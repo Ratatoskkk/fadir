@@ -1,0 +1,95 @@
+# fadir configuration (SPEC §3, §6, §8).
+
+fx:
+  # Provider used for any currency without an explicit override below.
+  default_provider: yfinance
+
+  # Per-currency provider assignment. TCMB publishes official Turkish Central Bank
+  # rates and is the right choice if figures are used for tax purposes, but its
+  # basket does not include TWD (SPEC §3) — TwdRate requests to TCMB raise
+  # UnsupportedCurrencyPair rather than triangulating. Leave TWD absent here.
+  overrides: {}
+    # USD: tcmb
+    # EUR: tcmb
+    # SEK: tcmb
+    # TWD intentionally absent — TCMB does not publish it.
+
+  # Trade dates may fall on days with no published rate. Walk backwards at most this
+  # many calendar days to the most recent published rate, then fail loudly. Never
+  # interpolate forward, never average.
+  max_lookback_days: 7
+
+  # Free key from evds2.tcmb.gov.tr. Only needed if a currency is routed to tcmb above.
+  # Can also be supplied via the FADIR_TCMB_API_KEY environment variable.
+  tcmb_api_key: null
+
+liquidation:
+  # Optional haircut applied to the top-line liquidation figure to approximate FX
+  # spread and commission on a full exit. Expressed as a fraction, e.g. 0.005 = 0.5%.
+  # Default 0% — the figure is an estimate and excludes tax either way (SPEC §6).
+  haircut_pct: 0.0
+
+# Approximate Turkish capital gains tax on a full liquidation, shown under the net
+# figure on the hero card. An ESTIMATE, not tax advice — see app/calc/tax.py for exactly
+# what is and is not modelled, and talk to a YMM/SMMM before relying on it.
+tax:
+  enabled: true
+
+  # Other income you will declare for the year, in TRY. The gain stacks on top of it, so
+  # this decides which bracket the first lira of gain falls into (GVK Md. 103). Leave it
+  # at 0 and the estimate assumes the gain is your only income.
+  other_income_try: 0
+
+  # GVK Mük. 80's annual exemption explicitly excludes gains on securities, so this is
+  # 0. Exposed only because the law changes.
+  exemption_try: 0
+
+  # Inflation indexing of the acquisition cost (GVK Mük. Madde 81). In a high-inflation
+  # environment this is the single biggest factor in the final number — leaving it off
+  # overstates the tax, often heavily.
+  #
+  # It is off by default because it needs real Yİ-ÜFE (D-PPI) index values from TÜİK,
+  # which this app does not fetch. To enable it: look up Yİ-ÜFE for the month before you
+  # bought and the month before today, work out the increase, and put it here as a
+  # fraction. Indexing is only permitted at all when that increase reaches 10%.
+  inflation_indexing:
+    enabled: false
+    rate: 0.0        # e.g. 0.42 for a 42% Yİ-ÜFE rise over the holding period
+    threshold: 0.10  # statutory minimum; do not change without checking the law
+
+  # GVK Madde 103 tariff. These are the 2025 figures — brackets are revalued every year,
+  # so update them for the tax year you are modelling.
+  brackets:
+    - { upto: 158000,  rate: 0.15 }
+    - { upto: 330000,  rate: 0.20 }
+    - { upto: 800000,  rate: 0.27 }
+    - { upto: 4300000, rate: 0.35 }
+    - { upto: null,    rate: 0.40 }
+
+cache:
+  intraday_quote_ttl_seconds: 60
+  # FX is refetched at most this often. An hour, deliberately: the lira does not move
+  # enough inside one to matter here, and holding the rate steady keeps every refresh
+  # cycle down to a single equity fetch. Share prices are what need to be current.
+  fx_current_ttl_seconds: 3600
+  # Settled daily closes and historical FX are immutable and cached permanently.
+
+refresh:
+  # How often the server refetches prices while an exchange is trading, and the default
+  # the UI polls at. Selectable in the UI: 5 / 10 / 15 / 30 / 60 / 300 / off.
+  #
+  # 10s is the fast end of what is safe. Every symbol goes out in ONE batched
+  # `yf.download`, so a cycle is a single request — 360/hour, comfortably inside what
+  # Yahoo tolerates from one IP. Going lower buys nothing real: Yahoo's own quote data
+  # updates on roughly a 10-15s heartbeat for delayed feeds, so faster polling returns
+  # the same number while multiplying the chance of a 429 and a temporary ban.
+  default_interval_seconds: 10
+  # Nothing but FX can move with every exchange shut, and FX is on an hourly TTL, so
+  # anything faster than this is a no-op that still costs a request.
+  closed_market_interval_seconds: 3600
+
+history:
+  # Portfolio inception — where the daily series begins (SPEC §6). Leave it null and the
+  # app starts the chart at your earliest transaction, which is what you usually want.
+  # Set a date only to start later than your first trade.
+  start_date: null

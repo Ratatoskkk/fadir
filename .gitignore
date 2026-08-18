@@ -1,0 +1,34 @@
+# --- your data. None of this belongs in the repo. -----------------------------------
+# The database holds every transaction you own.
+*.db
+*.db-wal
+*.db-shm
+
+# Your transaction CSV. Copy examples/seed_transactions.example.csv here to start.
+data/
+
+# config.yaml is tracked, because its defaults are the documentation. Keep a TCMB API
+# key out of it — use the FADIR_TCMB_API_KEY environment variable instead.
+config.local.yaml
+.env
+
+logs/
+
+# --- build and tooling output --------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+node_modules/
+frontend/dist/
+.vite/
+
+.DS_Store
+Thumbs.db
+
+# Local Claude Code permissions — personal, not project config.
+.claude/settings.local.json

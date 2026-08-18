@@ -1,0 +1,14 @@
+trade_date,side,ticker,exchange,yf_symbol,currency,quantity,price_native,fees_native,name
+2025-01-06,BUY,AAPL,NASDAQ,AAPL,USD,10,243.85,0,Apple Inc
+2025-01-20,BUY,SAP,ETR,SAP.DE,EUR,15,236.40,0,SAP SE
+2025-02-15,BUY,ERIC,STO,ERIC-B.ST,SEK,300,85.20,29.00,Telefonaktiebolaget LM Ericsson
+2025-03-03,BUY,2330,TPE,2330.TW,TWD,20,985.00,0,Taiwan Semiconductor Manufacturing
+2025-03-16,BUY,KO,NYSE,KO,USD,40,70.15,0,Coca-Cola Co
+2025-04-07,BUY,AAPL,NASDAQ,AAPL,USD,8,181.46,0,Apple Inc
+2025-04-27,BUY,ERIC,STO,ERIC-B.ST,SEK,250,76.90,0,Telefonaktiebolaget LM Ericsson
+2025-05-19,BUY,IBM,NYSE,IBM,USD,6,260.32,0,International Business Machines
+2025-06-08,BUY,SAP,ETR,SAP.DE,EUR,10,258.75,0,SAP SE
+2025-07-14,BUY,2330,TPE,2330.TW,TWD,15,1075.00,0,Taiwan Semiconductor Manufacturing
+2025-08-11,BUY,KO,NYSE,KO,USD,25,68.40,0,Coca-Cola Co
+2025-09-15,BUY,ERIC,STO,ERIC-B.ST,SEK,200,92.35,0,Telefonaktiebolaget LM Ericsson
+2025-10-06,SELL,AAPL,NASDAQ,AAPL,USD,5,258.10,0,Apple Inc

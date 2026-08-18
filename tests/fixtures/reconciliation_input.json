@@ -1,0 +1,65 @@
+{
+  "_comment": [
+    "Frozen input for the SPEC §12 reconciliation test. Invented data, not anyone's real",
+    "portfolio: thirteen purchases across six instruments and four currencies, each with",
+    "an explicit trade-date FX rate so the whole fixture is hand-checkable, and a frozen",
+    "as_of with fixed closes and current rates. Nothing here is fetched.",
+    "",
+    "Every row is a BUY, so every lot stays open and cost is a plain sum — which is what",
+    "lets scripts/make_golden.py recompute the expected figures without a lot matcher.",
+    "FIFO disposal is covered by tests/test_calc_fifo.py instead.",
+    "",
+    "Weekend trades (2025-02-15 Sat, 2025-03-16 Sun, 2025-04-27 Sun, 2025-06-08 Sun)",
+    "carry the preceding Friday's fx_rate_date.",
+    "",
+    "The fixture is shaped so 2330, IBM and SAP fall locally while the lira weakens under",
+    "them. Without divergent positions the golden file would pass even with the price/FX",
+    "decomposition broken."
+  ],
+  "as_of": "2026-01-30",
+  "current_fx": {
+    "USD": "44.50000000",
+    "SEK": "4.05000000",
+    "EUR": "48.20000000",
+    "TWD": "1.38000000"
+  },
+  "current_prices": {
+    "AAPL": "268.4000",
+    "KO": "74.8500",
+    "IBM": "231.6000",
+    "SAP": "218.9000",
+    "ERIC": "96.8000",
+    "2330": "942.0000"
+  },
+  "price_dates": {
+    "AAPL": "2026-01-29",
+    "KO": "2026-01-29",
+    "IBM": "2026-01-29",
+    "SAP": "2026-01-28",
+    "ERIC": "2026-01-28",
+    "2330": "2026-01-29"
+  },
+  "instruments": {
+    "AAPL": { "currency": "USD", "exchange": "NASDAQ", "yf_symbol": "AAPL", "name": "Apple Inc" },
+    "KO": { "currency": "USD", "exchange": "NYSE", "yf_symbol": "KO", "name": "Coca-Cola Co" },
+    "IBM": { "currency": "USD", "exchange": "NYSE", "yf_symbol": "IBM", "name": "International Business Machines" },
+    "SAP": { "currency": "EUR", "exchange": "ETR", "yf_symbol": "SAP.DE", "name": "SAP SE" },
+    "ERIC": { "currency": "SEK", "exchange": "STO", "yf_symbol": "ERIC-B.ST", "name": "Telefonaktiebolaget LM Ericsson" },
+    "2330": { "currency": "TWD", "exchange": "TPE", "yf_symbol": "2330.TW", "name": "Taiwan Semiconductor Manufacturing" }
+  },
+  "transactions": [
+    { "id": 1,  "ticker": "AAPL", "trade_date": "2025-01-06", "side": "BUY", "quantity": "10",  "price_native": "243.85",  "fees_native": "0",     "fx_rate_to_try": "35.4000", "fx_rate_date": "2025-01-06" },
+    { "id": 2,  "ticker": "SAP",  "trade_date": "2025-01-20", "side": "BUY", "quantity": "15",  "price_native": "236.40",  "fees_native": "0",     "fx_rate_to_try": "36.6000", "fx_rate_date": "2025-01-20" },
+    { "id": 3,  "ticker": "ERIC", "trade_date": "2025-02-15", "side": "BUY", "quantity": "300", "price_native": "85.20",   "fees_native": "29.00", "fx_rate_to_try": "3.3400",  "fx_rate_date": "2025-02-14" },
+    { "id": 4,  "ticker": "2330", "trade_date": "2025-03-03", "side": "BUY", "quantity": "20",  "price_native": "985.00",  "fees_native": "0",     "fx_rate_to_try": "1.1200",  "fx_rate_date": "2025-03-03" },
+    { "id": 5,  "ticker": "KO",   "trade_date": "2025-03-16", "side": "BUY", "quantity": "40",  "price_native": "70.15",   "fees_native": "0",     "fx_rate_to_try": "36.9000", "fx_rate_date": "2025-03-14" },
+    { "id": 6,  "ticker": "AAPL", "trade_date": "2025-04-07", "side": "BUY", "quantity": "8",   "price_native": "181.46",  "fees_native": "0",     "fx_rate_to_try": "38.1000", "fx_rate_date": "2025-04-07" },
+    { "id": 7,  "ticker": "ERIC", "trade_date": "2025-04-27", "side": "BUY", "quantity": "250", "price_native": "76.90",   "fees_native": "0",     "fx_rate_to_try": "3.4900",  "fx_rate_date": "2025-04-25" },
+    { "id": 8,  "ticker": "IBM",  "trade_date": "2025-05-19", "side": "BUY", "quantity": "6",   "price_native": "260.32",  "fees_native": "0",     "fx_rate_to_try": "38.9000", "fx_rate_date": "2025-05-19" },
+    { "id": 9,  "ticker": "SAP",  "trade_date": "2025-06-08", "side": "BUY", "quantity": "10",  "price_native": "258.75",  "fees_native": "0",     "fx_rate_to_try": "41.9000", "fx_rate_date": "2025-06-06" },
+    { "id": 10, "ticker": "2330", "trade_date": "2025-07-14", "side": "BUY", "quantity": "15",  "price_native": "1075.00", "fees_native": "0",     "fx_rate_to_try": "1.2400",  "fx_rate_date": "2025-07-14" },
+    { "id": 11, "ticker": "KO",   "trade_date": "2025-08-11", "side": "BUY", "quantity": "25",  "price_native": "68.40",   "fees_native": "0",     "fx_rate_to_try": "40.8000", "fx_rate_date": "2025-08-11" },
+    { "id": 12, "ticker": "ERIC", "trade_date": "2025-09-15", "side": "BUY", "quantity": "200", "price_native": "92.35",   "fees_native": "0",     "fx_rate_to_try": "3.8100",  "fx_rate_date": "2025-09-15" },
+    { "id": 13, "ticker": "AAPL", "trade_date": "2025-11-03", "side": "BUY", "quantity": "4",   "price_native": "225.10",  "fees_native": "0",     "fx_rate_to_try": "42.6000", "fx_rate_date": "2025-11-03" }
+  ]
+}
