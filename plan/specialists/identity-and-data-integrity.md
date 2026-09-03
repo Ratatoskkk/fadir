@@ -38,98 +38,33 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 ## Current assignment
 
-Assignment: DB-5E, malformed private-row rollback repair.
+Assignment: DB-6A, PostgreSQL migration version-field repair.
 
-Status: Complete and accepted in `a880385` after G3-B2 PASS. The write lease is released.
+Status: Active. The real PostgreSQL upgrade failed on the 35-character second revision.
 
-Reject malformed private rows with a stable result and complete rollback.
+The DB-6A section in `plan/manager-open-beta.md` defines the exact lease and completion criteria.
+Read that section before any change.
 
-Create no engine or database connection.
+Exact repository file lease:
 
-Use no private data, path, URL, identity, secret, or row count in a result.
+- `migrations/env.py`
+- `tests/test_migrations.py`
+- `tests/test_postgresql_migrations.py` (new)
 
-Keep a real PostgreSQL rehearsal outside this task.
+Preserve existing revision identifiers and the explicit database URL requirement.
+Use a documented extension point that works with the declared Alembic minimum.
+Keep this repair separate from private migration adapters and other model changes.
 
-## Exact file lease
+## Proof and handoff
 
-The completed lease contains only these files:
+Preserve the focused failed proof before the product edit.
+Run the focused and full offline suites with an explicit `-m "not live"` filter.
+Add an opt-in real PostgreSQL regression for the later VM review.
+The current assignment has no guest, service, package, host-resource, or real database write lease.
 
-- `app/services/private_migration.py`
-- `tests/test_private_migration.py`
+Protect the root private database, WAL files, uploads, local overrides, secrets, and the owner's email address.
+Check protected path metadata before and after the work without any private-row read.
+Keep the diff inside the three-file lease. The Senior Agent reviews and commits accepted work.
 
-No write lease is active. Wait for review before any further edit.
-
-## Protected paths and data
-
-Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
-
-Protect `.env`, `config.local.yaml`, environment secrets, identity secrets, and the private Yahoo permit.
-
-Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
-
-## Required failed proof
-
-Add a regression test before a product edit.
-
-Use a private row with `table: []` after shared rows enter the target transaction.
-
-Prove that the current code raises `TypeError` without rollback and leaves shared rows staged.
-
-Require `INVALID_PRIVATE_ROW`, `ROLLED_BACK`, and no staged rows after repair.
-
-Keep this regression and the existing eight rollback cases in the final diff.
-
-## Required commands
-
-Run:
-
-```powershell
-git status --short
-.venv\Scripts\python.exe -m pytest tests/test_private_migration.py -q
-.venv\Scripts\python.exe -m pytest -q
-git diff --check
-git status --short
-```
-
-Record protected root path metadata before and after the work. Do not enumerate `data/` or `uploads/`.
-
-Do not display an environment value.
-
-Make no package installation, database connection, process change, or external call.
-
-## Completion criteria
-
-- `run_private_migration(source, target, plan)` is the public operation.
-- The caller supplies the open source and target dependencies.
-- The module creates no engine or connection.
-- The module copies shared rows separately from private rows.
-- The module assigns one Portfolio identifier to each private row.
-- The operation uses one target transaction.
-- The result status is `PASSED` or `ROLLED_BACK`.
-- The target state is `COMMITTED` or `ROLLED_BACK`.
-- Validation results use stable category codes and a stable order.
-- The result contains no private value, row count, identity, path, URL, or secret.
-- Planned failures roll back all writes and return a stable failure code.
-- Tests use the same public interface as a future caller.
-- Repeat runs with fresh synthetic targets return equal results and rows.
-- The diff stays inside the exact lease.
-- Protected file metadata stays unchanged.
-- The handoff separates Facts, Limits, Uncertainty, and Open work.
-
-## Handoff
-
-### Facts
-
-List the changed files, public interface, failed proof, rollback cases, and command results.
-
-### Limits
-
-List the no-connection, no-private-row, no-secret, and synthetic-only limits.
-
-### Uncertainty
-
-List unresolved real-database, dialect, transaction, and mapping behavior.
-
-### Open work
-
-List each approval needed before a disposable PostgreSQL rehearsal.
+Separate Facts, Limits, Uncertainty, and Open work.
+Send the final handoff to the Senior task as well as the final response.

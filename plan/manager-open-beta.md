@@ -7,13 +7,44 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-5E is accepted. The owner approved real Linux and PostgreSQL tests in the disposable VM on 2026-09-04.
-- Active specialist assignments: PLAT-LINUX-1, Platform and Release.
-- Active file leases: No specialist repository edits. The operational lease below controls the VM setup and test files.
-- Proposed next assignment: Review the real database results, then assign the next product adapter change.
+- Current status: Linux passed 292 offline tests. Real PostgreSQL exposed an Alembic version-field length defect.
+- Active specialist assignments: PLAT-LINUX-1, Platform and Release; DB-6A, Identity and Data Integrity.
+- Active file leases: DB-6A has three exact repository files below. Platform retains its separate operational lease.
+- Proposed next assignment: Review DB-6A and repeat the real PostgreSQL proof before the next product adapter change.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
+
+### DB-6A migration version-field repair
+
+Platform tested source `c5ae1e1` on PostgreSQL 16.15 in the approved VM.
+The Linux suite passed 292 tests and deselected one live test.
+Alembic upgrade failed with `StringDataRightTruncation` at `0002_user_workspace_portfolio_roots`.
+That revision has 35 characters. The default version column accepts 32 characters.
+Platform applied no schema workaround and preserved the failed branch.
+
+Identity owns exactly these files:
+
+- `migrations/env.py`
+- `tests/test_migrations.py`
+- `tests/test_postgresql_migrations.py` (new)
+
+1. Preserve a focused failed regression before the product edit.
+2. Fix version storage through a documented Alembic extension point compatible with the declared minimum dependency.
+3. Preserve all existing revision identifiers and the revision chain.
+4. Support online and offline PostgreSQL migration paths without private Alembic attribute changes.
+5. Keep the explicit database URL requirement and all SQLite behavior.
+6. Add an opt-in real PostgreSQL regression for upgrade, downgrade, and second upgrade.
+7. Use a task-owned temporary schema in the explicitly selected synthetic test database and clean that schema only.
+8. Keep environment-dependent test controls inside tests, not production migration behavior.
+9. Run the focused and full offline suites with an explicit `-m "not live"` filter.
+10. Return the diff and proof for Senior review without a commit.
+
+The opt-in PostgreSQL test must not fall back to the private database or an implicit URL.
+Its cleanup must validate the exact task-owned schema before any schema removal.
+Identity has no guest, host-resource, package, or real database write lease in this assignment.
+Platform will finish its original proof before a separate review lease executes the new PostgreSQL regression.
+Keep other product defects and real migration adapters outside DB-6A.
 
 ### PLAT-LINUX-1 approved setup and proof
 
@@ -435,7 +466,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 ## Active leases
 
 PLAT-LINUX-1 is active. Its exact operational lease is in the current review section above.
-No specialist has a repository write lease.
+DB-6A is active. Its three-file repository lease is in the current review section above.
 
 ### Completed lease: APP-1
 
