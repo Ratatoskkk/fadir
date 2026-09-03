@@ -97,14 +97,16 @@ class SyntheticSource:
     def __init__(
         self,
         *,
+        shared_rows: Sequence[Mapping[str, object]] = SYNTHETIC_SHARED_ROWS,
         private_rows: Sequence[Mapping[str, object]] = SYNTHETIC_PRIVATE_ROWS,
         fail_private_read: bool = False,
     ) -> None:
+        self._shared_rows = shared_rows
         self._private_rows = private_rows
         self._fail_private_read = fail_private_read
 
     def read_shared_rows(self) -> Sequence[Mapping[str, object]]:
-        return SYNTHETIC_SHARED_ROWS
+        return self._shared_rows
 
     def read_private_rows(self) -> Sequence[Mapping[str, object]]:
         if self._fail_private_read:
@@ -213,10 +215,12 @@ class SyntheticTarget:
         self.shared_rows: list[dict[str, object]] = []
         self.private_rows: list[dict[str, object]] = []
         self.transaction_state: TargetState | None = None
+        self.transaction: SyntheticTransaction | None = None
 
     def begin(self) -> SyntheticTransaction:
         self.begin_calls += 1
-        return SyntheticTransaction(self)
+        self.transaction = SyntheticTransaction(self)
+        return self.transaction
 
 
 def result_states(result: MigrationResult) -> dict[str, ValidationState]:
@@ -321,6 +325,70 @@ def test_invalid_portfolio_identifier_stops_before_a_target_write(
 
     assert result.failure_code == "INVALID_PORTFOLIO_ID"
     assert target.shared_write_calls == 0
+    assert target.private_write_calls == 0
+    assert_rolled_back_without_rows(result, target)
+
+
+@pytest.mark.parametrize(
+    "private_row",
+    [
+        {"table": []},
+        {},
+        {"table": None},
+        {"table": {}},
+        {"table": set()},
+        {"table": 1},
+        {"table": True},
+        {"table": b"transaction"},
+    ],
+    ids=("list", "missing", "null", "dict", "set", "integer", "boolean", "bytes"),
+)
+def test_malformed_private_table_rolls_back_shared_rows(
+    private_row: Mapping[str, object],
+) -> None:
+    target = SyntheticTarget()
+    source = SyntheticSource(private_rows=(private_row,))
+
+    try:
+        result = run_private_migration(source, target, migration_plan())
+    except TypeError as error:
+        assert target.transaction is not None
+        error.add_note(
+            f"rollback_calls={target.rollback_calls}; "
+            f"shared_rows_staged={bool(target.transaction.read_staged_shared_rows())}"
+        )
+        raise
+
+    assert result.failure_code == "INVALID_PRIVATE_ROW"
+    assert target.shared_write_calls == 1
+    assert target.private_write_calls == 0
+    assert_rolled_back_without_rows(result, target)
+
+
+@pytest.mark.parametrize(
+    "reference", [[], {}, set(), None, True, "10"],
+    ids=("list", "dict", "set", "null", "boolean", "text"),
+)
+@pytest.mark.parametrize("location", ["shared-instrument", "private-reference"])
+def test_malformed_instrument_identifier_rolls_back_shared_rows(
+    reference: object, location: str,
+) -> None:
+    shared_rows = list(SYNTHETIC_SHARED_ROWS)
+    private_rows = list(SYNTHETIC_PRIVATE_ROWS)
+    if location == "shared-instrument":
+        shared_rows[0] = {**shared_rows[0], "id": reference}
+    else:
+        private_rows[0] = {**private_rows[0], "instrument_id": reference}
+    target = SyntheticTarget()
+
+    result = run_private_migration(
+        SyntheticSource(shared_rows=shared_rows, private_rows=private_rows),
+        target,
+        migration_plan(),
+    )
+
+    assert result.failure_code == "MISSING_SHARED_REFERENCE"
+    assert target.shared_write_calls == 1
     assert target.private_write_calls == 0
     assert_rolled_back_without_rows(result, target)
 
@@ -438,6 +506,10 @@ def assert_rolled_back_without_rows(
     assert target.transaction_state is TargetState.ROLLED_BACK
     assert target.shared_rows == []
     assert target.private_rows == []
+    assert target.transaction is not None
+    assert target.transaction.read_staged_shared_rows() == ()
+    assert target.transaction.read_staged_private_rows() == ()
+    assert not target.transaction.has_inserted_rows()
 
 
 def test_result_contains_only_control_evidence() -> None:

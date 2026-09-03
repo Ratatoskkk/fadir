@@ -158,21 +158,29 @@ def _decimals_match(
 def _private_rows_are_valid(
     private_rows: Sequence[Mapping[str, object]],
 ) -> bool:
-    return all(row.get("table") in PRIVATE_TABLES for row in private_rows)
+    return all(
+        type(row.get("table")) is str and row.get("table") in PRIVATE_TABLES
+        for row in private_rows
+    )
 
 
 def _private_references_exist(
     shared_rows: Sequence[Mapping[str, object]],
     private_rows: Sequence[Mapping[str, object]],
 ) -> bool:
-    instrument_ids = {
-        row.get("id")
-        for row in shared_rows
-        if row.get("table") == "instrument"
-    }
+    instrument_ids: set[int] = set()
+    for row in shared_rows:
+        if row.get("table") == "instrument":
+            instrument_id = row.get("id")
+            if type(instrument_id) is not int:
+                return False
+            instrument_ids.add(instrument_id)
     return all(
         row.get("table") != "transaction"
-        or row.get("instrument_id") in instrument_ids
+        or (
+            type(row.get("instrument_id")) is int
+            and row.get("instrument_id") in instrument_ids
+        )
         for row in private_rows
     )
 
