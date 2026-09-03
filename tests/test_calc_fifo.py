@@ -43,6 +43,49 @@ def test_multi_lot_weighted_avg_fx_is_cost_weighted_not_qty_weighted():
     assert book.cost_try == Decimal("24000.00")
 
 
+def test_average_purchase_price_uses_all_purchase_quantities_prices_and_fees():
+    book = build_lot_book(
+        "IBM",
+        "USD",
+        [
+            txn(1, "IBM", "USD", "2026-03-01", Side.BUY, "2", "100.00", "40.00", fees="10.00"),
+            txn(2, "IBM", "USD", "2026-04-01", Side.BUY, "3", "200.00", "41.00", fees="15.00"),
+        ],
+    )
+
+    # (2 x 100 + 10 + 3 x 200 + 15) / (2 + 3) = 165.
+    assert book.average_purchase_price_native == Decimal("165.00")
+
+
+def test_sales_do_not_change_the_lifetime_average_purchase_price():
+    purchases = [
+        txn(1, "IBM", "USD", "2026-03-01", Side.BUY, "2", "100.00", "40.00", fees="10.00"),
+        txn(2, "IBM", "USD", "2026-04-01", Side.BUY, "3", "200.00", "41.00", fees="15.00"),
+    ]
+    partial = build_lot_book(
+        "IBM",
+        "USD",
+        purchases
+        + [txn(3, "IBM", "USD", "2026-05-01", Side.SELL, "2", "250.00", "42.00", fees="99.00")],
+    )
+    closed = build_lot_book(
+        "IBM",
+        "USD",
+        purchases
+        + [txn(3, "IBM", "USD", "2026-05-01", Side.SELL, "5", "250.00", "42.00", fees="99.00")],
+    )
+
+    assert partial.quantity == Decimal("3")
+    assert partial.average_purchase_price_native == Decimal("165.00")
+    assert closed.quantity == Decimal("0")
+    assert closed.average_purchase_price_native == Decimal("165.00")
+
+
+def test_average_purchase_price_is_absent_without_a_purchase():
+    book = build_lot_book("IBM", "USD", [])
+    assert book.average_purchase_price_native is None
+
+
 def test_fifo_consumes_oldest_lot_first():
     book = build_lot_book(
         "ERIC",

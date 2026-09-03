@@ -176,6 +176,39 @@ def test_money_serialised_as_strings_not_floats(client):
     assert isinstance(body["liquidation"]["net_proceeds_try"], str)
 
 
+def test_average_purchase_price_is_a_string_for_open_and_fully_sold_groups(client):
+    open_position = next(
+        position
+        for position in client.get("/api/portfolio").json()["positions"]
+        if position["ticker"] == "AAPL"
+    )
+    assert Decimal(open_position["average_purchase_price_native"]) == Decimal("180.00")
+    assert isinstance(open_position["average_purchase_price_native"], str)
+
+    response = client.post(
+        "/api/transactions",
+        json={
+            "ticker": "AAPL",
+            "trade_date": TODAY.isoformat(),
+            "side": "SELL",
+            "quantity": "12",
+            "price_native": "200.00",
+            "fees_native": "25.00",
+            "fx_rate_override": "47.50",
+        },
+    )
+    assert response.status_code == 201
+
+    closed_position = next(
+        position
+        for position in client.get("/api/portfolio").json()["positions"]
+        if position["ticker"] == "AAPL"
+    )
+    assert Decimal(closed_position["quantity"]) == Decimal("0")
+    assert Decimal(closed_position["average_purchase_price_native"]) == Decimal("180.00")
+    assert isinstance(closed_position["average_purchase_price_native"], str)
+
+
 def test_portfolio_exposes_the_after_tax_estimate(client):
     body = client.get("/api/portfolio").json()
     tax = body["tax"]

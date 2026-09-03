@@ -145,6 +145,7 @@ class PositionMetrics:
     currency: str
     quantity: Decimal
 
+    average_purchase_price_native: Decimal | None
     cost_native: Decimal
     cost_try: Decimal
     market_value_native: Decimal
@@ -252,6 +253,7 @@ def position_metrics(book: LotBook, quote: MarketQuote) -> PositionMetrics:
             ticker=book.ticker,
             currency=book.currency,
             quantity=quantity,
+            average_purchase_price_native=book.average_purchase_price_native,
             cost_native=cost_native,
             cost_try=cost_try,
             market_value_native=mv_native,

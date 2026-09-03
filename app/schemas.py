@@ -60,6 +60,7 @@ class PositionOut(BaseModel):
     currency: str
     quantity: Money
 
+    average_purchase_price_native: OptMoney = None
     cost_native: Money
     cost_try: Money
     market_value_native: Money

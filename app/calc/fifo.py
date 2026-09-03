@@ -132,6 +132,8 @@ class LotBook:
     _quantity: Decimal = ZERO
     _cost_native: Decimal = ZERO
     _cost_try: Decimal = ZERO
+    _purchase_quantity: Decimal = ZERO
+    _purchase_cost_native: Decimal = ZERO
 
     # -- open position -------------------------------------------------------------
 
@@ -146,6 +148,15 @@ class LotBook:
     @property
     def cost_try(self) -> Decimal:
         return self._cost_try
+
+    @property
+    def average_purchase_price_native(self) -> Decimal | None:
+        """Lifetime purchase cost per share, with purchase fees included."""
+        if self._purchase_quantity == ZERO:
+            return None
+        with localcontext() as ctx:
+            ctx.prec = CALC_PRECISION
+            return self._purchase_cost_native / self._purchase_quantity
 
     def _recompute_totals(self) -> tuple[Decimal, Decimal, Decimal]:
         """Re-derive the totals by summing every lot. Reference implementation."""
@@ -203,6 +214,8 @@ class LotBook:
                 self._quantity += lot.quantity_open
                 self._cost_native += cost
                 self._cost_try += cost * lot.fx_rate_to_try
+                self._purchase_quantity += lot.quantity_original
+                self._purchase_cost_native += cost
             else:
                 _consume(self, txn)
 

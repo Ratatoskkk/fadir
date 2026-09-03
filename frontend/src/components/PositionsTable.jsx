@@ -9,6 +9,7 @@ const COLUMNS = [
   { key: "ticker", label: "Enstrüman", align: "left" },
   { key: "quantity", label: "Adet" },
   { key: "price_native", label: "Fiyat" },
+  { key: "average_purchase_price_native", label: "Ort. alış" },
   { key: "cost_native", label: "Maliyet", group: true },
   { key: "market_value_native", label: "Değer" },
   { key: "pnl_native", label: "K/Z (yerel)" },
@@ -33,6 +34,10 @@ function sortValue(position, key) {
     case "daily_pnl_try":
       // Rows with no previous session sort last rather than as a zero move.
       return position.daily?.available ? Number(position.daily.pnl_try) : -Infinity;
+    case "average_purchase_price_native":
+      return position.average_purchase_price_native === null
+        ? -Infinity
+        : Number(position.average_purchase_price_native);
     default:
       return Number(position[key]);
   }
@@ -214,6 +219,11 @@ export default function PositionsTable({ positions, focusTickers = [], onFocusTi
 
                   <td className="num">{num(p.quantity, 0)}</td>
                   <PriceCell position={p} />
+                  <td className="num">
+                    {p.average_purchase_price_native === null
+                      ? "—"
+                      : money(p.average_purchase_price_native, p.currency)}
+                  </td>
 
                   <td className="num group-sep">{money(p.cost_native, p.currency)}</td>
                   <td className="num">{p.ok ? money(p.market_value_native, p.currency) : "—"}</td>
@@ -263,7 +273,7 @@ export default function PositionsTable({ positions, focusTickers = [], onFocusTi
           <tfoot>
             <tr>
               <td>Toplam</td>
-              <td colSpan={5} />
+              <td colSpan={6} />
               <td className="num group-sep" colSpan={3} />
               <td className="num group-sep">{money(totals.cost)}</td>
               <td className="num">{money(totals.value)}</td>
@@ -282,6 +292,9 @@ export default function PositionsTable({ positions, focusTickers = [], onFocusTi
       </div>
 
       <p className="footnote">
+        <strong>Ort. alış</strong>, Stock Group içindeki tüm alışların miktar ağırlıklı
+        ömür boyu ortalamasıdır; alış masrafları sayılır, satışlar sayılmaz. Grup tamamen
+        satılsa da değer kalır.{" "}
         Kapalı borsalardaki fiyatlar son seans kapanışıdır, canlı değildir. “Çapraz kur”
         rozeti, Yahoo’da doğrudan TRY paritesi bulunmayan para birimleri için kurun USD
         üzerinden hesaplandığını gösterir. <strong>Enstrüman adına tıklayın</strong>:

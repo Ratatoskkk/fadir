@@ -104,6 +104,7 @@ def _position_out(metrics: PositionMetrics, instrument: Instrument | None) -> Po
         exchange=instrument.exchange if instrument else "",
         currency=metrics.currency,
         quantity=metrics.quantity,
+        average_purchase_price_native=metrics.average_purchase_price_native,
         cost_native=metrics.cost_native,
         cost_try=metrics.cost_try,
         market_value_native=metrics.market_value_native,
