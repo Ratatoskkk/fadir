@@ -38,110 +38,47 @@ Keep local, hosted, and public evidence in separate sections.
 
 ## Current assignment
 
-Assignment: None.
+Assignment: PLAT-LINUX-1.
 
-Status: LAB-SUDO-FINAL-DIAG-1 passed for live access. The correct sudo file is active and exact.
+Status: The owner approved disposable VM setup and real Linux/PostgreSQL product tests on 2026-09-04.
 
-Proposed next assignment: LAB-SSH-HARDEN-1 after owner approval.
-
-Preserve the live sudo proof and the inconclusive candidate-disappearance result.
-
-## Exact file lease
+The `PLAT-LINUX-1 approved setup and proof` section in `plan/manager-open-beta.md` is the authoritative lease.
+Read that section before any command. It names each resource, source revision, network limit, and cleanup action.
 
 Exact repository file lease: None.
 
-Exact host write lease: None.
+Use the operational lease to install dependencies, transfer the approved source, and test the current product.
+Keep product repairs outside this assignment. Return a focused failure when product code fails.
+Use the existing strict SSH path; SSH redesign is not part of this work.
 
-Exact guest write lease: None.
+## Protected paths and data
 
-Read-only access can verify:
-
-- VM `fadir-control-lab-01`.
-- Stable trust file `C:\ProgramData\fadir-agent-control\lab_known_hosts`.
-- Dedicated private key metadata at `C:\ProgramData\fadir-agent-control\lab_ed25519`.
-- Accepted final sudo evidence already recorded on the manager board.
+Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
+Protect `.env`, `config.local.yaml`, secrets, backup keys, and the private Yahoo permit.
+Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
 
 Use these host files for strict SSH only:
 
 - `C:\ProgramData\fadir-agent-control\lab_ed25519`
 - `C:\ProgramData\fadir-agent-control\lab_known_hosts`
 
-Do not display or copy the private-key content.
-
-Treat every other guest path and every host object as protected state.
-
-## Protected paths and data
-
-Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
-
-Protect `.env`, `config.local.yaml`, environment secrets, host secrets, backup keys, and the private Yahoo permit.
-
-Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
-
-## Required failed proof
-
-Preserve these failed proofs:
-
-- The installer SSH policy permits passwords, root key login, terminal access, and forwarding.
-- `sudo -n true` fails for `fadir-agent` with exit code `1`.
-- `sudo -n true` still failed after stage 1 created the candidate.
-- The live sudoers path remained absent after stage 1.
-- The first console install attempt used `/usr/sbin/install` and failed.
-- The console command omitted the explicit `-g root` argument.
-- The displayed zero followed `echo $`, so it does not prove the install exit code.
-- Password-free root access passed while the approved live sudoers path was absent.
-- Diagnosis found the active equals-sign file with the exact approved content.
-- The repair created and validated the correct file, then removed the equals-sign file.
-- The staged candidate was absent at the next check.
-- Direct final proof confirmed the correct file and password-free root access.
-- No host-driven restart or checkpoint recovery path has passed.
-
-## Required commands
-
-Run no specialist command while the assignment is empty.
-
-Keep candidate recreation, SSH hardening, packages, services, checkpoints, and unrelated system reads outside the empty lease.
+Keep their content and permissions unchanged. Do not display or copy the private-key content.
 
 ## Completion criteria
 
-- The owner accepts or rejects the missing transient candidate limit.
-- The owner approves an exact new lease before SSH hardening.
+1. Report the pinned source revision and transferred archive hash.
+2. Report package versions and the local PostgreSQL listener scope.
+3. Report the full offline Linux suite and frontend build results.
+4. Report real PostgreSQL migration, Decimal, ownership, and rollback evidence.
+5. List the exact guest resources created and retained.
+6. Confirm transfer-file cleanup and unchanged protected host state.
+7. State which product proof remains absent.
+
+Distinguish unit tests that use SQLite from checks that use PostgreSQL.
+The synthetic migration core alone cannot prove real migration adapters.
 
 ## Handoff
 
-### Facts
-
-- Ubuntu Server 24.04.4 LTS boots from the approved VHDX.
-- The guest uses `192.168.247.10` and host name `fadir-control-lab-01`.
-- The `fadir-agent` password is locked and its approved public key is installed.
-- The stable ED25519 host key matches the VM console proof.
-- Strict key-only SSH passed through the stable trust file with exit code `0`.
-- The account belongs only to group `fadir-agent`.
-- `sudo -n true` failed with exit code `1`.
-- Stage 1 created and validated the exact candidate.
-- The candidate SHA-256 value matches the approved value.
-- Root validation of the candidate passed at the VM console.
-- The owner ran `/usr/bin/install` without an error message.
-- Stage 2 proved password-free root access.
-- Stage 2 proved that the approved live sudoers path is absent.
-- Diagnosis identified `/etc/sudoers.d/90=fadir-agent-bootstrap` as the active source.
-- The correct file passed exact checks after the misnamed file was removed.
-- The staged candidate was then absent.
-- Direct final proof passed global syntax, effective policy, sudo, root identity, and strict SSH checks.
-
-### Limits
-
-- The staged candidate absence remains a non-functional failed requirement.
-- It does not prove recovery, PostgreSQL, hosted access, public access, or private-data safety.
-
-### Uncertainty
-
-- The candidate disappearance cause remains inconclusive.
-- The permanent constrained sudo design still fails its prior Quality review.
-
-### Open work
-
-- Obtain owner acceptance or rejection of the missing transient candidate limit.
-- Obtain an exact lease before SSH hardening.
-- Remove the temporary bootstrap after a reviewed constrained control path passes.
-- Prove host-driven restart and recovery before the lab receives product files, secrets, or private data.
+Separate Facts, Limits, Uncertainty, and Open work.
+Give the Senior Agent one concrete next product action.
+Send the handoff to the Senior task and include it in the final response.

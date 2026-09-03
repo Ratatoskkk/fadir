@@ -7,13 +7,51 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-5E accepted and committed as `a880385`. G3-B2 passed the bounded synthetic repair; overall G3 remains NOT READY.
-- Active specialist assignments: None. The DB-5E and G3-B2 leases are released.
-- Active file leases: None.
-- Proposed next assignment: Define the bounded real-adapter and PostgreSQL rehearsal lease for Gate 1 approval.
+- Current status: DB-5E is accepted. The owner approved real Linux and PostgreSQL tests in the disposable VM on 2026-09-04.
+- Active specialist assignments: PLAT-LINUX-1, Platform and Release.
+- Active file leases: No specialist repository edits. The operational lease below controls the VM setup and test files.
+- Proposed next assignment: Review the real database results, then assign the next product adapter change.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
+
+### PLAT-LINUX-1 approved setup and proof
+
+The owner approved the existing VM for real product tests with synthetic data.
+This approval replaces prior lab restrictions on source transfer and package setup for this assignment only.
+It does not approve private data, production work, public listeners, or live provider tests.
+
+1. Verify strict SSH identity and sudo on `fadir-control-lab-01` at `192.168.247.10`.
+2. Install PostgreSQL 16, its client, Python venv support, Node.js, npm, and their Ubuntu package dependencies.
+3. Create `/home/fadir-agent/fadir-tests` for committed source, isolated dependencies, test helpers, and evidence.
+4. Use source commit `c5ae1e1c9e9b484f363b26f537b3dc308ba59ae6` for the product proof.
+5. Transfer only tracked `app/`, `tests/`, `frontend/`, `migrations/`, `examples/`, and the named root configuration files.
+6. Include `requirements.txt`, `requirements-dev.txt`, `requirements-migrate.txt`, `pytest.ini`, `alembic.ini`, and committed `config.yaml`.
+7. Verify the archive manifest and hash before extraction. Exclude private files, local overrides, database files, and secrets.
+8. Use local PostgreSQL cluster `16/main`, role `fadir-agent`, and synthetic database `fadir_test`.
+9. Use Unix-socket peer authentication. Keep PostgreSQL limited to the local socket and loopback addresses.
+10. Give the role only the rights required for its test database; keep it outside the PostgreSQL superuser role.
+11. Install Python dependencies from PyPI and locked frontend dependencies from npm inside the guest work directory.
+12. Run the full Linux suite with an explicit `-m "not live"` filter and run the frontend build.
+13. Prove real PostgreSQL Alembic upgrade, downgrade, and upgrade against only `fadir_test`.
+14. Probe Decimal values, ownership constraints, and transaction rollback on that real database where the current product supports them.
+15. Report product defects with a focused failed proof. Keep product repair outside this Platform assignment.
+
+Operational writes cover the package-manager files required by these packages, cluster `16/main`, its service, and its local configuration.
+The guest directory lease covers `/home/fadir-agent/fadir-tests` and its descendants.
+The database lease covers role `fadir-agent` and database `fadir_test` only.
+Record absent resources before creation. Preserve an existing resource that does not match this assignment.
+The owner approves removal or reset of synthetic rows and schema created by this assignment inside `fadir_test`.
+Keep the installed packages and test directory for later product work. Stop task-owned temporary application listeners after proof.
+The exact host transfer file is `C:\Users\doguk\AppData\Local\Temp\fadir-plat-linux-1-c5ae1e1.tar`.
+Create it only if absent. Remove only this task-owned archive after verified transfer.
+Package downloads from Ubuntu, PyPI, and npm are approved. Live market-provider calls remain outside the lease.
+Use the existing dedicated SSH key and pinned trust file without any content or permission change.
+Keep SSH, sudo, Hyper-V, Windows networking, public services, and production resources unchanged.
+
+Completion requires source identity, package versions, test results, real database evidence, resource inventory, and remaining product limits.
+Separate the SQLite unit suite from PostgreSQL integration proof. The protocol-based migration core does not yet prove real adapters.
+Overall G3 remains NOT READY until its remaining product gates pass.
 
 ### DB-5D completion record
 
