@@ -26,7 +26,7 @@ It does not approve private data, production work, public listeners, or live pro
 3. Create `/home/fadir-agent/fadir-tests` for committed source, isolated dependencies, test helpers, and evidence.
 4. Use source commit `c5ae1e1c9e9b484f363b26f537b3dc308ba59ae6` for the product proof.
 5. Transfer only tracked `app/`, `tests/`, `frontend/`, `migrations/`, `examples/`, and the named root configuration files.
-6. Include `requirements.txt`, `requirements-dev.txt`, `requirements-migrate.txt`, `pytest.ini`, `alembic.ini`, and committed `config.yaml`.
+6. Include `requirements.txt`, `requirements-dev.txt`, `requirements-migrate.txt`, `pytest.ini`, `alembic.ini`, committed `config.yaml`, and `scripts/make_golden.py`.
 7. Verify the archive manifest and hash before extraction. Exclude private files, local overrides, database files, and secrets.
 8. Use local PostgreSQL cluster `16/main`, role `fadir-agent`, and synthetic database `fadir_test`.
 9. Use Unix-socket peer authentication. Keep PostgreSQL limited to the local socket and loopback addresses.
