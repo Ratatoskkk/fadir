@@ -42,7 +42,7 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 Assignment: G3-B2, proof-only verification of the DB-5E repair.
 
-Status: Active. Preserve the G3-B malformed-row failure as the repair baseline.
+Status: Complete. G3-B2 PASS within the DB-5E repair scope; overall G3 NOT READY. The lease is released.
 
 Review the two-file DB-5E diff against `da86bee`.
 

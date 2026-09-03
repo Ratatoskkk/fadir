@@ -7,10 +7,10 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: G3-B2 verifies the uncommitted DB-5E repair against the G3-B failed probe.
-- Active specialist assignments: Quality and Security owns G3-B2. The DB-5E write lease is released.
-- Active file leases: Empty. Preserve the two DB-5E product changes during review.
-- Proposed next assignment: Commit DB-5E after acceptance, then state the remaining G3 decision.
+- Current status: DB-5E accepted and committed as `a880385`. G3-B2 passed the bounded synthetic repair; overall G3 remains NOT READY.
+- Active specialist assignments: None. The DB-5E and G3-B2 leases are released.
+- Active file leases: None.
+- Proposed next assignment: Define the bounded real-adapter and PostgreSQL rehearsal lease for Gate 1 approval.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
@@ -37,6 +37,29 @@ This file is the only live work board. The stable role briefs define long-term s
 - The review changed no repository file or protected metadata.
 - DB-5E will preserve this failure and repair only malformed-row validation and rollback.
 - Real adapters, PostgreSQL, private access, and infrastructure remain outside this repair.
+
+### DB-5E and G3-B2 acceptance
+
+- Commit `a880385` changes only the migration core and its tests.
+- Quality reproduced seven failed tests and 31 passed tests against `da86bee` in process memory.
+- The repaired malformed table and Instrument identifier probes return stable rollback results.
+- Staged and committed inserted rows are empty after rollback.
+- All eight prior rollback cases remain covered.
+- Quality and the Senior Agent confirmed 38 focused tests and 292 offline tests passed.
+- The count-visible offline run deselected one live test and reported one existing Starlette warning.
+- The diff check passed. Quality confirmed unchanged product hashes, Git index, and protected metadata during its review.
+- G3-B2 passed within the repair scope. It does not approve a real adapter or PostgreSQL rehearsal.
+- The next lease must name the adapters, target, connection window, evidence rules, and cleanup authority.
+
+### Test-scope deviation on 2026-09-04
+
+- The Senior Agent cleared pytest `addopts` to show test counts and accidentally removed the `not live` filter.
+- That run passed 293 tests, including the live registry-symbol and FX provider test.
+- The live test invokes the Yahoo fetch path. Its source uses registry inputs, not private Portfolio rows.
+- The run is not offline proof. The exact external request count was not measured.
+- The Senior Agent reported the mistake and did not repeat the live test.
+- The corrected explicit `-m "not live"` run passed 292 tests and deselected one test.
+- Keep the offline marker filter when a command overrides pytest options.
 
 ### Facts
 

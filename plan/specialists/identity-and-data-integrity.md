@@ -40,7 +40,7 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 Assignment: DB-5E, malformed private-row rollback repair.
 
-Status: Implementation complete. The write lease is released for G3-B2 review.
+Status: Complete and accepted in `a880385` after G3-B2 PASS. The write lease is released.
 
 Reject malformed private rows with a stable result and complete rollback.
 
