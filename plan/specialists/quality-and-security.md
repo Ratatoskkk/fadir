@@ -40,11 +40,14 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 ## Current assignment
 
-Assignment: G3-B, independent proof-only review of DB-5D.
+Assignment: G3-B2, proof-only verification of the DB-5E repair.
 
-Status: Complete. Synthetic core FAIL; overall G3 NOT READY. The empty lease is released.
+Status: Active. Preserve the G3-B malformed-row failure as the repair baseline.
 
-Review commit `da86bee` and its synthetic migration proof.
+Review the two-file DB-5E diff against `da86bee`.
+
+Reproduce the original malformed-row probe against the repaired public operation.
+Verify the new malformed Instrument reference cases and all prior rollback cases.
 
 Classify the core separately from overall G3 readiness.
 
@@ -64,7 +67,7 @@ Keep repository files, the Git index, and protected state unchanged.
 1. Read `AGENTS.md`, `CONTEXT.md`, and `docs/OPEN_BETA_BRIEF.md`.
 2. Read `docs/PRIVATE_MIGRATION_RUNBOOK.md`.
 3. Read the manager board and the Identity specialist brief.
-4. Review `git show da86bee`.
+4. Review `git show da86bee` and the current two-file product diff.
 5. Read both files in that commit and the existing Portfolio scope module.
 
 ## Required proof

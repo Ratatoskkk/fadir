@@ -40,7 +40,7 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 Assignment: DB-5E, malformed private-row rollback repair.
 
-Status: Active. G3-B found a malformed-row defect in commit `da86bee`.
+Status: Implementation complete. The write lease is released for G3-B2 review.
 
 Reject malformed private rows with a stable result and complete rollback.
 
@@ -52,12 +52,12 @@ Keep a real PostgreSQL rehearsal outside this task.
 
 ## Exact file lease
 
-The active lease contains only these files:
+The completed lease contains only these files:
 
 - `app/services/private_migration.py`
 - `tests/test_private_migration.py`
 
-No other file can change.
+No write lease is active. Wait for review before any further edit.
 
 ## Protected paths and data
 

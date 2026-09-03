@@ -7,10 +7,10 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-5E malformed private-row rollback repair after G3-B FAIL.
-- Active specialist assignments: Identity and Data Integrity owns DB-5E. The G3-B lease is released.
-- Active file leases: `app/services/private_migration.py`; `tests/test_private_migration.py`.
-- Proposed next assignment: Quality and Security verifies the DB-5E repair against the G3-B failed probe.
+- Current status: G3-B2 verifies the uncommitted DB-5E repair against the G3-B failed probe.
+- Active specialist assignments: Quality and Security owns G3-B2. The DB-5E write lease is released.
+- Active file leases: Empty. Preserve the two DB-5E product changes during review.
+- Proposed next assignment: Commit DB-5E after acceptance, then state the remaining G3 decision.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
