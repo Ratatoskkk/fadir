@@ -42,7 +42,7 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 Assignment: G3-B, independent proof-only review of DB-5D.
 
-Status: Active.
+Status: Complete. Synthetic core FAIL; overall G3 NOT READY. The empty lease is released.
 
 Review commit `da86bee` and its synthetic migration proof.
 

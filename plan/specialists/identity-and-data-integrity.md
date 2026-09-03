@@ -38,11 +38,11 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 ## Current assignment
 
-Assignment: DB-5D, synthetic migration core implementation.
+Assignment: DB-5E, malformed private-row rollback repair.
 
-Status: Complete and accepted in commit `da86bee`. The lease is released.
+Status: Active. G3-B found a malformed-row defect in commit `da86bee`.
 
-Implement the accepted migration module interface with synthetic dependencies.
+Reject malformed private rows with a stable result and complete rollback.
 
 Create no engine or database connection.
 
@@ -52,12 +52,12 @@ Keep a real PostgreSQL rehearsal outside this task.
 
 ## Exact file lease
 
-The completed lease contained only these files:
+The active lease contains only these files:
 
 - `app/services/private_migration.py`
 - `tests/test_private_migration.py`
 
-No file lease is active. Wait for a new assignment before an edit.
+No other file can change.
 
 ## Protected paths and data
 
@@ -69,13 +69,15 @@ Keep private Portfolio rows and the owner's email address out of files, logs, pr
 
 ## Required failed proof
 
-Create `tests/test_private_migration.py` before the implementation file.
+Add a regression test before a product edit.
 
-Run the focused test file before the implementation exists.
+Use a private row with `table: []` after shared rows enter the target transaction.
 
-The focused proof must fail because the module is absent.
+Prove that the current code raises `TypeError` without rollback and leaves shared rows staged.
 
-Keep the failed-proof tests in the final diff.
+Require `INVALID_PRIVATE_ROW`, `ROLLED_BACK`, and no staged rows after repair.
+
+Keep this regression and the existing eight rollback cases in the final diff.
 
 ## Required commands
 

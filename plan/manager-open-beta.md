@@ -7,10 +7,10 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: G3-B independent review of the committed synthetic migration core.
-- Active specialist assignments: Quality and Security owns G3-B. The DB-5D lease is released.
-- Active file leases: Empty. G3-B is proof-only.
-- Proposed next assignment: Select the next bounded product step from the G3-B result.
+- Current status: DB-5E malformed private-row rollback repair after G3-B FAIL.
+- Active specialist assignments: Identity and Data Integrity owns DB-5E. The G3-B lease is released.
+- Active file leases: `app/services/private_migration.py`; `tests/test_private_migration.py`.
+- Proposed next assignment: Quality and Security verifies the DB-5E repair against the G3-B failed probe.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
@@ -26,6 +26,17 @@ This file is the only live work board. The stable role briefs define long-term s
 - The diff check passed, and the workspace was clean after the commit.
 - This acceptance covers synthetic dependencies only, not real database adapters or PostgreSQL.
 - G3-B will classify the committed core separately from overall G3 readiness.
+
+### G3-B review result
+
+- Synthetic core: FAIL. Overall G3: NOT READY.
+- The existing suites passed 18 focused tests and 272 full tests.
+- A process-local probe supplied a private row with `table: []`.
+- Set membership raised `TypeError` after shared writes. No rollback or structured result followed.
+- The focused probe failed with exit code 1 and retained staged shared rows.
+- The review changed no repository file or protected metadata.
+- DB-5E will preserve this failure and repair only malformed-row validation and rollback.
+- Real adapters, PostgreSQL, private access, and infrastructure remain outside this repair.
 
 ### Facts
 
