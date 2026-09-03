@@ -40,120 +40,92 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 ## Current assignment
 
-Assignment: G3-CTRL-3, proof-only exact control design review.
+Assignment: G3-B, independent proof-only review of DB-5D.
 
-Status: FAIL and complete. The empty lease is released.
+Status: Active.
 
-Review the complete PLAT-CTRL-4 final handoff and current coordination files.
+Review commit `da86bee` and its synthetic migration proof.
 
-Quality classified the design as FAIL.
+Classify the core separately from overall G3 readiness.
 
-Do not repair the design or run a live control test.
+The earlier control-design reviews are historical records in the manager board.
+SSH design, VM changes, and PostgreSQL provision work are outside G3-B.
 
 ## Exact file lease
 
-Exact file lease: Empty. This is a read-only proof assignment.
+The repository write lease is empty.
 
-Do not edit repository files. Treat all current changes as owner work.
+Read the code and run the existing offline tests.
+Use process-local synthetic probes if the existing tests miss a relevant boundary.
+Keep repository files, the Git index, and protected state unchanged.
 
-## Protected paths and data
+## Required context
 
-Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
+1. Read `AGENTS.md`, `CONTEXT.md`, and `docs/OPEN_BETA_BRIEF.md`.
+2. Read `docs/PRIVATE_MIGRATION_RUNBOOK.md`.
+3. Read the manager board and the Identity specialist brief.
+4. Review `git show da86bee`.
+5. Read both files in that commit and the existing Portfolio scope module.
 
-Protect `.env`, `config.local.yaml`, environment secrets, session secrets, and the private Yahoo permit.
+## Required proof
 
-Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
+1. Confirm that the committed diff contains exactly the two DB-5D files.
+2. Check the public interface and the no-connection boundary.
+3. Check Portfolio and Workspace ownership against staged rows.
+4. Check shared-row separation and cross-Workspace denial.
+5. Check Decimal type, value, and scale.
+6. Check date, text, enum, and null fidelity.
+7. Check an actual baseline and two fresh acceptance targets.
+8. Check all eight planned rollback cases and result privacy.
+9. Check that result states do not claim proof before the relevant event.
+10. Identify adapter limits without claiming real PostgreSQL proof.
 
-## Required failed proof
-
-Preserve the G3-CTRL-2 FAIL as the focused failed proof.
-
-Confirm that no Hyper-V VM or proven agent-control path exists.
-
-Review the design without a repair.
+Retain the original module-absence failure and the two repaired review failures as historical proof.
+Report new defects with an exact source location and a reproducible synthetic case.
+Do not repair a defect during this assignment.
 
 ## Required commands
 
-Run only these read-only commands:
+Run:
 
 ```powershell
 git status --short
-$PSVersionTable.PSVersion.ToString()
-$tools = 'wsl','ssh','ssh-keygen','ssh-keyscan','scp','vmconnect'
-$tools | ForEach-Object { [pscustomobject]@{ Name = $_; Available = [bool](Get-Command $_ -ErrorAction SilentlyContinue) } }
-$wslNames = @(wsl.exe --list --quiet 2>$null)
-[pscustomobject]@{ DistributionCount = @($wslNames | Where-Object { $_ }).Count; UbuntuPresent = [bool]($wslNames -match 'Ubuntu') }
-$vms = @(Get-VM -ErrorAction SilentlyContinue)
-[pscustomobject]@{ VMCount = $vms.Count; RunningCount = @($vms | Where-Object State -eq 'Running').Count }
-Get-NetTCPConnection -LocalPort 22,5432 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,State,OwningProcess
+git show --stat --oneline da86bee
+.venv\Scripts\python.exe -m pytest tests/test_private_migration.py -q
+.venv\Scripts\python.exe -m pytest -q
 git diff --check
 git status --short
 ```
 
-Reuse the accepted 2026-09-02 integration research record.
-
-Do not browse unless a material integration condition changed.
-
 Record protected root metadata before and after the review.
-
-Do not enumerate `data/` or `uploads/`.
-
-Do not start WSL or a VM.
-
-Make no package, key, credential, process, network, database, or external change.
+Read metadata only for the private database, WAL files, `data/`, and `uploads/`.
+Keep private rows, secrets, local configuration contents, and the owner email outside the proof.
+Do not enumerate protected directories.
+Make no package, VM, service, network, private-database, PostgreSQL, or external-service change.
 
 ## Completion criteria
 
-- The review checks the full PLAT-CTRL-4 handoff.
-- The review checks all four complete control programs.
-- The review checks POSIX shell syntax and exact command parsing.
-- The review checks each Linux user, group, directory, mode, and file creation right.
-- The review checks each dispatcher, wrapper, action, and negative boundary.
-- The review checks the process timeout, input stream, output streams, disposal, and failure cleanup.
-- The review checks the private-key and known-host ACL rules.
-- The review checks strict host-key pinning and effective SSH values for both users.
-- The review checks the transfer boundary, archive trust, checksum, and repeat-transfer behavior.
-- The review checks every PostgreSQL role, database, restore, backup, and cleanup action.
-- The review checks address inputs, subnet validation, conflict checks, and both address proofs.
-- The review checks host storage, guest iSCSI, checkpoint evidence, and recovery commands.
-- The review checks every negative test for an exact executable form and expected result.
-- The review keeps PostgreSQL backup proof separate from checkpoint proof.
-- The review confirms that every failed check blocks product, secret, and private data entry.
-- The review checks every destructive action and owner approval stop.
-- The review states why the design is PASS, FAIL, or NOT READY.
-- Protected file metadata stays unchanged.
-- No pass claim exceeds its evidence.
-- The review records each limit and unresolved risk.
-- The handoff separates Facts, Limits, Uncertainty, and Open work.
+- Classify the synthetic core as PASS or FAIL from direct evidence.
+- Classify overall G3 as PASS, FAIL, or NOT READY separately.
+- Distinguish required product repairs from real-adapter limits and owner decisions.
+- Report the smallest useful next product step.
+- Preserve the initial Git state and protected metadata.
+- Keep the handoff concise.
 
 ## Handoff
 
 ### Facts
 
-- All four proposed control programs failed review.
-- Backup and inspection cannot use the proposed directory permissions.
-- Database and transfer actions are not repeat-safe or concurrency-safe.
-- The process helper has failed-start, stream, and memory-boundary defects.
-- Only one of 24 negative tests has an executable test command.
-- No Hyper-V VM or proven control path exists.
-- Initial and final Git states match.
-- Protected root metadata stayed unchanged.
-- The review changed no repository file or host resource.
+Report classifications, findings, source locations, and command results.
 
 ### Limits
 
-- No proposed program ran in Linux.
-- No SSH, sudo, transfer, PostgreSQL, checkpoint, or recovery control received a live test.
-- The review provides local design evidence only.
+State that synthetic tests provide no real PostgreSQL, private-data, hosted, or public proof.
 
 ### Uncertainty
 
-- Some static defects need repair before installation.
-- Other behavior needs a disposable Linux environment.
-- Production-checkpoint event evidence remains unresolved.
-- Console-free recovery remains unproved.
+List only unresolved behavior relevant to the reviewed core or the next gate.
 
 ### Open work
 
-- Pause another full paper-only repair until the owner chooses the strategy.
-- The manager recommends a disposable Hyper-V Ubuntu lab with synthetic data only.
+Name the next product step and any exact owner approval it needs.

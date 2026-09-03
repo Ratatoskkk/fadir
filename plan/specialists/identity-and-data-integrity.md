@@ -40,7 +40,7 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 Assignment: DB-5D, synthetic migration core implementation.
 
-Status: Active.
+Status: Complete and accepted in commit `da86bee`. The lease is released.
 
 Implement the accepted migration module interface with synthetic dependencies.
 
@@ -52,12 +52,12 @@ Keep a real PostgreSQL rehearsal outside this task.
 
 ## Exact file lease
 
-The lease contains only these new files:
+The completed lease contained only these files:
 
 - `app/services/private_migration.py`
 - `tests/test_private_migration.py`
 
-No other file can change.
+No file lease is active. Wait for a new assignment before an edit.
 
 ## Protected paths and data
 

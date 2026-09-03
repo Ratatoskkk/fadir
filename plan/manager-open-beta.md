@@ -1,19 +1,31 @@
 # faðir open beta manager board
 
-Date: 2026-09-03
+Date: 2026-09-04
 
 This file is the only live work board. The stable role briefs define long-term specialist boundaries.
 
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-5D synthetic migration core implementation.
-- Active specialist assignments: Identity and Data Integrity owns DB-5D.
-- Active file leases: `app/services/private_migration.py`; `tests/test_private_migration.py`.
-- Proposed next assignment: Quality and Security reviews DB-5D after the specialist handoff.
+- Current status: G3-B independent review of the committed synthetic migration core.
+- Active specialist assignments: Quality and Security owns G3-B. The DB-5D lease is released.
+- Active file leases: Empty. G3-B is proof-only.
+- Proposed next assignment: Select the next bounded product step from the G3-B result.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
+
+### DB-5D completion record
+
+- Commit `da86bee` contains only the migration core and its tests.
+- The original failed proof reported an absent migration module.
+- Two review rounds found validation and proof gaps before acceptance.
+- The final standards and specification reviews passed independently.
+- The Senior Agent reproduced 18 focused tests and 272 full offline tests.
+- The suite reported one existing Starlette deprecation warning.
+- The diff check passed, and the workspace was clean after the commit.
+- This acceptance covers synthetic dependencies only, not real database adapters or PostgreSQL.
+- G3-B will classify the committed core separately from overall G3 readiness.
 
 ### Facts
 
