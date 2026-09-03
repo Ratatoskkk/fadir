@@ -434,7 +434,8 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-No specialist has an active lease.
+PLAT-LINUX-1 is active. Its exact operational lease is in the current review section above.
+No specialist has a repository write lease.
 
 ### Completed lease: APP-1
 
@@ -2345,6 +2346,8 @@ Recommendation:
 - The owner authorized the Senior Agent to commit accepted agent work after review on 2026-09-03.
 - Push, deployment, public changes, secrets, and destructive actions still need separate owner approval.
 - The owner approved the DB-5D two-file synthetic migration core lease on 2026-09-03.
+- The owner approved real Linux/PostgreSQL tests and required dependency downloads in the disposable VM on 2026-09-04.
+- PLAT-LINUX-1 records the exact source, synthetic database, package, and test resources for that approval.
 - DB-5D can use synthetic dependencies only. It cannot connect to SQLite or PostgreSQL.
 
 ### Decisions that remain open
