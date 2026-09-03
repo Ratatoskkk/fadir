@@ -38,23 +38,24 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 ## Current assignment
 
-Assignment: DB-5C, Gate 0 record and Gate 1 decision proposal.
+Assignment: DB-5D, synthetic migration core implementation.
 
-Status: Complete and accepted. The runbook lease is released.
+Status: Active.
 
-Record the approved Gate 0 scope in the migration runbook.
+Implement the accepted migration module interface with synthetic dependencies.
 
-The Gate 1 recommendations await Platform review and owner approval.
+Create no engine or database connection.
 
-Mark every recommendation as `RECOMMENDATION ONLY`.
+Use no private data, path, URL, identity, secret, or row count in a result.
 
-Keep Gate 1 and all later gates pending.
+Keep a real PostgreSQL rehearsal outside this task.
 
 ## Exact file lease
 
-The proposed lease contains only this existing file:
+The lease contains only these new files:
 
-- `docs/PRIVATE_MIGRATION_RUNBOOK.md`
+- `app/services/private_migration.py`
+- `tests/test_private_migration.py`
 
 No other file can change.
 
@@ -68,13 +69,13 @@ Keep private Portfolio rows and the owner's email address out of files, logs, pr
 
 ## Required failed proof
 
-Before the edit, prove that Gate 0 still says `PENDING OWNER APPROVAL`.
+Create `tests/test_private_migration.py` before the implementation file.
 
-Record that stale status as the focused failed proof.
+Run the focused test file before the implementation exists.
 
-Keep the failed proof in a Gate 0 approval record inside the runbook.
+The focused proof must fail because the module is absent.
 
-Do not change any other pending status to approved.
+Keep the failed-proof tests in the final diff.
 
 ## Required commands
 
@@ -82,10 +83,8 @@ Run:
 
 ```powershell
 git status --short
-rg -n "Gate 0.*PENDING OWNER APPROVAL" docs/PRIVATE_MIGRATION_RUNBOOK.md
-rg -n "Gate 0|APPROVED|Gate 1|RECOMMENDATION ONLY|Login Identity|PENDING OWNER APPROVAL" docs/PRIVATE_MIGRATION_RUNBOOK.md
-$badWhitespace = Select-String -Path docs/PRIVATE_MIGRATION_RUNBOOK.md -Pattern '[ \t]+$'
-if ($badWhitespace) { $badWhitespace; exit 1 }
+.venv\Scripts\python.exe -m pytest tests/test_private_migration.py -q
+.venv\Scripts\python.exe -m pytest -q
 git diff --check
 git status --short
 ```
@@ -98,37 +97,37 @@ Make no package installation, database connection, process change, or external c
 
 ## Completion criteria
 
-- The failed proof shows the stale Gate 0 status.
-- The runbook records Gate 0 approval on 2026-09-01.
-- The approval record states that Gate 0 accepts only the control plan.
-- Gate 1 and all later gates stay pending.
-- All private migration values stay pending.
-- The Gate 1 proposal covers the synthetic target type.
-- The proposal covers validation checks and exact acceptance limits.
-- The proposal covers rollback cases and evidence rules.
-- The proposal gives one exact future implementation lease.
-- Every proposed choice says `RECOMMENDATION ONLY`.
-- The proposal records the missing Login Identity model constraint.
-- The runbook keeps local, synthetic, private, hosted, and public proof separate.
+- `run_private_migration(source, target, plan)` is the public operation.
+- The caller supplies the open source and target dependencies.
+- The module creates no engine or connection.
+- The module copies shared rows separately from private rows.
+- The module assigns one Portfolio identifier to each private row.
+- The operation uses one target transaction.
+- The result status is `PASSED` or `ROLLED_BACK`.
+- The target state is `COMMITTED` or `ROLLED_BACK`.
+- Validation results use stable category codes and a stable order.
+- The result contains no private value, row count, identity, path, URL, or secret.
+- Planned failures roll back all writes and return a stable failure code.
+- Tests use the same public interface as a future caller.
+- Repeat runs with fresh synthetic targets return equal results and rows.
 - The diff stays inside the exact lease.
 - Protected file metadata stays unchanged.
-- The handoff lists each Gate 1 owner choice.
 - The handoff separates Facts, Limits, Uncertainty, and Open work.
 
 ## Handoff
 
 ### Facts
 
-List the changed file, failed proof, Gate 0 record, Gate 1 recommendations, and command results.
+List the changed files, public interface, failed proof, rollback cases, and command results.
 
 ### Limits
 
-List the no-connection, no-private-row, no-secret, and recommendation-only limits.
+List the no-connection, no-private-row, no-secret, and synthetic-only limits.
 
 ### Uncertainty
 
-List the Login Identity constraint and each unresolved Gate 1 choice.
+List unresolved real-database, dialect, transaction, and mapping behavior.
 
 ### Open work
 
-List each approval needed before the synthetic rehearsal implementation task.
+List each approval needed before a disposable PostgreSQL rehearsal.

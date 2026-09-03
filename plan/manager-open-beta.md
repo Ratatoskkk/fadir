@@ -7,10 +7,10 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: Product review and commit backlog. The disposable lab has sufficient strict SSH and administrator access for product tests.
-- Active specialist assignments: None.
-- Active file leases: None.
-- Proposed next assignment: Resume the Phase 3 product plan after the Senior Agent commits the accepted G2 and Phase 3 work.
+- Current status: DB-5D synthetic migration core implementation.
+- Active specialist assignments: Identity and Data Integrity owns DB-5D.
+- Active file leases: `app/services/private_migration.py`; `tests/test_private_migration.py`.
+- Proposed next assignment: Quality and Security reviews DB-5D after the specialist handoff.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
@@ -249,7 +249,7 @@ This file is the only live work board. The stable role briefs define long-term s
 
 ### Open work
 
-- Gate 1 scope, target, limits, rollback cases, evidence rules, and implementation lease remain open.
+- Gate 1 target, connection window, rehearsal limits, rollback proof, and evidence rules remain open.
 - A disposable SSH-controlled Hyper-V Ubuntu VM is the proposed Phase 3 rehearsal path.
 - A dedicated WSL2 Ubuntu distribution remains the local fallback path.
 - LAB-PREFLIGHT-1 must recommend exact VM, disk, network, ISO, and bootstrap values.
@@ -2260,6 +2260,8 @@ Recommendation:
 - The owner directed the Senior Agent to return to product work on 2026-09-03.
 - The owner authorized the Senior Agent to commit accepted agent work after review on 2026-09-03.
 - Push, deployment, public changes, secrets, and destructive actions still need separate owner approval.
+- The owner approved the DB-5D two-file synthetic migration core lease on 2026-09-03.
+- DB-5D can use synthetic dependencies only. It cannot connect to SQLite or PostgreSQL.
 
 ### Decisions that remain open
 
