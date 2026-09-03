@@ -15,6 +15,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from sqlalchemy import Engine, create_engine, event
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
@@ -30,9 +31,16 @@ def _register_decimal_adapters() -> None:
 
 
 def make_engine(db_path: Path | str) -> Engine:
+    is_url = isinstance(db_path, str) and "://" in db_path
+    engine_target = db_path if is_url else f"sqlite+pysqlite:///{db_path}"
+    is_sqlite = not is_url or make_url(db_path).get_backend_name() == "sqlite"
+
+    if not is_sqlite:
+        return create_engine(engine_target, future=True)
+
     _register_decimal_adapters()
     engine = create_engine(
-        f"sqlite+pysqlite:///{db_path}",
+        engine_target,
         future=True,
         # SQLite's Decimal handling emits a noisy warning; our adapter makes it correct.
         connect_args={"check_same_thread": False},

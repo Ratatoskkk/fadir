@@ -64,6 +64,75 @@ class ActionKind(str, enum.Enum):
     DIVIDEND = "DIVIDEND"
 
 
+class User(Base):
+    __tablename__ = "user"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=utcnow, onupdate=utcnow
+    )
+
+    workspace: Mapped["Workspace | None"] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False,
+    )
+
+
+class Workspace(Base):
+    __tablename__ = "workspace"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), nullable=True, unique=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User | None] = relationship(back_populates="workspace")
+    portfolios: Mapped[list["Portfolio"]] = relationship(
+        back_populates="workspace", cascade="all, delete-orphan"
+    )
+
+
+class Portfolio(Base):
+    __tablename__ = "portfolio"
+    __table_args__ = (
+        UniqueConstraint(
+            "workspace_id", "name", name="uq_portfolio_workspace_name"
+        ),
+        CheckConstraint(
+            "length(base_currency) = 3",
+            name="ck_portfolio_base_currency_length",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(
+        ForeignKey("workspace.id", ondelete="CASCADE"), nullable=False
+    )
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    base_currency: Mapped[str] = mapped_column(
+        String(3), nullable=False, default="TRY"
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=utcnow, onupdate=utcnow
+    )
+
+    workspace: Mapped[Workspace] = relationship(back_populates="portfolios")
+    transactions: Mapped[list["Transaction"]] = relationship(
+        back_populates="portfolio", passive_deletes="all"
+    )
+    snapshots: Mapped[list["Snapshot"]] = relationship(
+        back_populates="portfolio", passive_deletes="all"
+    )
+
+
 class Instrument(Base):
     __tablename__ = "instrument"
 
@@ -93,9 +162,23 @@ class Transaction(Base):
         CheckConstraint("price_native >= 0", name="ck_transaction_price_nonneg"),
         CheckConstraint("fx_rate_to_try > 0", name="ck_transaction_fx_positive"),
         Index("ix_transaction_instrument_date", "instrument_id", "trade_date"),
+        Index(
+            "ix_transaction_portfolio_instrument_date",
+            "portfolio_id",
+            "instrument_id",
+            "trade_date",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    portfolio_id: Mapped[int | None] = mapped_column(
+        ForeignKey(
+            "portfolio.id",
+            name="fk_transaction_portfolio_id_portfolio",
+            ondelete="CASCADE",
+        ),
+        nullable=True,
+    )
     instrument_id: Mapped[int] = mapped_column(
         ForeignKey("instrument.id", ondelete="CASCADE"), nullable=False
     )
@@ -123,6 +206,7 @@ class Transaction(Base):
     )
 
     instrument: Mapped[Instrument] = relationship(back_populates="transactions")
+    portfolio: Mapped[Portfolio | None] = relationship(back_populates="transactions")
 
     @property
     def fx_carried_forward(self) -> bool:
@@ -213,7 +297,20 @@ class Snapshot(Base):
     """Optional daily materialisation of the portfolio payload (SPEC §4)."""
 
     __tablename__ = "snapshot"
+    __table_args__ = (
+        Index("ix_snapshot_portfolio_date", "portfolio_id", "snapshot_date"),
+    )
 
     snapshot_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    portfolio_id: Mapped[int | None] = mapped_column(
+        ForeignKey(
+            "portfolio.id",
+            name="fk_snapshot_portfolio_id_portfolio",
+            ondelete="CASCADE",
+        ),
+        nullable=True,
+    )
     payload_json: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+
+    portfolio: Mapped[Portfolio | None] = relationship(back_populates="snapshots")
