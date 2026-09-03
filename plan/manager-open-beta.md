@@ -7,13 +7,47 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: Linux passed 292 offline tests. Real PostgreSQL exposed an Alembic version-field length defect.
-- Active specialist assignments: PLAT-LINUX-1, Platform and Release; DB-6A, Identity and Data Integrity.
-- Active file leases: DB-6A has three exact repository files below. Platform retains its separate operational lease.
-- Proposed next assignment: Review DB-6A and repeat the real PostgreSQL proof before the next product adapter change.
+- Current status: PLAT-LINUX-1 finished. DB-6A awaits the Senior Agent's real PostgreSQL review.
+- Active specialist assignments: None. Platform and Identity released their leases.
+- Active file leases: No specialist writes. The Senior Agent owns the DB-6A verification resources below.
+- Proposed next assignment: Accept and commit DB-6A after the real database proof, then address the remaining adapter gap.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
+
+### PLAT-LINUX-1 result and DB-6A verification
+
+- Setup passed on Ubuntu 24.04.4 with PostgreSQL 16.15, Python 3.12.3, Node 18.19.1, and npm 9.2.0.
+- The 79-file archive hash is `d1cce27777cf0646e6adbafc8d6d0383ba03553a0a10cdaa6a11178400a6a0cd`.
+- All transferred source files matched after tests. The exact host transfer archive was removed.
+- The original Linux suite passed 292 tests and deselected one live test. The frontend build passed.
+- PostgreSQL used local peer access and listened on loopback only. The test role had no elevated database flags.
+- Real Decimal and rollback primitives passed. They do not prove product ownership or migration adapters.
+- The failed Alembic transaction left zero public tables and no version table.
+- The test directory, package environment, cluster, role, and synthetic database remain for further tests.
+- Platform reported unchanged protected host metadata and unchanged key/trust metadata.
+- Two npm debug logs appeared outside the exact test directory because two commands lacked the scoped cache option.
+- The logs remain under `/home/fadir-agent/.npm/_logs/`; this deviation does not block the product repair.
+- Identity's repair passed 24 focused tests and 308 offline tests. Two live tests were deselected from the full suite.
+- The Senior Agent independently reproduced the 24 focused tests.
+- The repair preserves all revision IDs and uses Alembic's documented version-table hook, available since version 1.14.
+- Source: https://alembic.sqlalchemy.org/en/latest/api/ddl.html#alembic.ddl.impl.DefaultImpl.version_table_impl ; retrieved 2026-09-04, documentation version 1.19.1.
+- The hook changes newly created PostgreSQL version tables only. It does not alter an existing narrow version table.
+
+The Senior Agent will verify the frozen three-file DB-6A candidate before a commit.
+The exact guest review directory is `/home/fadir-agent/fadir-tests/db6a-review`.
+Extract the already verified `source.tar` there, then apply only the three leased candidate files.
+The exact host archive is `C:\Users\doguk\AppData\Local\Temp\fadir-db6a-review.tar`.
+Create it only if absent, verify its manifest and hash, and remove only that owned archive after transfer.
+The guest archive is `/home/fadir-agent/fadir-tests/db6a-review-candidate.tar`.
+Keep the original Platform source and evidence unchanged.
+Reuse the installed venv. Scope caches and temporary files inside the guest review directory.
+Run the full suite with `-m "not live"`.
+Run `tests/test_postgresql_migrations.py` alone with `-m live` and its explicit synthetic database opt-in.
+Only the generated `db6a_<UUID>` schema in `fadir_test` can change during that PostgreSQL test.
+The test must verify its database, schema OID, owner, and task marker before its approved schema cleanup.
+Record the candidate hashes, real result, schema cleanup, and final source equality before acceptance.
+Keep live provider calls, private data, public access, and other database objects outside this review.
 
 ### DB-6A migration version-field repair
 
@@ -465,8 +499,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-PLAT-LINUX-1 is active. Its exact operational lease is in the current review section above.
-DB-6A is active. Its three-file repository lease is in the current review section above.
+No specialist lease is active. The Senior Agent owns the DB-6A verification resources in the current review section.
 
 ### Completed lease: APP-1
 

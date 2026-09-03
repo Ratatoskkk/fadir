@@ -40,7 +40,7 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 Assignment: DB-6A, PostgreSQL migration version-field repair.
 
-Status: Active. The real PostgreSQL upgrade failed on the 35-character second revision.
+Status: The candidate is complete. The write lease is released for Senior review and real PostgreSQL proof.
 
 The DB-6A section in `plan/manager-open-beta.md` defines the exact lease and completion criteria.
 Read that section before any change.

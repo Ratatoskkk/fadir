@@ -38,9 +38,9 @@ Keep local, hosted, and public evidence in separate sections.
 
 ## Current assignment
 
-Assignment: PLAT-LINUX-1.
+Assignment: None. PLAT-LINUX-1 is complete and its operational lease is released.
 
-Status: The owner approved disposable VM setup and real Linux/PostgreSQL product tests on 2026-09-04.
+Status: Setup, 292 offline tests, the frontend build, and database primitives passed. The real migration failed at revision storage.
 
 The `PLAT-LINUX-1 approved setup and proof` section in `plan/manager-open-beta.md` is the authoritative lease.
 Read that section before any command. It names each resource, source revision, network limit, and cleanup action.
