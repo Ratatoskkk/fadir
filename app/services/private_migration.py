@@ -26,6 +26,23 @@ class TargetConstraintConflictError(RuntimeError):
     pass
 
 
+class TargetWriteError(RuntimeError):
+    """Carry write progress from memory, without a query after failure."""
+
+    def __init__(self, *, private_rows_written: bool) -> None:
+        super().__init__("Target write failed")
+        self.private_rows_written = private_rows_written
+
+
+class MigrationOutcomeUnknown(RuntimeError):
+    """Require explicit outcome verification before retry or cleanup."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Migration outcome is unknown. Do not retry or clean up automatically."
+        )
+
+
 class MigrationStatus(str, Enum):
     PASSED = "PASSED"
     ROLLED_BACK = "ROLLED_BACK"
@@ -120,13 +137,22 @@ def _rollback_result(
     states: Mapping[str, ValidationState] | None = None,
 ) -> MigrationResult:
     completed_states = dict(states or {})
-    transaction.rollback()
+    try:
+        transaction.rollback()
+    except MigrationOutcomeUnknown:
+        raise
+    except Exception:
+        raise MigrationOutcomeUnknown() from None
+    try:
+        remaining_rows = transaction.has_inserted_rows()
+    except MigrationOutcomeUnknown:
+        raise
+    except Exception:
+        raise MigrationOutcomeUnknown() from None
+    if remaining_rows is not False:
+        raise MigrationOutcomeUnknown()
     completed_states["ROLLBACK"] = ValidationState.PASSED
-    completed_states["PARTIAL_TARGET_STATE"] = (
-        ValidationState.FAILED
-        if transaction.has_inserted_rows()
-        else ValidationState.PASSED
-    )
+    completed_states["PARTIAL_TARGET_STATE"] = ValidationState.PASSED
     return MigrationResult(
         status=MigrationStatus.ROLLED_BACK,
         validation_results=_validation_results(completed_states),
@@ -248,6 +274,19 @@ def run_private_migration(
     target: MigrationTarget,
     plan: MigrationPlan,
 ) -> MigrationResult:
+    """Return confirmed outcomes; raise sanitized uncertainty without cleanup."""
+    try:
+        return _run_private_migration(source, target, plan)
+    except MigrationOutcomeUnknown:
+        pass
+    raise MigrationOutcomeUnknown() from None
+
+
+def _run_private_migration(
+    source: MigrationSource,
+    target: MigrationTarget,
+    plan: MigrationPlan,
+) -> MigrationResult:
     transaction = target.begin()
 
     if type(plan.portfolio_id) is not int or plan.portfolio_id <= 0:
@@ -255,11 +294,17 @@ def run_private_migration(
 
     try:
         shared_rows = tuple(dict(row) for row in source.read_shared_rows())
+    except MigrationOutcomeUnknown:
+        raise
     except Exception:
         return _rollback_result(transaction, "SOURCE_READ_FAILED")
 
     try:
         transaction.write_shared_rows(shared_rows)
+    except MigrationOutcomeUnknown:
+        raise
+    except TargetConstraintConflictError:
+        return _rollback_result(transaction, "TARGET_CONSTRAINT_CONFLICT")
     except Exception:
         return _rollback_result(transaction, "TARGET_WRITE_FAILED_AFTER_SHARED")
 
@@ -267,6 +312,8 @@ def run_private_migration(
         source_private_rows = tuple(
             dict(row) for row in source.read_private_rows()
         )
+    except MigrationOutcomeUnknown:
+        raise
     except Exception:
         return _rollback_result(transaction, "SOURCE_READ_FAILED")
 
@@ -282,15 +329,19 @@ def run_private_migration(
 
     try:
         transaction.write_private_rows(private_rows)
+    except MigrationOutcomeUnknown:
+        raise
     except TargetConstraintConflictError:
         return _rollback_result(transaction, "TARGET_CONSTRAINT_CONFLICT")
-    except Exception:
+    except TargetWriteError as error:
         failure_code = (
             "TARGET_WRITE_FAILED_AFTER_PRIVATE"
-            if transaction.read_staged_private_rows()
+            if error.private_rows_written
             else "TARGET_WRITE_FAILED_AFTER_SHARED"
         )
         return _rollback_result(transaction, failure_code)
+    except Exception:
+        return _rollback_result(transaction, "TARGET_WRITE_FAILED")
 
     try:
         validation_states = _precommit_validation(
@@ -299,6 +350,8 @@ def run_private_migration(
             shared_rows,
             private_rows,
         )
+    except MigrationOutcomeUnknown:
+        raise
     except Exception:
         return _rollback_result(transaction, "VALIDATION_FAILED")
 
@@ -317,12 +370,10 @@ def run_private_migration(
 
     try:
         transaction.commit()
+    except MigrationOutcomeUnknown:
+        raise
     except Exception:
-        return _rollback_result(
-            transaction,
-            "TARGET_COMMIT_FAILED",
-            validation_states,
-        )
+        raise MigrationOutcomeUnknown() from None
 
     return MigrationResult(
         status=MigrationStatus.PASSED,

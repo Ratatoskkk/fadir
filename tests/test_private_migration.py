@@ -4,10 +4,12 @@ from datetime import date
 from decimal import Decimal
 from enum import Enum
 from hashlib import sha256
+import traceback
 from typing import Mapping, Sequence, cast
 
 import pytest
 
+from app.services import private_migration as migration
 from app.services.private_migration import (
     VALIDATION_CODES,
     MigrationPlan,
@@ -15,6 +17,7 @@ from app.services.private_migration import (
     MigrationStatus,
     TargetConstraintConflictError,
     TargetState,
+    TargetWriteError,
     ValidationState,
     run_private_migration,
 )
@@ -133,7 +136,7 @@ class SyntheticTransaction:
         if self._target.failure_mode == "constraint":
             raise TargetConstraintConflictError
         if self._target.failure_mode == "write_after_shared":
-            raise RuntimeError("planned write failure after shared rows")
+            raise TargetWriteError(private_rows_written=False)
         for row in rows:
             staged_row = dict(row)
             if (
@@ -148,7 +151,7 @@ class SyntheticTransaction:
                 staged_row["quantity"] = Decimal("2.5")
             self._private_rows.append(staged_row)
             if self._target.failure_mode == "write_after_private":
-                raise RuntimeError("planned write failure after one private row")
+                raise TargetWriteError(private_rows_written=True)
 
     def read_staged_shared_rows(self) -> Sequence[Mapping[str, object]]:
         self._target.staged_shared_reads += 1
@@ -533,3 +536,238 @@ def test_result_contains_only_control_evidence() -> None:
         "fadir.db",
     ):
         assert protected_value not in result_text
+
+
+def test_write_failure_rolls_back_before_any_target_read(monkeypatch) -> None:
+    target = SyntheticTarget()
+    events = []
+    original_rollback = SyntheticTransaction.rollback
+
+    def fail_write(self, rows):
+        events.append("write")
+        raise RuntimeError("synthetic-write-detail")
+
+    def failed_transaction_read(self):
+        events.append("read")
+        raise RuntimeError("synthetic-aborted-transaction")
+
+    def rollback(self):
+        events.append("rollback")
+        original_rollback(self)
+
+    monkeypatch.setattr(SyntheticTransaction, "write_private_rows", fail_write)
+    monkeypatch.setattr(
+        SyntheticTransaction, "read_staged_private_rows", failed_transaction_read
+    )
+    monkeypatch.setattr(SyntheticTransaction, "rollback", rollback)
+
+    try:
+        result = run_private_migration(SyntheticSource(), target, migration_plan())
+    except Exception as error:
+        error.add_note(f"rollback_calls={target.rollback_calls}; events={events}")
+        raise
+
+    assert events == ["write", "rollback"]
+    assert result.status is MigrationStatus.ROLLED_BACK
+    assert result.failure_code == "TARGET_WRITE_FAILED"
+    assert target.rollback_calls == 1
+    assert target.transaction is not None
+    assert not target.transaction.has_inserted_rows()
+
+
+def assert_sanitized_unknown(error: Exception | None) -> None:
+    assert error is not None, "An unconfirmed outcome must not return a normal result"
+    assert type(error).__name__ == "MigrationOutcomeUnknown"
+    assert isinstance(error, migration.MigrationOutcomeUnknown)
+    assert str(error) == (
+        "Migration outcome is unknown. Do not retry or clean up automatically."
+    )
+    assert error.__cause__ is None
+    assert error.__context__ is None
+    assert "synthetic-secret" not in "".join(traceback.format_exception(error))
+    assert "synthetic-secret" not in repr(error)
+
+
+def test_lost_commit_reply_never_reports_rollback(monkeypatch) -> None:
+    target = SyntheticTarget()
+    original_commit = SyntheticTransaction.commit
+    original_rollback = SyntheticTransaction.rollback
+
+    def commit_then_lose_reply(self):
+        original_commit(self)
+        raise RuntimeError("synthetic-secret-commit-reply")
+
+    def rollback_cannot_undo_commit(self):
+        shared = list(target.shared_rows)
+        private = list(target.private_rows)
+        original_rollback(self)
+        target.shared_rows = shared
+        target.private_rows = private
+
+    monkeypatch.setattr(SyntheticTransaction, "commit", commit_then_lose_reply)
+    monkeypatch.setattr(SyntheticTransaction, "rollback", rollback_cannot_undo_commit)
+    result = None
+    caught = None
+    try:
+        result = run_private_migration(SyntheticSource(), target, migration_plan())
+    except Exception as error:
+        caught = error
+
+    assert result is None, "The core reported rollback while committed rows remain"
+    assert_sanitized_unknown(caught)
+    assert target.begin_calls == 1
+    assert target.rollback_calls == 0
+    assert target.transaction_state is TargetState.COMMITTED
+    assert target.shared_rows == list(SYNTHETIC_SHARED_ROWS)
+    assert target.private_rows == list(assigned_private_rows())
+
+
+@pytest.mark.parametrize(
+    "failure", ["rollback", "verification", "remaining-rows", "invalid-verification"]
+)
+def test_unconfirmed_rollback_raises_sanitized_unknown(monkeypatch, failure) -> None:
+    target = SyntheticTarget(failure_mode="write_after_shared")
+    verification_calls = []
+    original_rollback = SyntheticTransaction.rollback
+    original_verify = SyntheticTransaction.has_inserted_rows
+
+    def rollback(self):
+        if failure == "rollback":
+            target.rollback_calls += 1
+            raise RuntimeError("synthetic-secret-rollback")
+        if failure == "remaining-rows":
+            target.rollback_calls += 1
+            return
+        original_rollback(self)
+
+    def verify(self):
+        verification_calls.append("verify")
+        if failure == "verification":
+            raise RuntimeError("synthetic-secret-verification")
+        if failure == "invalid-verification":
+            return None
+        return original_verify(self)
+
+    monkeypatch.setattr(SyntheticTransaction, "rollback", rollback)
+    monkeypatch.setattr(SyntheticTransaction, "has_inserted_rows", verify)
+    caught = None
+    result = None
+    try:
+        result = run_private_migration(SyntheticSource(), target, migration_plan())
+    except Exception as error:
+        caught = error
+
+    assert result is None, "An unverified rollback must not return a normal result"
+    assert_sanitized_unknown(caught)
+    assert target.begin_calls == 1
+    assert target.rollback_calls == 1
+    assert len(verification_calls) == (0 if failure == "rollback" else 1)
+
+
+def test_shared_constraint_rejection_keeps_its_failure_category(monkeypatch) -> None:
+    def reject_constraint(self, rows):
+        raise TargetConstraintConflictError("synthetic-secret-constraint")
+
+    monkeypatch.setattr(SyntheticTransaction, "write_shared_rows", reject_constraint)
+    target = SyntheticTarget()
+    result = run_private_migration(SyntheticSource(), target, migration_plan())
+
+    assert result.failure_code == "TARGET_CONSTRAINT_CONFLICT"
+    assert_rolled_back_without_rows(result, target)
+
+
+@pytest.mark.parametrize(
+    ("owner", "method"),
+    [
+        (SyntheticTarget, "begin"),
+        (SyntheticSource, "read_shared_rows"),
+        (SyntheticTransaction, "write_shared_rows"),
+        (SyntheticSource, "read_private_rows"),
+        (SyntheticTransaction, "write_private_rows"),
+        (SyntheticTransaction, "read_staged_shared_rows"),
+        (SyntheticTransaction, "read_staged_private_rows"),
+        (SyntheticTransaction, "read_private_rows_for_workspace"),
+        (SyntheticTransaction, "repeatability_signature"),
+        (SyntheticTransaction, "commit"),
+        (SyntheticTransaction, "rollback"),
+        (SyntheticTransaction, "has_inserted_rows"),
+    ],
+)
+def test_typed_unknown_bypasses_normal_failure_paths(monkeypatch, owner, method) -> None:
+    during_rollback = method in ("rollback", "has_inserted_rows")
+    target = SyntheticTarget(
+        failure_mode="write_after_shared" if during_rollback else None
+    )
+    calls = []
+
+    def unknown(self, *args):
+        calls.append(method)
+        if method == "rollback":
+            target.rollback_calls += 1
+        raise migration.MigrationOutcomeUnknown() from RuntimeError("synthetic-secret")
+
+    monkeypatch.setattr(owner, method, unknown)
+    caught = None
+    try:
+        run_private_migration(
+            SyntheticSource(),
+            target,
+            migration_plan(
+                expected_signature="baseline"
+                if method == "repeatability_signature"
+                else None
+            ),
+        )
+    except Exception as error:
+        caught = error
+
+    assert_sanitized_unknown(caught)
+    assert calls == [method]
+    assert target.rollback_calls == int(during_rollback)
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected_code"),
+    [
+        ("write_after_shared", "TARGET_WRITE_FAILED_AFTER_SHARED"),
+        ("write_after_private", "TARGET_WRITE_FAILED_AFTER_PRIVATE"),
+    ],
+)
+def test_typed_write_progress_needs_no_failed_transaction_read(
+    monkeypatch, mode, expected_code,
+) -> None:
+    target = SyntheticTarget(failure_mode=mode)
+
+    def reject_read(self):
+        raise AssertionError("A failed transaction must not supply write progress")
+
+    monkeypatch.setattr(SyntheticTransaction, "read_staged_private_rows", reject_read)
+    result = run_private_migration(SyntheticSource(), target, migration_plan())
+
+    assert result.failure_code == expected_code
+    assert result.status is MigrationStatus.ROLLED_BACK
+    assert target.rollback_calls == 1
+    assert target.transaction is not None
+    assert not target.transaction.has_inserted_rows()
+
+
+def test_generic_commit_failure_is_unknown_without_durable_state_proof(monkeypatch) -> None:
+    target = SyntheticTarget()
+
+    def fail_commit(self):
+        raise RuntimeError("synthetic-secret-unconfirmed-commit")
+
+    monkeypatch.setattr(SyntheticTransaction, "commit", fail_commit)
+    caught = None
+    try:
+        run_private_migration(SyntheticSource(), target, migration_plan())
+    except Exception as error:
+        caught = error
+
+    assert_sanitized_unknown(caught)
+    assert target.begin_calls == 1
+    assert target.rollback_calls == 0
+    assert target.shared_rows == []
+    assert target.private_rows == []
+    assert target.transaction is not None
+    assert target.transaction.has_inserted_rows()
