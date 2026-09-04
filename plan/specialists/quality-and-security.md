@@ -40,19 +40,17 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 ## Current assignment
 
-Assignment: G3-RECORD, record the accepted data gate.
+Assignment: None. ID-1-REVIEW is complete.
 
-Status: Active. Read the G3 acceptance and G3-RECORD section on the live board.
+Status: Idle. The Senior recorded all six ID-1 contract corrections on the live board.
 
-Exact file lease: `docs/PRIVATE_MIGRATION_RUNBOOK.md` only.
+Exact file lease: Empty.
 Operational write lease: Empty.
-Record the dated Gate 2 PASS and conditional G3 PASS. Preserve private gates and proof limits.
+Wait for the next exact assignment. G3 remains passed; ID-1 has no runtime acceptance yet.
 
 ## Completion criteria
 
-1. Correct current pending-Gate-2 wording in the leased file.
-2. Preserve historical records, unknown-outcome controls, and retained-artifact limits.
-3. Return the one-file diff with Facts, Limits, Uncertainty, and Open work.
+The next assignment will define its own completion criteria on the live board.
 
 Send the handoff to the Senior task and include it in the final response.
 This is not an SSH, public release, or private migration review.

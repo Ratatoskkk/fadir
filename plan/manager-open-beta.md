@@ -7,15 +7,57 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 4. Guest access and identity.
-- Current status: Gate 2 and conditional G3 passed. ID-1-DESIGN is complete; the Guest foundation awaits engineering review.
-- Active specialist assignments: ID-1-REVIEW, Quality and Security. Identity is idle.
-- Active file leases: None. The engineering review has an empty write lease.
-- Proposed next assignment: Review the Guest design, then assign its exact implementation lease.
+- Current status: G3 passed. The Senior accepted all six ID-1 review corrections and assigned the Guest foundation.
+- Active specialist assignments: ID-1, Identity and Data Integrity. Quality is idle.
+- Active file leases: Identity owns the seven files listed under the ID-1 implementation boundary below.
+- Proposed next assignment: Review ID-1 code and real PostgreSQL evidence before a commit.
 - Next release gate: G4, Guest access, Login Identity, transitions, and User Sessions.
 
 ## Current review
 
 ### ID-1 foundation design and engineering review
+
+ID-1-REVIEW result: NOT READY before six contract corrections. The review lease is released.
+The Senior accepts all six corrections below. They supersede conflicting details in the original proposal and authorize ID-1 implementation.
+
+1. Support PostgreSQL+psycopg access operations only. Reject other backends before access or writes; retain SQLite schema compatibility.
+2. The service acquires locks, not the caller. Require an active caller-owned root transaction, one bind, READ COMMITTED, and actual autocommit off.
+3. Use Core column reads on the supplied Session connection. Reject affected pending ORM changes; preserve unrelated pending and flushed work.
+4. Use aware timestamps for new columns and normalize to UTC. Sample a trusted clock callable after locks; reject naive or backward values.
+5. Issue Workspace and GuestAccess inside one Core connection savepoint. Attempt issuance once; a digest collision must leave no partial Workspace.
+6. Self-revoke by token, not a supplied Workspace identifier. Repeated revocation is a no-op without an access-time touch.
+
+Additional exact controls from the same review:
+
+- The initial digest lookup finds a candidate only. Lock Workspace, then GuestAccess, then recheck digest, revocation, and User ownership.
+- Use NOWAIT locks and a stable busy error. A service-owned savepoint must contain lock errors and preserve the outer transaction.
+- Keep successful locks until the caller ends the outer transaction. Returned identifiers carry no authority after that transaction.
+- Change no transaction mode silently. Reject nested caller transactions, autocommit, unsupported isolation, or invalid connections.
+- Read current database columns rather than cached ORM objects. Do not flush or overwrite caller changes during access checks.
+- Add a named database check for a 32-byte digest and a named unique constraint.
+- Accept only canonical 43-character ASCII base64url tokens that decode to exactly 32 bytes. Bound input before decoding or lookup.
+- Use the existing Pydantic SecretStr for issuance, excluded from normal serialization. Permit deliberate secret extraction only.
+- Raise stable errors outside the original database exception context. Exclude SQL, parameters, tokens, digests, and private details.
+- Caller and test database logging must suppress sensitive parameters. No service retry, caller commit, or caller rollback is permitted.
+- A failed savepoint recovery must report an unconfirmed operation, not claim a safe outer transaction.
+- Clock input must be trusted and nondecreasing. This slice does not guarantee permanent expiry after an undetected system clock rollback.
+- Deny at exactly 90 elapsed days. A time before creation or last access gives denial without a touch.
+- Claim remains unimplemented. Tests may simulate its trusted, ordered, atomic User attachment and Guest revocation only.
+
+Required proof groups:
+
+1. Preserve the absent-model/service failure. Prove digest constraints, foreign keys, cascade, and no User or Portfolio at issue.
+2. Force a digest collision. Prove no partial Workspace, no escaped token, and preservation of unrelated pending and flushed caller work.
+3. Test token parsing, unknown inputs, representations, serialization, logs, and exception redaction.
+4. Test exact expiry, sliding touch, non-UTC database timezone, naive/backward time, and clock sampling after locks.
+5. Preload stale ORM state; commit revoke or simulated Claim elsewhere; require fresh-state denial.
+6. Test caller commit/rollback, unsafe modes, SQLite rejection, and access-time rollback.
+7. Test authorize/revoke and authorize/simulated-Claim in both orders, busy recovery, and repeated authorization with bounded workers.
+8. Prove SQLite and PostgreSQL upgrade, downgrade, and second upgrade. Preserve previous migration and adapter assertions.
+
+Implementation rules: Record the initial red proof before product code. Keep each new behavioral failure in the final tests.
+Use the seven-file lease and the activated operational scope below. Report the final diff and evidence for Senior review.
+Keep HTTP, public access, provider calls, private data, and physical Guest deletion outside ID-1.
 
 Facts: Identity completed ID-1-DESIGN without a file or operational change. The Senior reviewed its source inventory and proposed boundary.
 Chosen direction for review: a Guest-only internal foundation. It reuses Workspace, Portfolio, PortfolioScope, SQLAlchemy, and Python standard libraries.
@@ -30,12 +72,12 @@ Proposed contract:
 - Generate 32 random bytes through the standard secrets module. Store only a SHA-256 digest of the opaque token.
 - Return the raw token only at issue. Exclude it from representations, errors, logs, and normal serialization.
 - Reject malformed or oversized tokens before lookup. A valid record must be unrevoked and belong to a Workspace without a User.
-- Deny access at the exact 90-day inactivity boundary. Touch only successful access; never move access time backward or revive expired access.
-- Preserve caller transaction ownership. Acquire Workspace then GuestAccess locks and hold them through the private operation.
+- Deny access at the exact 90-day inactivity boundary. Touch only successful access under the reviewed clock precondition.
+- Preserve caller transaction ownership. The service acquires Workspace then GuestAccess locks and holds them through the private operation.
 - Later Claim must use the same lock order and atomically revoke Guest access when it attaches a User.
-- PostgreSQL row locks and SQLite write transaction rules require separate explicit tests. No implicit commit or rollback of caller work is permitted.
+- Prove PostgreSQL row locks and explicit SQLite service rejection. No implicit commit or rollback of caller work is permitted.
 
-Proposed seven-file implementation boundary, not an active lease:
+Active seven-file ID-1 implementation boundary:
 
 1. `app/models.py`
 2. `app/services/guest_access.py` (new)
@@ -52,7 +94,7 @@ Full offline tests use `-m "not live"`. Real tests require their own bounded ope
 
 Engineering Review Handoff:
 
-- Quality owns ID-1-REVIEW with an empty repository and operational write lease. Read Identity's complete design handoff.
+- ID-1-REVIEW is complete. Its empty repository and operational write lease is released; the corrections above record its result.
 - Use the engineering review skill to review scope, architecture, tests, performance, and failure modes.
 - Resolve whether the service must acquire locks itself, rather than require callers to reproduce a security-critical sequence.
 - Define the SQLite transaction precondition, ORM stale-state handling, UTC storage/round-trip rules, and clock rollback behavior.
@@ -76,7 +118,37 @@ Later route integration prerequisites:
 
 Limits: This is a design, not runtime or public access proof. Physical deletion, Google, email, User Sessions, Claim UI, Transfer, and Merge remain later work.
 Uncertainty: Lock contention, browser coordination, inactivity from polling, and concrete UTC behavior still need proof.
-Open work: Complete ID-1-REVIEW, then record the accepted exact implementation and operational leases.
+Open work: Implement ID-1, then review its code and real PostgreSQL evidence. Keep all later HTTP prerequisites closed.
+
+Active operational scope for ID-1:
+
+- Use the existing `fadir_test` database, `fadir-agent` role, strict SSH controls, and existing Python environment.
+- Source baseline: `720fb75`. Later Senior-only plan commits do not change this product baseline.
+- Use `/home/fadir-agent/fadir-tests/id1-foundation/` for source, synthetic fixtures, temporary files, and XML evidence.
+- Use `C:/Users/doguk/AppData/Local/Temp/fadir-id1-candidate.tar` and `/home/fadir-agent/fadir-tests/id1-candidate.tar` for the inspected source archive.
+- Require initial absence of these new paths. Preserve all DB-6A/DB-6B resources and the blocked host archive.
+- Use the existing public source allowlist from DB-6B, plus the exact seven candidate files. Record the baseline commit and archive hash.
+- Inspect every archive entry before transfer. Verify the guest hash before extraction and each updated candidate file before tests.
+- Keep packages, services, roles, database configuration, SSH, VM settings, and checkpoints unchanged.
+- New Guest tests use fresh `id1_<32 hexadecimal characters>` schemas, unique markers, recorded OIDs, and owner/database checks.
+- Schema removal is limited to the test's own verified synthetic schema. Unknown state requires verification before cleanup.
+- The existing migration-cycle test can use its existing DB-6A marked-schema controls with the new candidate head.
+- Set temporary-directory variables and a fresh explicit pytest basetemp below the task root on every run.
+- Run full offline tests with `-m "not live"`. Run live tests only in the two exact PostgreSQL files in the proposed lease.
+- Bound concurrent tests with server lock/statement timeouts, worker joins, and a whole-command timeout.
+- Retain archives and evidence for review. This assignment grants no host-archive or prior-artifact deletion.
+
+Additional design sources, retrieved 2026-09-04:
+
+| Source | Version scope and supported claim | Limit |
+|---|---|---|
+| https://docs.python.org/3.12/library/secrets.html | Python 3.12 documentation: token_urlsafe accepts an explicit random byte count. | VM uses 3.12.3; runtime proof remains required. |
+| https://docs.python.org/3.12/library/hashlib.html | Python 3.12 documentation: SHA-256 and byte digests are standard library primitives. | This does not prove the service's secret handling. |
+| https://www.postgresql.org/docs/16/explicit-locking.html | PostgreSQL 16: row locks persist to transaction end; waiting reads can receive updated rows. | Test actual interleavings on PostgreSQL 16.15. |
+| https://docs.sqlalchemy.org/en/20/orm/queryguide/api.html#populate-existing | SQLAlchemy 2.0: cached ORM objects need explicit refresh; populate_existing can replace pending changes. | Prefer a contract that preserves caller state; verify the chosen reads. |
+| https://docs.sqlalchemy.org/en/20/orm/session_transaction.html#using-savepoint | SQLAlchemy 2.0.52: Session savepoints flush pending ORM state; Core connection savepoints provide a lower-level boundary. | Prove preservation of pending caller work. |
+| https://www.postgresql.org/docs/16/datatype-datetime.html | PostgreSQL 16 supports timezone-aware timestamp columns. | Prove UTC behavior under a non-UTC database timezone. |
+| https://docs.pydantic.dev/latest/api/types/#pydantic.types.SecretStr | Current Pydantic documents a masked secret type with explicit extraction. | Configure serialization exclusion and test it; a wrapper alone is insufficient. |
 
 ### G3 acceptance and G3-RECORD
 
@@ -923,7 +995,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-ID-1-REVIEW has an empty write lease. The current review section defines the assignment.
+ID-1 owns seven repository files and the exact operational scope in the current review section.
 
 ### Completed lease: APP-1
 

@@ -38,23 +38,24 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 ## Current assignment
 
-Assignment: ID-1-DESIGN, Guest access design.
+Assignment: ID-1, internal Guest access foundation.
 
-Status: Active with an empty repository and operational write lease.
+Status: Active with the seven-file and operational leases on the live board.
 
-The ID-1-DESIGN section in `plan/manager-open-beta.md` defines the scope and completion criteria.
+The ID-1 foundation section in `plan/manager-open-beta.md` defines the scope and completion criteria.
 Read that section before any change.
 
-Compare the listed approaches. Recommend the smallest complete Guest access boundary.
-Return exact implementation files, tests, route-scope inventory, and an Engineering Review Handoff.
+Implement the six accepted review corrections and all additional controls before the older proposal details.
+Keep the service PostgreSQL-only and retain SQLite model/migration compatibility. Expose no HTTP route or cookie.
 
 ## Proof and handoff
 
-Use source reads and official documentation only. Keep the design in the task handoff.
+Preserve the focused failed proof before product code. Use real PostgreSQL for authorization and concurrency tests.
+Run the full offline suite with an explicit non-live filter. Keep all proof inside the operational lease.
 
 Protect the root private database, WAL files, uploads, local overrides, secrets, and the owner's email address.
-Create no product change, test artifact, database, package, or VM resource.
-The Senior Agent records and reviews the design before an implementation lease.
+Change only the seven leased files. Preserve caller work, secret boundaries, and earlier regressions.
+The Senior Agent reviews and commits accepted work.
 
 Separate Facts, Limits, Uncertainty, and Open work.
 Send the final handoff to the Senior task as well as the final response.
