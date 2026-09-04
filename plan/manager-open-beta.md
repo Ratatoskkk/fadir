@@ -17,6 +17,16 @@ This file is the only live work board. The stable role briefs define long-term s
 
 ### ID-1 foundation design and engineering review
 
+Implementation review in progress:
+
+- The initial retained proof had two failures: the GuestAccess model and service were absent.
+- Identity reported 37 focused offline tests passed. Real PostgreSQL proof had not run at that handoff.
+- Senior source review found that the yield fixture cannot catch an unconfirmed exception from the test body.
+- The installed pytest teardown resumes the fixture with next(iterator), not throw(test_error); the cleanup flag therefore misses that failure.
+- Identity must retain a focused regression and repair the cleanup gate before live proof, within the existing test-file lease.
+- Identity also found that the authorize-first Claim contender tests require again instead of the trusted Claim simulation.
+- The candidate remains unfrozen. No product acceptance or commit is authorized until the corrected proof and review pass.
+
 ID-1-REVIEW result: NOT READY before six contract corrections. The review lease is released.
 The Senior accepts all six corrections below. They supersede conflicting details in the original proposal and authorize ID-1 implementation.
 
