@@ -38,31 +38,23 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 ## Current assignment
 
-Assignment: DB-6B, real database migration adapters.
+Assignment: ID-1-DESIGN, Guest access design.
 
-Status: Accepted in `5315496` after Senior review and independent VM tests. The lease is released.
+Status: Active with an empty repository and operational write lease.
 
-The DB-6B section in `plan/manager-open-beta.md` defines the exact lease and completion criteria.
+The ID-1-DESIGN section in `plan/manager-open-beta.md` defines the scope and completion criteria.
 Read that section before any change.
 
-Exact repository file lease:
-
-- `app/services/private_migration_adapters.py` (new)
-- `tests/test_private_migration_adapters.py` (new)
-- `tests/test_postgresql_private_migration.py` (new)
-
-Implement the accepted thin-adapter design and its transaction controls.
-Reuse the accepted core without changes. Keep failure injection inside tests.
+Compare the listed approaches. Recommend the smallest complete Guest access boundary.
+Return exact implementation files, tests, route-scope inventory, and an Engineering Review Handoff.
 
 ## Proof and handoff
 
-Preserve the focused failed proof before the product edit.
-Run the focused and full offline suites with an explicit `-m "not live"` filter.
-Use the board's exact DB-6B operational lease for real synthetic PostgreSQL tests.
+Use source reads and official documentation only. Keep the design in the task handoff.
 
 Protect the root private database, WAL files, uploads, local overrides, secrets, and the owner's email address.
-Check protected path metadata before and after the work without any private-row read.
-Keep the diff inside the three-file lease. The Senior Agent reviews and commits accepted work.
+Create no product change, test artifact, database, package, or VM resource.
+The Senior Agent records and reviews the design before an implementation lease.
 
 Separate Facts, Limits, Uncertainty, and Open work.
 Send the final handoff to the Senior task as well as the final response.

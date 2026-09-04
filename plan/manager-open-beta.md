@@ -6,18 +6,50 @@ This file is the only live work board. The stable role briefs define long-term s
 
 ## Coordination state
 
-- Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-6B is accepted in `5315496`. G3 awaits Quality's final evidence review.
-- Active specialist assignments: G3-REVIEW, Quality and Security; ID-1-DESIGN, Identity and Data Integrity.
-- Active file leases: None. Both assignments have empty write leases.
-- Proposed next assignment: Record the G3 verdict, then prepare Phase 4 if the gate passes.
-- Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
+- Current phase: 4. Guest access and identity.
+- Current status: Gate 2 and conditional G3 passed Quality review. ID-1-DESIGN prepares the first Guest access slice.
+- Active specialist assignments: G3-RECORD, Quality and Security; ID-1-DESIGN, Identity and Data Integrity.
+- Active file leases: Quality owns `docs/PRIVATE_MIGRATION_RUNBOOK.md`. Identity has an empty write lease.
+- Proposed next assignment: Review the Guest design, then assign its exact implementation lease.
+- Next release gate: G4, Guest access, Login Identity, transitions, and User Sessions.
 
 ## Current review
 
+### G3 acceptance and G3-RECORD
+
+Facts:
+
+- Quality classified Gate 2 as PASS and G3 as PASS on 2026-09-04.
+- The Senior accepts that verdict for the conditional Phase 3 scope. G3-REVIEW is complete and its lease is released.
+- Quality reviewed the complete adapter commit, core regressions, scope module, engine boundary, migration repair, and test controls.
+- Quality read the retained guest XML through strict SSH and matched the failed tests to final passing tests.
+- The review confirmed 336 Linux tests, 28 adapter PostgreSQL tests, and the DB-6A upgrade/downgrade/second-upgrade proof.
+- Candidate and archive hashes matched the accepted evidence. Quality found no blocking defect within the scope.
+- Quality created no artifact, ran no new test, and reported clean initial and final Git states.
+
+Limits:
+
+- The pass covers synthetic database proof and the conditional private control plan only.
+- Request routes remain unscoped. Phase 4 must integrate identity with PortfolioScope before any hosted-product access proof.
+- Private execution, real network-loss recovery, full artifact cleanup, and public readiness remain unproved.
+- Retained artifacts and the blocked archive removal keep their prior boundaries.
+
+Uncertainty:
+
+- Private Gates 3-8 and Phase 4 Login Identity proof remain prerequisites for private execution.
+- Concurrent writers, large-data performance, historical SQLite precision loss, and alternate runtime versions remain outside this evidence.
+
+Open work and exact G3-RECORD lease:
+
+- Quality owns only `docs/PRIVATE_MIGRATION_RUNBOOK.md` for a status correction.
+- Record the dated Gate 2 PASS and conditional G3 PASS with a link to this board section.
+- Replace current pending-Gate-2 wording; preserve historical proof records and every pending private gate.
+- Preserve the unknown-outcome rule and retained-artifact limits. Add no new authority or proof claim.
+- Return the one-file diff for Senior review. Create no test, database, VM resource, or other file.
+
 ### ID-1-DESIGN: Guest access preparation
 
-Status: Active read-only preparation. Phase 4 implementation still requires the G3 verdict.
+Status: Active read-only design. G3 passed; implementation requires the design review and an exact lease.
 Identity owns an empty repository and operational write lease.
 Return the design in the task handoff; the Senior records accepted decisions on this board.
 
@@ -827,7 +859,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-G3-REVIEW and ID-1-DESIGN have empty write leases in the current review section.
+G3-RECORD owns one runbook file. ID-1-DESIGN has an empty write lease. The current review section defines both assignments.
 
 ### Completed lease: APP-1
 

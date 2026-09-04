@@ -40,22 +40,19 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 ## Current assignment
 
-Assignment: G3-REVIEW, synthetic rehearsal and data-stage acceptance.
+Assignment: G3-RECORD, record the accepted data gate.
 
-Status: Active. Read the DB-6B acceptance and G3-REVIEW section on the live board.
+Status: Active. Read the G3 acceptance and G3-RECORD section on the live board.
 
-Exact file and operational write lease: Empty.
-Review `5315496`, the accepted DB-6A/DB-6C evidence, the current runbook, and the retained DB-6B proof.
-Read existing guest evidence and schema counts through strict SSH if needed. Create no new test or database artifact.
-Keep source files, the Git index, private paths, and all host and guest resources unchanged.
+Exact file lease: `docs/PRIVATE_MIGRATION_RUNBOOK.md` only.
+Operational write lease: Empty.
+Record the dated Gate 2 PASS and conditional G3 PASS. Preserve private gates and proof limits.
 
 ## Completion criteria
 
-1. Check the exact candidate, failed proofs, and independent test evidence.
-2. Classify Gate 2 and G3 against the accepted conditional scope.
-3. Keep private decisions pending and distinguish controlled faults from real transport loss.
-4. Record artifact deviations without a cleanup-complete claim.
-5. Separate Facts, Limits, Uncertainty, and Open work.
+1. Correct current pending-Gate-2 wording in the leased file.
+2. Preserve historical records, unknown-outcome controls, and retained-artifact limits.
+3. Return the one-file diff with Facts, Limits, Uncertainty, and Open work.
 
 Send the handoff to the Senior task and include it in the final response.
 This is not an SSH, public release, or private migration review.
