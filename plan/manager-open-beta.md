@@ -92,6 +92,36 @@ Tests use model-scale synthetic values. They cannot claim to recover precision a
 Concurrent writers, private snapshot creation, real identity, route integration, and private cutover remain outside this design.
 Lost connections during COMMIT can have an uncertain outcome. The review must state that limit without a false rollback claim.
 
+Accepted adapter controls from Quality:
+
+- Support a SQLite source and a PostgreSQL+psycopg target only. Verify the installed driver version before runtime proof.
+- Require an open, valid, idle target without an active transaction or savepoint. Check actual DBAPI autocommit and transaction state.
+- Reject unsupported connections without a commit or rollback of caller work. Preserve the caller's source snapshot.
+- Use one migration write transaction. After confirmed rollback, verify actual rows in a separate short read transaction.
+- End that verification transaction in a finally path. A broken connection gives an unknown outcome; the adapter does not reconnect.
+- Use insert-only writes, an affected-key baseline, and a successful-insert record. Preserve occupied keys and unrelated rows.
+- Restrict Workspace queries to migration rows and join through Portfolio. Preserve unrelated Portfolio data.
+- Use explicit legacy column projections and model types. Preserve datetime values and raw Snapshot text without a rewrite.
+- Use fixed table, column, and primary-key order. Hash actual target rows through a versioned, type-tagged canonical representation.
+- Include Decimal scale, date, datetime, enum, Boolean, and null forms in that representation. Keep signatures outside public evidence.
+- Verify each sequence for the five copied integer-ID tables. Use transactional ALTER SEQUENCE RESTART before commit.
+- Account for sequence bounds, current state, and target maximum ID. Keep a sequence that is already ahead from moving backward.
+- Prove sequence rollback and a fresh generated insert after commit. Snapshot has a date key; root identifiers remain caller-owned.
+- Use bounded batches and set-based key checks. Keep current materialization; avoid one query per row and unbounded IN parameters.
+- Translate genuine IntegrityError into the constraint category. Use DB-6C's explicit outcome exceptions for uncertain database results.
+
+| Observed transaction state | Core action | Permitted result |
+|---|---|---|
+| Active, failure before COMMIT | Roll back, then verify actual state | ROLLED_BACK only after both checks pass |
+| COMMIT reply confirms success | Finish | COMMITTED |
+| COMMIT dispatched, reply unconfirmed | Stop automatic recovery | MigrationOutcomeUnknown |
+| Rollback or state verification unconfirmed | Stop automatic recovery | MigrationOutcomeUnknown |
+
+Tests must include legacy and head-shaped sources, complete typed fields, shuffled source inserts, and wrong-Workspace denial.
+Test active, nested, autocommit, closed, and invalidated targets without interference with caller work.
+Test all eight failure boundaries, occupied keys, unrelated sentinel rows, sequence state, and a fresh-connection read after commit.
+An unknown COMMIT outcome must block automatic cleanup of that target.
+
 Proposed exact implementation lease, inactive until review:
 
 - `app/services/private_migration_adapters.py` (new)
@@ -108,10 +138,13 @@ Official research, retrieved 2026-09-04:
 - SQLAlchemy 2.0 connection documentation: https://docs.sqlalchemy.org/en/20/core/connections.html . SQL statements can begin transactions implicitly.
 - PostgreSQL 16 sequence documentation: https://www.postgresql.org/docs/16/sql-altersequence.html . Sequence RESTART is transactional; setval is not equivalent.
 - The installed lab uses SQLAlchemy 2.0.52 and PostgreSQL 16.15. The implementation must validate the relevant behavior on that runtime.
+- Quality checked Psycopg transaction rules: https://www.psycopg.org/psycopg3/docs/basic/transactions.html and https://www.psycopg.org/psycopg3/docs/api/connections.html .
+- Those served Psycopg documents identify 3.3.6.dev1. The recorded lab version is 3.3.5; runtime API checks remain required.
+- Quality checked PostgreSQL 16 order and sequence rules: https://www.postgresql.org/docs/16/queries-order.html and https://www.postgresql.org/docs/16/functions-sequence.html .
 
 Engineering Review Handoff:
 
-- Quality owns DB-6B-REVIEW with an empty file and operational write lease.
+- Quality completed DB-6B-REVIEW without repository or infrastructure changes. The lease is released.
 - Review this design against the current protocols and database behavior before implementation.
 - Check the transaction lifecycle, conflict recovery, typed round trips, repeatability, sequence rollback, and connection-loss limit.
 - Distinguish a design defect from a core defect with a source reference or a minimal process-local probe.

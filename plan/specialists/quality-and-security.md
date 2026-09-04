@@ -42,7 +42,7 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 Assignment: DB-6B-REVIEW, adapter design review.
 
-Status: Active. Read the DB-6B design and engineering review section on the live manager board.
+Status: Complete, NOT READY. Two demonstrated core failures require DB-6C. The review lease is released.
 
 Exact file and operational write lease: Empty.
 Read the current migration core, its tests, model tables, PortfolioScope, and the real PostgreSQL test pattern.
