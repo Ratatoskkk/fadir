@@ -40,20 +40,21 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 ## Current assignment
 
-Assignment: G3-DOC, current synthetic authorization record.
+Assignment: G3-REVIEW, synthetic rehearsal and data-stage acceptance.
 
-Status: Accepted after Senior review. The lease is released. Await the DB-6B evidence review assignment.
+Status: Active. Read the DB-6B acceptance and G3-REVIEW section on the live board.
 
-Exact file lease: `docs/PRIVATE_MIGRATION_RUNBOOK.md` only. The operational write lease is empty.
-Use the accepted G3-PRECHECK handoff and the dated board authority.
-Keep DB-6B files, the Git index, private paths, and all host and guest resources unchanged.
+Exact file and operational write lease: Empty.
+Review `5315496`, the accepted DB-6A/DB-6C evidence, the current runbook, and the retained DB-6B proof.
+Read existing guest evidence and schema counts through strict SSH if needed. Create no new test or database artifact.
+Keep source files, the Git index, private paths, and all host and guest resources unchanged.
 
 ## Completion criteria
 
-1. Reconcile the current synthetic authorization without a new control design.
-2. Keep private decisions pending and historical recommendations clearly labeled.
-3. State the conditional identity boundary and unknown-outcome rule.
-4. Keep Gate 2 pending evidence acceptance and check the one-file diff.
+1. Check the exact candidate, failed proofs, and independent test evidence.
+2. Classify Gate 2 and G3 against the accepted conditional scope.
+3. Keep private decisions pending and distinguish controlled faults from real transport loss.
+4. Record artifact deviations without a cleanup-complete claim.
 5. Separate Facts, Limits, Uncertainty, and Open work.
 
 Send the handoff to the Senior task and include it in the final response.

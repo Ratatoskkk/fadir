@@ -7,13 +7,58 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-6C is accepted. DB-6B implements the real database adapters.
-- Active specialist assignments: DB-6B, Identity and Data Integrity.
-- Active file leases: The three DB-6B files.
-- Proposed next assignment: DB-6B Senior review, independent real VM proof, and G3 acceptance review.
+- Current status: DB-6B is accepted in `5315496`. G3 awaits Quality's final evidence review.
+- Active specialist assignments: G3-REVIEW, Quality and Security.
+- Active file leases: None. The review has an empty write lease.
+- Proposed next assignment: Record the G3 verdict, then prepare Phase 4 if the gate passes.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
+
+### DB-6B acceptance and G3-REVIEW
+
+Facts:
+
+- The Senior reviewed the complete three-file adapter change and committed it as `5315496`.
+- The retained initial proof had two missing-module errors. A later real PostgreSQL probe exposed two typed-unknown propagation failures.
+- Both propagation failures passed after explicit unknown-outcome handlers. The regressions remain in the tests.
+- The Senior independently passed 66 focused offline tests, 336 Windows offline tests, and 336 Linux offline tests.
+- Full offline runs deselected 30 live tests and reported one existing Starlette warning.
+- The exact new PostgreSQL test file passed 28 tests and deselected one offline test on both specialist and Senior runs.
+- Real checks cover legacy/head sources, typed fidelity, ownership, Workspace denial, repeated results, rollback, sequences, and generated identifiers.
+- Bounded-batch tests and unrelated-row preservation tests passed. Controlled failures verify sanitized unknown outcomes and explicit recovery checks.
+- All 83 guest source files match the final inspected archive. Eighteen Windows working files differ only by CRLF versus LF.
+- The final archive has 97 entries and SHA-256 `34581ab8f24c7a39145d50b964f63b6f9ef8ae8cfb3e6924454f7fcfcfeef321`.
+- The archive did not transfer as a whole; the guest has the original archive plus verified final candidate-file updates.
+- A separate Senior query confirmed zero DB-6B schemas and zero public tables after the tests.
+- Senior evidence: `evidence/senior-postgresql-20260904b.xml` and `evidence/senior-offline-20260904.xml` under the DB-6B guest root.
+- The guest also retains the two-failure proof at `evidence/typed-unknown-red.xml`.
+- Identity reported unchanged protected path metadata. Git checks passed, and only the three leased product files entered the commit.
+
+Limits:
+
+- This is synthetic Windows/Linux/PostgreSQL proof. It is not private migration, hosted-product, public, or cutover proof.
+- Lost-reply tests use controlled callback failures after a real commit. They do not prove an actual network-loss event.
+- The two out-of-lease pytest directories remain intact as recorded below.
+- The exact host archive remains because a tool policy blocked its removal. No workaround or further removal attempt occurred.
+- The first Senior live command had 22 fixture errors because its temporary parent directory was absent; six connection tests passed.
+- The Senior created the leased parent directory and repeated the unchanged candidate with a fresh test path; all 28 tests passed.
+- The VM was off when this session resumed. The owner started it; strict SSH then verified the same identity and host.
+
+Uncertainty:
+
+- Concurrent writers, large-data performance, historical SQLite precision loss, and real transport-loss recovery remain outside this contract.
+- Private identity, snapshot, mapping, retention, cutover, and restore decisions remain pending.
+
+Open work and exact review lease:
+
+- Quality owns G3-REVIEW with an empty repository and operational write lease.
+- Review the committed candidate, retained failure proofs, this evidence, DB-6A/DB-6C acceptance, and the current runbook.
+- Read the existing guest XML, source hashes, and schema counts if needed through the existing strict SSH controls.
+- Use no new database test, schema, filesystem artifact, private-path read, or infrastructure change for this review.
+- Return the Gate 2 and G3 verdicts against the conditional Phase 3 gate, with Facts, Limits, Uncertainty, and Open work.
+- Treat the disclosed temporary-file deviations separately from product correctness. Make no cleanup-complete or private-access claim.
+- If a code defect blocks acceptance, give the smallest source proof or process-local reproduction and stop without a repair.
 
 ### Continued execution approval
 
@@ -223,9 +268,9 @@ Engineering Review Handoff:
 |---|---|---|
 | DB-6B design review | Complete: NOT READY | Two focused core failures require DB-6C. |
 | DB-6C core repair | Accepted: cb587bf | 60 focused and 330 offline tests pass after Senior review. |
-| DB-6B implementation | Active | Exact adapter lease, retained red proof, and local tests pass. |
-| DB-6B real VM proof | Pending | Synthetic transfer, ownership, repeatability, rollback, and cleanup pass on PostgreSQL. |
-| G3 acceptance review | Pending | Quality classifies the data foundation and remaining private gates. |
+| DB-6B implementation | Accepted: 5315496 | The three-file change passed Senior review and offline tests. |
+| DB-6B real VM proof | Accepted with recorded artifact limits | 28 real tests and 336 Linux offline tests passed independently. |
+| G3 acceptance review | Active | Quality classifies the data foundation and remaining private gates. |
 
 ### DB-6A acceptance
 
@@ -749,7 +794,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-DB-6B is active with the three-file lease in the current review section.
+G3-REVIEW is active with the empty write lease in the current review section.
 
 ### Completed lease: APP-1
 

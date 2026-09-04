@@ -40,7 +40,7 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 Assignment: DB-6B, real database migration adapters.
 
-Status: Active. DB-6C is accepted in `cb587bf` and its lease is released.
+Status: Accepted in `5315496` after Senior review and independent VM tests. The lease is released.
 
 The DB-6B section in `plan/manager-open-beta.md` defines the exact lease and completion criteria.
 Read that section before any change.
