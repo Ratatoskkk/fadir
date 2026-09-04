@@ -8,8 +8,8 @@ This file is the only live work board. The stable role briefs define long-term s
 
 - Current phase: 3. PostgreSQL and private data scopes.
 - Current status: DB-6C is accepted. DB-6B implements the real database adapters.
-- Active specialist assignments: DB-6B, Identity and Data Integrity; G3-PRECHECK, Quality and Security.
-- Active file leases: The three adapter and test files listed in DB-6B below.
+- Active specialist assignments: DB-6B, Identity and Data Integrity; G3-DOC, Quality and Security.
+- Active file leases: The three DB-6B files and `docs/PRIVATE_MIGRATION_RUNBOOK.md` under G3-DOC.
 - Proposed next assignment: DB-6B Senior review, independent real VM proof, and G3 acceptance review.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
@@ -24,12 +24,21 @@ This instruction does not approve private source access, production cutover, liv
 
 ### G3-PRECHECK
 
-Quality has an empty file and operational write lease for a bounded acceptance prerequisite review.
-Read the current board, beta brief, runbook, and accepted DB-6A/DB-6C evidence.
-Identify the exact evidence needed after DB-6B, and distinguish synthetic rehearsal approval from later private access gates.
-Resolve any apparent Phase 3/Phase 4 dependency conflict from the documented gates; propose a correction if necessary.
-Return one concise checklist with Facts, Limits, Uncertainty, and Open work. Make no gate PASS claim before DB-6B proof.
-No code tests, private access, database action, document edit, or infrastructure work belongs to this precheck.
+Status: Complete. The empty write lease is released. No test or infrastructure action occurred.
+Quality confirms that current approval covers the bounded synthetic VM scope. Gate 2 still requires accepted DB-6B evidence.
+G3 accepts a conditional private execution plan, not a completed private dry run.
+Private execution waits for Phase 4 Login Identity proof and the applicable private access gates.
+No immediate owner decision is required. DB-6B and independent evidence review remain next.
+
+### G3-DOC
+
+Quality owns one exact file: `docs/PRIVATE_MIGRATION_RUNBOOK.md`.
+Reconcile its current header, Gate 1 status, and open-work pointers with the dated synthetic authorization in this board.
+Retain pending private access, identity, snapshot, retention, cutover, and public decisions.
+Keep prior recommendation records as history; distinguish them from the current bounded synthetic scope.
+State the conditional Phase 3/Phase 4 boundary and the DB-6C unknown-outcome rule.
+This assignment changes no control design, product code, proof result, or infrastructure. Gate 2 remains pending evidence acceptance.
+Return a one-file diff and Facts, Limits, Uncertainty, and Open work. The Senior reviews and commits the document.
 
 ### DB-6C transaction outcome repair
 
@@ -675,7 +684,7 @@ Use isolated test data. Do not copy private rows into fixtures, logs, reports, p
 |---|---|---|---|---|
 | 1 | Coordination baseline | Senior Agent | None | G1: All coordination files agree with the beta brief. The first conflict-free lease awaits owner approval. |
 | 2 | Average Purchase Price | Finance and Tax; Product Experience; Quality and Security | G1 | G2: The formula, API, detailed table, tests, and visible browser proof pass locally. |
-| 3 | PostgreSQL and private data scopes | Identity and Data Integrity; Quality and Security | G2 | G3: Migrations prove User, Workspace, and Portfolio scope. A private migration has an approved dry run and rollback plan. |
+| 3 | PostgreSQL and private data scopes | Identity and Data Integrity; Quality and Security | G2 | G3: Synthetic PostgreSQL migration and scope proof pass. The private dry-run and rollback control plan is accepted. Private execution waits for Phase 4 identity proof and the applicable private gates. |
 | 4 | Guest access and identity | Identity and Data Integrity; Product Experience; Quality and Security | G3 | G4: Guest, Google, magic link, Claim, Transfer, Merge, and session proofs pass. |
 | 5 | Multiple Portfolios, currencies, and Tax Profiles | Finance and Tax; Identity and Data Integrity; Product Experience | G4 | G5: Portfolio scope, Base Currency, Fee Currency, and Turkey Tax Profile proofs pass. |
 | 6 | Public market-data behavior | Market Data; Quality and Security | G5 | G6: Yahoo permission, symbols, prices, FX, caches, quotas, timestamps, and corporate actions pass for public traffic. |
