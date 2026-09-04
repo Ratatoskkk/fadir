@@ -1,6 +1,7 @@
 # faðir Private Migration Runbook
 
-Status: Gate 0 approved as the control plan. Gate 1 authorized for the bounded synthetic scope; Gate 2 awaits DB-6B acceptance.
+Status: Gate 2 PASS and conditional G3 PASS accepted on 2026-09-04.
+Gate 0 remains approved as the control plan. Gate 1 covers the bounded synthetic scope only.
 
 ## Current authority — 2026-09-04
 
@@ -8,7 +9,9 @@ The owner authorized continued synthetic work through the [live manager board](.
 The Senior can assign product work, run synthetic disposable-VM tests, review evidence, and commit accepted work.
 The board's DB-6B file and operational leases define the exact target, access, validation, transfer, evidence, and cleanup scope.
 This authorization satisfies Gate 1 only for that bounded synthetic scope. It does not accept unfinished proof.
-Gate 2 remains pending actual DB-6B evidence acceptance.
+Quality classified Gate 2 and conditional G3 as PASS on 2026-09-04. The Senior accepted both verdicts.
+The [G3 acceptance record](../plan/manager-open-beta.md#g3-acceptance-and-g3-record) defines the accepted evidence and limits.
+The completed DB-6B and G3-REVIEW leases grant no further operational authority.
 
 Private access, identity inputs, snapshots, retention, cutover, public changes, and new destructive scope remain behind their applicable owner gates.
 The synthetic authorization does not approve private source access, production cutover, live provider calls, a push, or public deployment.
@@ -21,6 +24,9 @@ The synthetic rehearsal does not claim Google identity validation. Public access
 DB-6C permits a confirmed rollback result only after rollback and row-state verification pass.
 An unconfirmed commit, rollback, or verification raises the sanitized `MigrationOutcomeUnknown` exception instead.
 The caller must verify the outcome before any retry or cleanup. Automatic retry and cleanup remain blocked for unknown outcomes.
+
+The two out-of-lease temporary directories remain intact. Tool policy blocked removal of the host archive.
+Guest source, archives, and evidence remain retained under the board's controls. Gate 2 acceptance does not authorize their removal.
 
 ## 1. Purpose
 
@@ -176,7 +182,7 @@ The two runs must produce the same protected result class.
 
 The evidence record must contain pass or fail results without source values or row counts.
 
-Use the target and acceptance limits in the current DB-6B board scope. Gate 2 remains pending evidence acceptance.
+Gate 2 passed on 2026-09-04 for the completed DB-6B scope and acceptance limits on the board.
 
 ## 9. Private dry run
 
@@ -345,7 +351,7 @@ The private evidence location and retention rule are PENDING OWNER APPROVAL. Use
 |---|---|---|
 | Gate 0 | Approve this runbook and its owner decision table. | APPROVED 2026-09-01 — CONTROL PLAN ONLY |
 | Gate 1 | Approve the synthetic rehearsal scope, target, and limits. | AUTHORIZED 2026-09-04 — BOUNDED BOARD SCOPE ONLY |
-| Gate 2 | Accept the synthetic rehearsal evidence. | PENDING DB-6B EVIDENCE ACCEPTANCE |
+| Gate 2 | Accept the synthetic rehearsal evidence. | PASS ACCEPTED 2026-09-04 — SYNTHETIC SCOPE ONLY |
 | Gate 3 | Approve private access, the snapshot method, and the dry-run window. | PENDING OWNER APPROVAL |
 | Gate 4 | Accept the private dry-run evidence. | PENDING OWNER APPROVAL |
 | Gate 5 | Approve the write freeze, target connection, and cutover. | PENDING OWNER APPROVAL |
@@ -501,7 +507,8 @@ This recommendation does not select an owner identity.
 - Current routes do not use PortfolioScope.
 - Request identity and Portfolio selection do not exist.
 - The board records accepted DB-6A PostgreSQL schema proof and DB-6C synthetic outcome proof.
-- DB-6B rehearsal acceptance remains pending. No private dry run has passed.
+- Quality and the Senior accepted DB-6B rehearsal evidence at Gate 2 on 2026-09-04.
+- G3 passed for the conditional Phase 3 scope on 2026-09-04. No private dry run has passed.
 
 ## 18. Limits
 
@@ -511,6 +518,8 @@ This recommendation does not select an owner identity.
 - This draft reads no private row, schema, count, database page, or WAL page.
 - This draft records no real identity, email address, path, URL, or secret.
 - This draft provides no private, hosted, or public pass.
+- The accepted synthetic evidence does not prove actual network-loss recovery or complete artifact cleanup.
+- Concurrent writers, large-data performance, historical SQLite precision loss, and alternate runtime versions remain outside that evidence.
 
 ## 19. Uncertainty
 
@@ -541,14 +550,14 @@ These private execution values remain pending. The current authority section cov
 
 ## 20. Open work
 
-1. Complete DB-6B within its current board lease.
-2. Complete independent synthetic proof and evidence review before Gate 2 acceptance.
-3. Review G3 as conditional plan acceptance, with private execution blocked by Phase 4 identity proof and private gates.
+1. Prepare Phase 4 identity and request-scope work through the live board.
+2. Keep private execution blocked until Phase 4 Login Identity proof and the applicable private gates pass.
+3. Preserve retained artifacts until their exact disposition has approval.
 
 The owner must approve these items before a private migration task:
 
-1. Every value in the owner decision table: PENDING OWNER APPROVAL.
-2. Every approval gate through the requested stage: PENDING OWNER APPROVAL.
+1. Every required private value in the owner decision table: PENDING OWNER APPROVAL.
+2. Every pending private approval gate through the requested stage: PENDING OWNER APPROVAL.
 3. The exact private access window: PENDING OWNER APPROVAL.
 4. The exact PostgreSQL connection window: PENDING OWNER APPROVAL.
 5. The exact migration implementation lease: PENDING OWNER APPROVAL.

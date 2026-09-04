@@ -7,13 +7,76 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 4. Guest access and identity.
-- Current status: Gate 2 and conditional G3 passed Quality review. ID-1-DESIGN prepares the first Guest access slice.
-- Active specialist assignments: G3-RECORD, Quality and Security; ID-1-DESIGN, Identity and Data Integrity.
-- Active file leases: Quality owns `docs/PRIVATE_MIGRATION_RUNBOOK.md`. Identity has an empty write lease.
+- Current status: Gate 2 and conditional G3 passed. ID-1-DESIGN is complete; the Guest foundation awaits engineering review.
+- Active specialist assignments: ID-1-REVIEW, Quality and Security. Identity is idle.
+- Active file leases: None. The engineering review has an empty write lease.
 - Proposed next assignment: Review the Guest design, then assign its exact implementation lease.
 - Next release gate: G4, Guest access, Login Identity, transitions, and User Sessions.
 
 ## Current review
+
+### ID-1 foundation design and engineering review
+
+Facts: Identity completed ID-1-DESIGN without a file or operational change. The Senior reviewed its source inventory and proposed boundary.
+Chosen direction for review: a Guest-only internal foundation. It reuses Workspace, Portfolio, PortfolioScope, SQLAlchemy, and Python standard libraries.
+Defer a combined identity foundation because it adds User Sessions and provider flows before Guest scope passes.
+Select no session package: User-linked tokens and signed client state do not directly provide the required Guest revocation and inactivity rules.
+The design adds no dependency, HTTP endpoint, cookie, User, Portfolio, private migration, or provider connection.
+
+Proposed contract:
+
+- Add GuestAccess with Workspace primary/foreign key, a unique 32-byte secret digest, creation/access timestamps, and optional revocation timestamp.
+- Add issue, require, and revoke operations in one service module. Use a supplied Session and trusted UTC time.
+- Generate 32 random bytes through the standard secrets module. Store only a SHA-256 digest of the opaque token.
+- Return the raw token only at issue. Exclude it from representations, errors, logs, and normal serialization.
+- Reject malformed or oversized tokens before lookup. A valid record must be unrevoked and belong to a Workspace without a User.
+- Deny access at the exact 90-day inactivity boundary. Touch only successful access; never move access time backward or revive expired access.
+- Preserve caller transaction ownership. Acquire Workspace then GuestAccess locks and hold them through the private operation.
+- Later Claim must use the same lock order and atomically revoke Guest access when it attaches a User.
+- PostgreSQL row locks and SQLite write transaction rules require separate explicit tests. No implicit commit or rollback of caller work is permitted.
+
+Proposed seven-file implementation boundary, not an active lease:
+
+1. `app/models.py`
+2. `app/services/guest_access.py` (new)
+3. `migrations/versions/0004_guest_access.py` (new; follows `0003_portfolio_ownership_keys`)
+4. `tests/test_guest_access.py` (new)
+5. `tests/test_migrations.py`
+6. `tests/test_postgresql_migrations.py`
+7. `tests/test_postgresql_guest_access.py` (new)
+
+The initial failed proof must show the absent access model/service.
+Acceptance covers hash-only storage, collision handling, exact expiry, sliding touch, malformed input, revocation, claimed-Workspace denial, and caller rollback.
+Preserve prior migration assertions and prove upgrade, downgrade, and second upgrade. Prove contention and lock order on real PostgreSQL.
+Full offline tests use `-m "not live"`. Real tests require their own bounded operational lease and exact test file.
+
+Engineering Review Handoff:
+
+- Quality owns ID-1-REVIEW with an empty repository and operational write lease. Read Identity's complete design handoff.
+- Use the engineering review skill to review scope, architecture, tests, performance, and failure modes.
+- Resolve whether the service must acquire locks itself, rather than require callers to reproduce a security-critical sequence.
+- Define the SQLite transaction precondition, ORM stale-state handling, UTC storage/round-trip rules, and clock rollback behavior.
+- Define a safe token-collision outcome without a partial Workspace or rollback of unrelated caller work.
+- Check whether dataclass serialization or database exception details can expose a raw token or digest.
+- Specify caller authority for revoke. A future browser-supplied Workspace identifier must never grant that authority.
+- Propose bounded concurrency tests for authorize/revoke/Claim interleavings and repeated access.
+- Return READY or NOT READY with concrete corrections. Create no test artifact, database, package, or VM resource.
+
+Later route integration prerequisites:
+
+- Scope portfolio totals, history, intraday series, transaction reads/mutations, and inception before calculations.
+- Remove private eager relationships from shared catalogue reads. Scope null-owned rows out of all Guest results.
+- Create Ana Portföy only with the first successful Transaction; serialize concurrent first saves and preserve rollback.
+- Separate the global refresh job from private calculations. Replace public exception text with stable errors and sanitized logs.
+- Review split application separately: the shared applied flag and global Transaction traversal cannot become a simple Portfolio filter.
+- Keep seed/bootstrap imports administrative until a separate scoped lease. No current HTTP import/export route exists.
+- Keep Snapshot dormant until a separate key migration supports the same date in different Portfolios.
+- Expose no Guest cookie until all-route isolation, CSRF, secure cookie attributes, no-store, and two-browser tests pass.
+- Review concurrent cookie-less bootstrap, first-save behavior, and the quiet retention notice before the visible Guest release.
+
+Limits: This is a design, not runtime or public access proof. Physical deletion, Google, email, User Sessions, Claim UI, Transfer, and Merge remain later work.
+Uncertainty: Lock contention, browser coordination, inactivity from polling, and concrete UTC behavior still need proof.
+Open work: Complete ID-1-REVIEW, then record the accepted exact implementation and operational leases.
 
 ### G3 acceptance and G3-RECORD
 
@@ -41,6 +104,7 @@ Uncertainty:
 
 Open work and exact G3-RECORD lease:
 
+- Status: Accepted after Senior review of the complete one-file diff. The G3-RECORD lease is released.
 - Quality owns only `docs/PRIVATE_MIGRATION_RUNBOOK.md` for a status correction.
 - Record the dated Gate 2 PASS and conditional G3 PASS with a link to this board section.
 - Replace current pending-Gate-2 wording; preserve historical proof records and every pending private gate.
@@ -49,7 +113,7 @@ Open work and exact G3-RECORD lease:
 
 ### ID-1-DESIGN: Guest access preparation
 
-Status: Active read-only design. G3 passed; implementation requires the design review and an exact lease.
+Status: Complete. The empty write lease is released; ID-1-REVIEW reviews the handoff above.
 Identity owns an empty repository and operational write lease.
 Return the design in the task handoff; the Senior records accepted decisions on this board.
 
@@ -859,7 +923,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-G3-RECORD owns one runbook file. ID-1-DESIGN has an empty write lease. The current review section defines both assignments.
+ID-1-REVIEW has an empty write lease. The current review section defines the assignment.
 
 ### Completed lease: APP-1
 
