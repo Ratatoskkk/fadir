@@ -28,6 +28,8 @@ Goal: Connect the accepted migration core to real SQLite source reads and Postgr
 Reuse `run_private_migration`, its protocols, `MigrationPlan`, `MigrationResult`, model tables, and the accepted Alembic chain.
 Use supplied SQLAlchemy connections. The adapters create no engine, connection, schema, User, Workspace, or Portfolio.
 The caller creates the target roots and supplies a stable source snapshot and a clean transactional target connection.
+The SQLite source uses the six-table `0001_current_schema_baseline` shape; it need not contain Portfolio columns or domain-root tables.
+Select legacy private columns explicitly and let the core add target ownership. A head-schema source can use the same selected columns.
 
 Chosen approach: One adapter module with thin source and target adapters for the existing protocols.
 An internal transaction object can implement the existing transaction contract if that keeps ownership clear.
