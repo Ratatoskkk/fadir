@@ -40,7 +40,7 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 Assignment: DB-6A, PostgreSQL migration version-field repair.
 
-Status: The candidate is complete. The write lease is released for Senior review and real PostgreSQL proof.
+Status: Accepted in `2bee162` after Senior review, the real PostgreSQL cycle, and 308 Linux tests. The lease is released.
 
 The DB-6A section in `plan/manager-open-beta.md` defines the exact lease and completion criteria.
 Read that section before any change.
@@ -60,7 +60,7 @@ Keep this repair separate from private migration adapters and other model change
 Preserve the focused failed proof before the product edit.
 Run the focused and full offline suites with an explicit `-m "not live"` filter.
 Add an opt-in real PostgreSQL regression for the later VM review.
-The current assignment has no guest, service, package, host-resource, or real database write lease.
+No new repository, guest, service, package, host-resource, or real database write lease is active.
 
 Protect the root private database, WAL files, uploads, local overrides, secrets, and the owner's email address.
 Check protected path metadata before and after the work without any private-row read.

@@ -7,13 +7,51 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: PLAT-LINUX-1 finished. DB-6A awaits the Senior Agent's real PostgreSQL review.
+- Current status: DB-6A passed real PostgreSQL review and is committed as `2bee162`. Overall G3 remains NOT READY.
 - Active specialist assignments: None. Platform and Identity released their leases.
-- Active file leases: No specialist writes. The Senior Agent owns the DB-6A verification resources below.
-- Proposed next assignment: Accept and commit DB-6A after the real database proof, then address the remaining adapter gap.
+- Active file leases: None. The Senior Agent completed the DB-6A verification lease.
+- Proposed next assignment: Add the real SQLite-to-PostgreSQL adapters for the accepted migration core and prove them with synthetic data.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
+
+### DB-6A acceptance
+
+Facts:
+
+- Commit `2bee162` contains only the three reviewed repair files.
+- The original focused regression failed because the version field accepted 32 characters and the revision required 35.
+- The Senior Agent reproduced 24 focused tests on Windows.
+- The Senior Agent ran the new PostgreSQL test against PostgreSQL 16.15 through the approved peer connection.
+- Upgrade, downgrade, and second upgrade passed. The test verified the head, nine product tables, and version storage.
+- The full repaired Linux suite passed 308 tests, deselected two live tests, and reported one existing Starlette warning.
+- The real PostgreSQL invocation selected only `tests/test_postgresql_migrations.py`; it did not select the market-provider test.
+- The PostgreSQL test removed its verified task schema. A separate query confirmed zero review schemas and zero public tables.
+- All 79 original source files remained equal to the original archive.
+- The review copy retained 77 unchanged baseline files and all three exact candidate files.
+- The candidate archive hash was `da08559e148ff67b927ddefc65478a7621f093aca72d71471f524a1a152997e4`.
+- Protected host path metadata remained equal across the Senior verification.
+- The exact host transfer archive was removed. The guest candidate archive and review directory remain for repeatable proof.
+- Evidence remains at `/home/fadir-agent/fadir-tests/db6a-review/evidence/postgresql.xml` and `evidence/offline.xml`.
+- The code review found no blocking defect within the repair scope.
+
+Limits:
+
+- This acceptance covers new PostgreSQL version tables. It does not widen an existing narrow version table.
+- The failed old-source migration left no version table in this lab, so that limit did not affect the verified repair.
+- No private migration adapter, private-row transfer, production deployment, or public access passed through this proof.
+- The existing npm log deviation remains recorded below. No out-of-lease cleanup occurred.
+
+Uncertainty:
+
+- Alembic 1.14 compatibility has official API and source evidence, not a separate minimum-version runtime proof.
+- Real migration adapters and product ownership checks through those adapters remain unproved.
+
+Open work:
+
+1. Define the real adapter lease for the existing migration core.
+2. Prove synthetic SQLite-to-PostgreSQL transfer and rollback in this VM.
+3. Ask Quality to review the remaining G3 evidence after those product checks pass.
 
 ### PLAT-LINUX-1 result and DB-6A verification
 
@@ -34,7 +72,7 @@ This file is the only live work board. The stable role briefs define long-term s
 - Source: https://alembic.sqlalchemy.org/en/latest/api/ddl.html#alembic.ddl.impl.DefaultImpl.version_table_impl ; retrieved 2026-09-04, documentation version 1.19.1.
 - The hook changes newly created PostgreSQL version tables only. It does not alter an existing narrow version table.
 
-The Senior Agent will verify the frozen three-file DB-6A candidate before a commit.
+The Senior Agent completed the following verification lease before commit `2bee162`.
 The exact guest review directory is `/home/fadir-agent/fadir-tests/db6a-review`.
 Extract the already verified `source.tar` there, then apply only the three leased candidate files.
 The exact host archive is `C:\Users\doguk\AppData\Local\Temp\fadir-db6a-review.tar`.
@@ -57,7 +95,7 @@ Alembic upgrade failed with `StringDataRightTruncation` at `0002_user_workspace_
 That revision has 35 characters. The default version column accepts 32 characters.
 Platform applied no schema workaround and preserved the failed branch.
 
-Identity owns exactly these files:
+The completed Identity lease contained exactly these files:
 
 - `migrations/env.py`
 - `tests/test_migrations.py`
@@ -499,7 +537,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-No specialist lease is active. The Senior Agent owns the DB-6A verification resources in the current review section.
+No specialist lease is active. The Senior Agent completed the DB-6A verification lease.
 
 ### Completed lease: APP-1
 
