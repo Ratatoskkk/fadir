@@ -132,6 +132,7 @@ Accepted adapter controls from Quality:
 - Support a SQLite source and a PostgreSQL+psycopg target only. Verify the installed driver version before runtime proof.
 - Require an open, valid, idle target without an active transaction or savepoint. Check actual DBAPI autocommit and transaction state.
 - Reject unsupported connections without a commit or rollback of caller work. Preserve the caller's source snapshot.
+- Verify a real SQLite source transaction, not only SQLAlchemy's transaction flag. The caller can issue an explicit BEGIN before adapter use.
 - Use one migration write transaction. After confirmed rollback, verify actual rows in a separate short read transaction.
 - End that verification transaction in a finally path. A broken connection gives an unknown outcome; the adapter does not reconnect.
 - Use insert-only writes, an affected-key baseline, and a successful-insert record. Preserve occupied keys and unrelated rows.
@@ -197,6 +198,8 @@ Official research, retrieved 2026-09-04:
 - Quality checked Psycopg transaction rules: https://www.psycopg.org/psycopg3/docs/basic/transactions.html and https://www.psycopg.org/psycopg3/docs/api/connections.html .
 - Those served Psycopg documents identify 3.3.6.dev1. The recorded lab version is 3.3.5; runtime API checks remain required.
 - Quality checked PostgreSQL 16 order and sequence rules: https://www.postgresql.org/docs/16/queries-order.html and https://www.postgresql.org/docs/16/functions-sequence.html .
+- The Senior checked SQLite legacy transaction behavior: https://docs.sqlalchemy.org/en/20/dialects/sqlite.html , retrieved 2026-09-04.
+- On the lab runtime, SQLAlchemy begin plus SELECT reported an active SQLAlchemy transaction but no sqlite3 transaction. Explicit source snapshot control remains required.
 
 Engineering Review Handoff:
 
