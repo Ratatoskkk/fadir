@@ -8,12 +8,45 @@ This file is the only live work board. The stable role briefs define long-term s
 
 - Current phase: 3. PostgreSQL and private data scopes.
 - Current status: DB-6B is accepted in `5315496`. G3 awaits Quality's final evidence review.
-- Active specialist assignments: G3-REVIEW, Quality and Security.
-- Active file leases: None. The review has an empty write lease.
+- Active specialist assignments: G3-REVIEW, Quality and Security; ID-1-DESIGN, Identity and Data Integrity.
+- Active file leases: None. Both assignments have empty write leases.
 - Proposed next assignment: Record the G3 verdict, then prepare Phase 4 if the gate passes.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
+
+### ID-1-DESIGN: Guest access preparation
+
+Status: Active read-only preparation. Phase 4 implementation still requires the G3 verdict.
+Identity owns an empty repository and operational write lease.
+Return the design in the task handoff; the Senior records accepted decisions on this board.
+
+1. Inspect the current Workspace, PortfolioScope, routes, services, and test fixtures.
+2. Compare a Guest-only first slice, a combined identity foundation, and an established session package.
+3. Recommend the smallest complete Guest access boundary that fits the accepted product rules.
+4. Identify exact implementation files, acceptance tests, dependencies, and later identity work.
+
+Reuse the existing User, Workspace, Portfolio, and PortfolioScope types.
+A Guest uses one opaque browser cookie. The Workspace has no User.
+Guest access expires after 90 inactive days. Physical deletion needs its later exact cleanup scope.
+The default Portfolio appears only with the first saved Transaction.
+Separate a safe internal foundation from a complete route integration; expose no partial access boundary.
+List every private route and service that needs scope, including imports, exports, calculations, and snapshots.
+Define token secrecy, server-side expiry, revocation, concurrent access, transaction ownership, and safe failure behavior.
+Explain how later Claim invalidates Guest access without an implicit Transfer or Merge.
+Keep Google, email delivery, credentials, public access, and private data outside this task.
+Use source reads and official documentation only. Create no test artifact, database, package, or VM resource.
+Return Facts, Limits, Uncertainty, Open work, and an Engineering Review Handoff.
+
+Research inputs, retrieved 2026-09-04:
+
+| Source | Version scope and supported claim | Limit |
+|---|---|---|
+| https://developers.google.com/identity/openid-connect/openid-connect | Current Google OIDC guide: durable identity uses issuer and subject, not email. Reuse a maintained verification library. | Documentation only; no credentials or live identity proof. |
+| https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html | Current session guidance: opaque random identifiers, server-side state, expiry, and revocation. | Security guidance, not a selected package or runtime proof. |
+
+The design skills favor existing components, a small first slice, and testable rules with explicit clock inputs.
+The email service decision can wait until a slice requires delivery. It does not block Guest design.
 
 ### DB-6B acceptance and G3-REVIEW
 
@@ -794,7 +827,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-G3-REVIEW is active with the empty write lease in the current review section.
+G3-REVIEW and ID-1-DESIGN have empty write leases in the current review section.
 
 ### Completed lease: APP-1
 
