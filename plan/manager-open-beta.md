@@ -7,10 +7,10 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-6B review found two core transaction defects. DB-6C repairs them before adapter implementation.
-- Active specialist assignments: DB-6C, Identity and Data Integrity.
-- Active file leases: `app/services/private_migration.py` and `tests/test_private_migration.py` only.
-- Proposed next assignment: DB-6C review, DB-6B implementation, real VM proof, and G3 acceptance review.
+- Current status: DB-6C is accepted. DB-6B implements the real database adapters.
+- Active specialist assignments: DB-6B, Identity and Data Integrity.
+- Active file leases: The three adapter and test files listed in DB-6B below.
+- Proposed next assignment: DB-6B Senior review, independent real VM proof, and G3 acceptance review.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
@@ -23,6 +23,19 @@ Ask the owner when a necessary choice, secret, private-data access, public chang
 This instruction does not approve private source access, production cutover, live provider calls, a push, or public deployment.
 
 ### DB-6C transaction outcome repair
+
+Status: Accepted in `cb587bf`. The two-file lease is released.
+
+Facts: Identity retained a seven-failure baseline with 38 prior tests still green.
+The Senior independently reproduced both original failures before the repair.
+The reviewed repair passed 60 focused tests and 330 full offline tests, with two live tests deselected.
+Both Identity and the Senior ran these tests. The full suite reported one existing Starlette warning.
+The repair uses typed in-memory write progress and a sanitized unknown-outcome exception.
+All confirmed rollback results require successful rollback and an exact false row-presence result.
+Git diff checks passed. Identity reported unchanged protected path metadata.
+Limits: This is local synthetic proof. No real adapter or PostgreSQL failure passed through this repair task.
+Uncertainty: Unknown outcomes remain unknown; the caller must verify them before retry or cleanup.
+Open work: DB-6B must apply the accepted contract to real database operations.
 
 Quality completed DB-6B-REVIEW with a NOT READY verdict. The read-only lease is released.
 Two process-local failures prove that the core needs this prerequisite repair:
@@ -122,16 +135,37 @@ Test active, nested, autocommit, closed, and invalidated targets without interfe
 Test all eight failure boundaries, occupied keys, unrelated sentinel rows, sequence state, and a fresh-connection read after commit.
 An unknown COMMIT outcome must block automatic cleanup of that target.
 
-Proposed exact implementation lease, inactive until review:
+Active exact implementation lease:
 
 - `app/services/private_migration_adapters.py` (new)
 - `tests/test_private_migration_adapters.py` (new)
 - `tests/test_postgresql_private_migration.py` (new)
 
-DB-6C must pass review before this adapter lease starts. The adapters then use its confirmed and unknown outcome contract.
+DB-6C passed Senior review. The adapters use its confirmed and unknown outcome contract.
 Real tests use the approved `fadir_test` database through peer access and task-owned schemas only.
 Use the DB-6A opt-in and verified-schema cleanup pattern. Keep shared test support small and local to the new tests.
-The Senior Agent will name the exact source-transfer and guest directories before the implementation dispatch.
+
+Operational lease for DB-6B:
+
+- Baseline product commit: `cb587bf`. Transfer only tracked public source plus the three leased candidate files.
+- Host archive: `C:/Users/doguk/AppData/Local/Temp/fadir-db6b-candidate.tar`. Require initial absence; remove only this archive after proof.
+- Guest archive: `/home/fadir-agent/fadir-tests/db6b-candidate.tar`.
+- Guest task root: `/home/fadir-agent/fadir-tests/db6b-implementation/`, including source, temporary test files, caches, and evidence.
+- Reuse `/home/fadir-agent/fadir-tests/venv/` without package changes. Preserve both prior source and evidence directories.
+- Transfer allowlist: tracked `app/`, `tests/`, `frontend/`, `migrations/`, `examples/`, and `scripts/make_golden.py`.
+- Root allowlist: `requirements.txt`, `requirements-dev.txt`, `requirements-migrate.txt`, `pytest.ini`, `alembic.ini`, and committed `config.yaml`.
+- Inspect archive entries and hash before transfer. Verify the guest hash before extraction. Exclude links, absolute paths, and parent traversal.
+- Use the existing strict SSH identity, host-key, KEX, and timeout controls. Transfer no private database, config override, key, or secret.
+- Database: `fadir_test`, local peer URL `postgresql+psycopg:///fadir_test`, role `fadir-agent`.
+- Create only fresh `db6b_<32 hexadecimal characters>` schemas with a unique task marker and recorded OID.
+- Remove a task schema only after database, name, OID, owner, and marker checks pass. Preserve unknown outcomes for separate verification.
+- Keep source SQLite fixtures synthetic and inside the task root or process memory.
+- Run only the exact new PostgreSQL test file with `-m live`. Run all other suites with explicit `-m "not live"`.
+- Keep result XML and sanitized evidence inside the task root. Retain guest evidence for Senior review.
+- This scope excludes service, package, role, database, SSH-policy, VM-setting, and checkpoint changes.
+
+The Senior verified the guest on 2026-09-04: PostgreSQL 16.15, psycopg 3.3.5, and SQLAlchemy 2.0.52.
+The target driver reports idle state before SQL and autocommit false. The database has no public tables or DB-6A/DB-6B schemas.
 
 Official research, retrieved 2026-09-04:
 
@@ -155,8 +189,8 @@ Engineering Review Handoff:
 | Step | State | Completion condition |
 |---|---|---|
 | DB-6B design review | Complete: NOT READY | Two focused core failures require DB-6C. |
-| DB-6C core repair | Active | Both regressions and outcome verification tests pass. |
-| DB-6B implementation | Pending | Exact adapter lease, retained red proof, and local tests pass. |
+| DB-6C core repair | Accepted: cb587bf | 60 focused and 330 offline tests pass after Senior review. |
+| DB-6B implementation | Active | Exact adapter lease, retained red proof, and local tests pass. |
 | DB-6B real VM proof | Pending | Synthetic transfer, ownership, repeatability, rollback, and cleanup pass on PostgreSQL. |
 | G3 acceptance review | Pending | Quality classifies the data foundation and remaining private gates. |
 
@@ -682,7 +716,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-DB-6C is active with the two-file lease in the current review section.
+DB-6B is active with the three-file lease in the current review section.
 
 ### Completed lease: APP-1
 

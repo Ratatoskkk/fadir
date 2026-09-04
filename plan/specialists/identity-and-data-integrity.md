@@ -38,30 +38,31 @@ Use a new test database. Keep private migration proof separate from synthetic mi
 
 ## Current assignment
 
-Assignment: DB-6C, transaction outcome repair.
+Assignment: DB-6B, real database migration adapters.
 
-Status: Active. DB-6A is accepted and its lease is released.
+Status: Active. DB-6C is accepted in `cb587bf` and its lease is released.
 
-The DB-6C section in `plan/manager-open-beta.md` defines the exact lease and completion criteria.
+The DB-6B section in `plan/manager-open-beta.md` defines the exact lease and completion criteria.
 Read that section before any change.
 
 Exact repository file lease:
 
-- `app/services/private_migration.py`
-- `tests/test_private_migration.py`
+- `app/services/private_migration_adapters.py` (new)
+- `tests/test_private_migration_adapters.py` (new)
+- `tests/test_postgresql_private_migration.py` (new)
 
-Repair the two demonstrated core failures before the adapter task starts.
-Keep this repair independent of SQLAlchemy and preserve confirmed outcome contracts.
+Implement the accepted thin-adapter design and its transaction controls.
+Reuse the accepted core without changes. Keep failure injection inside tests.
 
 ## Proof and handoff
 
 Preserve the focused failed proof before the product edit.
 Run the focused and full offline suites with an explicit `-m "not live"` filter.
-Use local synthetic tests. No guest, service, package, host-resource, or real database write lease is active.
+Use the board's exact DB-6B operational lease for real synthetic PostgreSQL tests.
 
 Protect the root private database, WAL files, uploads, local overrides, secrets, and the owner's email address.
 Check protected path metadata before and after the work without any private-row read.
-Keep the diff inside the two-file lease. The Senior Agent reviews and commits accepted work.
+Keep the diff inside the three-file lease. The Senior Agent reviews and commits accepted work.
 
 Separate Facts, Limits, Uncertainty, and Open work.
 Send the final handoff to the Senior task as well as the final response.
