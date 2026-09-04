@@ -8,7 +8,7 @@ This file is the only live work board. The stable role briefs define long-term s
 
 - Current phase: 3. PostgreSQL and private data scopes.
 - Current status: DB-6C is accepted. DB-6B implements the real database adapters.
-- Active specialist assignments: DB-6B, Identity and Data Integrity.
+- Active specialist assignments: DB-6B, Identity and Data Integrity; G3-PRECHECK, Quality and Security.
 - Active file leases: The three adapter and test files listed in DB-6B below.
 - Proposed next assignment: DB-6B Senior review, independent real VM proof, and G3 acceptance review.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
@@ -21,6 +21,15 @@ On 2026-09-04, the owner directed the Senior Agent to continue through the board
 The Senior Agent can assign product work, run synthetic VM tests, review changes, and commit accepted work.
 Ask the owner when a necessary choice, secret, private-data access, public change, or new destructive scope needs their action.
 This instruction does not approve private source access, production cutover, live provider calls, a push, or public deployment.
+
+### G3-PRECHECK
+
+Quality has an empty file and operational write lease for a bounded acceptance prerequisite review.
+Read the current board, beta brief, runbook, and accepted DB-6A/DB-6C evidence.
+Identify the exact evidence needed after DB-6B, and distinguish synthetic rehearsal approval from later private access gates.
+Resolve any apparent Phase 3/Phase 4 dependency conflict from the documented gates; propose a correction if necessary.
+Return one concise checklist with Facts, Limits, Uncertainty, and Open work. Make no gate PASS claim before DB-6B proof.
+No code tests, private access, database action, document edit, or infrastructure work belongs to this precheck.
 
 ### DB-6C transaction outcome repair
 

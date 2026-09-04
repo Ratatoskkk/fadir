@@ -40,22 +40,21 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 ## Current assignment
 
-Assignment: DB-6B-REVIEW, adapter design review.
+Assignment: G3-PRECHECK, acceptance prerequisite review.
 
-Status: Complete, NOT READY. Two demonstrated core failures require DB-6C. The review lease is released.
+Status: Active. Read the G3-PRECHECK section on the live board. The DB-6B-REVIEW lease is released.
 
 Exact file and operational write lease: Empty.
-Read the current migration core, its tests, model tables, PortfolioScope, and the real PostgreSQL test pattern.
-Review the proposed adapter contracts before implementation. Use the code-plan-eng-review skill.
-Official primary documentation reads are permitted for this design.
+Read the current board, beta brief, runbook, and accepted DB-6A/DB-6C evidence.
+Keep the review on gate prerequisites. DB-6B implementation and tests belong to Identity until handoff.
 Keep repository files, the Git index, private paths, and all host and guest resources unchanged.
 
 ## Completion criteria
 
-1. Check transaction ownership, PostgreSQL conflict recovery, sequence rollback, and uncertain COMMIT outcomes.
-2. Check typed row fidelity, deterministic order, repeatability, and Workspace denial.
-3. State any core contract gap with an exact source reference or a minimal process-local probe.
-4. Return a bounded READY or NOT READY design verdict.
+1. List the remaining evidence required after DB-6B.
+2. Separate approved synthetic tests from pending private execution gates.
+3. Explain the Phase 3 and Phase 4 dependency without an unsupported gate pass.
+4. Name a narrow document correction or a real owner decision only if necessary.
 5. Separate Facts, Limits, Uncertainty, and Open work.
 
 Send the handoff to the Senior task and include it in the final response.
