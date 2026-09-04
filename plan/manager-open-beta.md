@@ -125,6 +125,8 @@ Active operational scope for ID-1:
 - Use the existing `fadir_test` database, `fadir-agent` role, strict SSH controls, and existing Python environment.
 - Source baseline: `720fb75`. Later Senior-only plan commits do not change this product baseline.
 - Use `/home/fadir-agent/fadir-tests/id1-foundation/` for source, synthetic fixtures, temporary files, and XML evidence.
+- Use `C:/Users/doguk/AppData/Local/Temp/fadir-id1-tests/` for Windows synthetic fixtures, temporary files, and XML evidence.
+- The Senior verified that the Windows test root was absent on 2026-09-04. Recheck absence before creation and retain its artifacts for review.
 - Use `C:/Users/doguk/AppData/Local/Temp/fadir-id1-candidate.tar` and `/home/fadir-agent/fadir-tests/id1-candidate.tar` for the inspected source archive.
 - Require initial absence of these new paths. Preserve all DB-6A/DB-6B resources and the blocked host archive.
 - Use the existing public source allowlist from DB-6B, plus the exact seven candidate files. Record the baseline commit and archive hash.
@@ -133,7 +135,7 @@ Active operational scope for ID-1:
 - New Guest tests use fresh `id1_<32 hexadecimal characters>` schemas, unique markers, recorded OIDs, and owner/database checks.
 - Schema removal is limited to the test's own verified synthetic schema. Unknown state requires verification before cleanup.
 - The existing migration-cycle test can use its existing DB-6A marked-schema controls with the new candidate head.
-- Set temporary-directory variables and a fresh explicit pytest basetemp below the task root on every run.
+- Set temporary-directory variables and a fresh explicit pytest basetemp below the applicable Windows or guest task root on every run.
 - Run full offline tests with `-m "not live"`. Run live tests only in the two exact PostgreSQL files in the proposed lease.
 - Bound concurrent tests with server lock/statement timeouts, worker joins, and a whole-command timeout.
 - Retain archives and evidence for review. This assignment grants no host-archive or prior-artifact deletion.
