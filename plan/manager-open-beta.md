@@ -7,13 +7,93 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-6A passed real PostgreSQL review and is committed as `2bee162`. Overall G3 remains NOT READY.
-- Active specialist assignments: None. Platform and Identity released their leases.
-- Active file leases: None. The Senior Agent completed the DB-6A verification lease.
-- Proposed next assignment: Add the real SQLite-to-PostgreSQL adapters for the accepted migration core and prove them with synthetic data.
+- Current status: DB-6A is accepted. DB-6B adapter design awaits the bounded Quality review.
+- Active specialist assignments: DB-6B-REVIEW, Quality and Security, read-only design review.
+- Active file leases: None. No product implementation lease starts before this review returns.
+- Proposed next assignment: DB-6B implementation, real VM proof, and G3 acceptance review, in that order.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
+
+### Continued execution approval
+
+On 2026-09-04, the owner directed the Senior Agent to continue through the board without routine approval pauses.
+The Senior Agent can assign product work, run synthetic VM tests, review changes, and commit accepted work.
+Ask the owner when a necessary choice, secret, private-data access, public change, or new destructive scope needs their action.
+This instruction does not approve private source access, production cutover, live provider calls, a push, or public deployment.
+
+### DB-6B adapter design and engineering review
+
+Goal: Connect the accepted migration core to real SQLite source reads and PostgreSQL target transactions.
+Reuse `run_private_migration`, its protocols, `MigrationPlan`, `MigrationResult`, model tables, and the accepted Alembic chain.
+Use supplied SQLAlchemy connections. The adapters create no engine, connection, schema, User, Workspace, or Portfolio.
+The caller creates the target roots and supplies a stable source snapshot and a clean transactional target connection.
+
+Chosen approach: One adapter module with thin source and target adapters for the existing protocols.
+An internal transaction object can implement the existing transaction contract if that keeps ownership clear.
+Rejected alternatives: A second migration engine duplicates accepted logic; a CLI or job service adds an unnecessary entry point.
+The `reuse-before-build` and `sans-io` rules support this boundary.
+
+Data flow:
+
+`supplied SQLite connection -> source adapter -> accepted core -> target adapter -> one PostgreSQL transaction`
+
+Invariants and tests:
+
+1. Read all six legacy data tables in deterministic dependency and primary-key order.
+2. Copy Instrument, PriceCache, FxCache, and CorporateAction separately from Transaction and Snapshot.
+3. Preserve row identifiers and typed fields, including Decimal value and model scale, date, text, enum, boolean, and null.
+4. Let the core assign the selected Portfolio to private rows. Reject invalid rows or conflicting target constraints without partial writes.
+5. Read actual staged target rows for validation. Track inserted keys so unrelated pre-existing rows remain unchanged.
+6. Validate Workspace access through a Portfolio relationship, not a supplied Workspace flag.
+7. Produce a deterministic repeatability signature from canonical typed target rows.
+8. Use one target transaction. Preserve the caller's source connection and source rows.
+9. Reject an active or autocommit target connection before writes. State unsupported transaction modes clearly.
+10. Keep post-rollback checks usable after a real PostgreSQL constraint failure and leave no implicit read transaction open.
+11. Preserve future generated identifiers after explicit-ID copies. Use transactional sequence changes and prove rollback of those changes.
+12. Exclude private values, counts, identities, paths, URLs, and secrets from the existing structured result.
+13. Prove success twice with fresh synthetic targets and equal canonical results.
+14. Prove all eight accepted failure boundaries on real transactions where applicable; failure injection stays in tests.
+15. Verify committed rows through a fresh connection and verify post-migration inserts without identifier collisions.
+
+The existing core materializes source rows. This bounded task keeps that behavior; streaming and large-data performance are separate work.
+Tests use model-scale synthetic values. They cannot claim to recover precision already lost in a historical SQLite source.
+Concurrent writers, private snapshot creation, real identity, route integration, and private cutover remain outside this design.
+Lost connections during COMMIT can have an uncertain outcome. The review must state that limit without a false rollback claim.
+
+Proposed exact implementation lease, inactive until review:
+
+- `app/services/private_migration_adapters.py` (new)
+- `tests/test_private_migration_adapters.py` (new)
+- `tests/test_postgresql_private_migration.py` (new)
+
+The core stays unchanged. Return a focused core failure before any request to expand this lease.
+Real tests use the approved `fadir_test` database through peer access and task-owned schemas only.
+Use the DB-6A opt-in and verified-schema cleanup pattern. Keep shared test support small and local to the new tests.
+The Senior Agent will name the exact source-transfer and guest directories before the implementation dispatch.
+
+Official research, retrieved 2026-09-04:
+
+- SQLAlchemy 2.0 connection documentation: https://docs.sqlalchemy.org/en/20/core/connections.html . SQL statements can begin transactions implicitly.
+- PostgreSQL 16 sequence documentation: https://www.postgresql.org/docs/16/sql-altersequence.html . Sequence RESTART is transactional; setval is not equivalent.
+- The installed lab uses SQLAlchemy 2.0.52 and PostgreSQL 16.15. The implementation must validate the relevant behavior on that runtime.
+
+Engineering Review Handoff:
+
+- Quality owns DB-6B-REVIEW with an empty file and operational write lease.
+- Review this design against the current protocols and database behavior before implementation.
+- Check the transaction lifecycle, conflict recovery, typed round trips, repeatability, sequence rollback, and connection-loss limit.
+- Distinguish a design defect from a core defect with a source reference or a minimal process-local probe.
+- Read official primary documentation as needed. Private data, database connections, VM writes, and product edits remain outside this review.
+- Return Facts, Limits, Uncertainty, Open work, and a READY or NOT READY design verdict.
+- Keep the review bounded to these adapters. Do not reopen SSH or unrelated release controls.
+
+| Step | State | Completion condition |
+|---|---|---|
+| DB-6B design review | Active | Quality resolves critical adapter and core contract gaps. |
+| DB-6B implementation | Pending | Exact adapter lease, retained red proof, and local tests pass. |
+| DB-6B real VM proof | Pending | Synthetic transfer, ownership, repeatability, rollback, and cleanup pass on PostgreSQL. |
+| G3 acceptance review | Pending | Quality classifies the data foundation and remaining private gates. |
 
 ### DB-6A acceptance
 
@@ -537,7 +617,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-No specialist lease is active. The Senior Agent completed the DB-6A verification lease.
+DB-6B-REVIEW is active with an empty write lease. The current review section defines its exact scope.
 
 ### Completed lease: APP-1
 

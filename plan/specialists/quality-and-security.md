@@ -40,95 +40,23 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 ## Current assignment
 
-Assignment: G3-B2, proof-only verification of the DB-5E repair.
+Assignment: DB-6B-REVIEW, adapter design review.
 
-Status: Complete. G3-B2 PASS within the DB-5E repair scope; overall G3 NOT READY. The lease is released.
+Status: Active. Read the DB-6B design and engineering review section on the live manager board.
 
-Review the two-file DB-5E diff against `da86bee`.
-
-Reproduce the original malformed-row probe against the repaired public operation.
-Verify the new malformed Instrument reference cases and all prior rollback cases.
-
-Classify the core separately from overall G3 readiness.
-
-The earlier control-design reviews are historical records in the manager board.
-SSH design, VM changes, and PostgreSQL provision work are outside G3-B.
-
-## Exact file lease
-
-The repository write lease is empty.
-
-Read the code and run the existing offline tests.
-Use process-local synthetic probes if the existing tests miss a relevant boundary.
-Keep repository files, the Git index, and protected state unchanged.
-
-## Required context
-
-1. Read `AGENTS.md`, `CONTEXT.md`, and `docs/OPEN_BETA_BRIEF.md`.
-2. Read `docs/PRIVATE_MIGRATION_RUNBOOK.md`.
-3. Read the manager board and the Identity specialist brief.
-4. Review `git show da86bee` and the current two-file product diff.
-5. Read both files in that commit and the existing Portfolio scope module.
-
-## Required proof
-
-1. Confirm that the committed diff contains exactly the two DB-5D files.
-2. Check the public interface and the no-connection boundary.
-3. Check Portfolio and Workspace ownership against staged rows.
-4. Check shared-row separation and cross-Workspace denial.
-5. Check Decimal type, value, and scale.
-6. Check date, text, enum, and null fidelity.
-7. Check an actual baseline and two fresh acceptance targets.
-8. Check all eight planned rollback cases and result privacy.
-9. Check that result states do not claim proof before the relevant event.
-10. Identify adapter limits without claiming real PostgreSQL proof.
-
-Retain the original module-absence failure and the two repaired review failures as historical proof.
-Report new defects with an exact source location and a reproducible synthetic case.
-Do not repair a defect during this assignment.
-
-## Required commands
-
-Run:
-
-```powershell
-git status --short
-git show --stat --oneline da86bee
-.venv\Scripts\python.exe -m pytest tests/test_private_migration.py -q
-.venv\Scripts\python.exe -m pytest -q
-git diff --check
-git status --short
-```
-
-Record protected root metadata before and after the review.
-Read metadata only for the private database, WAL files, `data/`, and `uploads/`.
-Keep private rows, secrets, local configuration contents, and the owner email outside the proof.
-Do not enumerate protected directories.
-Make no package, VM, service, network, private-database, PostgreSQL, or external-service change.
+Exact file and operational write lease: Empty.
+Read the current migration core, its tests, model tables, PortfolioScope, and the real PostgreSQL test pattern.
+Review the proposed adapter contracts before implementation. Use the code-plan-eng-review skill.
+Official primary documentation reads are permitted for this design.
+Keep repository files, the Git index, private paths, and all host and guest resources unchanged.
 
 ## Completion criteria
 
-- Classify the synthetic core as PASS or FAIL from direct evidence.
-- Classify overall G3 as PASS, FAIL, or NOT READY separately.
-- Distinguish required product repairs from real-adapter limits and owner decisions.
-- Report the smallest useful next product step.
-- Preserve the initial Git state and protected metadata.
-- Keep the handoff concise.
+1. Check transaction ownership, PostgreSQL conflict recovery, sequence rollback, and uncertain COMMIT outcomes.
+2. Check typed row fidelity, deterministic order, repeatability, and Workspace denial.
+3. State any core contract gap with an exact source reference or a minimal process-local probe.
+4. Return a bounded READY or NOT READY design verdict.
+5. Separate Facts, Limits, Uncertainty, and Open work.
 
-## Handoff
-
-### Facts
-
-Report classifications, findings, source locations, and command results.
-
-### Limits
-
-State that synthetic tests provide no real PostgreSQL, private-data, hosted, or public proof.
-
-### Uncertainty
-
-List only unresolved behavior relevant to the reviewed core or the next gate.
-
-### Open work
-
-Name the next product step and any exact owner approval it needs.
+Send the handoff to the Senior task and include it in the final response.
+This is not an SSH, public release, or private migration review.
