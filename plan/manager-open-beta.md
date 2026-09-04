@@ -183,12 +183,20 @@ Operational lease for DB-6B:
 - Create only fresh `db6b_<32 hexadecimal characters>` schemas with a unique task marker and recorded OID.
 - Remove a task schema only after database, name, OID, owner, and marker checks pass. Preserve unknown outcomes for separate verification.
 - Keep source SQLite fixtures synthetic and inside the task root or process memory.
+- Set pytest --basetemp and temporary-directory variables to fresh paths inside the task root for each run.
 - Run only the exact new PostgreSQL test file with `-m live`. Run all other suites with explicit `-m "not live"`.
 - Keep result XML and sanitized evidence inside the task root. Retain guest evidence for Senior review.
 - This scope excludes service, package, role, database, SSH-policy, VM-setting, and checkpoint changes.
 
 The Senior verified the guest on 2026-09-04: PostgreSQL 16.15, psycopg 3.3.5, and SQLAlchemy 2.0.52.
 The target driver reports idle state before SQL and autocommit false. The database has no public tables or DB-6A/DB-6B schemas.
+
+DB-6B operational deviation, reported during implementation:
+
+- Two initial pytest commands omitted --basetemp and created `/tmp/pytest-of-fadir-agent/pytest-0` and `pytest-1`.
+- Identity reports synthetic fixtures only. Read-only path and ownership checks are permitted.
+- These exact directories remain outside the cleanup lease. Preserve them and their parent links; product proof can continue.
+- Further runs must use explicit temporary paths inside the leased task root. Record the retained artifacts in the final handoff.
 
 Official research, retrieved 2026-09-04:
 
