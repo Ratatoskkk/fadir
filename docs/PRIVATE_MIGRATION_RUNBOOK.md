@@ -1,6 +1,26 @@
 # faðir Private Migration Runbook
 
-Status: Gate 0 approved as the control plan on 2026-09-01. Gate 1 remains pending.
+Status: Gate 0 approved as the control plan. Gate 1 authorized for the bounded synthetic scope; Gate 2 awaits DB-6B acceptance.
+
+## Current authority — 2026-09-04
+
+The owner authorized continued synthetic work through the [live manager board](../plan/manager-open-beta.md#continued-execution-approval).
+The Senior can assign product work, run synthetic disposable-VM tests, review evidence, and commit accepted work.
+The board's DB-6B file and operational leases define the exact target, access, validation, transfer, evidence, and cleanup scope.
+This authorization satisfies Gate 1 only for that bounded synthetic scope. It does not accept unfinished proof.
+Gate 2 remains pending actual DB-6B evidence acceptance.
+
+Private access, identity inputs, snapshots, retention, cutover, public changes, and new destructive scope remain behind their applicable owner gates.
+The synthetic authorization does not approve private source access, production cutover, live provider calls, a push, or public deployment.
+Historical recommendations below do not require duplicate approval or extend the current lease.
+
+G3 accepts a conditional private dry-run and rollback control plan, not a completed private dry run.
+Private execution waits for Phase 4 Login Identity proof and Gate 3 approval.
+The synthetic rehearsal does not claim Google identity validation. Public access still requires request identity and Portfolio scope.
+
+DB-6C permits a confirmed rollback result only after rollback and row-state verification pass.
+An unconfirmed commit, rollback, or verification raises the sanitized `MigrationOutcomeUnknown` exception instead.
+The caller must verify the outcome before any retry or cleanup. Automatic retry and cleanup remain blocked for unknown outcomes.
 
 ## 1. Purpose
 
@@ -82,6 +102,8 @@ One proof class cannot replace another proof class.
 
 ## 6. Owner decision table
 
+Pending entries apply to private execution unless marked synthetic. See the current authority section for the bounded synthetic authorization.
+
 | Decision | Required owner value | Status |
 |---|---|---|
 | WAL-consistent snapshot method | Select one choice from the snapshot options in this runbook. | PENDING OWNER APPROVAL |
@@ -103,8 +125,8 @@ One proof class cannot replace another proof class.
 | PostgreSQL cleanup steps | Approve the exact cleanup sequence and destructive authority. | PENDING OWNER APPROVAL |
 | Private access approval | Approve who can access the source snapshot and private target. | PENDING OWNER APPROVAL |
 | PostgreSQL connection window | Select the allowed connection start and end. | PENDING OWNER APPROVAL |
-| Synthetic target type | Select the isolated database type for the rehearsal. | PENDING OWNER APPROVAL |
-| Synthetic rollback cases | Select the rollback cases for the rehearsal. | PENDING OWNER APPROVAL |
+| Synthetic target type | Use the exact DB-6B target on the live board. | AUTHORIZED — BOUNDED SYNTHETIC SCOPE |
+| Synthetic rollback cases | Use the DB-6B checks and DB-6C outcome contract on the live board. | AUTHORIZED — BOUNDED SYNTHETIC SCOPE |
 | Cutover date | Select the date inside the approved write-freeze window. | PENDING OWNER APPROVAL |
 | Evidence location and retention | Select a protected location and deletion rule. | PENDING OWNER APPROVAL |
 | Migration implementation lease | Approve the exact files for the future migration tool. | PENDING OWNER APPROVAL |
@@ -113,7 +135,7 @@ One proof class cannot replace another proof class.
 
 The owner approved the runbook as the control plan on 2026-09-01.
 
-Gate 1 approval remains a precondition for a rehearsal task.
+The current authority section records Gate 1 authorization for the bounded synthetic rehearsal.
 
 The following preconditions apply to later tasks:
 
@@ -121,7 +143,7 @@ The following preconditions apply to later tasks:
 2. The synthetic upgrade and rollback tests pass.
 3. A later lease supplies a deterministic migration tool and synthetic tests.
 4. The owner approves every required decision for the next stage.
-5. The target User has a verified Google issuer and subject.
+5. Before private execution, the target User has a verified Google issuer and subject through the Phase 4 Login Identity model.
 6. The target Workspace and Portfolio have approved definitions.
 7. Every Transaction and Snapshot has one deterministic Portfolio result.
 8. Shared Instrument and market-cache data stays outside Portfolio ownership.
@@ -154,9 +176,7 @@ The two runs must produce the same protected result class.
 
 The evidence record must contain pass or fail results without source values or row counts.
 
-The synthetic target type is PENDING OWNER APPROVAL.
-
-The synthetic acceptance limits are PENDING OWNER APPROVAL.
+Use the target and acceptance limits in the current DB-6B board scope. Gate 2 remains pending evidence acceptance.
 
 ## 9. Private dry run
 
@@ -208,7 +228,7 @@ The evidence record must store only a category, proof class, timestamp, and pass
 
 The evidence record must not store a private value, count, identity, path, URL, or secret.
 
-The exact checks and limits are PENDING OWNER APPROVAL.
+The exact private checks and limits are PENDING OWNER APPROVAL. Use the current board scope for synthetic validation.
 
 ## 11. Write freeze
 
@@ -317,15 +337,15 @@ The record must use pass, fail, or inconclusive results.
 
 The record must exclude private values, row counts, identities, paths, URLs, and secrets.
 
-The evidence location and retention rule are PENDING OWNER APPROVAL.
+The private evidence location and retention rule are PENDING OWNER APPROVAL. Use the current board scope for synthetic evidence.
 
 ## 16. Approval gates
 
 | Gate | Required approval | Status |
 |---|---|---|
 | Gate 0 | Approve this runbook and its owner decision table. | APPROVED 2026-09-01 — CONTROL PLAN ONLY |
-| Gate 1 | Approve the synthetic rehearsal scope, target, and limits. | PENDING OWNER APPROVAL |
-| Gate 2 | Accept the synthetic rehearsal evidence. | PENDING OWNER APPROVAL |
+| Gate 1 | Approve the synthetic rehearsal scope, target, and limits. | AUTHORIZED 2026-09-04 — BOUNDED BOARD SCOPE ONLY |
+| Gate 2 | Accept the synthetic rehearsal evidence. | PENDING DB-6B EVIDENCE ACCEPTANCE |
 | Gate 3 | Approve private access, the snapshot method, and the dry-run window. | PENDING OWNER APPROVAL |
 | Gate 4 | Accept the private dry-run evidence. | PENDING OWNER APPROVAL |
 | Gate 5 | Approve the write freeze, target connection, and cutover. | PENDING OWNER APPROVAL |
@@ -351,13 +371,13 @@ The focused failed proof returned this stale record before the edit:
 324:| Gate 0 | Approve this runbook and its owner decision table. | PENDING OWNER APPROVAL |
 ```
 
-Gate 1 and all later gates remain `PENDING OWNER APPROVAL`.
+At the Gate 0 decision, Gate 1 and all later gates remained `PENDING OWNER APPROVAL`.
+Every owner decision value was pending. The current authority section records the later synthetic authorization.
 
-Every value in the owner decision table remains `PENDING OWNER APPROVAL`.
+### Historical Gate 1 recommendation — DB-5C
 
-### Gate 1 recommendation
-
-Gate 1 remains `PENDING OWNER APPROVAL`. This section proposes choices only.
+The following subsections preserve the DB-5C proposals, including their original approval labels and retention recommendation.
+They are historical, not current operational authority. Use the current authority section and live board for synthetic work.
 
 #### Synthetic target comparison
 
@@ -480,7 +500,8 @@ This recommendation does not select an owner identity.
 - PortfolioScope assigns and checks Portfolio ownership for private rows.
 - Current routes do not use PortfolioScope.
 - Request identity and Portfolio selection do not exist.
-- No private dry run or real PostgreSQL proof exists.
+- The board records accepted DB-6A PostgreSQL schema proof and DB-6C synthetic outcome proof.
+- DB-6B rehearsal acceptance remains pending. No private dry run has passed.
 
 ## 18. Limits
 
@@ -493,7 +514,7 @@ This recommendation does not select an owner identity.
 
 ## 19. Uncertainty
 
-These owner values remain unknown:
+These private execution values remain pending. The current authority section covers the authorized synthetic scope only.
 
 - Snapshot method: PENDING OWNER APPROVAL.
 - Snapshot location: PENDING OWNER APPROVAL.
@@ -514,20 +535,15 @@ These owner values remain unknown:
 - PostgreSQL cleanup steps: PENDING OWNER APPROVAL.
 - Private access approval: PENDING OWNER APPROVAL.
 - PostgreSQL connection window: PENDING OWNER APPROVAL.
-- Synthetic target type: PENDING OWNER APPROVAL.
-- Synthetic rollback cases: PENDING OWNER APPROVAL.
 - Cutover date: PENDING OWNER APPROVAL.
 - Evidence location and retention rule: PENDING OWNER APPROVAL.
 - Migration implementation lease: PENDING OWNER APPROVAL.
 
 ## 20. Open work
 
-The owner must approve these items before a synthetic rehearsal task:
-
-1. The synthetic target type: PENDING OWNER APPROVAL.
-2. The synthetic validation checks and limits: PENDING OWNER APPROVAL.
-3. The synthetic rollback cases: PENDING OWNER APPROVAL.
-4. The exact implementation lease: PENDING OWNER APPROVAL.
+1. Complete DB-6B within its current board lease.
+2. Complete independent synthetic proof and evidence review before Gate 2 acceptance.
+3. Review G3 as conditional plan acceptance, with private execution blocked by Phase 4 identity proof and private gates.
 
 The owner must approve these items before a private migration task:
 
