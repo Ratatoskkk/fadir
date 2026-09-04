@@ -8,8 +8,8 @@ This file is the only live work board. The stable role briefs define long-term s
 
 - Current phase: 3. PostgreSQL and private data scopes.
 - Current status: DB-6C is accepted. DB-6B implements the real database adapters.
-- Active specialist assignments: DB-6B, Identity and Data Integrity; G3-DOC, Quality and Security.
-- Active file leases: The three DB-6B files and `docs/PRIVATE_MIGRATION_RUNBOOK.md` under G3-DOC.
+- Active specialist assignments: DB-6B, Identity and Data Integrity.
+- Active file leases: The three DB-6B files.
 - Proposed next assignment: DB-6B Senior review, independent real VM proof, and G3 acceptance review.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
@@ -31,6 +31,10 @@ Private execution waits for Phase 4 Login Identity proof and the applicable priv
 No immediate owner decision is required. DB-6B and independent evidence review remain next.
 
 ### G3-DOC
+
+Status: Accepted after Senior review of the complete one-file diff. The lease is released.
+The runbook now distinguishes current synthetic authority from historical recommendations and pending private decisions.
+Gate 2 still awaits DB-6B evidence. No new test, control design, or infrastructure action occurred.
 
 Quality owns one exact file: `docs/PRIVATE_MIGRATION_RUNBOOK.md`.
 Reconcile its current header, Gate 1 status, and open-work pointers with the dated synthetic authorization in this board.

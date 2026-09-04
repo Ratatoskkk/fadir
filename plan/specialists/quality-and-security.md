@@ -42,7 +42,7 @@ Keep local, hosted, and public proof separate. Reject unsupported pass claims.
 
 Assignment: G3-DOC, current synthetic authorization record.
 
-Status: Active. Read the G3-DOC section on the live board. G3-PRECHECK is complete and its lease is released.
+Status: Accepted after Senior review. The lease is released. Await the DB-6B evidence review assignment.
 
 Exact file lease: `docs/PRIVATE_MIGRATION_RUNBOOK.md` only. The operational write lease is empty.
 Use the accepted G3-PRECHECK handoff and the dated board authority.
