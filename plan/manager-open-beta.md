@@ -8,7 +8,7 @@ This file is the only live work board. The stable role briefs define long-term s
 
 - Current phase: 4. Guest access and identity.
 - Current status: G3 passed. The Senior accepted all six ID-1 review corrections and assigned the Guest foundation.
-- Active specialist assignments: ID-1, Identity and Data Integrity. Quality is idle.
+- Active specialist assignments: ID-1, Identity and Data Integrity; ID-1-CODE, Quality and Security.
 - Active file leases: Identity owns the seven files listed under the ID-1 implementation boundary below.
 - Proposed next assignment: Review ID-1 code and real PostgreSQL evidence before a commit.
 - Next release gate: G4, Guest access, Login Identity, transitions, and User Sessions.
@@ -17,10 +17,21 @@ This file is the only live work board. The stable role briefs define long-term s
 
 ### ID-1 foundation design and engineering review
 
+ID-1-CODE review lease:
+
+- Quality has an empty repository and operational write lease for an independent source review.
+- Review the current seven-file candidate against the accepted contract. Identity still repairs the test cleanup and concurrency proofs.
+- Prioritize the service, model, and migration. Recheck changed tests after Identity freezes the candidate.
+- Review transaction ownership, pending ORM state, locks, fresh-state access, secret handling, and failure classification.
+- Return concrete blockers with source evidence. Create no artifact, test database, VM change, or code repair.
+- This interim review does not accept runtime proof. The final verdict must use the frozen candidate and completed evidence.
+
 Implementation review in progress:
 
 - The initial retained proof had two failures: the GuestAccess model and service were absent.
 - Identity reported 37 focused offline tests passed. Real PostgreSQL proof had not run at that handoff.
+- The Senior independently passed 350 Windows offline tests with 71 live tests deselected and one existing warning.
+- That interim run is recorded at `C:/Users/doguk/AppData/Local/Temp/fadir-id1-tests/senior-offline-1.xml`.
 - Senior source review found that the yield fixture cannot catch an unconfirmed exception from the test body.
 - The installed pytest teardown resumes the fixture with next(iterator), not throw(test_error); the cleanup flag therefore misses that failure.
 - Identity must retain a focused regression and repair the cleanup gate before live proof, within the existing test-file lease.
@@ -1007,7 +1018,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-ID-1 owns seven repository files and the exact operational scope in the current review section.
+ID-1 owns seven repository files and the exact operational scope in the current review section. ID-1-CODE has an empty write lease.
 
 ### Completed lease: APP-1
 
