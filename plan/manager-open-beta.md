@@ -7,10 +7,10 @@ This file is the only live work board. The stable role briefs define long-term s
 ## Coordination state
 
 - Current phase: 3. PostgreSQL and private data scopes.
-- Current status: DB-6A is accepted. DB-6B adapter design awaits the bounded Quality review.
-- Active specialist assignments: DB-6B-REVIEW, Quality and Security, read-only design review.
-- Active file leases: None. No product implementation lease starts before this review returns.
-- Proposed next assignment: DB-6B implementation, real VM proof, and G3 acceptance review, in that order.
+- Current status: DB-6B review found two core transaction defects. DB-6C repairs them before adapter implementation.
+- Active specialist assignments: DB-6C, Identity and Data Integrity.
+- Active file leases: `app/services/private_migration.py` and `tests/test_private_migration.py` only.
+- Proposed next assignment: DB-6C review, DB-6B implementation, real VM proof, and G3 acceptance review.
 - Next release gate: G3, PostgreSQL migrations and private data scope acceptance.
 
 ## Current review
@@ -21,6 +21,35 @@ On 2026-09-04, the owner directed the Senior Agent to continue through the board
 The Senior Agent can assign product work, run synthetic VM tests, review changes, and commit accepted work.
 Ask the owner when a necessary choice, secret, private-data access, public change, or new destructive scope needs their action.
 This instruction does not approve private source access, production cutover, live provider calls, a push, or public deployment.
+
+### DB-6C transaction outcome repair
+
+Quality completed DB-6B-REVIEW with a NOT READY verdict. The read-only lease is released.
+Two process-local failures prove that the core needs this prerequisite repair:
+
+1. A private write fails and the next read raises. The exception escapes with zero rollback calls.
+2. A commit succeeds but its reply fails. The core reports ROLLED_BACK although durable rows remain.
+
+Identity owns this exact two-file lease:
+
+- `app/services/private_migration.py`
+- `tests/test_private_migration.py`
+
+Preserve both failed proofs before the repair. Keep all 38 existing core tests.
+Attempt rollback after a write failure without a database read first.
+Use explicit non-SQL progress or a typed write error when the failure category needs write progress.
+Keep genuine constraint rejection distinct from a generic write error.
+Add a sanitized `MigrationOutcomeUnknown` exception for an unconfirmed commit or rollback outcome.
+Preserve the public result enums for confirmed outcomes. Unknown outcomes must bypass the normal rollback-result path.
+A confirmed pre-commit failure can return a rollback result only after rollback and row-state verification pass.
+A failed rollback, failed verification, or remaining inserted rows must report uncertainty without private error text.
+The caller must not retry or clean up an unknown outcome automatically.
+Use ordinary Exception subclasses, not BaseException. Keep the core independent of SQLAlchemy.
+Test a lost commit reply separately from a confirmed pre-commit failure.
+Test rollback failure, verification failure, remaining rows, and sanitized error output.
+Run focused tests and the full suite with an explicit `-m "not live"` filter.
+This lease permits local synthetic tests only. Database adapters and VM changes remain outside it.
+Return Facts, Limits, Uncertainty, and Open work. The Senior reviews and commits accepted work.
 
 ### DB-6B adapter design and engineering review
 
@@ -69,7 +98,7 @@ Proposed exact implementation lease, inactive until review:
 - `tests/test_private_migration_adapters.py` (new)
 - `tests/test_postgresql_private_migration.py` (new)
 
-The core stays unchanged. Return a focused core failure before any request to expand this lease.
+DB-6C must pass review before this adapter lease starts. The adapters then use its confirmed and unknown outcome contract.
 Real tests use the approved `fadir_test` database through peer access and task-owned schemas only.
 Use the DB-6A opt-in and verified-schema cleanup pattern. Keep shared test support small and local to the new tests.
 The Senior Agent will name the exact source-transfer and guest directories before the implementation dispatch.
@@ -92,7 +121,8 @@ Engineering Review Handoff:
 
 | Step | State | Completion condition |
 |---|---|---|
-| DB-6B design review | Active | Quality resolves critical adapter and core contract gaps. |
+| DB-6B design review | Complete: NOT READY | Two focused core failures require DB-6C. |
+| DB-6C core repair | Active | Both regressions and outcome verification tests pass. |
 | DB-6B implementation | Pending | Exact adapter lease, retained red proof, and local tests pass. |
 | DB-6B real VM proof | Pending | Synthetic transfer, ownership, repeatability, rollback, and cleanup pass on PostgreSQL. |
 | G3 acceptance review | Pending | Quality classifies the data foundation and remaining private gates. |
@@ -619,7 +649,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-DB-6B-REVIEW is active with an empty write lease. The current review section defines its exact scope.
+DB-6C is active with the two-file lease in the current review section.
 
 ### Completed lease: APP-1
 
