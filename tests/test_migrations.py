@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch
+import re
+from unittest.mock import MagicMock, patch
 
 import pytest
-from alembic import command
+from alembic import command, context
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.dialects import postgresql
 
 from app.models import Base
 
@@ -346,6 +349,63 @@ def test_postgresql_upgrade_sql_is_offline(monkeypatch, capsys) -> None:
     assert "fk_snapshot_portfolio_id_portfolio" in sql
     assert "ix_transaction_portfolio_instrument_date" in sql
     assert "ix_snapshot_portfolio_date" in sql
+
+
+def test_postgresql_version_storage_fits_revision_chain(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("FADIR_DATABASE_URL", POSTGRESQL_URL)
+    config = _alembic_config()
+    revisions = tuple(ScriptDirectory.from_config(config).walk_revisions())
+    required_length = max(len(revision.revision) for revision in revisions)
+
+    with patch(
+        "sqlalchemy.engine.create.create_engine",
+        side_effect=AssertionError("offline migration tried to create an engine"),
+    ):
+        command.upgrade(config, "head", sql=True)
+
+    sql = capsys.readouterr().out
+    declaration = re.search(r"version_num (TEXT|VARCHAR\((\d+)\))", sql)
+    assert declaration is not None
+    if declaration.group(2) is not None:
+        capacity = int(declaration.group(2))
+        assert capacity >= required_length, (
+            f"PostgreSQL version storage accepts {capacity} characters; "
+            f"the unchanged revision chain requires {required_length}"
+        )
+    assert "PRIMARY KEY (version_num)" in sql
+    for revision in revisions:
+        assert revision.revision in sql
+
+
+def test_online_postgresql_uses_version_table_extension(monkeypatch) -> None:
+    monkeypatch.setenv("FADIR_DATABASE_URL", POSTGRESQL_URL)
+    connection = MagicMock()
+    connection.dialect = postgresql.dialect()
+    connection.in_transaction.return_value = False
+    observed = []
+
+    def inspect_version_table() -> None:
+        implementation = context.get_context().impl
+        for primary_key in (True, False):
+            table = implementation.version_table_impl(
+                version_table="synthetic_version",
+                version_table_schema="synthetic_schema",
+                version_table_pk=primary_key,
+            )
+            assert table.name == "synthetic_version"
+            assert table.schema == "synthetic_schema"
+            assert not table.c.version_num.nullable
+            assert bool(table.primary_key.columns) is primary_key
+            observed.append(table.c.version_num.type.compile(connection.dialect))
+
+    with (
+        patch("sqlalchemy.engine_from_config") as factory,
+        patch("alembic.context.run_migrations", side_effect=inspect_version_table),
+    ):
+        factory.return_value.connect.return_value.__enter__.return_value = connection
+        command.upgrade(_alembic_config(), "head")
+
+    assert observed == ["TEXT", "TEXT"]
 
 
 def test_baseline_revision_is_static() -> None:

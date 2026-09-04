@@ -3,13 +3,36 @@ from __future__ import annotations
 import os
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from alembic.ddl.postgresql import PostgresqlImpl
+from sqlalchemy import Table, Text, engine_from_config, pool
 
 from app.models import Base
 
 
 config = context.config
 target_metadata = Base.metadata
+
+
+class FadirPostgresqlImpl(PostgresqlImpl):
+    __dialect__ = "postgresql"
+
+    # Alembic 1.14+ exposes this dialect hook for the version table definition.
+    def version_table_impl(
+        self,
+        *,
+        version_table: str,
+        version_table_schema: str | None,
+        version_table_pk: bool,
+        **kw,
+    ) -> Table:
+        table = super().version_table_impl(
+            version_table=version_table,
+            version_table_schema=version_table_schema,
+            version_table_pk=version_table_pk,
+            **kw,
+        )
+        table.c.version_num.type = Text()
+        return table
 
 
 def _database_url() -> str:
