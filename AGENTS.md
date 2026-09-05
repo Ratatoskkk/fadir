@@ -1,31 +1,32 @@
 # faðir agent index
 
-Read [CONTEXT.md](CONTEXT.md) before product work. Read [docs/OPEN_BETA_BRIEF.md](docs/OPEN_BETA_BRIEF.md) before open beta work.
+Read [CONTEXT.md](CONTEXT.md) before product work.
+Read [the beta brief](docs/OPEN_BETA_BRIEF.md) and [the ADRs](docs/adr/) before beta work.
 
-Use [plan/manager-open-beta.md](plan/manager-open-beta.md) as the only live work board. The board controls phases, assignments, leases, gates, and owner decisions.
+Use [the manager board](plan/manager-open-beta.md) as the only live work board.
+Read its current authority, work rules, protected state, and exact lease before each assignment.
+Historical records preserve evidence. They do not activate a lease.
 
-Use the stable role briefs under [plan/specialists/](plan/specialists/). [plan/README.md](plan/README.md) lists all six roles.
+Use [the specialist index](plan/README.md) for the six stable role briefs.
+Use Luna with High effort for specialist tasks: `gpt-5.6-luna`, `high`.
 
-Review `git status --short` before each lease. Treat all current changes as owner work.
+Review `git status --short` before each lease. Preserve current changes as owner work.
+Require a focused failed proof before a repair. Preserve that proof through the repair.
+Require visible browser proof for each visible interface change.
+Separate Facts, Limits, Uncertainty, and Open work in each review and handoff.
+Keep local, synthetic VM, hosted, private, and public proof separate.
 
-When the plan selects a new integration, research current official primary documentation before design or testing.
+Research current official sources before design or tests for a new integration.
+Record each source URL, retrieval date, version scope, and tool limit.
+Repeat research after a material version, environment, requirement, or documentation change.
+Routine tests for an accepted integration can use its accepted research.
 
-Use the research to choose the best path for the current scenario. Record the source URL, retrieval date, version scope, and tool limits.
+Protect private databases, WAL files, uploads, secrets, local configuration, Portfolio rows, and the owner's email address.
+The owner approved continued delivery, VM use, and reviewed commits and pushes.
+Use the board's current delivery authority and exact leases for each action.
+The Senior coordinates and reviews. Specialists implement product and operational changes.
+Ask for missing owner values and protect private data throughout delivery.
 
-Use known tool limits to shape the first test plan. Routine tests for an accepted integration do not need new research.
-
-Research again when the version, environment, requirements, or documented behavior changes.
-
-Each assignment must have one exact file lease. Each specialist can have one active assignment at most.
-
-Create a focused failed proof before a repair. Keep that proof through the repair.
-
-Match each test to the risk. A visible interface change needs visible browser proof.
-
-Keep local, hosted, and public proof separate. Local proof cannot prove a public pass.
-
-Protect the private database, WAL files, uploads, secrets, local configuration, Portfolio rows, and the owner's email address.
-
-Stop for an owner choice, a secret, a public change, or a destructive action. Get owner approval before a commit, push, deployment, or external service call.
-
-Each review and handoff must separate Facts, Limits, Uncertainty, and Open work.
+Write in Simplified Technical English. Use the relevant code or write skill for substantive work.
+After each material Senior action, add a short `ELIM5:` paragraph in the user conversation.
+Keep that paragraph outside specialist prompts and handoffs.

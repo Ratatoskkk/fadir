@@ -1,24 +1,38 @@
 # faðir open beta coordination
 
-The [manager board](manager-open-beta.md) is the only live work board. It records phases, dependencies, gates, assignments, leases, and owner decisions.
+The [manager board](manager-open-beta.md) is the only live work board.
+Its current authority section controls assignments, leases, gates, and owner decisions.
+The accepted beta brief and ADRs control product decisions.
 
-The specialist files are stable role briefs. Keep the role names and file names stable.
+## Stable roles
 
-- [Product Experience](specialists/product-experience.md)
-- [Identity and Data Integrity](specialists/identity-and-data-integrity.md)
-- [Finance and Tax](specialists/finance-and-tax.md)
-- [Market Data](specialists/market-data.md)
-- [Platform and Release](specialists/platform-and-release.md)
-- [Quality and Security](specialists/quality-and-security.md)
+| Role | Brief | Task |
+|---|---|---|
+| Product Experience | [product-experience.md](specialists/product-experience.md) | `01a0576b-208f-7b10-bdef-91dbf0a69abe` |
+| Identity and Data Integrity | [identity-and-data-integrity.md](specialists/identity-and-data-integrity.md) | `01a059a5-e2b6-71d0-b045-abd010e0f492` |
+| Finance and Tax | [finance-and-tax.md](specialists/finance-and-tax.md) | `01a056f1-7e78-7b70-a153-de6ec5bcf18f` |
+| Market Data | [market-data.md](specialists/market-data.md) | `01a070ed-793e-7360-8575-155af877f4d8` |
+| Platform and Release | [platform-and-release.md](specialists/platform-and-release.md) | `01a05ef0-3faa-7b52-ad69-52a851bb56c9` |
+| Quality and Security | [quality-and-security.md](specialists/quality-and-security.md) | `01a05777-bcc9-7ed0-b66d-292eff0f6d9c` |
 
-The manager reviews the worktree before each lease. The manager then updates the live board before a specialist starts.
+Use `gpt-5.6-luna` with `high` effort for every specialist task.
+Keep each task title equal to its role name.
+Reuse an existing role task when possible.
+Each role can have one active assignment at most.
 
-Apply the integration research rule from [AGENTS.md](../AGENTS.md) when the plan selects a new integration.
+## Assignment procedure
 
-Use documented tool limits to shape the first test plan. Routine tests for an accepted integration do not need new research.
+1. Read the current authority and worktree status.
+2. Select one bounded assignment.
+3. Record its exact file lease and operational lease on the board.
+4. Send the specialist its assignment and stable brief.
+5. Review its diff, retained failed proof, final proof, and handoff.
+6. Release its lease before dependent work starts.
 
-Each specialist can have one active assignment at most. A specialist works only inside the exact lease.
+The current delivery table defines each specialist lease. Earlier setup leases are released.
+The Senior alone edits the nine coordination files.
+Return specialist reports in the task conversation.
+The Senior records accepted results on the board.
 
-Each specialist must produce a focused failed proof before a repair. The specialist must keep that proof through the repair.
-
-Each handoff must separate Facts, Limits, Uncertainty, and Open work.
+Use the [work rules](manager-open-beta.md#work-rules) and [protected state](manager-open-beta.md#protected-state) for all work.
+Use the [test commands](manager-open-beta.md#current-test-instructions) only within an active proof lease.

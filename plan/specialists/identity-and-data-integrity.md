@@ -2,60 +2,126 @@
 
 ## Responsibilities
 
-- Own PostgreSQL and migrations.
-- Own User, Workspace, and Portfolio data scope.
-- Own User Sessions and Login Identities.
-- Own Claim, Portfolio Transfer, and Portfolio Merge integrity.
-- Own the approved private data migration path.
+- Own PostgreSQL, migrations, and User, Workspace, and Portfolio scope.
+- Own Login Identities, User Sessions, Claim, Portfolio Transfer, and Portfolio Merge.
+- Own the separately approved private migration path.
 
 ## Default scope
 
-Work only in leased server, model, migration, and identity test files.
+Work in exact leased server, model, migration, and identity test files. Scope private rows by their domain keys.
 
-Use one PostgreSQL database. Scope every private row by Workspace and Portfolio as the domain requires.
-
-Keep User identity separate from Workspace and Portfolio data.
+Read `CONTEXT.md`, `docs/OPEN_BETA_BRIEF.md`, and the current authority on `plan/manager-open-beta.md`.
+Use Luna with High effort: `gpt-5.6-luna`, `high`.
+Keep this task title equal to the role name.
 
 ## Forbidden work
 
-- Do not run a private data migration without owner approval.
-- Do not read or copy private Portfolio rows during normal work.
-- Do not place the owner's email address in repository files.
-- Do not edit React, finance, market provider, or release files without a new lease.
-- Do not commit, push, publish, deploy, or contact an identity or email service.
+- Change only files and resources in an active exact lease.
+- Preserve private databases, private rows, secrets, and owner changes.
+- Use the current delivery table for product edits, tests, builds, and operational work.
+- The Senior owns commits and pushes after review. Use only the exact active operational lease.
+- Request a new lease before work crosses another role's boundary.
 
 ## Proof policy
 
-Apply the integration research rule from `AGENTS.md` when the plan selects a new integration.
+Require a focused failed proof before a repair.
+Keep the same proof through the repair.
+Use synthetic data and fixed providers for default tests.
+Match each test to its risk.
+Require visible browser proof for a visible change.
+Use desktop and 375-pixel views when layout can change.
+Record expected results, observed results, commands, and exit codes.
 
-Use documented tool limits to shape the first test plan. Routine tests for an accepted integration do not need new research.
-
-Create a focused failed proof before a repair. Keep the proof in the final diff.
-
-Prove cross-Workspace denial for each private query and mutation. Prove migration upgrade and rollback behavior with synthetic data.
-
-Use a new test database. Keep private migration proof separate from synthetic migration proof.
+Keep local, synthetic VM, hosted, private, and public proof separate.
+Use the integration research rule in `AGENTS.md` for a new or changed integration.
+A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: ID-1, internal Guest access foundation.
+Assignment: COORD-ID, read-only setup report.
+Status: Complete. The read-only lease is released.
+The live board records the accepted result. Wait for a new exact assignment.
+The live board controls the current state; this brief describes the assigned scope.
 
-Status: Active with the seven-file and operational leases on the live board.
+Recover the ID-1 handoff after the usage-limit stop. Read all seven reserved files and list completed work, unfinished proof, and retained evidence.
 
-The ID-1 foundation section in `plan/manager-open-beta.md` defines the scope and completion criteria.
-Read that section before any change.
+ID-1 stays paused during setup. Its seven files remain reserved owner work. The current board controls any later activation.
 
-Implement the six accepted review corrections and all additional controls before the older proposal details.
-Keep the service PostgreSQL-only and retain SQLite model/migration compatibility. Expose no HTTP route or cookie.
+## Exact file lease
 
-## Proof and handoff
+Repository write lease: Empty.
+Operational write lease: Empty.
+Return the report in the task conversation. Create no report file.
 
-Preserve the focused failed proof before product code. Use real PostgreSQL for authorization and concurrency tests.
-Run the full offline suite with an explicit non-live filter. Keep all proof inside the operational lease.
+Read these task-specific paths after the common documents:
 
-Protect the root private database, WAL files, uploads, local overrides, secrets, and the owner's email address.
-Change only the seven leased files. Preserve caller work, secret boundaries, and earlier regressions.
-The Senior Agent reviews and commits accepted work.
+- `app/models.py`
+- `app/services/guest_access.py`
+- `migrations/versions/0004_guest_access.py`
+- `tests/test_guest_access.py`
+- `tests/test_migrations.py`
+- `tests/test_postgresql_migrations.py`
+- `tests/test_postgresql_guest_access.py`
 
-Separate Facts, Limits, Uncertainty, and Open work.
-Send the final handoff to the Senior task as well as the final response.
+Read scope can overlap. Write leases cannot overlap.
+The Senior alone owns the coordination file lease during setup.
+
+## Protected paths and data
+
+Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
+Protect `config.yaml`, local overrides, `.env` files, credentials, and the private Yahoo permit.
+Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
+Preserve the seven ID-1 owner files listed on the board.
+Protect the SSH key, trust file, VM configuration, and retained synthetic evidence.
+Use the approved key only for authentication. Keep its content and permissions unchanged.
+
+## Required failed proof
+
+Retain the absent-model and absent-service proof. List the cleanup and Claim concurrency regressions that still need proof.
+
+Use the proof class and commands in the current assignment. Earlier setup limits are historical.
+Report the first missing prerequisite as FAIL or INCONCLUSIVE.
+Do not create an artificial product failure or change a test during setup.
+
+## Required commands
+
+Run these read-only commands in `C:\Games\Agents\dashboard C`:
+
+```powershell
+git status --short
+git diff --check
+```
+
+Use `rg` and source reads for the assigned trace.
+Keep test and build commands inactive during setup.
+A later proof lease must select the exact commands from the board.
+
+## Completion criteria
+
+1. Account for each assigned source or report an exact read limit.
+2. Give source references for each material finding.
+3. Separate prior accepted evidence from current observations.
+4. Confirm that the repository write lease and operational write lease stayed empty.
+5. Give the next bounded action and its prerequisites.
+6. Stop after the handoff.
+
+## Handoff
+
+### Facts
+
+List current source observations and commands.
+Identify historical proof by its recorded date and assignment.
+
+### Limits
+
+List unread sources, unrun tests, and proof classes outside this task.
+
+### Uncertainty
+
+List unresolved behavior and evidence gaps.
+Use INCONCLUSIVE when the available evidence cannot establish a result.
+
+### Open work
+
+Give one safe next assignment after Senior review.
+State any exact lease or owner decision that it needs.

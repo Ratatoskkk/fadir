@@ -2,65 +2,58 @@
 
 ## Responsibilities
 
-- Own Average Purchase Price rules.
-- Own Base Currency and Fee Currency finance rules.
-- Own transaction-date FX rules.
-- Own Tax Profiles and country tax adapters.
-- Own deterministic finance and tax calculations.
+- Own Average Purchase Price and deterministic finance calculations.
+- Own Base Currency, Fee Currency, transaction-date FX rules, Tax Profiles, and country tax adapters.
+- Use Decimal arithmetic and the accepted money serializer.
 
 ## Default scope
 
-Work in leased calculation, API contract, and finance test files.
+Work in exact leased calculation, finance contract, and finance test files.
 
-Keep native transaction values separate from Portfolio Base Currency values. Keep tax currency separate from both when the domain requires it.
-
-Use exact Decimal arithmetic. Serialize money with the existing string format.
+Read `CONTEXT.md`, `docs/OPEN_BETA_BRIEF.md`, and the current authority on `plan/manager-open-beta.md`.
+Use Luna with High effort: `gpt-5.6-luna`, `high`.
+Keep this task title equal to the role name.
 
 ## Forbidden work
 
-- Do not edit React, identity, database migration, market provider, or release files without a new lease.
-- Do not add Fee Currency to the Average Purchase Price assignment.
-- Do not use private Portfolio rows as test data.
-- Do not commit, push, publish, deploy, or contact an external service.
+- Change only files and resources in an active exact lease.
+- Preserve private databases, private rows, secrets, and owner changes.
+- Use the current delivery table for product edits, tests, builds, and operational work.
+- The Senior owns commits and pushes after review. Use only the exact active operational lease.
+- Request a new lease before work crosses another role's boundary.
 
 ## Proof policy
 
-Apply the integration research rule from `AGENTS.md` when the plan selects a new integration.
+Require a focused failed proof before a repair.
+Keep the same proof through the repair.
+Use synthetic data and fixed providers for default tests.
+Match each test to its risk.
+Require visible browser proof for a visible change.
+Use desktop and 375-pixel views when layout can change.
+Record expected results, observed results, commands, and exit codes.
 
-Use documented tool limits to shape the first test plan. Routine tests for an accepted integration do not need new research.
-
-Create a focused failed proof before a repair. Keep the proof in the final diff.
-
-Use fixed synthetic values that distinguish the accepted rule from a wrong rule. Prove boundary states, including a zero open position.
-
-Run focused tests first. Run the full non-network suite after the repair.
+Keep local, synthetic VM, hosted, private, and public proof separate.
+Use the integration research rule in `AGENTS.md` for a new or changed integration.
+A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: APP-1, Average Purchase Price calculation and API contract.
+Assignment: COORD-APP, read-only setup report.
+Status: Complete. The read-only lease is released.
+The live board records the accepted result. Wait for a new exact assignment.
+The live board controls the current state; this brief describes the assigned scope.
 
-Status: Accepted and complete. The lease is released.
+Trace the existing Average Purchase Price from purchases through the API. Compare the source and retained tests with the accepted rule.
 
-Implement this accepted rule:
-
-- Use all purchase quantities and native-currency purchase costs.
-- Include each purchase fee.
-- Exclude every sale and sale fee.
-- Keep the lifetime value after the open quantity reaches zero.
-- Return no value only when the Stock Group has no purchase.
-- Keep Fee Currency outside this assignment.
-
-Use this formula:
-
-`sum(purchase quantity * purchase price + purchase fee) / sum(purchase quantity)`
-
-Expose the value as `average_purchase_price_native` on each portfolio position. Use the existing string money serializer.
-
-Do not add the React table column. Product Experience owns that later assignment.
+Use sum(quantity * native purchase price + purchase fee) / sum(purchase quantity). Exclude sales and sale fees. Preserve the lifetime value after full sale. Return null only without purchases. Keep Fee Currency for Phase 5.
 
 ## Exact file lease
 
-The proposed lease contains only these files:
+Repository write lease: Empty.
+Operational write lease: Empty.
+Return the report in the task conversation. Create no report file.
+
+Read these task-specific paths after the common documents:
 
 - `app/calc/fifo.py`
 - `app/calc/attribution.py`
@@ -69,71 +62,65 @@ The proposed lease contains only these files:
 - `tests/test_calc_fifo.py`
 - `tests/test_api.py`
 
-This lease is complete. Treat its current changes as owner work.
+Read scope can overlap. Write leases cannot overlap.
+The Senior alone owns the coordination file lease during setup.
 
 ## Protected paths and data
 
 Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
-
-Protect `.env`, `config.local.yaml`, environment secrets, and the private Yahoo permit.
-
+Protect `config.yaml`, local overrides, `.env` files, credentials, and the private Yahoo permit.
 Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
+Preserve the seven ID-1 owner files listed on the board.
+Protect the SSH key, trust file, VM configuration, and retained synthetic evidence.
+Use the approved key only for authentication. Keep its content and permissions unchanged.
 
 ## Required failed proof
 
-Add focused tests before product edits. Run them and capture the failure.
+APP-1 already retains the missing-feature failure in its record. A new repair needs a new focused failure; keep the passing feature intact.
 
-The tests must cover:
-
-- Multiple purchases with different quantities and prices
-- Purchase fees
-- A partial sale that does not change the lifetime average
-- A full sale that keeps the lifetime average
-- API string serialization for an open and a fully sold Stock Group
-
-The first failure must show that the calculation or API field is missing. Keep these tests after the repair.
+Use the proof class and commands in the current assignment. Earlier setup limits are historical.
+Report the first missing prerequisite as FAIL or INCONCLUSIVE.
+Do not create an artificial product failure or change a test during setup.
 
 ## Required commands
 
-Run this focused command before and after the repair:
+Run these read-only commands in `C:\Games\Agents\dashboard C`:
 
 ```powershell
-.venv\Scripts\python.exe -m pytest tests/test_calc_fifo.py tests/test_api.py -q
+git status --short
+git diff --check
 ```
 
-Run this full local regression command after the focused proof passes:
-
-```powershell
-.venv\Scripts\python.exe -m pytest -q
-```
-
-Do not run `make test-live`. It contacts Yahoo and needs owner approval.
+Use `rg` and source reads for the assigned trace.
+Keep test and build commands inactive during setup.
+A later proof lease must select the exact commands from the board.
 
 ## Completion criteria
 
-- The focused proof fails before product edits.
-- The same proof passes after the repair.
-- The full non-network suite passes.
-- The API returns `average_purchase_price_native` as a string or `null`.
-- Sales do not change the value.
-- A fully sold Stock Group keeps the value.
-- The diff stays inside the six leased files.
-- The handoff separates Facts, Limits, Uncertainty, and Open work.
+1. Account for each assigned source or report an exact read limit.
+2. Give source references for each material finding.
+3. Separate prior accepted evidence from current observations.
+4. Confirm that the repository write lease and operational write lease stayed empty.
+5. Give the next bounded action and its prerequisites.
+6. Stop after the handoff.
 
 ## Handoff
 
 ### Facts
 
-List the formula, changed files, failed proof output, and final command results.
+List current source observations and commands.
+Identify historical proof by its recorded date and assignment.
 
 ### Limits
 
-State that the React table, Fee Currency, hosted proof, and public proof remain outside APP-1.
+List unread sources, unrun tests, and proof classes outside this task.
 
 ### Uncertainty
 
-List unresolved contract or arithmetic behavior.
+List unresolved behavior and evidence gaps.
+Use INCONCLUSIVE when the available evidence cannot establish a result.
 
 ### Open work
 
-Name APP-2 as the next task after manager acceptance. List each owner choice.
+Give one safe next assignment after Senior review.
+State any exact lease or owner decision that it needs.

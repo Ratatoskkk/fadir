@@ -1,19 +1,370 @@
 # faðir open beta manager board
 
-Date: 2026-09-04
+Date: 2026-09-05
 
 This file is the only live work board. The stable role briefs define long-term specialist boundaries.
 
+## Current delivery authority: 2026-09-05
+
+The owner approved continued delivery through release and final acceptance.
+The Senior coordinates Luna High specialists and reviews their work.
+The Senior can commit and push accepted work to the existing repository.
+The owner also approved VM use and release work. Routine approval pauses are not required.
+This approval ends the setup-only pause in earlier records and briefs.
+Keep the nine-phase order, exact leases, focused failed proofs, and independent acceptance gates.
+The Senior edits coordination files only. Specialists implement product and operational changes under exact leases.
+
+The approved destination is the existing Linux VM and the existing origin repository.
+Inspect each concrete resource before a change. Prefer reversible changes and bounded synthetic resources.
+Keep private data, WAL files, uploads, credentials, and local configuration protected.
+The approval does not supply a domain, identity mapping, email sender, backup target, or secret.
+Ask for missing values while independent work continues.
+Confirm any destructive action on existing owner data or infrastructure before execution.
+Use only free services or existing approved resources unless the owner approves a charge.
+Create no real identity or private-data migration from an assumed owner value.
+Deploy only after the applicable product, security, operations, and recovery gates pass.
+
+## Active delivery assignments
+
+| Role | Assignment | Repository write lease | Operational write lease | Status |
+|---|---|---|---|---|
+| Quality and Security | ID-1-CODE-RESUME | Empty | Empty | Active source review |
+| Platform and Release | PLAT-READY-1 | Empty | Empty | Active host and release prerequisite audit |
+| Identity and Data Integrity | None | Empty | Empty | Wait for ID-1 review |
+| Product Experience | None | Empty | Empty | Wait for scoped Guest contract |
+| Finance and Tax | None | Empty | Empty | Available |
+| Market Data | None | Empty | Empty | Wait for Phase 6 |
+
+The seven ID-1 candidate files remain frozen during Quality review.
+Quality reads their complete diff and the accepted ID-1 contract.
+Quality checks pending ORM state, transaction ownership, lock order, secret handling, clock rules, cleanup, and retained failure proofs.
+It returns source findings and a READY or NOT READY verdict. It runs no test and makes no artifact or repair.
+After the review, the Senior assigns a focused repair or exact synthetic proof lease.
+
+PLAT-READY-1 reconciles the named VM with the successful strict SSH result.
+It can read Hyper-V metadata, caller elevation, VM service metadata, strict SSH identity, OS/package versions, listener metadata, and relevant public source files.
+It can read metadata for the existing synthetic test roots and retained XML evidence.
+It can inspect Git and deployment source for existing domain, service, ingress, and backup choices.
+It reads no private database, private rows, secret content, unrelated network inventory, or private application logs.
+It changes no host, guest, package, file, service, database, tunnel, or checkpoint.
+It proposes exact resources for a safe synthetic server and later public release.
+Use accepted official sources; refresh official documentation only for a changed integration or version gap.
+Report missing owner values without guessing them.
+
+## Repository delivery rule
+
+PUB-1 verifies the already committed source before the first push.
+The earlier worktree registry points to an absent directory. The attempted test command did not start.
+The Senior can create a detached source worktree at `C:/Users/doguk/AppData/Local/Temp/fadir-publish-20260905/source/`.
+Run offline tests from that exact committed source. Keep the canonical owner worktree unchanged.
+Require HEAD `aefcf6a8a6776750ea050bc987e70330048e73a6` and a clean source status before the run.
+Use the existing Windows Python environment without package changes.
+The exact new evidence root is `C:/Users/doguk/AppData/Local/Temp/fadir-publish-20260905/`.
+Require initial absence, use explicit basetemp, disable bytecode and pytest cache writes, and keep all fixtures synthetic.
+Run the full suite with `-o addopts= -m "not live"`. Create no listener and make no provider call.
+Retain the source and evidence root. This lease permits no deletion or product source edit.
+
+The first remote fetch reports zero remote-only commits and 38 local-only commits on main.
+The screenshot's changed-line count is not a commit count.
+The worktree also contains the nine coordination files and seven unfinished ID-1 files.
+Review the committed publication range separately from the unfinished candidate.
+Scan the publication range for protected files and secrets before its first push.
+Commit only accepted exact files. Never stage the whole worktree.
+Push accepted commits with a normal fast-forward push. Preserve unrelated owner changes.
+A rejected non-fast-forward push requires a fresh fetch and review; never force-push.
+Record the revision, checks, review result, and remote result after each complete assignment.
+
+## Current product state
+
+### PUB-1 review
+
+Facts: The accepted committed source passed 336 offline tests, with 30 live tests deselected and one existing Starlette warning.
+The run used detached HEAD `aefcf6a` and retained XML at `C:/Users/doguk/AppData/Local/Temp/fadir-publish-20260905/offline.xml`.
+The publication range contains 53 changed paths. The protected-path and credential-pattern checks found no flagged entry.
+The committed diff check passed. Origin is the existing public repository `Ratatoskkk/fadir`, with main as its default branch.
+The prior G2 and conditional G3 reviews remain the product acceptance records for this range.
+Limits: The scan is a bounded publication check, not a proof that every possible secret pattern is absent.
+This is source publication with fresh offline regression proof. It is not a public service release or final ID-1 acceptance.
+Uncertainty: Hosted CI is absent from the tracked source. Public application readiness remains behind G4-G9.
+Open work: Commit the reviewed coordination update, push the accepted history, and verify the remote revision.
+
+Phase 4 remains current. G2 and conditional G3 retain their accepted scope.
+G4 remains NOT READY until Guest access, identity, transitions, and User Sessions pass.
+ID-1 needs an independent review and fresh PostgreSQL proof after its last source repair.
+No setup report proves hosted-product or public acceptance.
+
+## Earlier setup record
+
+The sections below retain the completed setup and earlier evidence.
+Their setup-only pauses do not override the current delivery authority.
+Only the active delivery table grants a current specialist lease.
+
+## Current authority: setup refresh, 2026-09-05
+
+The owner requested coordination only, plus direct specialist prompts.
+On 2026-09-05, the owner changed the specialist model to Luna High after the usage-limit stop.
+The Senior can edit only the nine coordination files listed below.
+The Senior reused five role tasks and created the Market Data task.
+All six specialists completed their read-only setup reports with Luna High.
+Their empty write leases are released.
+Keep implementation paused until the owner resolves the continuation question.
+The owner's server target is the existing Linux VM. Server setup remains a later Platform assignment.
+
+This section controls the setup. Older action text below preserves the project record.
+Historical approvals, proposed leases, and commands do not activate work during setup.
+The earlier commit and synthetic VM permissions do not authorize a setup mutation.
+Preserve accepted G2 and conditional G3 results. Keep completed APP and Phase 3 work complete.
+
 ## Coordination state
 
-- Current phase: 4. Guest access and identity.
-- Current status: G3 passed. The Senior accepted all six ID-1 review corrections and assigned the Guest foundation.
-- Active specialist assignments: ID-1, Identity and Data Integrity; ID-1-CODE, Quality and Security.
-- Active file leases: Identity owns the seven files listed under the ID-1 implementation boundary below.
-- Proposed next assignment: Review ID-1 code and real PostgreSQL evidence before a commit.
-- Next release gate: G4, Guest access, Login Identity, transitions, and User Sessions.
+- Current product phase: 4. Guest access and identity.
+- Setup state: Nine coordination files refreshed. The Senior reviewed all six specialist reports.
+- Prior gates: G2 passed locally. Conditional G3 passed for synthetic scope on 2026-09-04.
+- Current gate: G4 remains NOT READY. ID-1 has no accepted runtime result.
+- Active specialist assignments: None. All six setup reports are complete.
+- Paused product assignments: ID-1 and ID-1-CODE. Preserve their contract and evidence.
+- Next action: Owner review of the proposed read-only ID-1 candidate review below.
+- Next release gate: G4 for Guest access, identity transitions, and User Sessions.
 
-## Current review
+## Current setup leases
+
+Senior repository write lease:
+
+1. `AGENTS.md`
+2. `plan/README.md`
+3. `plan/manager-open-beta.md`
+4. `plan/specialists/product-experience.md`
+5. `plan/specialists/identity-and-data-integrity.md`
+6. `plan/specialists/finance-and-tax.md`
+7. `plan/specialists/market-data.md`
+8. `plan/specialists/platform-and-release.md`
+9. `plan/specialists/quality-and-security.md`
+
+Senior operational write lease: Empty.
+
+| Role | Assignment | Repository write lease | Operational write lease | State |
+|---|---|---|---|---|
+| Product Experience | COORD-UX | Empty | Empty | Complete; lease released; Luna High |
+| Identity and Data Integrity | COORD-ID | Empty | Empty | Complete; lease released; Luna High |
+| Finance and Tax | COORD-APP | Empty | Empty | Complete; lease released; Luna High |
+| Market Data | COORD-MKT | Empty | Empty | Complete; lease released; Luna High |
+| Platform and Release | COORD-VM | Empty | Empty | Complete; lease released; Luna High |
+| Quality and Security | COORD-QS | Empty | Empty | Complete; lease released; Luna High |
+
+All specialist reads use the canonical repository at `C:\Games\Agents\dashboard C`.
+A task worktree does not replace this board or supply current owner changes.
+Specialists return reports in their task conversations. The Senior alone edits coordination files.
+The Senior checks Git state before each dispatch and reviews each report before dependent work.
+
+### Reserved ID-1 owner files
+
+The initial worktree contains these seven changes. No setup task can edit them.
+
+1. `app/models.py` — modified.
+2. `tests/test_migrations.py` — modified.
+3. `tests/test_postgresql_migrations.py` — modified.
+4. `app/services/guest_access.py` — untracked.
+5. `migrations/versions/0004_guest_access.py` — untracked.
+6. `tests/test_guest_access.py` — untracked.
+7. `tests/test_postgresql_guest_access.py` — untracked.
+
+These files remain reserved owner work. This reservation is not an active implementation lease.
+Identity and Quality stopped at a usage limit in their latest recorded attempts.
+Recover their evidence before implementation resumes.
+
+## Setup review
+
+### Facts
+
+- The Senior read all 27 project Markdown files, including all ten ADRs and the private migration runbook.
+- The Senior read the structure, test configuration, Makefile, frontend commands, and Git state.
+- Identity, Platform, and Quality briefs lacked required sections.
+- The section check remains the failed coordination proof in the Senior task record.
+- The existing APP calculation, API, table, and retained tests contain the accepted feature.
+- All seven APP source files are outside the initial owner change set.
+- Initial HEAD: `aefcf6a`. The Senior recorded hashes for 115 non-coordination source files before edits.
+- The Senior reused five role tasks and created Market Data as task `01a070ed-793e-7360-8575-155af877f4d8`.
+- The first Market Data request returned only a queued client identifier before the usage-limit stop.
+- The second request produced the completed Luna High task. Preserve the earlier worktree; no cleanup is authorized.
+
+### Limits
+
+- This is document and source proof. No new product test or browser acceptance ran.
+- Prior G2 and G3 results retain their local and synthetic limits.
+- The README, SPEC, and Makefile describe the earlier local product.
+- Their local-only text does not override the beta brief and ADRs.
+- The market report's older provider-seam proposals do not override ADR 0010.
+- Documents outside the coordination lease remain unchanged.
+
+### Uncertainty
+
+- Final ID-1 PostgreSQL and concurrency proof remains absent after the latest source repairs.
+- SSH reaches the expected guest, but the host inventory probe returned no named VM row.
+- No current hosted service or public endpoint acceptance is established.
+
+### Open work
+
+1. Approve the proposed read-only ID-1 candidate review below.
+2. Define a fresh synthetic proof lease after that review.
+3. Keep implementation paused until its exact lease has approval.
+4. Keep private migration Gates 3-8 and production choices pending.
+
+## Current Average Purchase Price trace
+
+| Layer | Source | Observation |
+|---|---|---|
+| Purchase totals | `app/calc/fifo.py:153`, `:217` | Purchase totals include fees. Sales change open lots, not lifetime totals. |
+| Metrics | `app/calc/attribution.py:148`, `:256` | Each PositionMetrics carries the lifetime average. |
+| API schema | `app/schemas.py:63` | PositionOut uses nullable money and the Decimal string serializer. |
+| API map | `app/api/routes.py:107` | Each position receives average_purchase_price_native. |
+| Detailed table | `frontend/src/components/PositionsTable.jsx:12`, `:223` | Ort. alış uses native currency and an em dash for null. |
+| Formula tests | `tests/test_calc_fifo.py:57`, `:79`, `:85` | Tests cover fees, partial sale, full sale, and no purchase. |
+| API tests | `tests/test_api.py:185`, `:208` | Tests check string values before and after full sale. |
+
+Use `sum(purchase quantity * native price + purchase fee) / sum(purchase quantity)`.
+Exclude sales and sale fees. Keep the lifetime average at zero open quantity.
+Keep separate Fee Currency work in Phase 5.
+
+First current assignment: COORD-APP, Finance and Tax.
+Exact repository write lease: Empty.
+Exact operational write lease: Empty.
+Read the six APP-1 files above. Product Experience separately reads the table under COORD-UX.
+The empty lease cannot conflict with owner changes.
+A new defect needs a focused failure and a new exact repair lease after review.
+
+The original six-file APP-1 lease remains in the completed record below.
+APP-2 used only `frontend/src/components/PositionsTable.jsx`.
+Both leases are released. They are not new implementation instructions.
+
+## Current VM direction
+
+Use `fadir-control-lab-01` at `192.168.247.10` for approved synthetic Linux proof.
+The 2026-09-04 record reports Ubuntu 24.04.4, PostgreSQL 16.15, and peer access to `fadir_test`.
+It records accepted DB-6A migration cycles and DB-6B adapter proof after the original migration failure.
+The temporary sudo rule grants full root access. It is not constrained sudo.
+The prior control review and recovery limits remain in the record.
+
+COORD-VM permits host metadata and the established strict SSH path.
+It permits identity, OS version, PostgreSQL version, and listener or service status reads.
+It permits no database query, private-data read, log read, source transfer, VM start, restart, or configuration change.
+An unavailable VM gives an INCONCLUSIVE check, not permission to start or repair it.
+
+Place the server in the approved Linux VM after the product and operational gates pass.
+Any conversion of the disposable lab into production needs an exact owner-approved lease.
+Platform must define services, source, secrets, backups, restore, and network resources before deployment.
+The VM exists; Phase 8 must review it before any new provision step.
+Keep synthetic lab proof separate from hosted and public acceptance.
+
+## Current test instructions
+
+These commands are references for a later active proof lease. Run no tests or builds during setup.
+
+```powershell
+.venv\Scripts\python.exe -m pytest tests/test_calc_fifo.py tests/test_api.py -o addopts= -q -m "not live"
+.venv\Scripts\python.exe -m pytest -o addopts= -q -m "not live"
+npm --prefix frontend run build
+git diff --check
+```
+
+A runtime lease must define synthetic fixtures, temporary paths, processes, evidence, and cleanup first.
+Keep `-m "not live"` explicit when a command replaces pytest options.
+Real PostgreSQL tests need exact test files, explicit opt-in, and named synthetic resources.
+A whole-suite `-m live` command can contact Yahoo.
+The verify, bootstrap, demo, and test-live targets can contact providers or change data.
+They remain outside setup scope.
+
+## Senior review of the setup reports
+
+### Facts
+
+- All six Luna High tasks returned a read-only report. The Senior reviewed each report.
+- Finance confirmed the lifetime purchase formula, purchase fees, full-sale retention, nullable API field, and Decimal string output.
+- Product Experience confirmed the table column, native currency, null display, sort logic, footer spans, and lifetime footnote in source.
+- Identity confirmed the seven-file ID-1 candidate and the retained cleanup and Claim corrections in source.
+- The Senior also read the pending-state guard and the retained cleanup regression.
+- Identity reported an earlier 42-test PostgreSQL result before the latest repair. The Senior does not accept it as final proof.
+- Market Data confirmed direct Yahoo, the deferred provider seam, and the G5 prerequisite for Phase 6.
+- Quality confirmed all required specialist sections, the nine phases, exact empty leases, and agreement with all ten ADRs.
+- Quality found the pending Market Data task entry. The Senior replaced it with the verified task identifier.
+- Platform reached `fadir-agent` on `fadir-control-lab-01` through the established strict SSH path.
+- The guest reports Ubuntu 24.04.4 and PostgreSQL 16.15. Cluster `16/main` is online and listens on `127.0.0.1:5432`.
+- Platform reported no VM row from its host inventory probe. SSH availability does not prove the host recovery path.
+- The section check now passes for all six briefs and all four handoff subsections.
+- `git diff --check` passes. The next release gate remains G4.
+
+### Limits
+
+- The Senior accepts these reports as coordination and source evidence only.
+- No setup task ran a product test, build, browser proof, database query, or provider call.
+- The Platform probe proves SSH and PostgreSQL service availability only. It does not prove a deployed faðir server.
+- ID-1 runtime acceptance, hosted access, public access, private migration, and recovery remain outside this result.
+- The task reader omitted some final reports. The Senior read their exact local task records instead.
+- The earlier queued Market Data worktree remains intact. It has no implementation lease.
+
+### Uncertainty
+
+- The final ID-1 candidate needs independent source review and fresh synthetic proof after its last repair.
+- The guest source and retained test evidence may predate the last candidate change.
+- The cause of the missing host inventory row remains unknown.
+- Production resource choices and private migration decisions remain pending.
+
+### Open work
+
+1. Review the current ID-1 candidate with an empty write lease.
+2. Define an exact synthetic VM proof lease after that review.
+3. Resolve the host inventory discrepancy before a server or recovery assignment.
+4. Keep product implementation and deployment paused until their applicable approvals.
+
+## First Average Purchase Price prompt
+
+COORD-APP used this scope and is complete. This prompt is retained for the setup record.
+It is a source check because APP-1 and APP-2 already exist.
+The original six-file implementation lease remains released.
+
+```text
+You are Finance and Tax for COORD-APP in C:\Games\Agents\dashboard C.
+Use Luna High.
+Read the current manager board and your stable specialist brief.
+Use an empty repository write lease and an empty operational write lease.
+Read app/calc/fifo.py, app/calc/attribution.py, app/schemas.py, app/api/routes.py,
+tests/test_calc_fifo.py, and tests/test_api.py.
+Check the quantity-weighted native purchase cost, purchase fees, excluded sales, and full-sale retention.
+Check the nullable average_purchase_price_native API field and Decimal string output.
+Keep Fee Currency in Phase 5.
+Run no tests or builds. Make no file or service change.
+Return Facts, Limits, Uncertainty, and Open work with source references.
+Stop after the report.
+```
+
+## Proposed next specialist prompt
+
+Status: Prepared only. No dispatch or runtime lease exists for this next assignment.
+Role: Quality and Security.
+Assignment: ID-1-CODE-RESUME, independent source review.
+Exact repository write lease: Empty.
+Exact operational write lease: Empty.
+Read only the seven reserved ID-1 files and their accepted contract and retained evidence.
+This review can overlap their read scope without permission to edit owner work.
+
+```text
+You are Quality and Security for ID-1-CODE-RESUME in C:\Games\Agents\dashboard C.
+Use Luna High.
+Read the current manager board and your stable specialist brief.
+Review the seven reserved ID-1 files against the accepted Guest access contract.
+Use an empty repository write lease and an empty operational write lease.
+Check caller transactions, pending ORM state, locks, expiry, secrets, Claim simulation, and cleanup controls.
+Compare the last source repairs with the retained evidence.
+Report the first concrete blocker or a source-review pass.
+Keep runtime acceptance separate. Run no tests and make no file, database, VM, or service change.
+Return Facts, Limits, Uncertainty, and Open work with exact source references.
+Stop after the report.
+```
+
+## Recorded reviews before this setup
+
+The records below preserve decisions, failed proofs, and prior operational boundaries.
+Read their dates and final acceptance sections together.
+Historical action text cannot override current authority or activate a completed lease.
 
 ### ID-1 foundation design and engineering review
 
@@ -941,7 +1292,7 @@ Overall G3 remains NOT READY until its remaining product gates pass.
 11. Review each diff, proof, command result, and handoff before dependent work starts.
 12. Keep local, hosted, and public proof separate.
 13. Stop for an owner choice, a secret, a public change, or a destructive action.
-14. The Senior Agent can commit accepted agent work after review.
+14. During setup, the Senior edits coordination files only. A later assignment must state its current commit authority.
 15. Get owner approval before a push, deployment, public change, destructive action, or external service call.
 
 ## Protected state
@@ -966,7 +1317,7 @@ Use isolated test data. Do not copy private rows into fixtures, logs, reports, p
 
 | Order | Phase | Lead roles | Depends on | Release gate |
 |---|---|---|---|---|
-| 1 | Coordination baseline | Senior Agent | None | G1: All coordination files agree with the beta brief. The first conflict-free lease awaits owner approval. |
+| 1 | Coordination baseline | Senior Agent | None | G1: Six complete briefs, one board, exact leases, and owner gates agree with the beta brief. |
 | 2 | Average Purchase Price | Finance and Tax; Product Experience; Quality and Security | G1 | G2: The formula, API, detailed table, tests, and visible browser proof pass locally. |
 | 3 | PostgreSQL and private data scopes | Identity and Data Integrity; Quality and Security | G2 | G3: Synthetic PostgreSQL migration and scope proof pass. The private dry-run and rollback control plan is accepted. Private execution waits for Phase 4 identity proof and the applicable private gates. |
 | 4 | Guest access and identity | Identity and Data Integrity; Product Experience; Quality and Security | G3 | G4: Guest, Google, magic link, Claim, Transfer, Merge, and session proofs pass. |
@@ -1006,9 +1357,19 @@ Research proof can block an unsafe design or test. It cannot replace local, host
 
 Local proof uses isolated data and local processes. It includes unit, API, integration, build, and visible local browser evidence.
 
+### Synthetic VM proof
+
+Synthetic VM proof uses invented data in the disposable lab. It proves only the tested Linux or PostgreSQL behavior.
+It does not prove a deployed application, production recovery, private migration, or public access.
+
 ### Hosted proof
 
-Hosted proof runs on the approved VM. It includes service, PostgreSQL, backup, restore, and private network evidence.
+Hosted proof runs on the approved deployed service. It includes service, PostgreSQL, backup, restore, and private network evidence.
+
+### Private proof
+
+Private proof uses only an owner-approved snapshot or private target inside its exact access window.
+Synthetic tests cannot prove private rows, identity mapping, or cutover readiness.
 
 ### Public proof
 
@@ -1018,7 +1379,8 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-ID-1 owns seven repository files and the exact operational scope in the current review section. ID-1-CODE has an empty write lease.
+Use the current setup lease table above. ID-1 and ID-1-CODE are paused.
+The records below are completed or historical leases. They grant no current write authority.
 
 ### Completed lease: APP-1
 

@@ -2,83 +2,124 @@
 
 ## Responsibilities
 
-- Own the Hyper-V and Ubuntu Server LTS release platform.
-- Own PostgreSQL operations on the host.
-- Own Cloudflare Tunnel operations.
-- Own service definitions, backups, restore, and release steps.
-- Own hosted recovery evidence.
+- Own Hyper-V, Ubuntu Server LTS, PostgreSQL operations, and Cloudflare Tunnel.
+- Own services, encrypted off-site backups, restore, and release steps.
+- Target one hour of data loss and a four-hour restore.
 
 ## Default scope
 
-Work in leased release documents, scripts, service files, and infrastructure tests.
+Work in exact leased release files and separately named operational resources. Place the future server in the approved Linux VM.
 
-Use the approved VM and public design. Keep each release step reversible and record its rollback step.
-
-Target one hour of data loss and a four-hour restore.
+Read `CONTEXT.md`, `docs/OPEN_BETA_BRIEF.md`, and the current authority on `plan/manager-open-beta.md`.
+Use Luna with High effort: `gpt-5.6-luna`, `high`.
+Keep this task title equal to the role name.
 
 ## Forbidden work
 
-- Do not create or change a VM without owner approval.
-- Do not change a host, router, tunnel, domain, service, backup, or deployment without owner approval.
-- Do not request or display secrets in repository files.
-- Do not edit product logic without a new lease.
-- Do not commit, push, publish, or deploy without owner approval.
+- Change only files and resources in an active exact lease.
+- Preserve private databases, private rows, secrets, and owner changes.
+- Use the current delivery table for product edits, tests, builds, and operational work.
+- The Senior owns commits and pushes after review. Use only the exact active operational lease.
+- Request a new lease before work crosses another role's boundary.
 
 ## Proof policy
 
-Apply the integration research rule from `AGENTS.md` when the plan selects a new integration.
+Require a focused failed proof before a repair.
+Keep the same proof through the repair.
+Use synthetic data and fixed providers for default tests.
+Match each test to its risk.
+Require visible browser proof for a visible change.
+Use desktop and 375-pixel views when layout can change.
+Record expected results, observed results, commands, and exit codes.
 
-Use documented tool limits to shape the first test plan. Routine tests for an accepted integration do not need new research.
-
-Create a focused failed proof before a repair when code or automation changes. Keep the proof in the final diff.
-
-For operational work, capture the failed precondition before the change. Then prove the exact service, backup, restore, or route after approval.
-
-Keep local, hosted, and public evidence in separate sections.
+Keep local, synthetic VM, hosted, private, and public proof separate.
+Use the integration research rule in `AGENTS.md` for a new or changed integration.
+A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: None. PLAT-LINUX-1 is complete and its operational lease is released.
+Assignment: PLAT-READY-1.
+Status: Active. Use the current delivery table on the manager board.
+Reconcile the VM inventory and strict SSH identity. Audit the exact server and release prerequisites from the active delivery table.
+The repository and operational write leases are empty.
+Return the handoff in the task conversation. The Senior records accepted results.
 
-Status: Setup, 292 offline tests, the frontend build, and database primitives passed. The real migration failed at revision storage.
+## Exact file lease
 
-The `PLAT-LINUX-1 approved setup and proof` section in `plan/manager-open-beta.md` is the authoritative lease.
-Read that section before any command. It names each resource, source revision, network limit, and cleanup action.
+Repository write lease: Empty.
+Operational write lease: Empty.
+Return the report in the task conversation. Create no report file.
 
-Exact repository file lease: None.
+Read these task-specific paths after the common documents:
 
-Use the operational lease to install dependencies, transfer the approved source, and test the current product.
-Keep product repairs outside this assignment. Return a focused failure when product code fails.
-Use the existing strict SSH path; SSH redesign is not part of this work.
+- `docs/PRIVATE_MIGRATION_RUNBOOK.md`
+- `plan/manager-open-beta.md`
+
+Read scope can overlap. Write leases cannot overlap.
+The Senior alone owns the coordination file lease during setup.
 
 ## Protected paths and data
 
 Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
-Protect `.env`, `config.local.yaml`, secrets, backup keys, and the private Yahoo permit.
+Protect `config.yaml`, local overrides, `.env` files, credentials, and the private Yahoo permit.
 Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
+Preserve the seven ID-1 owner files listed on the board.
+Protect the SSH key, trust file, VM configuration, and retained synthetic evidence.
+Use the approved key only for authentication. Keep its content and permissions unchanged.
 
-Use these host files for strict SSH only:
+## Required failed proof
 
-- `C:\ProgramData\fadir-agent-control\lab_ed25519`
-- `C:\ProgramData\fadir-agent-control\lab_known_hosts`
+For a future operational repair, retain the first failed precondition. Prove the exact result and recovery path after approval.
 
-Keep their content and permissions unchanged. Do not display or copy the private-key content.
+Use the proof class and commands in the current assignment. Earlier setup limits are historical.
+Report the first missing prerequisite as FAIL or INCONCLUSIVE.
+Do not create an artificial product failure or change a test during setup.
+
+## Required commands
+
+Run these read-only commands in `C:\Games\Agents\dashboard C`:
+
+```powershell
+git status --short
+git diff --check
+```
+
+Use `rg` and source reads for the assigned trace.
+Keep test and build commands inactive during setup.
+A later proof lease must select the exact commands from the board.
+
+Use `Get-VM -Name fadir-control-lab-01` for host metadata.
+Use only the existing strict SSH controls for the named lab.
+Read identity, OS version, PostgreSQL version, and listener or service status only.
+Keep database queries, logs, source transfers, VM starts, restarts, and configuration changes outside this report.
+If access fails, report the failed precondition and stop that probe.
 
 ## Completion criteria
 
-1. Report the pinned source revision and transferred archive hash.
-2. Report package versions and the local PostgreSQL listener scope.
-3. Report the full offline Linux suite and frontend build results.
-4. Report real PostgreSQL migration, Decimal, ownership, and rollback evidence.
-5. List the exact guest resources created and retained.
-6. Confirm transfer-file cleanup and unchanged protected host state.
-7. State which product proof remains absent.
-
-Distinguish unit tests that use SQLite from checks that use PostgreSQL.
-The synthetic migration core alone cannot prove real migration adapters.
+1. Account for each assigned source or report an exact read limit.
+2. Give source references for each material finding.
+3. Separate prior accepted evidence from current observations.
+4. Confirm that the repository write lease and operational write lease stayed empty.
+5. Give the next bounded action and its prerequisites.
+6. Stop after the handoff.
 
 ## Handoff
 
-Separate Facts, Limits, Uncertainty, and Open work.
-Give the Senior Agent one concrete next product action.
-Send the handoff to the Senior task and include it in the final response.
+### Facts
+
+List current source observations and commands.
+Identify historical proof by its recorded date and assignment.
+
+### Limits
+
+List unread sources, unrun tests, and proof classes outside this task.
+
+### Uncertainty
+
+List unresolved behavior and evidence gaps.
+Use INCONCLUSIVE when the available evidence cannot establish a result.
+
+### Open work
+
+Give one safe next assignment after Senior review.
+State any exact lease or owner decision that it needs.

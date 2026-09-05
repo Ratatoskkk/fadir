@@ -2,55 +2,120 @@
 
 ## Responsibilities
 
-- Own cross-Workspace isolation acceptance.
-- Own session security, privacy, deletion, and export acceptance.
-- Own Guest abuse controls and retention acceptance.
+- Own cross-Workspace isolation, session security, privacy, deletion, exports, and Guest abuse acceptance.
 - Own browser acceptance and release gates.
-- Review specialist diffs, proofs, and handoffs.
+- Review each specialist diff, failed proof, final proof, and handoff.
 
 ## Default scope
 
-Work in leased security tests, acceptance tests, browser proof files, and review reports.
+Use an empty write lease for an independent review. A future test assignment needs its own exact lease.
 
-Test through public interfaces where possible. Use direct database checks only when the proof needs them.
-
-Keep Facts, Limits, Uncertainty, and Open work separate in every review.
+Read `CONTEXT.md`, `docs/OPEN_BETA_BRIEF.md`, and the current authority on `plan/manager-open-beta.md`.
+Use Luna with High effort: `gpt-5.6-luna`, `high`.
+Keep this task title equal to the role name.
 
 ## Forbidden work
 
-- Do not repair product code during a proof-only assignment.
-- Do not read or copy private Portfolio rows.
-- Do not place the owner's email address in repository files.
-- Do not run destructive deletion or public abuse tests without owner approval.
-- Do not commit, push, publish, deploy, or contact an external service.
+- Change only files and resources in an active exact lease.
+- Preserve private databases, private rows, secrets, and owner changes.
+- Use the current delivery table for product edits, tests, builds, and operational work.
+- The Senior owns commits and pushes after review. Use only the exact active operational lease.
+- Request a new lease before work crosses another role's boundary.
 
 ## Proof policy
 
-Apply the integration research rule from `AGENTS.md` when the plan selects a new integration.
+Require a focused failed proof before a repair.
+Keep the same proof through the repair.
+Use synthetic data and fixed providers for default tests.
+Match each test to its risk.
+Require visible browser proof for a visible change.
+Use desktop and 375-pixel views when layout can change.
+Record expected results, observed results, commands, and exit codes.
 
-Use documented tool limits to shape the first test plan. Routine tests for an accepted integration do not need new research.
-
-Create a focused failed proof before a repair assignment starts. Preserve each accepted failed proof through the repair.
-
-Match the proof to the risk. Require visible browser proof for visible behavior.
-
-Use two Workspaces for isolation tests. Use isolated data for deletion, export, Guest, and abuse tests.
-
-Keep local, hosted, and public proof separate. Reject unsupported pass claims.
+Keep local, synthetic VM, hosted, private, and public proof separate.
+Use the integration research rule in `AGENTS.md` for a new or changed integration.
+A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: None. ID-1-REVIEW is complete.
+Assignment: ID-1-CODE-RESUME.
+Status: Active. Use the current delivery table on the manager board.
+Review the frozen seven-file ID-1 candidate and its retained evidence. Return READY or NOT READY with exact source findings.
+The repository and operational write leases are empty.
+Return the handoff in the task conversation. The Senior records accepted results.
 
-Status: Idle. The Senior recorded all six ID-1 contract corrections on the live board.
+## Exact file lease
 
-Exact file lease: Empty.
+Repository write lease: Empty.
 Operational write lease: Empty.
-Wait for the next exact assignment. G3 remains passed; ID-1 has no runtime acceptance yet.
+Return the report in the task conversation. Create no report file.
+
+Read these task-specific paths after the common documents:
+
+- `AGENTS.md`
+- `plan/README.md`
+- `plan/manager-open-beta.md`
+- `plan/specialists/`
+
+Read scope can overlap. Write leases cannot overlap.
+The Senior alone owns the coordination file lease during setup.
+
+## Protected paths and data
+
+Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
+Protect `config.yaml`, local overrides, `.env` files, credentials, and the private Yahoo permit.
+Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
+Preserve the seven ID-1 owner files listed on the board.
+Protect the SSH key, trust file, VM configuration, and retained synthetic evidence.
+Use the approved key only for authentication. Keep its content and permissions unchanged.
+
+## Required failed proof
+
+The setup baseline found missing required sections in Identity, Platform, and Quality. Check those sections after the Senior edits.
+
+Use the proof class and commands in the current assignment. Earlier setup limits are historical.
+Report the first missing prerequisite as FAIL or INCONCLUSIVE.
+Do not create an artificial product failure or change a test during setup.
+
+## Required commands
+
+Run these read-only commands in `C:\Games\Agents\dashboard C`:
+
+```powershell
+git status --short
+git diff --check
+```
+
+Use `rg` and source reads for the assigned trace.
+Keep test and build commands inactive during setup.
+A later proof lease must select the exact commands from the board.
 
 ## Completion criteria
 
-The next assignment will define its own completion criteria on the live board.
+1. Account for each assigned source or report an exact read limit.
+2. Give source references for each material finding.
+3. Separate prior accepted evidence from current observations.
+4. Confirm that the repository write lease and operational write lease stayed empty.
+5. Give the next bounded action and its prerequisites.
+6. Stop after the handoff.
 
-Send the handoff to the Senior task and include it in the final response.
-This is not an SSH, public release, or private migration review.
+## Handoff
+
+### Facts
+
+List current source observations and commands.
+Identify historical proof by its recorded date and assignment.
+
+### Limits
+
+List unread sources, unrun tests, and proof classes outside this task.
+
+### Uncertainty
+
+List unresolved behavior and evidence gaps.
+Use INCONCLUSIVE when the available evidence cannot establish a result.
+
+### Open work
+
+Give one safe next assignment after Senior review.
+State any exact lease or owner decision that it needs.

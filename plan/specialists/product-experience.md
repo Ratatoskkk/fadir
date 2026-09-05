@@ -2,130 +2,120 @@
 
 ## Responsibilities
 
-- Own the React interface and user-visible behavior.
-- Own table presentation, Portfolio controls, notices, and responsive layout.
-- Prove visible changes in a real browser.
-- Keep Turkish interface text clear and consistent.
+- Own the React interface, table presentation, Portfolio controls, notices, and responsive layout.
+- Prove each visible change in a browser.
+- Keep Turkish interface text clear.
 
 ## Default scope
 
-Work in leased files under `frontend/`. Edit API client code only when the lease names it.
+Work in exact leased frontend files. Use the accepted API contract.
 
-Use the API contract that the manager accepted. Report a contract gap before any server edit.
+Read `CONTEXT.md`, `docs/OPEN_BETA_BRIEF.md`, and the current authority on `plan/manager-open-beta.md`.
+Use Luna with High effort: `gpt-5.6-luna`, `high`.
+Keep this task title equal to the role name.
 
 ## Forbidden work
 
-- Do not edit calculation, identity, database, migration, market provider, or release files without a new lease.
-- Do not use private Portfolio rows for fixtures or screenshots.
-- Do not start a public service or contact an external service.
-- Do not commit, push, publish, or deploy.
+- Change only files and resources in an active exact lease.
+- Preserve private databases, private rows, secrets, and owner changes.
+- Use the current delivery table for product edits, tests, builds, and operational work.
+- The Senior owns commits and pushes after review. Use only the exact active operational lease.
+- Request a new lease before work crosses another role's boundary.
 
 ## Proof policy
 
-Apply the integration research rule from `AGENTS.md` when the plan selects a new integration.
+Require a focused failed proof before a repair.
+Keep the same proof through the repair.
+Use synthetic data and fixed providers for default tests.
+Match each test to its risk.
+Require visible browser proof for a visible change.
+Use desktop and 375-pixel views when layout can change.
+Record expected results, observed results, commands, and exit codes.
 
-Use documented tool limits to shape the first test plan. Routine tests for an accepted integration do not need new research.
-
-Create a focused failed proof before a repair. Keep that proof in the final diff.
-
-Run the narrow interface proof first. Then run the frontend build and the required local regression tests.
-
-Use visible browser proof for every visible change. Prove desktop and 375-pixel layouts when responsive layout can change.
-
-Record URL, viewport, actions, expected result, and observed result. Label all local proof as local.
+Keep local, synthetic VM, hosted, private, and public proof separate.
+Use the integration research rule in `AGENTS.md` for a new or changed integration.
+A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: APP-2, show Average Purchase Price in the detailed table.
+Assignment: COORD-UX, read-only setup report.
+Status: Complete. The read-only lease is released.
+The live board records the accepted result. Wait for a new exact assignment.
+The live board controls the current state; this brief describes the assigned scope.
 
-Status: Accepted and complete. The lease is released.
+Read the APP-2 source and G2 record. Confirm the table contract and list later Guest interface dependencies.
 
-Add one sortable `Ort. alış` column after `Fiyat`.
-
-Use `average_purchase_price_native` from the accepted API contract. Format it in the Stock Group native currency.
-
-Show `—` only for `null`. Show the value even when current market data failed.
-
-Keep the value for fully sold groups. Keep the footer column spans aligned.
-
-Add a short footnote that explains the lifetime rule. Keep Fee Currency outside this assignment.
+APP-2 and G2 are complete in the accepted record. Do not reopen them without a specific defect.
 
 ## Exact file lease
 
-The proposed lease contains only this file:
+Repository write lease: Empty.
+Operational write lease: Empty.
+Return the report in the task conversation. Create no report file.
+
+Read these task-specific paths after the common documents:
 
 - `frontend/src/components/PositionsTable.jsx`
 
-This lease is complete. Treat its current change as owner work.
+Read scope can overlap. Write leases cannot overlap.
+The Senior alone owns the coordination file lease during setup.
 
 ## Protected paths and data
 
 Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
-
-Protect `.env`, `config.local.yaml`, environment secrets, and the private Yahoo permit.
-
+Protect `config.yaml`, local overrides, `.env` files, credentials, and the private Yahoo permit.
 Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
+Preserve the seven ID-1 owner files listed on the board.
+Protect the SSH key, trust file, VM configuration, and retained synthetic evidence.
+Use the approved key only for authentication. Keep its content and permissions unchanged.
 
 ## Required failed proof
 
-Before the edit, run a source contract check that fails because the API field is absent from the table source.
+For a future visible repair, retain a source failure and a visible browser failure with synthetic data.
 
-Also capture visible local browser proof that the detailed table has no Average Purchase Price column.
-
-Keep both failed proofs in the task record. Use synthetic data in a fresh temporary database.
+Use the proof class and commands in the current assignment. Earlier setup limits are historical.
+Report the first missing prerequisite as FAIL or INCONCLUSIVE.
+Do not create an artificial product failure or change a test during setup.
 
 ## Required commands
 
-Run this focused source check before and after the edit:
+Run these read-only commands in `C:\Games\Agents\dashboard C`:
 
 ```powershell
-node -e "const fs=require('fs');const s=fs.readFileSync('frontend/src/components/PositionsTable.jsx','utf8');if(!s.includes('average_purchase_price_native')){console.error('missing Average Purchase Price table field');process.exit(1)}"
+git status --short
+git diff --check
 ```
 
-Run this frontend build:
-
-```powershell
-Set-Location frontend
-npm run build
-```
-
-Return to the repository root. Run this accepted API regression command:
-
-```powershell
-.venv\Scripts\python.exe -m pytest tests/test_calc_fifo.py tests/test_api.py -q
-```
-
-Use the `browser:control-in-app-browser` skill for visible proof.
-
-Use a fresh temporary database with synthetic open and fully sold Stock Groups. Stub every external provider call.
-
-Use an unused loopback port. Stop all owned processes after proof.
+Use `rg` and source reads for the assigned trace.
+Keep test and build commands inactive during setup.
+A later proof lease must select the exact commands from the board.
 
 ## Completion criteria
 
-- The source and visible proofs fail before the repair.
-- The source proof passes after the repair.
-- The frontend build passes.
-- The accepted APP-1 focused suite passes.
-- Visible browser proof passes at desktop and 375-pixel viewports.
-- The browser proves the label, native currency, full-sale value, sorting, and horizontal access.
-- The diff stays inside the exact lease.
-- The handoff separates Facts, Limits, Uncertainty, and Open work.
+1. Account for each assigned source or report an exact read limit.
+2. Give source references for each material finding.
+3. Separate prior accepted evidence from current observations.
+4. Confirm that the repository write lease and operational write lease stayed empty.
+5. Give the next bounded action and its prerequisites.
+6. Stop after the handoff.
 
 ## Handoff
 
 ### Facts
 
-List changed files, failed proof results, final command results, and browser observations.
+List current source observations and commands.
+Identify historical proof by its recorded date and assignment.
 
 ### Limits
 
-List untested viewports, browsers, routes, and proof classes.
+List unread sources, unrun tests, and proof classes outside this task.
 
 ### Uncertainty
 
-List unresolved interface or API behavior.
+List unresolved behavior and evidence gaps.
+Use INCONCLUSIVE when the available evidence cannot establish a result.
 
 ### Open work
 
-List the next safe task and each owner choice.
+Give one safe next assignment after Senior review.
+State any exact lease or owner decision that it needs.
