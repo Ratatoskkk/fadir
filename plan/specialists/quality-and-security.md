@@ -38,9 +38,9 @@ A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: ID-2-RUNTIME-REVIEW.
-Status: Complete. The Senior accepted the contract for implementation. Wait for a new candidate review lease.
-Review explicit database selection, credential protection, migration readiness without startup DDL, and the five-file lease.
+Assignment: ID-2-FINAL-ACCEPT.
+Status: Complete; PASS. The review lease is released.
+Use the exact current board contract. The ID-3 scope contract review is complete.
 The repository and operational write leases are empty.
 Return the handoff in the task conversation. The Senior records accepted results.
 

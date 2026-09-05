@@ -1,6 +1,6 @@
 # faðir open beta manager board
 
-Date: 2026-09-05
+Date: 2026-09-06
 
 This file is the only live work board. The stable role briefs define long-term specialist boundaries.
 
@@ -39,15 +39,34 @@ Current DNS setup research: Cloudflare full setup and Namecheap Custom DNS docum
 Sources: https://developers.cloudflare.com/dns/zone-setups/full-setup/setup/ and https://www.namecheap.com/support/knowledgebase/article.aspx/767/10/how-to-change-dns-for-a-domain/ .
 Scope: Current documented account setup, assigned nameservers, DNSSEC transition, and registrar fields. No account UI was inspected.
 
+Google setup research: https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid , retrieved 2026-09-06.
+Version scope: The page reports an update on 2026-04-06. It documents a Web application client and authorized JavaScript origins.
+The owner can prepare a client for `https://ratatosk.dev`. A callback URI depends on the later accepted backend contract.
+Limits: No Google account UI, client, credential, or sign-in was inspected. This is setup guidance, not an integration or public pass.
+
+The owner supplied this public Google Web client ID on 2026-09-06:
+`133938753454-ivjems9e1a27jftdfrpkcckdbcfqgh1a.apps.googleusercontent.com`.
+Use it through the later deployment configuration. Keep it outside product constants.
+The client ID does not establish authorized origins, a callback URI, or successful sign-in.
+
+Additional Google research, retrieved 2026-09-06:
+https://developers.google.com/identity/gsi/web/guides/verify-google-id-token and https://developers.google.com/identity/gsi/web/guides/display-button .
+Scope: Current GIS Web button and server verification guides; no installed Google library version was selected or tested.
+The documented ID-token flow can use the public client ID and server verification against Google's public keys.
+The server must verify signature, audience, issuer, and expiry. Bind sign-in to the browser request and verify CSRF protection.
+Use issuer and subject for identity. Never link accounts by email alone.
+The later integration contract must select the callback method, nonce and replay controls, key cache, and bounded network behavior.
+Limits: This is research input. It selects no final flow and supplies no account, credential, browser, or public proof.
+
 ## Active delivery assignments
 
 | Role | Assignment | Repository write lease | Operational write lease | Status |
 |---|---|---|---|---|
-| Quality and Security | None | Empty | Empty | Runtime review complete; wait for candidate |
+| Quality and Security | None | Empty | Empty | ID-2 final acceptance passed; lease released |
 | Platform and Release | None | Empty | Empty | BETA-SCOPE-1 accepted; lease released |
-| Identity and Data Integrity | ID-2-RUNTIME | Five exact files below | Exact synthetic proof roots and schemas below | Active implementation and proof |
-| Product Experience | None | Empty | Empty | Design complete; Senior review pending |
-| Finance and Tax | None | Empty | Empty | Available |
+| Identity and Data Integrity | ID-3A-CALC-SCOPE | `app/services/portfolio.py`, `tests/test_portfolio_service_scope.py` | New host proof root below | Active additive scoped calculations |
+| Product Experience | None | Empty | Empty | Design accepted with the recorded corrections |
+| Finance and Tax | None | Empty | Empty | MERGE-FIN-1 accepted with corrections below |
 | Market Data | None | Empty | Empty | Wait for Phase 6 |
 
 The seven ID-1 candidate files remain frozen during ID-1-PROOF-RESUME.
@@ -175,6 +194,13 @@ Return the retained failure, final diff, commands, exits, versions, evidence has
 
 ## Repository delivery rule
 
+MERGE-FIN-1 is a read-only Phase 4 task with empty write leases.
+Compare the existing Transaction fields, seed duplicate check, beta Merge rule, and accepted currency invariants.
+Define a conservative possible-duplicate rule for an explicit source Portfolio and selected target Portfolio.
+Preserve purchase fees, source currency, FX evidence, source rows, and the user's explicit keep or skip decision.
+Define stale-preview checks and synthetic examples for later tests. Avoid an assumed private transaction or new tax rule.
+Return a bounded financial contract and exact uncertainty. Make no calculation, file, test, or provider change.
+
 PUB-1 verifies the already committed source before the first push.
 The earlier worktree registry points to an absent directory. The attempted test command did not start.
 The Senior can create a detached source worktree at `C:/Users/doguk/AppData/Local/Temp/fadir-publish-20260905/source/`.
@@ -197,6 +223,138 @@ A rejected non-fast-forward push requires a fresh fetch and review; never force-
 Record the revision, checks, review result, and remote result after each complete assignment.
 
 ## Current product state
+
+### ID-3A-CALC-SCOPE
+
+Facts: Quality returned READY for the additive scoped calculation contract. The Senior accepts that contract with the details below.
+The Senior checked the worktree. `app/services/portfolio.py` has no diff; the new test file and proof root are absent.
+Limits: This lease changes only `app/services/portfolio.py` and new `tests/test_portfolio_service_scope.py`.
+Existing local routes remain unscoped until their later cutover. This slice supplies no Guest, hosted, or public isolation pass.
+Uncertainty: Shared refresh and split application require later separate changes.
+Open work: Add `PortfolioService.scoped(scope)` as a calculation facade with inception, view, history, and intraday methods.
+Require a valid scope from the same Session. Reject absent or detached scope without a global fallback.
+Use SQL-filtered private Transaction lists and referenced shared Instruments. Preserve all formulas and the Average Purchase Price rule.
+Never assign filtered rows to `Instrument.transactions`. Preloaded relationships must not contaminate scoped results or cause persistence changes.
+Keep existing local callers functional. Keep refresh, split mutation, routes, models, and migrations outside this lease.
+Preserve the existing active-only Instrument rule and configured history start date behavior.
+For scoped ticker selection, match only held active Instruments. An unknown or out-of-scope ticker gives the same bounded not-found result.
+An empty Portfolio without a ticker filter returns an empty result safely.
+Retain focused failures before repair for two Workspaces, two Portfolios, unowned rows, shared Instruments, and preloaded relationships.
+Cover inception, view, history, intraday inputs, same-Session rejection, inactive Instruments, empty Portfolio, and SQL-level scope.
+Verify that a flush after each scoped calculation changes no Transaction association or source value.
+Use only the new host operational root `C:/Users/doguk/AppData/Local/Temp/fadir-id3a-scope-20260906/`.
+Build synthetic proof source from committed `2405850` plus only the two leased files. Exclude the separate ID-2 candidate and canonical private configuration.
+Use the existing Windows environment without installs. Stub providers and use synthetic SQLite only for this calculation slice.
+Run focused tests and the full offline suite with `-o addopts= -m "not live"`, explicit fresh basetemp and XML paths.
+Disable bytecode and pytest cache writes. Place temporary files under the exact proof root and retain all failed and final evidence.
+No VM, provider, server, package, public, private-data, commit, or push action belongs in this assignment.
+Return the exact diff, source and archive hashes, commands, XML counts, and Facts, Limits, Uncertainty, Open work.
+
+### ID-2-FINAL-ACCEPT
+
+Facts: Quality returned PASS for the five-file runtime candidate after the startup repair.
+The Senior matched all five final hashes and verified the r4 archive against committed source plus the candidate.
+The retained failure, 18 focused passes, 365 offline passes, and one synthetic PostgreSQL pass support this result.
+Commit `476df16` contains only the five accepted runtime files. It reached origin/main with a normal fast-forward push.
+The remote ahead/behind counts were zero after the push.
+Limits: No hosted or public service was deployed. The concurrent calculation assignment remains outside this acceptance.
+Uncertainty: One existing Starlette warning remains. Nested TCMB key representation requires the later privacy review.
+Open work: Continue ID-3A calculations, then request identity and route scope before G4 acceptance.
+The review lease is released. The following text records its exact review scope.
+
+Quality reviews the final five-file candidate and the retained startup failure under empty write leases.
+Use the existing exact ID-2 host and guest proof roots. Read the r4 archive, source hashes, local XML, and guest `evidence/live-r4.xml`.
+Strict SSH can read only this guest evidence and matching source metadata. Query no application table.
+Check the actual lifespan regression, generic error with no cause or context, no refresh or fallback, and unchanged readiness behavior.
+Compare the final hashes to the five canonical files. The concurrent ID-3 calculation lease is outside this review.
+Run no test, repair, new artifact, provider call, or unrelated operational probe. Return a final bounded verdict and handoff.
+
+### ID-2-STARTUP-REPAIR
+
+Facts: Quality confirmed the final source and proof, then changed its verdict to FAIL after the Senior supplied a concrete startup defect.
+SQLAlchemy's PostgreSQL port parser includes a non-integer query value in its exception message.
+The real lifespan calls `get_engine()` before the sanitized migration check. Thus the raw configured value can escape.
+The trigger uses a synthetic URL with `?port=synthetic-private-value`. No connection is needed to reach this error.
+Limits: Previous tests remain valid for their cases. They do not cover this actual startup path.
+Uncertainty: The process runner controls the final log format. The source already proves the exposed exception value.
+Open work: Repair only `app/db.py`, `app/main.py`, and `tests/test_runtime_database.py`.
+The Senior checked their current status and hashes. This lease continues the accepted candidate; preserve the other two frozen files.
+Retain a new focused failure before repair. Exercise real engine construction through lifespan with the synthetic non-integer port query.
+Require a generic error with no private value, original cause, or context. Start no refresh and create no SQLite fallback.
+Preserve supported connection options, local SQLite behavior, and the read-only PostgreSQL migration check.
+Reuse the exact ID-2 operational roots and controls with fresh evidence and archive names. Preserve all earlier evidence.
+Run the focused regression, the full offline suite, and the existing bounded synthetic PostgreSQL proof after repair.
+Return source hashes, archive hash and entries, XML counts, cleanup evidence, and Facts, Limits, Uncertainty, Open work.
+This lease permits no other product, provider, public, or operational change. The Senior owns publication after independent acceptance.
+
+Repair completed. Both write leases are released. Preserve the five-file runtime candidate for acceptance.
+Facts: `startup-red-1.xml` retains one failed test and 17 passes. The actual startup path exposed the synthetic query value.
+The repair adds a generic engine-construction boundary before readiness. Final focused proof passed 18 tests; offline proof passed 365 tests.
+The Senior parsed `startup-focused-2.xml` and `startup-offline-1.xml` and confirmed both changed source hashes.
+The reported final synthetic PostgreSQL proof passed one test with no remaining task schema.
+Archive: `id2-candidate-r4.tar`, 145 entries, SHA-256 `fc51917c7dba9db55325b3a7a0d2a59f3aec414635cdae929167c0ff04828cb1`.
+Guest XML: `evidence/live-r4.xml`, SHA-256 `49e3a900cc7e9d2369e57b07063bae01f49e3c54f64013a6fc40496de47fab42`.
+Limits: This is local and synthetic VM proof. No hosted or public service was tested.
+Uncertainty: Final independent acceptance remains pending. One existing Starlette warning remains.
+Open work: Quality reviews the final repair after its current scope contract report.
+
+### ID-3-SCOPE-DESIGN
+
+Facts: Identity completed the read-only trace. The Senior checked the current worktree before this assignment.
+Limits: Both write leases are empty. This assignment permits no tests, server, VM action, or product edit.
+Uncertainty: The proposed calculation-only lease would reject current callers without a scope. Its caller transition needs review before implementation.
+Quality reviews this proposal as ID-3-SCOPE-REVIEW with empty write leases.
+Resolve an additive scoped calculation boundary while the existing local callers wait for their later coordinated change.
+The scoped entry point must reject missing scope and exclude unowned or other-Portfolio Transactions before calculation.
+Keep current local callers functional until their explicit cutover. This temporary local behavior cannot qualify for public or Guest access.
+Use explicit scoped Transaction lists. Never filter by assignment to an ORM relationship, which can change persisted associations.
+Check same-Session enforcement, shared Instrument identity-map state, empty Portfolios, inactive Instruments, and SQL-level private scope.
+Return one concrete next contract and exact lease. No code, test, artifact, or operational action is permitted.
+Open work: Trace calculation inputs, shared cache refresh, split application, and their callers.
+Propose the next exact implementation lease with source references and focused failed proof cases.
+Keep current formulas and the accepted Average Purchase Price rule unchanged.
+Resolve how private Portfolio selection reaches calculations without a global private-row read.
+Separate shared catalog/cache work from private Transaction queries and per-Portfolio split effects.
+Describe the smallest sequential leases where ownership boundaries require a split.
+List all callers that need later changes. Do not claim route isolation before those changes pass.
+Return Facts, Limits, Uncertainty, and Open work in the task conversation.
+
+### ID-2-RUNTIME corrected proof pending acceptance
+
+Facts: Identity returned the corrected five-file candidate and retained the failed regression at `focused-4.xml`.
+That red proof reported seven failures and ten passes. The final focused proof reports 17 passes; the full offline suite reports 364 passes.
+The final PostgreSQL proof reports one live test passed, including a read-only transaction and wrong-head rejection.
+Identity reports no remaining task schema after confirmed cleanup.
+The exact evidence root remains `C:/Users/doguk/AppData/Local/Temp/fadir-id2-runtime-20260905/` and its approved guest counterpart.
+Final evidence: `focused-9.xml`, `offline-4.xml`, and guest `evidence/live-r3.xml`.
+Final archive SHA-256: `1501f9a9947eeaf723d836a59b2055a99bf5dd1fe077f805de0c71bfaabc3572`.
+Live XML SHA-256: `0ae38578ab5b882f88c315a702687d1a9b8fb5a2ee57aae6e8c7191c1f4d2eb4`.
+Limits: The earlier green report was rejected. Only the corrected candidate can qualify for acceptance. No hosted or public service was tested.
+Uncertainty: Final source, proof coverage, archive contents, and cleanup still need independent acceptance.
+Open work: ID-2-ACCEPT reviews the five frozen files and exact retained evidence with empty write leases.
+Quality can read the two exact proof roots, archive manifests, synthetic XML, matching source hashes, and Identity's final proof record.
+Strict SSH may read that guest evidence and check only the recorded task schema metadata in `fadir_test`.
+No test rerun, new artifact, application-table query, repair, provider call, or unrelated VM probe is authorized.
+Return PASS, FAIL, or INCONCLUSIVE for ID-2 only. Keep G4 and all public release gates open.
+
+### MERGE-FIN-1 review
+
+Facts: Finance compared the Transaction model, seed duplicate check, and Merge requirements without an edit or runtime action.
+The Senior accepts this possible-duplicate key: instrument identity, native currency, trade date, side, quantity, and native price.
+Use exact stored Decimal and date values. Treat the key as a possible match, not proof that two purchases are the same event.
+Use multiset counts. Two equal source purchases and one target purchase leave at least one unmatched source purchase.
+Show fees and all stored FX differences in the preview. Each matched source row requires an explicit keep or skip decision.
+Keep complete source values for each retained row. Preserve the target Base Currency and never average, overwrite, or collapse transactions.
+Limits: This is a financial contract for later implementation. The seed importer itself remains unchanged.
+Uncertainty: API shapes and the mechanism for a current preview remain part of the later identity transition contract.
+Open work: Implement only after an exact Merge lease, with these Senior corrections:
+
+1. A kept transaction moves atomically into the target. The contract does not require a duplicate physical row or a new transaction identifier.
+2. The preview must pair candidate rows deterministically and show the exact source row affected by each choice.
+3. The freshness check covers all stored transaction values, including notes and metadata, plus source/target identity and currencies.
+4. Scope reads to the authorized source and target first. Unowned rows outside those Portfolios stay excluded and cannot block a legitimate Merge.
+5. An explicitly requested out-of-scope row gives the same not-found result as an unknown row. Never attach it silently.
+
 
 ### BETA-SCOPE-1 acceptance
 
@@ -250,6 +408,20 @@ Quality returns READY or NOT READY with only concrete corrections. Both review w
 Quality returned NOT READY for the present implementation because the planned runtime controls are absent.
 Its corrections match the proposed contract and identify no new owner choice or lease gap.
 The Senior accepts the corrected contract for implementation. The current-code failures define the required red proof; they do not require another design cycle.
+
+### ID-2-RUNTIME interim source review
+
+Facts: The draft added an SQLite version-table delete and head stamp without migrations.
+Its live test cleanup ran in `finally` without a confirmed-success gate.
+The URL representation masked only the password field, and the startup error boundary could retain original errors.
+The Senior returned these source defects to Identity under the same five-file lease before acceptance.
+Limits: The draft is not accepted. An interim green suite cannot prove the omitted startup and privacy cases.
+Uncertainty: Any live resource from the interim run requires its recorded identity before cleanup.
+Open work: Retain failed regressions, remove manual SQLite stamping, preserve original local initialization, and fix success-gated test cleanup.
+Prove missing/wrong heads, no PostgreSQL DDL, complete options, no refresh on failed readiness, secret query masking, and generic public errors.
+On 2026-09-06, the task status confirmed a usage-limit failure during that repair.
+The Senior resumed the same exact assignment and retained proof roots after inspection. The initial green report remains unaccepted.
+Current source removes manual SQLite version stamping and adds generic failure handling. Final corrected proof and independent review remain required.
 
 ### UX-GUEST-DESIGN review
 
@@ -333,7 +505,7 @@ The post-push ahead/behind counts are both zero. Only the seven unfinished ID-1 
 
 Phase 4 remains current. G2 and conditional G3 retain their accepted scope.
 G4 remains NOT READY until Guest access, identity, transitions, and User Sessions pass.
-ID-1 needs an independent review and fresh PostgreSQL proof after its last source repair.
+ID-1 and ID-2 passed their recorded local and synthetic PostgreSQL checks. Later HTTP and identity work remains open.
 No setup report proves hosted-product or public acceptance.
 
 ## Earlier setup record

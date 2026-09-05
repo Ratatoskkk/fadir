@@ -38,9 +38,9 @@ A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: COORD-APP, read-only setup report.
-Status: Complete. The read-only lease is released.
-The live board records the accepted result. Wait for a new exact assignment.
+Assignment: MERGE-FIN-1.
+Status: Complete. The Senior accepted the contract with the corrections on the board. Both write leases are released.
+Define the financial fields and examples for possible duplicates in an explicit Portfolio Merge.
 The live board controls the current state; this brief describes the assigned scope.
 
 Trace the existing Average Purchase Price from purchases through the API. Compare the source and retained tests with the accepted rule.

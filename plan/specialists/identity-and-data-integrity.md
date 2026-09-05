@@ -38,14 +38,14 @@ A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: ID-2-RUNTIME.
-Status: Active implementation and synthetic proof. Use the corrected runtime contract and exact lease in the current board.
-Preserve the focused failed proof before repair. Keep Guest HTTP and public service work outside this slice.
+Assignment: ID-3A-CALC-SCOPE.
+Status: Active additive scoped calculation implementation under the exact board contract.
+Preserve the completed runtime candidate and all retained proofs.
 
 ## Exact file lease
 
-Repository write lease: `app/config.py`, `app/db.py`, `app/main.py`, `tests/test_db.py`, `tests/test_runtime_database.py`.
-Operational write lease: The two exact ID-2-RUNTIME roots and verified new synthetic schemas in the current board.
+Repository write lease: `app/services/portfolio.py`, `tests/test_portfolio_service_scope.py`.
+Operational write lease: `C:/Users/doguk/AppData/Local/Temp/fadir-id3a-scope-20260906/` with the source and test controls on the board.
 Return the report in the task conversation. Create no report file.
 
 Read these task-specific paths after the common documents:
