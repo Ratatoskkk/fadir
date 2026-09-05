@@ -34,7 +34,7 @@ BASELINE_TABLES = {
     "snapshot",
 }
 DOMAIN_ROOT_TABLES = {"user", "workspace", "portfolio"}
-APPLICATION_TABLES = BASELINE_TABLES | DOMAIN_ROOT_TABLES
+APPLICATION_TABLES = BASELINE_TABLES | DOMAIN_ROOT_TABLES | {"guest_access"}
 POSTGRESQL_URL = "postgresql+psycopg://fadir@db.example/fadir_test"
 
 
@@ -164,6 +164,33 @@ def test_migrations_require_database_url(monkeypatch) -> None:
 
     with pytest.raises(RuntimeError, match="FADIR_DATABASE_URL is required"):
         command.upgrade(_alembic_config(), "head")
+
+
+def test_guest_revision_cycle_preserves_existing_tables(tmp_path, monkeypatch):
+    database_url = _sqlite_url(tmp_path / "guest-migration.db")
+    monkeypatch.setenv("FADIR_DATABASE_URL", database_url)
+    config = _alembic_config()
+    command.upgrade(config, "head")
+    _assert_schema_matches_models(database_url)
+    command.downgrade(config, "0003_portfolio_ownership_keys")
+    engine = create_engine(database_url)
+    try:
+        assert set(inspect(engine).get_table_names()) == (
+            BASELINE_TABLES | DOMAIN_ROOT_TABLES | {"alembic_version"}
+        )
+    finally:
+        engine.dispose()
+    command.upgrade(config, "head")
+    _assert_schema_matches_models(database_url)
+
+
+def test_guest_revision_is_static():
+    source = (ROOT / "migrations/versions/0004_guest_access.py").read_text(encoding="utf-8")
+    assert "0003_portfolio_ownership_keys" in source
+    assert "Base" not in source
+    assert "metadata" not in source
+    assert source.count("op.create_table(") == 1
+    assert source.count("op.drop_table(") == 1
 
 
 def test_sqlite_upgrade_downgrade_and_second_upgrade(tmp_path, monkeypatch) -> None:

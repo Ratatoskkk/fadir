@@ -24,6 +24,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -97,6 +98,27 @@ class Workspace(Base):
     portfolios: Mapped[list["Portfolio"]] = relationship(
         back_populates="workspace", cascade="all, delete-orphan"
     )
+    guest_access: Mapped["GuestAccess | None"] = relationship(
+        back_populates="workspace", cascade="all, delete-orphan", uselist=False
+    )
+
+
+class GuestAccess(Base):
+    __tablename__ = "guest_access"
+    __table_args__ = (
+        UniqueConstraint("secret_digest", name="uq_guest_access_secret_digest"),
+        CheckConstraint("length(secret_digest) = 32", name="ck_guest_access_digest_length"),
+    )
+
+    workspace_id: Mapped[int] = mapped_column(
+        ForeignKey("workspace.id", ondelete="CASCADE"), primary_key=True
+    )
+    secret_digest: Mapped[bytes] = mapped_column(LargeBinary(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+    last_access_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    workspace: Mapped[Workspace] = relationship(back_populates="guest_access")
 
 
 class Portfolio(Base):
