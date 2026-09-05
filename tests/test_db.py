@@ -21,7 +21,9 @@ def test_make_engine_keeps_postgresql_url_and_omits_sqlite_options() -> None:
         engine = make_engine(POSTGRESQL_URL)
 
     assert engine is create_engine.return_value
-    create_engine.assert_called_once_with(POSTGRESQL_URL, future=True)
+    create_engine.assert_called_once_with(
+        POSTGRESQL_URL, future=True, hide_parameters=True
+    )
     register_decimal_adapters.assert_not_called()
     listens_for.assert_not_called()
 

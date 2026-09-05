@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from app.calc.tax import DEFAULT_BRACKETS, TaxBracket, TaxConfig
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -68,6 +67,20 @@ class Settings:
     refresh: RefreshConfig = field(default_factory=RefreshConfig)
     history: HistoryConfig = field(default_factory=HistoryConfig)
     db_path: Path = DEFAULT_DB_PATH
+    database_url: str | None = None
+
+    @property
+    def database_target(self) -> str | Path:
+        return self.database_url if self.database_url is not None else self.db_path
+
+    def __repr__(self) -> str:
+        database_url = "<configured>" if self.database_url is not None else None
+        return (
+            "Settings("
+            f"fx={self.fx!r}, liquidation={self.liquidation!r}, tax={self.tax!r}, "
+            f"cache={self.cache!r}, refresh={self.refresh!r}, history={self.history!r}, "
+            f"db_path={self.db_path!r}, database_url={database_url!r})"
+        )
 
 
 def _load_tax(raw: dict[str, Any]) -> TaxConfig:
@@ -136,7 +149,12 @@ def load_settings(path: Path | None = None) -> Settings:
         tcmb_api_key=os.environ.get("FADIR_TCMB_API_KEY") or fx_raw.get("tcmb_api_key"),
     )
 
-    db_path = Path(os.environ["FADIR_DB_PATH"]) if os.environ.get("FADIR_DB_PATH") else DEFAULT_DB_PATH
+    db_path = (
+        Path(os.environ["FADIR_DB_PATH"])
+        if os.environ.get("FADIR_DB_PATH")
+        else DEFAULT_DB_PATH
+    )
+    database_url = os.environ["FADIR_DATABASE_URL"] if "FADIR_DATABASE_URL" in os.environ else None
 
     return Settings(
         fx=fx,
@@ -158,6 +176,7 @@ def load_settings(path: Path | None = None) -> Settings:
             start_date=_as_date(hist_raw.get("start_date")),
         ),
         db_path=db_path,
+        database_url=database_url,
     )
 
 

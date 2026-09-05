@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
 from app.config import PROJECT_ROOT, get_settings
-from app.db import init_db, session_scope
+from app.db import check_migration_heads, get_engine, init_db, session_scope
 from app.providers import market_hours
 from app.services.portfolio import PortfolioService, load_instruments
 
@@ -88,11 +88,25 @@ def _refresh_once() -> int:
         return report.price_rows_written
 
 
+def _startup_engine():
+    try:
+        engine = get_engine()
+    except Exception:
+        error = RuntimeError("database startup failed")
+    else:
+        return engine
+    raise error
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
+    engine = _startup_engine()
+    if engine.dialect.name == "sqlite":
+        init_db(engine)
+    else:
+        check_migration_heads(engine)
     settings = get_settings()
-    log.info("fadir ready - db=%s", settings.db_path)
+    log.info("fadir ready")
 
     task = asyncio.create_task(_auto_refresh())
     try:
@@ -134,8 +148,8 @@ app.include_router(router)
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request, exc: Exception):  # pragma: no cover
-    log.exception("unhandled error on %s", request.url.path)
-    return JSONResponse(status_code=500, content={"detail": str(exc)})
+    log.error("unhandled error on %s", request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "internal server error"})
 
 
 #: The SPA shell names the hashed bundles, so a stale copy of it pins the whole app to
