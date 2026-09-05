@@ -3,8 +3,8 @@
 ## Responsibilities
 
 - Own Hyper-V, Ubuntu Server LTS, PostgreSQL operations, and Cloudflare Tunnel.
-- Own services, encrypted off-site backups, restore, and release steps.
-- Target one hour of data loss and a four-hour restore.
+- Own services, restart, release rollback, service reconstruction, and release steps.
+- Off-site backups and their recovery targets are deferred by the owner for this beta.
 
 ## Default scope
 
@@ -38,10 +38,10 @@ A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: PLAT-READY-1.
-Status: Active. Use the current delivery table on the manager board.
-Reconcile the VM inventory and strict SSH identity. Audit the exact server and release prerequisites from the active delivery table.
-The repository and operational write leases are empty.
+Assignment: BETA-SCOPE-1.
+Status: Complete and accepted. The three-file lease is released.
+Record Google-only beta access and deferred off-site backups. Keep the current privacy and release checks.
+The operational write lease is empty.
 Return the handoff in the task conversation. The Senior records accepted results.
 
 ## Exact file lease

@@ -38,19 +38,14 @@ A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: COORD-ID, read-only setup report.
-Status: Complete. The read-only lease is released.
-The live board records the accepted result. Wait for a new exact assignment.
-The live board controls the current state; this brief describes the assigned scope.
-
-Recover the ID-1 handoff after the usage-limit stop. Read all seven reserved files and list completed work, unfinished proof, and retained evidence.
-
-ID-1 stays paused during setup. Its seven files remain reserved owner work. The current board controls any later activation.
+Assignment: ID-2-RUNTIME.
+Status: Active implementation and synthetic proof. Use the corrected runtime contract and exact lease in the current board.
+Preserve the focused failed proof before repair. Keep Guest HTTP and public service work outside this slice.
 
 ## Exact file lease
 
-Repository write lease: Empty.
-Operational write lease: Empty.
+Repository write lease: `app/config.py`, `app/db.py`, `app/main.py`, `tests/test_db.py`, `tests/test_runtime_database.py`.
+Operational write lease: The two exact ID-2-RUNTIME roots and verified new synthetic schemas in the current board.
 Return the report in the task conversation. Create no report file.
 
 Read these task-specific paths after the common documents:
@@ -93,7 +88,7 @@ git diff --check
 ```
 
 Use `rg` and source reads for the assigned trace.
-Keep test and build commands inactive during setup.
+Use the current proof commands and environment in the manager board.
 A later proof lease must select the exact commands from the board.
 
 ## Completion criteria

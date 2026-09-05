@@ -1,7 +1,15 @@
-# Use Google first with email magic-link recovery
+# Use Google-only sign-in for the beta
 
-faðir will use Google as the primary sign-in method and an email magic link as recovery. A User can attach both verified Login Identities. The service will use the provider subject, not the email address, as the durable Google key.
+## Current beta decision — 2026-09-05
 
-The beta will use a free external transactional email service. Resend is the first candidate, and Brevo is the fallback. The application will keep the email service behind a small interface.
+The beta accepts Google sign-in only. Email magic-link recovery is deferred. The beta will not use an email sender service or an email sign-in flow.
 
-The VM will not operate an email server while a suitable free service exists. This choice protects email delivery quality and reduces VM maintenance.
+Google identity uses the provider issuer and subject, not the email address, as the durable key. A User Session expires after 30 days without activity, and the User can view and revoke active sessions.
+
+## Decision history
+
+The earlier decision planned Google as the primary sign-in method and an email magic link as recovery. It allowed a User to attach both verified Login Identities. It used the provider subject, not the email address, as the durable Google key.
+
+The earlier decision considered a free external transactional email service. Resend was the first candidate, and Brevo was the fallback. The application would keep the email service behind a small interface.
+
+The VM will not operate an email server while the later email-recovery scope remains deferred. This history does not add email recovery to the beta.

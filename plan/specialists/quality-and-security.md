@@ -38,9 +38,9 @@ A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: ID-1-CODE-RESUME.
-Status: Active. Use the current delivery table on the manager board.
-Review the frozen seven-file ID-1 candidate and its retained evidence. Return READY or NOT READY with exact source findings.
+Assignment: ID-2-RUNTIME-REVIEW.
+Status: Complete. The Senior accepted the contract for implementation. Wait for a new candidate review lease.
+Review explicit database selection, credential protection, migration readiness without startup DDL, and the five-file lease.
 The repository and operational write leases are empty.
 Return the handoff in the task conversation. The Senior records accepted results.
 

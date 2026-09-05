@@ -17,31 +17,100 @@ The Senior edits coordination files only. Specialists implement product and oper
 The approved destination is the existing Linux VM and the existing origin repository.
 Inspect each concrete resource before a change. Prefer reversible changes and bounded synthetic resources.
 Keep private data, WAL files, uploads, credentials, and local configuration protected.
-The approval does not supply a domain, identity mapping, email sender, backup target, or secret.
+The owner selected `ratatosk.dev` as the release domain during this delivery turn.
+Check its current DNS and service use before a route change. Preserve an existing service until its change scope is clear.
+The owner selected Google sign-in only for this beta. Defer email magic-link recovery and its sender account.
+The owner removed off-site backups from this beta. Do not require a backup account or claim the earlier recovery guarantee.
+Preserve existing private state and retained proof. This decision authorizes no deletion of existing backups or data.
+Restart, release rollback, and service reconstruction proof remain required. They do not prove recovery of lost Portfolio data.
+These current owner choices supersede conflicting email and backup requirements in the earlier brief and ADR records.
+Specialists must update the product documents under an exact lease before release.
+The approval does not supply an identity mapping, Google OAuth credentials, or a Tunnel secret.
 Ask for missing values while independent work continues.
 Confirm any destructive action on existing owner data or infrastructure before execution.
 Use only free services or existing approved resources unless the owner approves a charge.
 Create no real identity or private-data migration from an assumed owner value.
 Deploy only after the applicable product, security, operations, and recovery gates pass.
 
+The owner supplied `mina.ns.cloudflare.com` and `sevki.ns.cloudflare.com`.
+A public NS query through `1.1.1.1` returned both names on 2026-09-05.
+This proves the observed DNS delegation, not Cloudflare account status, TLS, a Tunnel, or a public faðir service.
+Current DNS setup research: Cloudflare full setup and Namecheap Custom DNS documentation, retrieved 2026-09-05.
+Sources: https://developers.cloudflare.com/dns/zone-setups/full-setup/setup/ and https://www.namecheap.com/support/knowledgebase/article.aspx/767/10/how-to-change-dns-for-a-domain/ .
+Scope: Current documented account setup, assigned nameservers, DNSSEC transition, and registrar fields. No account UI was inspected.
+
 ## Active delivery assignments
 
 | Role | Assignment | Repository write lease | Operational write lease | Status |
 |---|---|---|---|---|
-| Quality and Security | ID-1-CODE-RESUME | Empty | Empty | Active source review |
-| Platform and Release | PLAT-READY-1 | Empty | Empty | Active host and release prerequisite audit |
-| Identity and Data Integrity | None | Empty | Empty | Wait for ID-1 review |
-| Product Experience | None | Empty | Empty | Wait for scoped Guest contract |
+| Quality and Security | None | Empty | Empty | Runtime review complete; wait for candidate |
+| Platform and Release | None | Empty | Empty | BETA-SCOPE-1 accepted; lease released |
+| Identity and Data Integrity | ID-2-RUNTIME | Five exact files below | Exact synthetic proof roots and schemas below | Active implementation and proof |
+| Product Experience | None | Empty | Empty | Design complete; Senior review pending |
 | Finance and Tax | None | Empty | Empty | Available |
 | Market Data | None | Empty | Empty | Wait for Phase 6 |
 
-The seven ID-1 candidate files remain frozen during Quality review.
+The seven ID-1 candidate files remain frozen during ID-1-PROOF-RESUME.
 Quality reads their complete diff and the accepted ID-1 contract.
 Quality checks pending ORM state, transaction ownership, lock order, secret handling, clock rules, cleanup, and retained failure proofs.
 It returns source findings and a READY or NOT READY verdict. It runs no test and makes no artifact or repair.
 After the review, the Senior assigns a focused repair or exact synthetic proof lease.
 
-PLAT-READY-1 reconciles the named VM with the successful strict SSH result.
+BETA-SCOPE-1 updates only these three files after their clean diff check:
+
+The active Platform task is `01a0729f-6ff0-74d3-b2ce-0d5757dd94a3`.
+The older task returned a historical sudo report instead of this assignment. It made no change and the Senior rejected it.
+The Senior archived the old task and created a fresh task with the same stable role and Luna High settings.
+
+1. `docs/OPEN_BETA_BRIEF.md`
+2. `docs/adr/0003-owner-managed-vm-for-open-beta.md`
+3. `docs/adr/0004-google-primary-with-email-magic-link.md`
+
+Record the owner's Google-only beta and deferred email recovery. Keep issuer-plus-subject identity and revocable User Sessions.
+Record no off-site backups for this beta and no one-hour data-loss or four-hour restore guarantee.
+Keep service restart, release rollback, and reconstruction proof. State that these do not recover lost Portfolio data.
+Preserve the domain, VM, Tunnel, privacy, Guest, scope, and export requirements.
+Keep ADR filenames and useful decision history. Make the current beta choice unambiguous.
+Retain the pre-edit conflicting text as the focused document failure in the task report.
+Run a focused document consistency check and `git diff --check`. No product tests or operational action is required.
+Return the exact diff and Facts, Limits, Uncertainty, Open work. The Senior owns commit and push.
+
+ID-1-PROOF-RESUME tests the frozen seven-file candidate after its source review passed.
+Repository write lease: Empty. Preserve every existing owner change and all earlier evidence.
+The source baseline is `b3693ac`, plus only the seven reserved ID-1 candidate files.
+Use these exact new operational roots after an absence check:
+
+1. `C:/Users/doguk/AppData/Local/Temp/fadir-id1-resume-20260905/`
+2. `/home/fadir-agent/fadir-tests/id1-resume-20260905/`
+
+Place the inspected source archive, extracted source, synthetic fixtures, temporary files, and XML evidence under those roots.
+Build the archive from committed public source plus the seven candidate files. Never copy canonical local configuration.
+Use the earlier DB-6B public source allowlist. Exclude Git metadata, private data, local overrides, uploads, secrets, and bytecode.
+Record the baseline, candidate file hashes, archive entries, archive hash, and matching guest hash before extraction.
+Use the existing Windows Python environment and the established guest Python environment without package changes.
+Use the existing strict SSH controls, `fadir-agent`, and `postgresql+psycopg:///fadir_test`.
+Set `FADIR_RUN_POSTGRESQL_MIGRATIONS=1`, `FADIR_TEST_POSTGRESQL_URL`, and `FADIR_TEST_POSTGRESQL_DATABASE=fadir_test` only for the live command.
+The live command targets only `tests/test_postgresql_guest_access.py` and `tests/test_postgresql_migrations.py` with `-o addopts= -m live`.
+Run full offline tests with `-o addopts= -m "not live"`. Use fresh explicit basetemp and XML paths for every run.
+Disable pytest cache and bytecode writes. Set temporary-directory variables inside the leased root.
+Bound live tests with PostgreSQL timeouts, worker joins, and a 300-second whole-command timeout.
+The tests can create only fresh `id1_<32hex>` and `db6a_<32hex>` schemas in the synthetic database.
+Permit only their reviewed marker, OID, owner, database, and name checks before removal of their own new schemas.
+Retain an unconfirmed Guest test schema and report its exact identifier. Preserve all prior schemas and test artifacts.
+Keep packages, services, roles, database configuration, SSH, VM settings, and checkpoints unchanged.
+Retain all new archives and XML evidence. This lease permits no artifact deletion or product repair.
+Stop on a failed prerequisite or test. Return its smallest retained failure for a separate repair lease.
+
+ID-1-PROOF-RESUME completed. Its operational write lease is released; retain the exact roots and evidence.
+ID-1-ACCEPT reviews the frozen diff, retained failures, source hashes, and new XML evidence with empty write leases.
+Quality can read the exact two proof roots, archive manifests, and the Identity proof task record.
+Use strict SSH to read the guest evidence and metadata only. No test rerun or artifact is required.
+An optional cleanup check can read `pg_catalog.pg_namespace` in `fadir_test` for only the task schema names from the XML.
+It can read existing package version metadata to compare the accepted runtime. It cannot query application tables.
+Confirm the evidence matches the current seven files. Return PASS, FAIL, or INCONCLUSIVE for ID-1 only.
+Keep G4 open. HTTP, identity transitions, browser, hosted, private migration, and public proof remain later gates.
+
+PLAT-READY-1 completed the release prerequisite audit. PLAT-HOST-2 diagnoses the remaining host inventory gap.
 It can read Hyper-V metadata, caller elevation, VM service metadata, strict SSH identity, OS/package versions, listener metadata, and relevant public source files.
 It can read metadata for the existing synthetic test roots and retained XML evidence.
 It can inspect Git and deployment source for existing domain, service, ingress, and backup choices.
@@ -50,6 +119,59 @@ It changes no host, guest, package, file, service, database, tunnel, or checkpoi
 It proposes exact resources for a safe synthetic server and later public release.
 Use accepted official sources; refresh official documentation only for a changed integration or version gap.
 Report missing owner values without guessing them.
+
+PLAT-HOST-2 uses explicit errors for each Hyper-V command. Record the command source and caller identity scope.
+Check the named VM through Hyper-V and the virtualization CIM namespace without a mutation or elevation change.
+Compare that result with the existing strict SSH hostname and virtualization metadata.
+Report an access error as an access error. An empty pipeline with a suppressed error does not prove zero VMs.
+Return exact command results and the smallest remaining prerequisite. Keep both write leases empty.
+
+UX-GUEST-DESIGN traces the present interface and defines the Phase 4 Guest and sign-in flows.
+Read the beta brief, ADRs 0004 and 0009, current frontend source, API routes, and accepted route prerequisites.
+Describe first-save retention, cookie loss, expiry, sign-in, Claim, Transfer, and explicit Merge choices.
+Define the minimum API contract and a sequential frontend lease. Keep ownership checks on the server.
+Preserve full Guest feature access and require desktop plus 375-pixel proof for later interface changes.
+Return a source-based design and missing decisions. Make no file, package, browser, server, or service change.
+
+ID-2-DESIGN completed with empty write leases. It prepared sequential backend assignments from the tested ID-1 candidate.
+Trace configuration, engine and session creation, startup, scope queries, every API route, calculation inputs, refresh, and split behavior.
+First propose the smallest PostgreSQL runtime lease. Require explicit database selection, protected URL handling, and migration readiness before startup.
+Then define all-route Guest isolation and a browser contract before any Guest cookie endpoint can activate.
+Keep the accepted internal Guest transaction, lock, secret, and expiry rules. Use current source and accepted integration research.
+Specify first-save atomicity, retries, private query scope, public errors, cookie renewal, CSRF, no-store, and concurrent bootstrap behavior.
+Treat the Product Experience design as input with the corrections in its review below. Google-only access controls this beta.
+Return exact sequential file leases, retained failure targets, commands, and test boundaries. Make no file or operational change.
+
+ID-2-RUNTIME implements the corrected runtime contract in exactly these files:
+
+1. `app/config.py`
+2. `app/db.py`
+3. `app/main.py`
+4. `tests/test_db.py`
+5. `tests/test_runtime_database.py` (new)
+
+The Senior verified clean diffs and absence of the new test file before activation.
+Use source baseline `04bab50`. Preserve all concurrent documentation and coordination changes.
+Retain focused failed tests before repair. Include URL precedence, invalid selection, private-data redaction, PostgreSQL heads, no startup DDL, and refresh suppression.
+Use supported Alembic read APIs. Catch database failures without exposing connection details or exception chains.
+Keep real PostgreSQL readiness tests in the leased test file with explicit `live` marks.
+Permit only these new operational roots after an absence check:
+
+1. `C:/Users/doguk/AppData/Local/Temp/fadir-id2-runtime-20260905/`
+2. `/home/fadir-agent/fadir-tests/id2-runtime-20260905/`
+
+Use the existing Python environments and strict SSH controls. Make no package, service, role, or configuration change.
+Construct the inspected test source from committed public files plus the five leased files. Use committed configuration, never canonical local configuration.
+Record source and archive hashes; inspect all entries; verify the guest copy before extraction. Retain archives and XML.
+Scope all temporary paths, pytest basetemp, and evidence inside the applicable root. Disable bytecode and pytest cache writes.
+Run focused and full offline tests with `-o addopts= -m "not live"` before the live proof.
+The live command targets only `tests/test_runtime_database.py` with `-o addopts= -m live` and a 300-second command bound.
+Use explicit opt-in and `postgresql+psycopg:///fadir_test` as `fadir-agent`. No provider or HTTP listener is authorized.
+Create only fresh `id2_<32hex>` schemas for synthetic readiness scenarios. Record a random marker, OID, database, and owner.
+DDL belongs only to the explicit synthetic fixture setup. The application startup path must prove that it performs no DDL.
+Before cleanup, verify each exact task schema name, marker, OID, database, and owner. Preserve unknown or failed/unconfirmed state.
+Remove only the test's verified new schemas after successful proof. Preserve every prior resource and private database.
+Return the retained failure, final diff, commands, exits, versions, evidence hashes, and cleanup result for independent review.
 
 ## Repository delivery rule
 
@@ -76,6 +198,126 @@ Record the revision, checks, review result, and remote result after each complet
 
 ## Current product state
 
+### BETA-SCOPE-1 acceptance
+
+Facts: The fresh Platform task changed only the beta brief and ADRs 0003 and 0004.
+The Senior reviewed the full diff and the retained prior requirements.
+The documents now state Google-only beta sign-in, deferred email recovery, and no off-site backups or lost-data recovery guarantee.
+The 30-day User Session rule, revocation, Guest behavior, private scope, export, domain, VM, and Tunnel requirements remain.
+The backup deletion limit remains conditional for any retained backup. Restart and service reconstruction proof remain release gates.
+The focused consistency check and `git diff --check` passed.
+Limits: This is a document change. No runtime, private data, DNS, VM, or service change occurred.
+Uncertainty: Google OAuth and Tunnel credentials still need their later exact setup steps.
+Open work: Publish the three reviewed documents with the current coordination records. Continue ID-2-RUNTIME.
+
+### ID-1 final acceptance
+
+Facts: Quality returned ID-1 PASS after the resumed final review.
+It matched the seven source files to the 101-entry archive and parsed both retained XML records.
+It confirmed 350 offline tests and 43 PostgreSQL tests passed, with verified task schema cleanup.
+The Senior accepts the internal Guest foundation. Its seven-file source lease is released after the publication step below.
+Limits: This result covers local and synthetic VM behavior only. HTTP, cookies, real identity transitions, and User Sessions remain unimplemented.
+Uncertainty: One existing Starlette warning remains. The ambient guest Python probe lacked psycopg; the accepted test environment passed.
+Open work: Commit and push the seven exact ID-1 files after a final unchanged-hash and publication check. Keep G4 open.
+Publication completed: `04bab50` contains only the seven accepted ID-1 files and reached origin/main with a normal fast-forward push.
+The final source hashes matched the accepted proof. The bounded credential scan and diff checks passed.
+The remote ahead/behind counts were zero after the push. Product documentation and coordination changes remain separate.
+
+### ID-2-DESIGN review and corrected runtime contract
+
+Facts: Identity confirmed that settings ignore `FADIR_DATABASE_URL`, startup calls `create_all`, and current routes remain unscoped.
+The Senior accepts separate runtime, calculation scope, identity, and browser stages as the direction.
+Limits: The proposed automatic `alembic upgrade head` at application startup is rejected. The application must not perform schema changes on startup.
+The later lease sketches are recommendations only. User Session models and migrations need their own complete boundary.
+Uncertainty: Shared split application needs its own contract; a shared applied flag cannot safely represent independent Portfolio application.
+Open work: Quality reviews ID-2-RUNTIME-REVIEW with this corrected contract before implementation:
+
+1. Honor an explicit `FADIR_DATABASE_URL`. Reject an empty, malformed, or unsupported selected URL without a SQLite fallback.
+2. Support PostgreSQL with psycopg. Preserve supported SQLite path and URL behavior for the existing local workflow.
+3. Keep full connection options intact. Protect URL credentials from settings representations, startup logs, public errors, and exception chains.
+4. Set engine parameter hiding without changing the accepted Guest transaction and isolation requirements.
+5. For PostgreSQL startup, read and compare the database migration head with the repository head. Fail closed on a missing or different head.
+6. Perform no DDL or automatic migration during PostgreSQL startup. Platform runs explicit reviewed migrations as a separate release step.
+7. Preserve local SQLite initialization for now. This slice does not expose Guest routes or authorize any public listener.
+8. Start no background refresh if the database readiness check fails. Log no database URL or private path during startup.
+
+Proposed exact implementation lease: `app/config.py`, `app/db.py`, `app/main.py`, `tests/test_db.py`, `tests/test_runtime_database.py`.
+The five paths have no current owner diff. The new test path must be absent before activation.
+Retain focused failures for ignored URL selection and PostgreSQL startup schema handling before repair.
+Use synthetic configuration, patched external boundaries, and real PostgreSQL readiness proof under a later exact operational lease.
+Quality returns READY or NOT READY with only concrete corrections. Both review write leases are empty.
+
+Quality returned NOT READY for the present implementation because the planned runtime controls are absent.
+Its corrections match the proposed contract and identify no new owner choice or lease gap.
+The Senior accepts the corrected contract for implementation. The current-code failures define the required red proof; they do not require another design cycle.
+
+### UX-GUEST-DESIGN review
+
+Facts: Product Experience traced the frontend and global API routes and returned the proposed Guest and identity flows.
+Its first-save notice, full Guest feature access, explicit duplicate choice, server authority, and desktop/mobile proof cases fit the brief.
+Limits: This is a design input, not an accepted endpoint contract or browser proof. It creates no implementation lease.
+The proposed email flows are superseded by the owner's Google-only beta choice.
+Uncertainty: Concurrent cookie-less bootstrap, cookie renewal, duplicate preview freshness, and session revocation need a backend contract.
+Open work: ID-2-DESIGN resolves the backend boundary with these corrections:
+
+1. Check an existing User Session before any Guest issuance. Do not create an extra Guest Workspace for a signed-in User.
+2. Match browser cookie renewal to successful sliding access. Define how normal polling affects inactivity.
+3. Distinguish cancellation of a preview from explicit rejection of a Merge. Rejection must keep a separate Portfolio with name resolution.
+4. Provide User Session list and revocation flows. Google-only access does not remove these controls.
+5. Bind any confirmed Merge to a current preview and explicit source and target choices. Recheck private scope and duplicate decisions.
+6. Use bounded coherent frontend leases. A one-file-only rule is not required; avoid incomplete components without a runnable integration.
+7. Do not claim that a lost cookie can be detected. A first visit and a lost-cookie visit can be indistinguishable.
+
+
+### PLAT-READY-1 review
+
+Facts: Strict SSH reaches `fadir-control-lab-01`. The guest reports Ubuntu 24.04.4 LTS and PostgreSQL 16.15.
+The PostgreSQL cluster is online and listens on `127.0.0.1:5432`.
+The domain `ratatosk.dev` redirects to its `www` Namecheap parking page. HTTPS failed in the probe.
+The host shell reports no administrator token. The reported empty VM inventory conflicts with successful guest access.
+The source has no systemd, tunnel, email, or backup configuration. Its current application configuration selects SQLite.
+Limits: This was a read-only metadata and public DNS audit. It proves no hosted faðir service, database content, or recovery result.
+The existing parking page is recorded as the current route. The owner approved faðir release work on this selected domain.
+Uncertainty: DNS account access, email sender, backup target, and secret delivery remain unspecified.
+The Hyper-V inventory requires explicit error handling before a conclusion.
+Open work: Run PLAT-HOST-2. Prepare PostgreSQL runtime integration after the Guest foundation review.
+
+### PLAT-HOST-2 review
+
+Facts: `Get-VM -Name fadir-control-lab-01 -ErrorAction Stop` reports a permission error.
+The caller has no administrator token or Hyper-V Administrators group membership.
+The CIM query returns no matching row. Strict SSH still returns the expected guest and `systemd-detect-virt` reports `microsoft`.
+Limits: The empty inventory does not prove that the VM is absent. This task changed no host or guest resource.
+Uncertainty: Host VM identity and recovery controls require an available elevated management context.
+Open work: Continue the approved synthetic proof through strict SSH. Recheck host inventory before host-level operations or recovery acceptance.
+The owner already approved VM use. The missing item is a usable management context, not repeated general VM permission.
+
+### ID-1-CODE-RESUME review status
+
+Facts: Quality returned a historical G3-CTRL-2 report instead of the assigned Guest source review.
+The Senior rejected that report and sent the exact current assignment again.
+Quality then returned ID-1-CODE-RESUME READY with references for all seven candidate files.
+The Senior reviewed the source controls and accepted the verdict as source evidence only.
+The original-identity guard and failed-call cleanup regression remain in the candidate.
+Limits: No test ran in that review. Its unrelated VM inventory text supplies no operational acceptance evidence.
+Uncertainty: Lock, driver, savepoint, migration, and cleanup behavior still require fresh runtime proof.
+Open work: Identity runs ID-1-PROOF-RESUME. Quality reviews its evidence before the Senior accepts a product commit.
+
+### ID-1-PROOF-RESUME review
+
+Facts: The Windows offline suite passed 350 tests, with 72 deselected and one existing warning.
+The exact PostgreSQL files passed 43 live tests, with 16 deselected. Both commands returned zero.
+The Senior parsed the offline XML and matched all seven canonical SHA-256 values to the tested candidate.
+Archive baseline: `b3693ac`; entries: 101; SHA-256: `d0a694cf8205a9586b1650e6b368a66ce79cc2defbaa5cf2b8fdbe5eac50c677`.
+The guest archive hash matched before extraction.
+Offline XML: `C:/Users/doguk/AppData/Local/Temp/fadir-id1-resume-20260905/offline.xml`.
+Live XML: `/home/fadir-agent/fadir-tests/id1-resume-20260905/evidence/live.xml`.
+Live XML SHA-256: `10161715250ea6aaad178d04664557c054040a7927d4e91e5c4bf8630a817dae`.
+Identity reports 42 new Guest schemas and no remaining task Guest or migration schema after verified cleanup.
+Limits: This is local and synthetic VM evidence. No HTTP, cookies, real Claim, hosted service, public service, or private migration was tested.
+Uncertainty: Independent evidence acceptance remains pending. The existing Starlette warning remains.
+Open work: Quality completes ID-1-ACCEPT. The Senior can then commit and push only the accepted candidate and coordination files.
+
 ### PUB-1 review
 
 Facts: The accepted committed source passed 336 offline tests, with 30 live tests deselected and one existing Starlette warning.
@@ -86,7 +328,8 @@ The prior G2 and conditional G3 reviews remain the product acceptance records fo
 Limits: The scan is a bounded publication check, not a proof that every possible secret pattern is absent.
 This is source publication with fresh offline regression proof. It is not a public service release or final ID-1 acceptance.
 Uncertainty: Hosted CI is absent from the tracked source. Public application readiness remains behind G4-G9.
-Open work: Commit the reviewed coordination update, push the accepted history, and verify the remote revision.
+Open work: Continue ID-1 review. Commit `b3693ac` and all 38 prior commits reached origin/main with a normal push.
+The post-push ahead/behind counts are both zero. Only the seven unfinished ID-1 files remain in the worktree.
 
 Phase 4 remains current. G2 and conditional G3 retain their accepted scope.
 G4 remains NOT READY until Guest access, identity, transitions, and User Sessions pass.
@@ -1320,12 +1563,12 @@ Use isolated test data. Do not copy private rows into fixtures, logs, reports, p
 | 1 | Coordination baseline | Senior Agent | None | G1: Six complete briefs, one board, exact leases, and owner gates agree with the beta brief. |
 | 2 | Average Purchase Price | Finance and Tax; Product Experience; Quality and Security | G1 | G2: The formula, API, detailed table, tests, and visible browser proof pass locally. |
 | 3 | PostgreSQL and private data scopes | Identity and Data Integrity; Quality and Security | G2 | G3: Synthetic PostgreSQL migration and scope proof pass. The private dry-run and rollback control plan is accepted. Private execution waits for Phase 4 identity proof and the applicable private gates. |
-| 4 | Guest access and identity | Identity and Data Integrity; Product Experience; Quality and Security | G3 | G4: Guest, Google, magic link, Claim, Transfer, Merge, and session proofs pass. |
+| 4 | Guest access and identity | Identity and Data Integrity; Product Experience; Quality and Security | G3 | G4: Guest, Google, Claim, Transfer, Merge, and session proofs pass. Email recovery is deferred by the owner. |
 | 5 | Multiple Portfolios, currencies, and Tax Profiles | Finance and Tax; Identity and Data Integrity; Product Experience | G4 | G5: Portfolio scope, Base Currency, Fee Currency, and Turkey Tax Profile proofs pass. |
 | 6 | Public market-data behavior | Market Data; Quality and Security | G5 | G6: Yahoo permission, symbols, prices, FX, caches, quotas, timestamps, and corporate actions pass for public traffic. |
 | 7 | Security, privacy, export, deletion, and abuse controls | Quality and Security; Identity and Data Integrity | G6 | G7: Isolation, sessions, privacy, deletion, export, retention, Guest quotas, and abuse controls pass. |
-| 8 | Hyper-V VM and public release | Platform and Release; Quality and Security | G7, owner approval, and agent-control proof | G8: Agent control, VM, PostgreSQL operations, tunnel, services, backup, restore, and release checks pass on the host. |
-| 9 | Full acceptance and recovery proof | Quality and Security; Platform and Release; all other roles as needed | G8 | G9: Local, browser, hosted, public, backup, and recovery evidence passes with clear proof labels. |
+| 8 | Hyper-V VM and public release | Platform and Release; Quality and Security | G7, owner approval, and agent-control proof | G8: Agent control, VM, PostgreSQL operations, tunnel, services, restart, and release rollback checks pass. Off-site backups are deferred by the owner. |
+| 9 | Full acceptance and recovery proof | Quality and Security; Platform and Release; all other roles as needed | G8 | G9: Local, browser, hosted, public, restart, and service reconstruction evidence passes with clear proof labels. No lost-data recovery guarantee applies. |
 
 ## Dependency map
 
@@ -1364,7 +1607,7 @@ It does not prove a deployed application, production recovery, private migration
 
 ### Hosted proof
 
-Hosted proof runs on the approved deployed service. It includes service, PostgreSQL, backup, restore, and private network evidence.
+Hosted proof runs on the approved deployed service. It includes service, PostgreSQL, restart, release rollback, and private network evidence.
 
 ### Private proof
 
@@ -1379,7 +1622,7 @@ Each report must name its proof class. A lower proof class cannot satisfy a high
 
 ## Active leases
 
-Use the current setup lease table above. ID-1 and ID-1-CODE are paused.
+Use the current delivery table at the top of this board.
 The records below are completed or historical leases. They grant no current write authority.
 
 ### Completed lease: APP-1

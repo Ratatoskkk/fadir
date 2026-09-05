@@ -34,13 +34,11 @@ If the User rejects a Merge, the service keeps the Guest Portfolio as a separate
 
 ## Identity
 
-Google is the primary sign-in method. Email magic links provide recovery.
+Google is the only sign-in method in the beta. Email magic-link recovery is deferred.
 
-A User can attach both methods. Google identity uses the provider issuer and subject as the durable key.
+The beta does not use an email sender service or an email sign-in flow. Google identity uses the provider issuer and subject as the durable key.
 
 A User Session expires after 30 days without activity. The User can view and revoke active sessions.
-
-The beta will use a free external transactional email service. The VM will not operate an email server while a free service fits.
 
 ## Portfolio calculations
 
@@ -72,11 +70,13 @@ The hosted service will use one PostgreSQL database. Workspace and Portfolio key
 
 Shared market data can use global cache rows. Private Portfolio data cannot enter Operator tools or normal logs.
 
-The beta will run on an Ubuntu Server LTS VM under Hyper-V. Cloudflare Tunnel will provide public access.
+The beta will run on an Ubuntu Server LTS VM under Hyper-V. Cloudflare Tunnel will provide public access for `ratatosk.dev`.
 
 The owner will keep the host computer on. A later full product can move to a separate server computer.
 
-The beta will use basic encrypted off-site backups. It targets one hour of data loss and a four-hour restore.
+The beta will not use off-site backups. It has no one-hour data-loss target and no four-hour restore guarantee.
+
+Release readiness still requires proof of service restart, release rollback, and service reconstruction. These proofs do not recover lost Portfolio data.
 
 ## Public controls
 
@@ -90,19 +90,19 @@ Operator views can show health, counts, quotas, and failures. They cannot show t
 
 A User can export each Portfolio as CSV and JSON. A User can delete a Portfolio or the full User record.
 
-Deletion revokes active sessions at once. Deleted data can remain in encrypted backups for no more than 30 days.
+Deletion revokes active sessions at once. If the beta retains encrypted backups, deleted data can remain in them for no more than 30 days.
 
 ## Delivery order
 
 1. Set up the Senior Agent and stable specialists.
 2. Add Average Purchase Price as the first isolated product change.
 3. Add PostgreSQL, migrations, and the User, Workspace, and Portfolio scopes.
-4. Add Guest access, Google sign-in, magic links, Claim, Transfer, and Merge.
+4. Add Guest access, Google sign-in, Claim, Transfer, and Merge.
 5. Add multiple Portfolios, Base Currency, Fee Currency, and the Tax Profile.
 6. Prepare the market-data and cache behavior for public traffic.
 7. Add security, privacy, deletion, export, and abuse proofs.
 8. Create the Hyper-V VM and deploy the service through Cloudflare Tunnel.
-9. Run local, browser, restore, and public acceptance checks.
+9. Run local, browser, restart, release rollback, service reconstruction, and public acceptance checks.
 
 ## Work model
 

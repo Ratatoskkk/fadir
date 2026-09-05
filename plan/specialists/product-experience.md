@@ -38,9 +38,9 @@ A source review does not establish runtime acceptance.
 
 ## Current assignment
 
-Assignment: COORD-UX, read-only setup report.
-Status: Complete. The read-only lease is released.
-The live board records the accepted result. Wait for a new exact assignment.
+Assignment: UX-GUEST-DESIGN.
+Status: Complete. The Senior will review the design before a new lease.
+Trace the current interface and define the Phase 4 Guest and sign-in flows.
 The live board controls the current state; this brief describes the assigned scope.
 
 Read the APP-2 source and G2 record. Confirm the table contract and list later Guest interface dependencies.

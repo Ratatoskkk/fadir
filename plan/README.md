@@ -2,7 +2,7 @@
 
 The [manager board](manager-open-beta.md) is the only live work board.
 Its current authority section controls assignments, leases, gates, and owner decisions.
-The accepted beta brief and ADRs control product decisions.
+The beta brief and ADRs record product decisions. Current explicit owner changes on the board take priority until document updates pass review.
 
 ## Stable roles
 
@@ -12,7 +12,7 @@ The accepted beta brief and ADRs control product decisions.
 | Identity and Data Integrity | [identity-and-data-integrity.md](specialists/identity-and-data-integrity.md) | `01a059a5-e2b6-71d0-b045-abd010e0f492` |
 | Finance and Tax | [finance-and-tax.md](specialists/finance-and-tax.md) | `01a056f1-7e78-7b70-a153-de6ec5bcf18f` |
 | Market Data | [market-data.md](specialists/market-data.md) | `01a070ed-793e-7360-8575-155af877f4d8` |
-| Platform and Release | [platform-and-release.md](specialists/platform-and-release.md) | `01a05ef0-3faa-7b52-ad69-52a851bb56c9` |
+| Platform and Release | [platform-and-release.md](specialists/platform-and-release.md) | `01a0729f-6ff0-74d3-b2ce-0d5757dd94a3` |
 | Quality and Security | [quality-and-security.md](specialists/quality-and-security.md) | `01a05777-bcc9-7ed0-b66d-292eff0f6d9c` |
 
 Use `gpt-5.6-luna` with `high` effort for every specialist task.
