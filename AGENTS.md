@@ -1,5 +1,11 @@
 # faðir agent index
 
+Specialists must not read repository files by default.
+The Senior must name each file or path that a specialist may read.
+The Senior must provide only the relevant board excerpt and named source paths.
+The Senior must not send the historical board or unrelated documents by default.
+This rule applies before specialist analysis, implementation, testing, and handoff.
+
 Read [CONTEXT.md](CONTEXT.md) before product work.
 Read [the beta brief](docs/OPEN_BETA_BRIEF.md) and [the ADRs](docs/adr/) before beta work.
 
@@ -15,6 +21,8 @@ Require a focused failed proof before a repair. Preserve that proof through the 
 Require visible browser proof for each visible interface change.
 Separate Facts, Limits, Uncertainty, and Open work in each review and handoff.
 Keep local, synthetic VM, hosted, private, and public proof separate.
+Keep proof summaries in the live board. Store full XML, archives, and logs outside prompt context.
+Use the four handoff sections only. Keep each section concise and evidence-based.
 
 Research current official sources before design or tests for a new integration.
 Record each source URL, retrieval date, version scope, and tool limit.
@@ -27,6 +35,4 @@ Use the board's current delivery authority and exact leases for each action.
 The Senior coordinates and reviews. Specialists implement product and operational changes.
 Ask for missing owner values and protect private data throughout delivery.
 
-Write in Simplified Technical English. Use the relevant code or write skill for substantive work.
-After each material Senior action, add a short `ELIM5:` paragraph in the user conversation.
-Keep that paragraph outside specialist prompts and handoffs.
+Use the relevant code or write skill for substantive work.

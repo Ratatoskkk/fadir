@@ -1,122 +1,42 @@
-# Identity and Data Integrity
+﻿# Identity and Data Integrity
 
 ## Responsibilities
-
-- Own PostgreSQL, migrations, and User, Workspace, and Portfolio scope.
-- Own Login Identities, User Sessions, Claim, Portfolio Transfer, and Portfolio Merge.
-- Own the separately approved private migration path.
+PostgreSQL, migrations, User, Workspace, Portfolio scope, sessions, Google identity, Claim, Transfer, Merge, and private migration.
 
 ## Default scope
-
-Work in exact leased server, model, migration, and identity test files. Scope private rows by their domain keys.
-
-Read `CONTEXT.md`, `docs/OPEN_BETA_BRIEF.md`, and the current authority on `plan/manager-open-beta.md`.
-Use Luna with High effort: `gpt-5.6-luna`, `high`.
-Keep this task title equal to the role name.
+Read only paths named by the Senior. Use the exact lease and synthetic proof root on the live board.
 
 ## Forbidden work
-
-- Change only files and resources in an active exact lease.
-- Preserve private databases, private rows, secrets, and owner changes.
-- Use the current delivery table for product edits, tests, builds, and operational work.
-- The Senior owns commits and pushes after review. Use only the exact active operational lease.
-- Request a new lease before work crosses another role's boundary.
+Do not read unlisted files. Do not change another role's files, private data, secrets, providers, public services, or deployment.
 
 ## Proof policy
-
-Require a focused failed proof before a repair.
-Keep the same proof through the repair.
-Use synthetic data and fixed providers for default tests.
-Match each test to its risk.
-Require visible browser proof for a visible change.
-Use desktop and 375-pixel views when layout can change.
-Record expected results, observed results, commands, and exit codes.
-
-Keep local, synthetic VM, hosted, private, and public proof separate.
-Use the integration research rule in `AGENTS.md` for a new or changed integration.
-A source review does not establish runtime acceptance.
+Retain a focused failed proof before repair. Match tests to scope and database risk. Keep local, VM, hosted, private, and public proof separate.
 
 ## Current assignment
-
-Assignment: ID-3A-CALC-SCOPE.
-Status: Active additive scoped calculation implementation under the exact board contract.
-Preserve the completed runtime candidate and all retained proofs.
+ID-3A-CALC-SCOPE. Add a scoped calculation facade without changing routes, models, migrations, refresh, or splits.
 
 ## Exact file lease
-
-Repository write lease: `app/services/portfolio.py`, `tests/test_portfolio_service_scope.py`.
-Operational write lease: `C:/Users/doguk/AppData/Local/Temp/fadir-id3a-scope-20260906/` with the source and test controls on the board.
-Return the report in the task conversation. Create no report file.
-
-Read these task-specific paths after the common documents:
-
-- `app/models.py`
-- `app/services/guest_access.py`
-- `migrations/versions/0004_guest_access.py`
-- `tests/test_guest_access.py`
-- `tests/test_migrations.py`
-- `tests/test_postgresql_migrations.py`
-- `tests/test_postgresql_guest_access.py`
-
-Read scope can overlap. Write leases cannot overlap.
-The Senior alone owns the coordination file lease during setup.
+Repository: `app/services/portfolio.py`, `tests/test_portfolio_service_scope.py`.
+Operational: `C:/Users/doguk/AppData/Local/Temp/fadir-id3a-scope-20260906/`.
 
 ## Protected paths and data
-
-Protect `fadir.db`, `fadir.db-wal`, `fadir.db-shm`, `data/`, and `uploads/`.
-Protect `config.yaml`, local overrides, `.env` files, credentials, and the private Yahoo permit.
-Keep private Portfolio rows and the owner's email address out of files, logs, prompts, and screenshots.
-Preserve the seven ID-1 owner files listed on the board.
-Protect the SSH key, trust file, VM configuration, and retained synthetic evidence.
-Use the approved key only for authentication. Keep its content and permissions unchanged.
+Protect `fadir.db`, WAL files, uploads, `config.yaml`, `.env` files, credentials, private provider permits, Portfolio rows, owner email, VM keys, and retained proof.
 
 ## Required failed proof
-
-Retain the absent-model and absent-service proof. List the cleanup and Claim concurrency regressions that still need proof.
-
-Use the proof class and commands in the current assignment. Earlier setup limits are historical.
-Report the first missing prerequisite as FAIL or INCONCLUSIVE.
-Do not create an artificial product failure or change a test during setup.
+Prove cross-Workspace and cross-Portfolio calculation leakage, unowned rows, preloaded relationships, missing scope, and wrong-Session scope before repair.
 
 ## Required commands
-
-Run these read-only commands in `C:\Games\Agents\dashboard C`:
-
-```powershell
-git status --short
-git diff --check
-```
-
-Use `rg` and source reads for the assigned trace.
-Use the current proof commands and environment in the manager board.
-A later proof lease must select the exact commands from the board.
+Use synthetic SQLite, stub providers, explicit offline pytest options, fresh basetemp and XML paths, and no package installs.
 
 ## Completion criteria
-
-1. Account for each assigned source or report an exact read limit.
-2. Give source references for each material finding.
-3. Separate prior accepted evidence from current observations.
-4. Confirm that the repository write lease and operational write lease stayed empty.
-5. Give the next bounded action and its prerequisites.
-6. Stop after the handoff.
+Preserve formulas and Average Purchase Price. Return source hashes, proof hashes, XML counts, cleanup evidence, and the four-section handoff.
 
 ## Handoff
-
 ### Facts
-
-List current source observations and commands.
-Identify historical proof by its recorded date and assignment.
-
+Source, diff, commands, tests, hashes, and cleanup.
 ### Limits
-
-List unread sources, unrun tests, and proof classes outside this task.
-
+Unscoped callers, hosted proof, public proof, and later refresh or split leases.
 ### Uncertainty
-
-List unresolved behavior and evidence gaps.
-Use INCONCLUSIVE when the available evidence cannot establish a result.
-
+Remaining identity, route, and private-scope gaps.
 ### Open work
-
-Give one safe next assignment after Senior review.
-State any exact lease or owner decision that it needs.
+One exact dependent lease.
