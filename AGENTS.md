@@ -6,11 +6,11 @@ The Senior must provide only the relevant board excerpt and named source paths.
 The Senior must not send the historical board or unrelated documents by default.
 This rule applies before specialist analysis, implementation, testing, and handoff.
 
-Read [CONTEXT.md](CONTEXT.md) before product work.
-Read [the beta brief](docs/OPEN_BETA_BRIEF.md) and [the ADRs](docs/adr/) before beta work.
+Before product work, the Senior reads [CONTEXT.md](CONTEXT.md) or names it in a specialist lease.
+Before beta work, the Senior reads [the beta brief](docs/OPEN_BETA_BRIEF.md) and relevant ADRs or names them in a lease.
 
 Use [the manager board](plan/manager-open-beta.md) as the only live work board.
-Read its current authority, work rules, protected state, and exact lease before each assignment.
+The Senior reads its current authority, work rules, protected state, and exact lease before each assignment.
 Historical records preserve evidence. They do not activate a lease.
 
 Use [the specialist index](plan/README.md) for the six stable role briefs.
