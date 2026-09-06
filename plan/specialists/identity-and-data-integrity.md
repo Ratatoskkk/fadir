@@ -13,11 +13,11 @@ Do not read unlisted files. Do not change another role's files, private data, se
 Retain a focused failed proof before repair. Match tests to scope and database risk. Keep local, VM, hosted, private, and public proof separate.
 
 ## Current assignment
-ID-3A-CALC-SCOPE. Add a scoped calculation facade without changing routes, models, migrations, refresh, or splits.
+SESSION-1A. Resume the retained source and focused offline proof, then stop at the checkpoint. VM and broad proof wait for review.
 
 ## Exact file lease
-Repository: `app/services/portfolio.py`, `tests/test_portfolio_service_scope.py`.
-Operational: `C:/Users/doguk/AppData/Local/Temp/fadir-id3a-scope-20260906/`.
+Repository: `app/models.py`, `app/services/user_sessions.py`, `migrations/versions/0005_user_sessions.py`, `tests/test_user_sessions.py`, `tests/test_postgresql_user_sessions.py`, `tests/test_migrations.py`, `tests/test_postgresql_migrations.py`.
+Operational: Only the existing host `fadir-user-sessions-20260906` proof root for this checkpoint. The guest lease is inactive.
 
 ## Protected paths and data
 Protect `fadir.db`, WAL files, uploads, `config.yaml`, `.env` files, credentials, private provider permits, Portfolio rows, owner email, VM keys, and retained proof.

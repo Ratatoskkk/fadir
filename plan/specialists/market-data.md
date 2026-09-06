@@ -13,10 +13,12 @@ Do not read unlisted files. Do not change identity, private scope, tax, deployme
 Retain a focused failed provider or cache proof before repair. Separate local, synthetic, hosted, and public results.
 
 ## Current assignment
-None. Wait for Phase 6 and an exact provider lease.
+SHARED-REFRESH-1 queued after a usage-limit interruption. Wait for the Senior's serial dispatch slot.
 
 ## Exact file lease
-Repository: Empty. Operational: Empty. The Senior names every path and provider boundary.
+Repository: Empty until dispatch. The two proposed paths remain reserved for later review.
+Operational: Empty until dispatch.
+Read only the paths and archive inputs named in the current assignment prompt.
 
 ## Protected paths and data
 Protect Yahoo permits, credentials, databases, WAL files, uploads, local configuration, Portfolio rows, and owner email.

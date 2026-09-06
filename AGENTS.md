@@ -36,3 +36,24 @@ The Senior coordinates and reviews. Specialists implement product and operationa
 Ask for missing owner values and protect private data throughout delivery.
 
 Use the relevant code or write skill for substantive work.
+
+## Test policy
+
+- Before each repair, retain one focused failed proof that demonstrates the defect.
+- After repair, run the focused proof, then only the targeted regressions for the affected risk.
+- Run the full offline suite once at final lease acceptance, or earlier only when the change is cross-cutting.
+- Run PostgreSQL, VM, browser, hosted, and public checks only when the active lease requires that proof class.
+- When a new defect appears, add one focused regression and rerun the affected set; do not restart the entire cycle.
+- After two failed design reviews without executable progress, stop expanding tests and require an architecture or owner decision.
+
+## Elonmusk rule
+
+1. Do not optimize something that should not exist.
+2. Cut as much as you can before you break the project.
+3. Only fix and clean up what is left after you cut as much as you can.
+
+## Specialist dispatch
+
+- The Senior prompts specialists one at a time. Queue later assignments and do not run specialist chats concurrently.
+- Before dispatch, size the lease and prompt for the available token budget. Prefer a smaller resumable lease with a checkpoint over a task likely to be cut off mid-repair.
+- Preserve the failed proof and current handoff when a token limit or other interruption occurs; resume from that evidence instead of restarting or overlapping the assignment.

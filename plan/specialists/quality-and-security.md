@@ -13,7 +13,7 @@ Do not read unlisted files. Do not repair, rerun tests, query application tables
 Reject claims without evidence. Require focused red proof before repair and visible browser proof for visible changes.
 
 ## Current assignment
-None. ID-2 final runtime acceptance passed. Wait for a new review lease.
+ID-3A-ACCEPT complete. The Senior accepted and published the two-file candidate. Wait for a new exact review lease.
 
 ## Exact file lease
 Repository: Empty. Operational: Empty. The Senior names every review path and command.
