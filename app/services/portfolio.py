@@ -12,7 +12,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import inspect as sa_inspect, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.calc import (
@@ -39,6 +39,11 @@ from app.providers.base import ProviderError
 from app.providers.fx_service import FxService
 from app.providers.intraday import IntradayService, latest_session_bounds, session_days
 from app.providers.price_service import PriceService, RefreshReport
+from app.services.portfolio_scope import (
+    PortfolioScope,
+    PortfolioScopeNotFound,
+    PortfolioScopeViolation,
+)
 
 #: Shared across requests so the short-lived intraday cache is actually reused; it is
 #: bounded by (symbols x intervals) and replaced wholesale on refetch.
@@ -100,6 +105,84 @@ class PortfolioService:
         self.fx = fx_service or FxService(session, settings)
         self.prices = price_service or PriceService(session, settings)
         self.intraday = intraday_service or _intraday_service
+        self._scope: PortfolioScope | None = None
+
+    def scoped(self, scope: PortfolioScope) -> PortfolioService:
+        self._validate_scope(scope)
+        scoped = PortfolioService(
+            self.session,
+            self.settings,
+            fx_service=self.fx,
+            price_service=self.prices,
+            intraday_service=self.intraday,
+        )
+        scoped._scope = scope
+        return scoped
+
+    def _validate_scope(self, scope: PortfolioScope | None) -> PortfolioScope:
+        if not isinstance(scope, PortfolioScope):
+            raise PortfolioScopeViolation("Portfolio scope is required")
+        if getattr(scope, "_session", None) is not self.session:
+            raise PortfolioScopeViolation("Portfolio scope belongs to another Session")
+        state = sa_inspect(scope.portfolio)
+        if state.session is not self.session or not state.persistent or state.deleted:
+            raise PortfolioScopeViolation("Portfolio scope is detached")
+        return scope
+
+    def _required_scope(self) -> PortfolioScope:
+        return self._validate_scope(self._scope)
+
+    def _calculation_inputs(
+        self,
+    ) -> tuple[list[Instrument], dict[int, list[Transaction]]]:
+        if self._scope is None:
+            instruments = load_instruments(self.session)
+            return instruments, {
+                instrument.id: list(instrument.transactions)
+                for instrument in instruments
+            }
+
+        scope = self._required_scope()
+        transactions = list(
+            self.session.scalars(
+                select(Transaction)
+                .where(Transaction.portfolio_id == scope.portfolio.id)
+                .order_by(Transaction.trade_date, Transaction.id)
+            )
+        )
+        instrument_ids = {transaction.instrument_id for transaction in transactions}
+        if not instrument_ids:
+            return [], {}
+
+        instruments = list(
+            self.session.scalars(
+                select(Instrument)
+                .where(
+                    Instrument.id.in_(instrument_ids),
+                    Instrument.active.is_(True),
+                )
+                .order_by(Instrument.id)
+            )
+        )
+        active_ids = {instrument.id for instrument in instruments}
+        transactions_by_instrument: dict[int, list[Transaction]] = {}
+        for transaction in transactions:
+            if transaction.instrument_id in active_ids:
+                transactions_by_instrument.setdefault(transaction.instrument_id, []).append(
+                    transaction
+                )
+        return instruments, transactions_by_instrument
+
+    def _select_instruments(
+        self, instruments: list[Instrument], tickers: list[str] | None
+    ) -> list[Instrument]:
+        if not tickers:
+            return instruments
+        wanted = {ticker.upper() for ticker in tickers}
+        selected = [instrument for instrument in instruments if instrument.ticker.upper() in wanted]
+        if self._scope is not None and {instrument.ticker.upper() for instrument in selected} != wanted:
+            raise PortfolioScopeNotFound("Ticker not found")
+        return selected
 
     # -- inception -----------------------------------------------------------------
 
@@ -114,6 +197,17 @@ class PortfolioService:
         configured = self.settings.history.start_date
         if configured is not None:
             return configured
+        if self._scope is not None:
+            _, transactions_by_instrument = self._calculation_inputs()
+            earliest = min(
+                (
+                    transaction.trade_date
+                    for rows in transactions_by_instrument.values()
+                    for transaction in rows
+                ),
+                default=None,
+            )
+            return earliest or date.today()
         earliest = self.session.execute(
             select(Transaction.trade_date).order_by(Transaction.trade_date).limit(1)
         ).scalar_one_or_none()
@@ -123,6 +217,8 @@ class PortfolioService:
 
     def refresh(self, *, force: bool = False) -> RefreshReport:
         """Refetch prices and FX. Partial failure is expected and tolerated (SPEC §8)."""
+        if self._scope is not None:
+            raise PortfolioScopeViolation("Refresh is not available for a scoped service")
         instruments = load_instruments(self.session)
         full_start = self.inception() - timedelta(days=10)
         end = date.today()
@@ -230,12 +326,12 @@ class PortfolioService:
         now_utc = now_utc or datetime.now(timezone.utc)
         warnings: list[str] = []
         positions: list[PositionMetrics] = []
-        instruments = load_instruments(self.session)
+        instruments, transactions_by_instrument = self._calculation_inputs()
 
         for instrument in instruments:
             txns = [
                 to_txn_input(t, instrument.ticker, instrument.currency)
-                for t in instrument.transactions
+                for t in transactions_by_instrument.get(instrument.id, [])
             ]
             if not txns:
                 continue
@@ -284,7 +380,11 @@ class PortfolioService:
         )
 
         # Only meaningful when nothing is trading; otherwise the frontend polls normally.
-        exchanges = {i.exchange for i in instruments if i.transactions}
+        exchanges = {
+            instrument.exchange
+            for instrument in instruments
+            if transactions_by_instrument.get(instrument.id)
+        }
         any_open = any(market_hours.is_open(e, now_utc) for e in exchanges)
         next_open = None if any_open else market_hours.next_open(exchanges, now_utc)
 
@@ -317,7 +417,10 @@ class PortfolioService:
         start = start or self.inception()
         end = end or date.today()
 
-        instruments = self._filtered_instruments(tickers)
+        instruments, transactions_by_instrument = self._calculation_inputs()
+        instruments = self._select_instruments(instruments, tickers)
+        if self._scope is not None and not instruments and not tickers:
+            return []
         positions: list[PositionHistoryInput] = []
         closes: dict[str, dict[date, Decimal]] = {}
         currencies: set[str] = set()
@@ -325,7 +428,8 @@ class PortfolioService:
         lookback = self.settings.fx.max_lookback_days
 
         for instrument in instruments:
-            if not instrument.transactions:
+            transactions = transactions_by_instrument.get(instrument.id, [])
+            if not transactions:
                 continue
             positions.append(
                 PositionHistoryInput(
@@ -333,7 +437,7 @@ class PortfolioService:
                     currency=instrument.currency,
                     transactions=[
                         to_txn_input(t, instrument.ticker, instrument.currency)
-                        for t in instrument.transactions
+                        for t in transactions
                     ],
                 )
             )
@@ -368,11 +472,8 @@ class PortfolioService:
     # -- intraday ------------------------------------------------------------------
 
     def _filtered_instruments(self, tickers: list[str] | None) -> list[Instrument]:
-        instruments = load_instruments(self.session)
-        if not tickers:
-            return instruments
-        wanted = {t.upper() for t in tickers}
-        return [i for i in instruments if i.ticker.upper() in wanted]
+        instruments, _ = self._calculation_inputs()
+        return self._select_instruments(instruments, tickers)
 
     def build_intraday(
         self,
@@ -388,7 +489,12 @@ class PortfolioService:
         weekend it shows Friday's session rather than an empty grid. `tickers` narrows it
         to a subset, exactly as `build_history` does.
         """
-        instruments = [i for i in self._filtered_instruments(tickers) if i.transactions]
+        instruments, transactions_by_instrument = self._calculation_inputs()
+        instruments = [
+            instrument
+            for instrument in self._select_instruments(instruments, tickers)
+            if transactions_by_instrument.get(instrument.id)
+        ]
         if not instruments:
             return [], [], 0
 
@@ -396,7 +502,10 @@ class PortfolioService:
             PositionHistoryInput(
                 ticker=i.ticker,
                 currency=i.currency,
-                transactions=[to_txn_input(t, i.ticker, i.currency) for t in i.transactions],
+                transactions=[
+                    to_txn_input(t, i.ticker, i.currency)
+                    for t in transactions_by_instrument[i.id]
+                ],
             )
             for i in instruments
         ]
