@@ -80,6 +80,9 @@ class User(Base):
         single_parent=True,
         uselist=False,
     )
+    sessions: Mapped[list["UserSession"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Workspace(Base):
@@ -119,6 +122,41 @@ class GuestAccess(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     workspace: Mapped[Workspace] = relationship(back_populates="guest_access")
+
+
+class UserSession(Base):
+    __tablename__ = "user_session"
+    __table_args__ = (
+        UniqueConstraint("public_id", name="uq_user_session_public_id"),
+        UniqueConstraint("secret_digest", name="uq_user_session_secret_digest"),
+        CheckConstraint(
+            "length(public_id) = 22", name="ck_user_session_public_id_length"
+        ),
+        CheckConstraint(
+            "length(secret_digest) = 32", name="ck_user_session_digest_length"
+        ),
+        Index("ix_user_session_user_active", "user_id", "revoked_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), nullable=False, active_history=True
+    )
+    public_id: Mapped[str] = mapped_column(
+        String(22), nullable=False, active_history=True
+    )
+    secret_digest: Mapped[bytes] = mapped_column(LargeBinary(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utcnow
+    )
+    last_access_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utcnow
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    user: Mapped[User] = relationship(back_populates="sessions")
 
 
 class Portfolio(Base):

@@ -25,6 +25,7 @@ DOMAIN_ROOT_REVISION = (
 OWNERSHIP_REVISION = (
     ROOT / "migrations" / "versions" / "0003_portfolio_ownership_keys.py"
 )
+SESSION_REVISION = ROOT / "migrations" / "versions" / "0005_user_sessions.py"
 BASELINE_TABLES = {
     "instrument",
     "transaction",
@@ -34,7 +35,10 @@ BASELINE_TABLES = {
     "snapshot",
 }
 DOMAIN_ROOT_TABLES = {"user", "workspace", "portfolio"}
-APPLICATION_TABLES = BASELINE_TABLES | DOMAIN_ROOT_TABLES | {"guest_access"}
+APPLICATION_TABLES = BASELINE_TABLES | DOMAIN_ROOT_TABLES | {
+    "guest_access",
+    "user_session",
+}
 POSTGRESQL_URL = "postgresql+psycopg://fadir@db.example/fadir_test"
 
 
@@ -463,3 +467,16 @@ def test_ownership_revision_is_static() -> None:
     assert "Base.metadata" not in source
     assert "create_all" not in source
     assert "drop_all" not in source
+
+
+def test_user_session_revision_is_static() -> None:
+    assert SESSION_REVISION.is_file(), "user session revision is absent"
+    source = SESSION_REVISION.read_text(encoding="utf-8")
+
+    assert "0004_guest_access" in source
+    assert "from app.models import Base" not in source
+    assert "Base.metadata" not in source
+    assert "create_all" not in source
+    assert "drop_all" not in source
+    assert source.count('op.create_table(') == 1
+    assert source.count('op.drop_table(') == 1

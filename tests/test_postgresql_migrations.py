@@ -28,6 +28,7 @@ APPLICATION_TABLES = {
     "workspace",
     "portfolio",
     "guest_access",
+    "user_session",
 }
 
 
