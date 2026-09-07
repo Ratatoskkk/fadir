@@ -86,7 +86,7 @@ def _refresh_once() -> int:
     """One non-forced refresh. Returns rows written."""
     settings = get_settings()
     with session_scope() as session:
-        report = PortfolioService(session, settings).refresh(force=False)
+        report = PortfolioService(session, settings).refresh_shared(force=False)
         return report.price_rows_written
 
 
