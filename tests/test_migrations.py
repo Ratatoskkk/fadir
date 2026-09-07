@@ -26,6 +26,7 @@ OWNERSHIP_REVISION = (
     ROOT / "migrations" / "versions" / "0003_portfolio_ownership_keys.py"
 )
 SESSION_REVISION = ROOT / "migrations" / "versions" / "0005_user_sessions.py"
+LOGIN_IDENTITY_REVISION = ROOT / "migrations" / "versions" / "0006_login_identities.py"
 BASELINE_TABLES = {
     "instrument",
     "transaction",
@@ -38,6 +39,7 @@ DOMAIN_ROOT_TABLES = {"user", "workspace", "portfolio"}
 APPLICATION_TABLES = BASELINE_TABLES | DOMAIN_ROOT_TABLES | {
     "guest_access",
     "user_session",
+    "login_identity",
 }
 POSTGRESQL_URL = "postgresql+psycopg://fadir@db.example/fadir_test"
 
@@ -480,3 +482,40 @@ def test_user_session_revision_is_static() -> None:
     assert "drop_all" not in source
     assert source.count('op.create_table(') == 1
     assert source.count('op.drop_table(') == 1
+
+
+def test_login_identity_revision_is_static() -> None:
+    assert LOGIN_IDENTITY_REVISION.is_file(), "login identity revision is absent"
+    source = LOGIN_IDENTITY_REVISION.read_text(encoding="utf-8")
+
+    assert "0005_user_sessions" in source
+    assert "from app.models import Base" not in source
+    assert "Base.metadata" not in source
+    assert "create_all" not in source
+    assert "drop_all" not in source
+    assert source.count('op.create_table(') == 1
+    assert source.count('op.drop_table(') == 1
+
+
+def test_login_identity_revision_cycle(tmp_path, monkeypatch) -> None:
+    database_url = _sqlite_url(tmp_path / "login-identity-migration.db")
+    monkeypatch.setenv("FADIR_DATABASE_URL", database_url)
+    config = _alembic_config()
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    try:
+        assert "login_identity" in inspect(engine).get_table_names()
+    finally:
+        engine.dispose()
+
+    command.downgrade(config, "0005_user_sessions")
+    engine = create_engine(database_url)
+    try:
+        assert "login_identity" not in inspect(engine).get_table_names()
+        assert "user_session" in inspect(engine).get_table_names()
+    finally:
+        engine.dispose()
+
+    command.upgrade(config, "head")
+    _assert_schema_matches_models(database_url)

@@ -1,4 +1,4 @@
-"""Opt-in PostgreSQL proof in a fresh DB-6A schema, never the default schema."""
+"""Opt-in PostgreSQL proof in a fresh login-identity schema, never the default schema."""
 
 from __future__ import annotations
 
@@ -29,6 +29,7 @@ APPLICATION_TABLES = {
     "portfolio",
     "guest_access",
     "user_session",
+    "login_identity",
 }
 
 
@@ -57,7 +58,7 @@ def _selected_test_url() -> URL:
 
 
 def _drop_owned_schema(connection, schema, marker, schema_oid, database) -> None:
-    if re.fullmatch(r"db6a_[0-9a-f]{32}", schema) is None:
+    if re.fullmatch(r"loginid1_[0-9a-f]{32}", schema) is None:
         raise RuntimeError("Cleanup refused: invalid task schema")
     record = connection.execute(
         text(
@@ -93,7 +94,7 @@ def _assert_head(engine, schema: str, head: str) -> None:
 def test_postgresql_upgrade_downgrade_and_second_upgrade(monkeypatch) -> None:
     __tracebackhide__ = True
     url = _selected_test_url()
-    schema = "db6a_" + uuid4().hex
+    schema = "loginid1_" + uuid4().hex
     marker = "DB-6A:" + uuid4().hex
     schema_oid = None
     engine = None
@@ -210,7 +211,7 @@ def test_cleanup_refuses_foreign_schema(record) -> None:
     connection = MagicMock()
     connection.execute.return_value.one_or_none.return_value = record
     with pytest.raises(RuntimeError, match="ownership mismatch"):
-        _drop_owned_schema(connection, "db6a_" + "a" * 32, "token", 123, "fadir_test")
+        _drop_owned_schema(connection, "loginid1_" + "a" * 32, "token", 123, "fadir_test")
     assert connection.execute.call_count == 1
 
 
@@ -222,7 +223,7 @@ def test_cleanup_refuses_public_schema() -> None:
 
 
 def test_cleanup_removes_only_the_verified_schema() -> None:
-    schema = "db6a_" + "a" * 32
+    schema = "loginid1_" + "a" * 32
     connection = MagicMock()
     connection.execute.return_value.one_or_none.return_value = (
         "fadir_test", 123, True, "token"

@@ -83,6 +83,9 @@ class User(Base):
     sessions: Mapped[list["UserSession"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    login_identities: Mapped[list["LoginIdentity"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Workspace(Base):
@@ -157,6 +160,31 @@ class UserSession(Base):
     )
 
     user: Mapped[User] = relationship(back_populates="sessions")
+
+
+class LoginIdentity(Base):
+    __tablename__ = "login_identity"
+    __table_args__ = (
+        UniqueConstraint(
+            "issuer", "subject", name="uq_login_identity_issuer_subject"
+        ),
+        CheckConstraint("length(issuer) > 0", name="ck_login_identity_issuer_nonempty"),
+        CheckConstraint("length(subject) > 0", name="ck_login_identity_subject_nonempty"),
+        Index("ix_login_identity_user", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    )
+    issuer: Mapped[str] = mapped_column(String(255), nullable=False)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=utcnow, onupdate=utcnow
+    )
+
+    user: Mapped[User] = relationship(back_populates="login_identities")
 
 
 class Portfolio(Base):
