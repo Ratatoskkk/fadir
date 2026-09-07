@@ -75,6 +75,15 @@ def load_instruments(session: Session, *, active_only: bool = True) -> list[Inst
     return list(session.execute(stmt).scalars())
 
 
+def load_shared_instruments(session: Session) -> list[Instrument]:
+    stmt = (
+        select(Instrument)
+        .where(Instrument.active.is_(True))
+        .order_by(Instrument.id)
+    )
+    return list(session.scalars(stmt))
+
+
 def to_txn_input(txn: Transaction, ticker: str, currency: str) -> TxnInput:
     return TxnInput(
         id=txn.id,
@@ -234,6 +243,28 @@ class PortfolioService:
                 self.fx.current(currency, force=force)
             except ProviderError as exc:
                 log.error("FX refresh failed for %s: %s", currency, exc)
+                report.errors.append(f"FX {currency}: {exc}")
+
+        return report
+
+    def refresh_shared(self, *, force: bool = False) -> RefreshReport:
+        """Refresh shared market rows without reading or changing private rows."""
+        if self._scope is not None:
+            raise PortfolioScopeViolation("Shared refresh is not available for a scoped service")
+        if self.session.new or self.session.dirty or self.session.deleted:
+            raise ValueError("shared refresh requires a clean caller Session")
+
+        instruments = load_shared_instruments(self.session)
+        end = date.today()
+        full_start = end - timedelta(days=10)
+        start = self.prices.incremental_start(instruments, full_start)
+        report = self.prices.refresh_shared(instruments, start, end, force=force)
+
+        for currency in sorted({instrument.currency for instrument in instruments}):
+            try:
+                self.fx.warm(currency, full_start, end)
+            except ProviderError as exc:
+                log.error("shared FX refresh failed for %s: %s", currency, exc)
                 report.errors.append(f"FX {currency}: {exc}")
 
         return report

@@ -44,7 +44,36 @@ def client(session, monkeypatch):
     monkeypatch.setattr(yf_client, "fetch_close_series", lambda *a, **k: {})
     monkeypatch.setattr(yf_client, "fetch_close_series_batch", lambda syms, *a, **k: {s: {} for s in syms})
     monkeypatch.setattr(yf_client, "fetch_splits", lambda *a, **k: [])
+    from app.providers.fx_service import FxService
 
+    class StubFxProvider:
+        name = "yfinance"
+
+        def __init__(self, label: str, triangulated: bool):
+            self.label = label
+            self.triangulated = triangulated
+
+        def provenance(self, currency: str) -> str:
+            return self.label
+
+        def is_triangulated(self, currency: str) -> bool:
+            return self.triangulated
+
+        def rate(self, base: str, quote: str, on: date) -> Decimal:
+            return Decimal("47.50")
+
+        def series(self, base: str, quote: str, start: date, end: date) -> dict[date, Decimal]:
+            return {end: Decimal("47.50")}
+
+    monkeypatch.setattr(
+        FxService,
+        "provider_for",
+        lambda self, currency: StubFxProvider(
+            "yfinance:SEKUSD=X*USDTRY=X", True
+        )
+        if currency.upper() == "SEK"
+        else StubFxProvider("yfinance", False),
+    )
     from app.api.request_authority import RequestAuthority, get_request_authority
     from app.api.csrf import CSRF_COOKIE_NAME, CSRF_HEADER_NAME, issue_csrf_token
 
@@ -508,7 +537,7 @@ def test_create_transaction_rejects_non_positive_quantity(client):
 def test_patch_transaction_updates_and_refetches_fx(client):
     txn_id = client.get("/api/transactions").json()[0]["id"]
     r = client.patch(f"/api/transactions/{txn_id}", json={"quantity": "20", "refetch_fx": True})
-    assert r.status_code == 200
+    assert r.status_code == 200, r.text
     assert Decimal(r.json()["quantity"]) == Decimal("20")
 
 
@@ -700,7 +729,9 @@ def test_health_reports_providers_and_cache_age(client):
 
 def test_refresh_endpoint_reports_per_instrument(client):
     """US-5.2 / US-5.3: refresh returns per-symbol outcomes, not a single verdict."""
-    body = client.post("/api/refresh").json()
+    response = client.post("/api/refresh")
+    assert response.status_code == 200, response.text
+    body = response.json()
     assert set(body["per_instrument"]) == {"AAPL", "ERIC"}
     for status in body["per_instrument"].values():
         assert "session" in status

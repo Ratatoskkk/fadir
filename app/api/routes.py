@@ -636,12 +636,19 @@ def create_instrument(payload: InstrumentCreate, session: SessionDep) -> Instrum
 # -- operations --------------------------------------------------------------------
 
 
-@router.post("/refresh", response_model=RefreshOut)
-def refresh(session: SessionDep, settings: SettingsDep) -> RefreshOut:
+@private_router.post(
+    "/refresh",
+    response_model=RefreshOut,
+    dependencies=[Depends(_write_guard)],
+)
+def refresh(
+    session: RequestSessionDep,
+    settings: SettingsDep,
+    _authority: AuthorityDep,
+) -> RefreshOut:
     """Force cache invalidation and refetch (SPEC §7, US-5.2)."""
     service = _service(session, settings)
-    report = service.refresh(force=True)
-    session.commit()
+    report = service.refresh_shared(force=True)
     return RefreshOut(
         ok=not report.errors,
         price_rows_written=report.price_rows_written,
