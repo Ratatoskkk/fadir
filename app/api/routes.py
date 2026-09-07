@@ -3,21 +3,37 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Annotated
+from urllib.parse import urlsplit
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.calc.attribution import DailyChange, PositionMetrics
 from app.config import Settings, get_settings
-from app.api.csrf import validate_request_csrf
-from app.api.request_authority import RequestAuthority, get_request_authority
+from app.api.csrf import (
+    CSRF_COOKIE_NAME,
+    CsrfError,
+    CookiePolicy,
+    issue_csrf_token,
+    set_csrf_cookie,
+    validate_request_csrf,
+)
+from app.api.request_authority import (
+    GUEST_COOKIE_MAX_AGE,
+    GUEST_COOKIE_NAME,
+    RequestAuthority,
+    RequestAuthorityError,
+    delete_guest_cookie,
+    get_request_authority,
+    set_guest_cookie,
+)
 from app.api.request_transaction import RequestTransactionRoute, request_session
 from app.db import get_session
-from app.models import FxCache, Instrument, Side, Transaction
+from app.models import FxCache, GuestAccess, Instrument, Portfolio, Side, Transaction
 from app.providers import market_hours, yf_client
 from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
@@ -25,6 +41,7 @@ from app.providers.price_service import PriceService
 from app.schemas import (
     AttributionOut,
     DailyOut,
+    GuestBootstrapOut,
     HealthOut,
     HistoryOut,
     HistoryPointOut,
@@ -46,6 +63,7 @@ from app.schemas import (
 )
 from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
+from app.services import guest_access
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
@@ -231,6 +249,87 @@ def _empty_portfolio_out() -> PortfolioOut:
         ),
         warnings=[],
         next_market_open=None,
+    )
+
+
+def _bootstrap_origin_guard(request: Request) -> None:
+    configured = getattr(request.app.state, "configured_origin", None)
+    if type(configured) is not str or not configured:
+        raise CsrfError()
+    expected = configured.rstrip("/")
+    origin = request.headers.get("origin")
+    if origin is None:
+        referer = request.headers.get("referer")
+        parsed = urlsplit(referer) if referer else None
+        origin = (
+            f"{parsed.scheme}://{parsed.netloc}"
+            if parsed and parsed.scheme in {"http", "https"} and parsed.netloc
+            else None
+        )
+    if origin != expected:
+        raise CsrfError()
+
+
+def _guest_bootstrap_context(session: Session, row: GuestAccess) -> dict[str, object]:
+    now = datetime.now(timezone.utc)
+    last_access = row.last_access_at
+    if last_access.tzinfo is None:
+        last_access = last_access.replace(tzinfo=timezone.utc)
+    expires_at = last_access + timedelta(days=90)
+    has_saved_portfolio = session.execute(
+        select(Portfolio.id).where(Portfolio.workspace_id == row.workspace_id).limit(1)
+    ).first() is not None
+    return {
+        "active": row.revoked_at is None and now < expires_at,
+        "last_access_at": last_access,
+        "expires_at": expires_at,
+        "notice_due": has_saved_portfolio,
+    }
+
+
+@private_router.post("/guest/bootstrap", response_model=GuestBootstrapOut)
+def bootstrap_guest(
+    request: Request,
+    response: Response,
+    session: RequestSessionDep,
+) -> GuestBootstrapOut | Response:
+    """Issue or revalidate one Guest Workspace without exposing its authority."""
+    _bootstrap_origin_guard(request)
+    token = request.cookies.get(GUEST_COOKIE_NAME)
+    created = token is None
+    if created:
+        issued = guest_access.issue(
+            session, clock=lambda: datetime.now(timezone.utc)
+        )
+        workspace_id = issued.workspace_id
+    else:
+        try:
+            authority = guest_access.require(
+                session, token, clock=lambda: datetime.now(timezone.utc)
+            )
+        except Exception:
+            delete_guest_cookie(response)
+            response.status_code = 401
+            response.body = b'{"detail":"request rejected"}'
+            response.media_type = "application/json"
+            return response
+        workspace_id = authority.workspace_id
+
+    row = session.get(GuestAccess, workspace_id)
+    if row is None:
+        raise RequestAuthorityError()
+    if created:
+        set_guest_cookie(response, issued.secret.get_secret_value())
+    if CSRF_COOKIE_NAME not in request.cookies:
+        set_csrf_cookie(
+            response,
+            issue_csrf_token(),
+            policy=CookiePolicy(max_age=GUEST_COOKIE_MAX_AGE),
+        )
+    if created:
+        response.status_code = 201
+    return GuestBootstrapOut(
+        created=created, guest=_guest_bootstrap_context(session, row)
     )
 
 

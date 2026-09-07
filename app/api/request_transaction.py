@@ -54,12 +54,34 @@ def _rollback(root: Any) -> None:
         pass
 
 
-def _error_response(status_code: int) -> Response:
+def _error_response(status_code: int, *, safe_set_cookie: bytes | None = None) -> Response:
     if isinstance(status_code, int) and 400 <= status_code < 500:
         status = status_code
     else:
         status = 500
-    return no_store(JSONResponse(status_code=status, content={"detail": "request rejected"}))
+    response = no_store(JSONResponse(status_code=status, content={"detail": "request rejected"}))
+    if safe_set_cookie is not None:
+        response.raw_headers.append((b"set-cookie", safe_set_cookie))
+    return response
+
+
+def _safe_guest_deletion(response: Response) -> bytes | None:
+    for name, value in response.raw_headers:
+        if name.lower() != b"set-cookie":
+            continue
+        try:
+            cookie = value.decode("latin-1")
+        except UnicodeDecodeError:
+            continue
+        if (
+            cookie.startswith("__Host-fadir-guest=")
+            and "Max-Age=0" in cookie
+            and "Path=/" in cookie
+            and "Secure" in cookie
+            and "Domain=" not in cookie
+        ):
+            return value
+    return None
 
 
 def _exception_response(error: Exception) -> Response:
@@ -98,8 +120,11 @@ async def transactional_handler(
             raise RequestTransactionError("streaming and late background work are unsupported")
         response = no_store(response)
         if response.status_code >= 400:
+            safe_set_cookie = _safe_guest_deletion(response)
             _rollback(root)
-            result = _error_response(response.status_code)
+            result = _error_response(
+                response.status_code, safe_set_cookie=safe_set_cookie
+            )
         else:
             try:
                 root.commit()

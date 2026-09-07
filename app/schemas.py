@@ -296,3 +296,19 @@ class RefreshOut(BaseModel):
     splits_applied: int
     errors: list[str] = Field(default_factory=list)
     per_instrument: dict[str, Any] = Field(default_factory=dict)
+
+
+class GuestBootstrapGuestOut(BaseModel):
+    active: bool
+    last_access_at: datetime
+    expires_at: datetime
+    notice_due: bool = False
+
+
+class GuestBootstrapOut(BaseModel):
+    mode: Literal["guest"] = "guest"
+    created: bool
+    guest: GuestBootstrapGuestOut
+    user: None = None
+    portfolios: list[Any] = Field(default_factory=list)
+    migration_required: bool = False
