@@ -273,6 +273,69 @@ class PriceService:
         self.session.flush()
         return adjusted
 
+    def _require_clean_session(self) -> None:
+        if self.session.new or self.session.dirty or self.session.deleted:
+            raise ValueError("shared refresh requires a clean caller Session")
+
+    def refresh_shared(
+        self,
+        instruments: list[Instrument],
+        start: date,
+        end: date,
+        *,
+        force: bool = False,
+        now_utc: datetime | None = None,
+    ) -> RefreshReport:
+        """Refresh shared market rows without touching private transactions.
+
+        This entry point stores prices and corporate actions only. The caller retains
+        transaction ownership and can commit or roll back the flushed shared rows.
+        """
+        self._require_clean_session()
+
+        report = RefreshReport()
+        if not instruments:
+            return report
+
+        now_utc = now_utc or datetime.now(timezone.utc)
+        symbols = [i.yf_symbol for i in instruments]
+
+        try:
+            batch = yf_client.fetch_close_series_batch(symbols, start, end)
+        except Exception as exc:  # noqa: BLE001 - never fail the whole dashboard
+            log.error("batch price fetch failed entirely: %s", exc)
+            report.errors.append(f"batch fetch failed: {exc}")
+            batch = {}
+
+        for instrument in instruments:
+            status = PriceStatus(ticker=instrument.ticker, ok=False)
+            try:
+                closes = batch.get(instrument.yf_symbol) or {}
+                report.price_rows_written += self._store_closes(instrument.id, closes)
+
+                if force:
+                    report.splits_found += self.sync_splits(instrument)
+
+                latest = self.last_cached_close(instrument.id)
+                if latest is None:
+                    status.error = "no price data available"
+                    report.errors.append(f"{instrument.ticker}: no price data")
+                else:
+                    close, traded = latest
+                    status.ok = True
+                    status.last_close = close
+                    status.last_traded = traded
+                    status.session = market_hours.session_state(instrument.exchange, now_utc)
+                    status.stale = status.session == "closed" or traded < date.today()
+            except Exception as exc:  # noqa: BLE001 - isolate per instrument
+                log.error("shared refresh failed for %s: %s", instrument.ticker, exc)
+                status.error = str(exc)
+                report.errors.append(f"{instrument.ticker}: {exc}")
+
+            report.per_instrument[instrument.ticker] = status
+
+        return report
+
     # -- refresh -------------------------------------------------------------------
 
     def refresh(
@@ -333,4 +396,3 @@ class PriceService:
             report.per_instrument[instrument.ticker] = status
 
         return report
-
