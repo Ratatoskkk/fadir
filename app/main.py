@@ -19,9 +19,11 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import router
+from app.api.routes import private_router, router
+from app.api.csrf import CsrfError, no_store
+from app.api.request_authority import RequestAuthorityConfigurationError, RequestAuthorityError
 from app.config import PROJECT_ROOT, get_settings
-from app.db import check_migration_heads, get_engine, init_db, session_scope
+from app.db import check_migration_heads, get_engine, get_sessionmaker, init_db, session_scope
 from app.providers import market_hours
 from app.services.portfolio import PortfolioService, load_instruments
 
@@ -123,6 +125,9 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+app.state.session_factory = lambda: get_sessionmaker()()
+app.state.authority_session_factory = lambda: get_sessionmaker()()
+app.state.configured_origin = "https://ratatosk.dev"
 
 # Money crosses the wire as full-precision Decimal strings, which is deliberate — the
 # §6 identities are exact and quantizing each field independently would break them, since
@@ -135,14 +140,16 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://ratatosk.dev",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.include_router(private_router)
 app.include_router(router)
 
 
@@ -150,6 +157,21 @@ app.include_router(router)
 async def unhandled_exception_handler(request, exc: Exception):  # pragma: no cover
     log.error("unhandled error on %s", request.url.path)
     return JSONResponse(status_code=500, content={"detail": "internal server error"})
+
+
+@app.exception_handler(RequestAuthorityConfigurationError)
+async def request_authority_configuration_error(request, exc):
+    return no_store(JSONResponse(status_code=503, content={"detail": "request unavailable"}))
+
+
+@app.exception_handler(RequestAuthorityError)
+async def request_authority_error(request, exc):
+    return no_store(JSONResponse(status_code=401, content={"detail": "request rejected"}))
+
+
+@app.exception_handler(CsrfError)
+async def csrf_error(request, exc):
+    return no_store(JSONResponse(status_code=403, content={"detail": "request rejected"}))
 
 
 #: The SPA shell names the hashed bundles, so a stale copy of it pins the whole app to

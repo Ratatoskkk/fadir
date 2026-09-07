@@ -311,3 +311,81 @@ def test_module_does_not_commit_and_caller_rollback_reverses_changes(
     with Session(engine) as session:
         assert session.get(models.Transaction, added_id) is None
         assert session.get(models.Transaction, data.first_transaction_ids[0]) is not None
+
+
+def test_select_defaults_to_first_portfolio_and_fails_closed_for_cross_workspace(
+    scoped_database,
+) -> None:
+    PortfolioScope, PortfolioScopeNotFound, _ = _scope_types()
+    engine, data = scoped_database
+    with Session(engine) as session:
+        selected = PortfolioScope.select(
+            session, workspace_id=data.first_workspace_id
+        )
+        assert selected is not None
+        assert selected.portfolio.id == data.first_portfolio_id
+
+        with pytest.raises(PortfolioScopeNotFound):
+            PortfolioScope.select(
+                session,
+                workspace_id=data.second_workspace_id,
+                portfolio_id=data.first_portfolio_id,
+            )
+
+
+def test_empty_read_does_not_create_but_first_save_creates_default_and_rolls_back(
+    tmp_path,
+) -> None:
+    PortfolioScope, _, _ = _scope_types()
+    engine = make_engine(tmp_path / "portfolio-selection.db")
+    models.Base.metadata.create_all(engine)
+    try:
+        with Session(engine) as session:
+            workspace = models.Workspace()
+            session.add(workspace)
+            session.flush()
+            workspace_id = workspace.id
+
+            assert PortfolioScope.select(session, workspace_id=workspace_id) is None
+            assert session.query(models.Portfolio).count() == 0
+
+            scope = PortfolioScope.select_for_write(
+                session, workspace_id=workspace_id
+            )
+            assert scope.portfolio.name == "Ana Portföy"
+            assert scope.portfolio.base_currency == "TRY"
+            assert scope.portfolio.workspace_id == workspace_id
+            assert session.query(models.Portfolio).count() == 1
+            session.rollback()
+
+        with Session(engine) as session:
+            assert session.query(models.Portfolio).count() == 0
+    finally:
+        engine.dispose()
+
+
+def test_repeated_first_save_rechecks_and_never_commits(
+    tmp_path,
+) -> None:
+    PortfolioScope, _, _ = _scope_types()
+    engine = make_engine(tmp_path / "portfolio-selection-recheck.db")
+    models.Base.metadata.create_all(engine)
+    try:
+        with Session(engine) as session:
+            workspace = models.Workspace()
+            session.add(workspace)
+            session.flush()
+
+            with patch.object(session, "commit", wraps=session.commit) as commit:
+                first = PortfolioScope.select_for_write(
+                    session, workspace_id=workspace.id
+                )
+                second = PortfolioScope.select_for_write(
+                    session, workspace_id=workspace.id
+                )
+                commit.assert_not_called()
+
+            assert first.portfolio.id == second.portfolio.id
+            assert session.query(models.Portfolio).count() == 1
+    finally:
+        engine.dispose()

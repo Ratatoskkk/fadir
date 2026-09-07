@@ -112,6 +112,7 @@ def database(monkeypatch, request):
 def _client(database, endpoint) -> TestClient:
     app = FastAPI()
     app.state.session_factory = lambda: Session(database)
+    app.state.authority_session_factory = lambda: Session(database)
     router = APIRouter(route_class=RequestTransactionRoute)
     router.add_api_route("/private", endpoint, methods=["GET"])
     app.include_router(router)

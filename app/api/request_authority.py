@@ -156,7 +156,26 @@ def request_authority_from_session(session: Session, cookies: Mapping[str, str])
 
 
 def get_request_authority(request: Request) -> RequestAuthority:
-    """FastAPI dependency adapter for an opted-in RequestTransactionRoute."""
-    from app.api.request_transaction import request_session
-
-    return request_authority_from_session(request_session(request), request.cookies)
+    """Resolve authority in a short, separate transaction before route data work."""
+    factory = getattr(request.app.state, "authority_session_factory", None)
+    if not callable(factory):
+        raise RequestAuthorityConfigurationError()
+    session = None
+    root = None
+    try:
+        session = factory()
+        root = session.begin()
+        authority = request_authority_from_session(session, request.cookies)
+        root.commit()
+        return authority
+    except RequestAuthorityError:
+        if root is not None and root.is_active:
+            root.rollback()
+        raise
+    except Exception:
+        if root is not None and root.is_active:
+            root.rollback()
+        raise RequestAuthorityError() from None
+    finally:
+        if session is not None:
+            session.close()

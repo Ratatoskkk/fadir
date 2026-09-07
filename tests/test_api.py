@@ -12,7 +12,7 @@ from decimal import Decimal
 import pytest
 from fastapi.testclient import TestClient
 
-from app.models import FxCache, Instrument, PriceCache, Side, Transaction
+from app.models import FxCache, Instrument, Portfolio, PriceCache, Side, Transaction, Workspace
 
 TODAY = date.today()
 
@@ -35,7 +35,7 @@ def client(session, monkeypatch):
     """A TestClient wired to the per-test SQLite DB with caches pre-seeded."""
     from app.main import app
 
-    _seed(session)
+    workspace_id, portfolio_id = _seed(session)
     session.commit()
 
     # Nothing in these tests may touch the network.
@@ -45,11 +45,30 @@ def client(session, monkeypatch):
     monkeypatch.setattr(yf_client, "fetch_close_series_batch", lambda syms, *a, **k: {s: {} for s in syms})
     monkeypatch.setattr(yf_client, "fetch_splits", lambda *a, **k: [])
 
-    with TestClient(app) as c:
-        yield c
+    from app.api.request_authority import RequestAuthority, get_request_authority
+    from app.api.csrf import CSRF_COOKIE_NAME, CSRF_HEADER_NAME, issue_csrf_token
+
+    app.dependency_overrides[get_request_authority] = lambda: RequestAuthority(
+        mode="guest", user_id=None, workspace_id=workspace_id
+    )
+    try:
+        with TestClient(app) as c:
+            token = issue_csrf_token()
+            c.cookies.set(CSRF_COOKIE_NAME, token)
+            c.headers.update(
+                {"Origin": "https://ratatosk.dev", CSRF_HEADER_NAME: token}
+            )
+            yield c
+    finally:
+        app.dependency_overrides.pop(get_request_authority, None)
 
 
-def _seed(session) -> None:
+def _seed(session) -> tuple[int, int]:
+    workspace = Workspace(portfolios=[Portfolio(name="Ana Portföy")])
+    session.add(workspace)
+    session.flush()
+    portfolio_id = workspace.portfolios[0].id
+
     instruments = [
         Instrument(ticker="AAPL", exchange="NASDAQ", yf_symbol="AAPL", currency="USD", name="Apple Inc"),
         Instrument(ticker="ERIC", exchange="STO", yf_symbol="ERIC-B.ST", currency="SEK", name="Telefonaktiebolaget LM Ericsson"),
@@ -85,6 +104,7 @@ def _seed(session) -> None:
     session.add(
         Transaction(
             instrument_id=instruments[0].id,
+            portfolio_id=portfolio_id,
             trade_date=date(2026, 5, 11),
             side=Side.BUY,
             quantity=Decimal("12"),
@@ -98,6 +118,7 @@ def _seed(session) -> None:
     session.add(
         Transaction(
             instrument_id=instruments[1].id,
+            portfolio_id=portfolio_id,
             trade_date=date(2026, 3, 29),
             side=Side.BUY,
             quantity=Decimal("800"),
@@ -109,6 +130,7 @@ def _seed(session) -> None:
         )
     )
     session.flush()
+    return workspace.id, portfolio_id
 
 
 # -- static file serving -------------------------------------------------------------
@@ -336,7 +358,7 @@ def test_history_rejects_an_unknown_ticker_rather_than_ignoring_it(client):
     """Silently returning everything would look like a filter that disagrees with the table."""
     response = client.get("/api/portfolio/history", params={"ticker": "NOPE"})
     assert response.status_code == 404
-    assert "NOPE" in response.json()["detail"]
+    assert response.json()["detail"] == "request rejected"
 
 
 def test_history_accepts_several_tickers(client):
@@ -518,9 +540,11 @@ def test_oversized_sell_degrades_one_row_instead_of_the_whole_dashboard(client, 
     position and keep the rest, exactly as a dead symbol is handled (SPEC §8).
     """
     aapl = next(i for i in session.query(Instrument) if i.ticker == "AAPL")
+    portfolio_id = session.query(Portfolio.id).first()[0]
     session.add(
         Transaction(
             instrument_id=aapl.id,
+            portfolio_id=portfolio_id,
             trade_date=TODAY,
             side=Side.SELL,
             quantity=Decimal("9999"),  # only 12 were ever bought
@@ -690,9 +714,11 @@ def test_one_failing_symbol_degrades_one_row_only(client, session):
     )
     session.add(broken)
     session.flush()
+    portfolio_id = session.query(Portfolio.id).first()[0]
     session.add(
         Transaction(
             instrument_id=broken.id,
+            portfolio_id=portfolio_id,
             trade_date=date(2026, 5, 4),
             side=Side.BUY,
             quantity=Decimal("39"),

@@ -7,12 +7,15 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.calc.attribution import DailyChange, PositionMetrics
 from app.config import Settings, get_settings
+from app.api.csrf import validate_request_csrf
+from app.api.request_authority import RequestAuthority, get_request_authority
+from app.api.request_transaction import RequestTransactionRoute, request_session
 from app.db import get_session
 from app.models import FxCache, Instrument, Side, Transaction
 from app.providers import market_hours, yf_client
@@ -42,11 +45,19 @@ from app.schemas import (
     TransactionPatch,
 )
 from app.services.portfolio import PortfolioService
+from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
+private_router = APIRouter(prefix="/api", route_class=RequestTransactionRoute)
 
 SessionDep = Annotated[Session, Depends(get_session)]
+RequestSessionDep = Annotated[Session, Depends(request_session)]
+AuthorityDep = Annotated[RequestAuthority, Depends(get_request_authority)]
+
+
+def _write_guard(request: Request, authority: AuthorityDep) -> None:
+    validate_request_csrf(request)
 
 
 def _settings() -> Settings:
@@ -166,12 +177,101 @@ def _transaction_out(txn: Transaction) -> TransactionOut:
     )
 
 
+def _empty_portfolio_out() -> PortfolioOut:
+    zero = Decimal("0")
+    daily = DailyOut(
+        available=False,
+        reference_date=None,
+        pnl_try=zero,
+        price_effect_try=zero,
+        fx_effect_try=zero,
+        pnl_native=zero,
+        return_ratio=None,
+    )
+    return PortfolioOut(
+        as_of=datetime.now(timezone.utc),
+        positions=[],
+        totals=TotalsOut(
+            cost_try=zero,
+            market_value_try=zero,
+            pnl_try=zero,
+            price_effect_try=zero,
+            fx_effect_try=zero,
+            total_return=None,
+            realized_pnl_try=zero,
+            realized_price_effect_try=zero,
+            realized_fx_effect_try=zero,
+            daily=daily,
+        ),
+        liquidation=LiquidationOut(
+            gross_proceeds_try=zero,
+            haircut_pct=zero,
+            haircut_try=zero,
+            net_proceeds_try=zero,
+            total_invested_try=zero,
+            net_pnl_try=zero,
+            net_return=None,
+        ),
+        tax=TaxOut(
+            applicable=False,
+            gross_gain_try=zero,
+            taxable_gain_try=zero,
+            tax_try=zero,
+            net_after_tax_try=zero,
+            effective_rate=zero,
+            marginal_rate=zero,
+            indexing_applied=False,
+            indexing_rate=zero,
+            price_portion_try=zero,
+            fx_portion_try=zero,
+            tax_on_price_try=zero,
+            tax_on_fx_try=zero,
+            assumptions=[],
+            disclaimer="No Portfolio selected.",
+        ),
+        warnings=[],
+        next_market_open=None,
+    )
+
+
+def _scope(
+    session: Session,
+    authority: RequestAuthority,
+    portfolio_id: int | None,
+    *,
+    for_write: bool = False,
+) -> PortfolioScope | None:
+    try:
+        if for_write:
+            return PortfolioScope.select_for_write(
+                session,
+                workspace_id=authority.workspace_id,
+                portfolio_id=portfolio_id,
+            )
+        return PortfolioScope.select(
+            session,
+            workspace_id=authority.workspace_id,
+            portfolio_id=portfolio_id,
+        )
+    except PortfolioScopeNotFound as exc:
+        raise HTTPException(404, "Portfolio not found") from exc
+
+
 # -- portfolio ---------------------------------------------------------------------
 
 
-@router.get("/portfolio", response_model=PortfolioOut)
-def get_portfolio(session: SessionDep, settings: SettingsDep) -> PortfolioOut:
+@private_router.get("/portfolio", response_model=PortfolioOut)
+def get_portfolio(
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+    settings: SettingsDep,
+    portfolio_id: int | None = Query(default=None),
+) -> PortfolioOut:
+    scope = _scope(session, authority, portfolio_id)
+    if scope is None:
+        return _empty_portfolio_out()
     service = _service(session, settings)
+    service = service.scoped(scope)
     view = service.build_view()
 
     return PortfolioOut(
@@ -222,16 +322,27 @@ def get_portfolio(session: SessionDep, settings: SettingsDep) -> PortfolioOut:
     )
 
 
-@router.get("/portfolio/history", response_model=HistoryOut)
+@private_router.get("/portfolio/history", response_model=HistoryOut)
 def get_history(
-    session: SessionDep,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
     settings: SettingsDep,
     from_: date | None = Query(default=None, alias="from"),
     to: date | None = Query(default=None),
     freq: str = Query(default="D", pattern="^[DWMdwm]$"),
     ticker: list[str] | None = Query(default=None),
+    portfolio_id: int | None = Query(default=None),
 ) -> HistoryOut:
-    service = _service(session, settings)
+    scope = _scope(session, authority, portfolio_id)
+    if scope is None:
+        start = from_ or date.today()
+        end = to or start
+        if start > end:
+            raise HTTPException(422, "`from` must not be after `to`")
+        return HistoryOut(
+            start=start, end=end, freq=freq.upper(), tickers=[], points=[]
+        )
+    service = _service(session, settings).scoped(scope)
     start = from_ or service.inception()
     end = to or date.today()
     if start > end:
@@ -265,14 +376,16 @@ def get_history(
     )
 
 
-@router.get("/portfolio/intraday", response_model=IntradayOut)
+@private_router.get("/portfolio/intraday", response_model=IntradayOut)
 def get_intraday(
-    session: SessionDep,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
     settings: SettingsDep,
     interval: str = Query(default="5m", pattern="^(5m|15m|1h)$"),
     force: bool = Query(default=False),
     ticker: list[str] | None = Query(default=None),
     offset: int = Query(default=0, ge=0, le=30),
+    portfolio_id: int | None = Query(default=None),
 ) -> IntradayOut:
     """The 1G view (SPEC §9 range selector, extended).
 
@@ -280,7 +393,10 @@ def get_intraday(
     bypasses the short in-process TTL so the manual refresh button gets fresh bars.
     `ticker` narrows the series to a subset, as on the daily history.
     """
-    service = _service(session, settings)
+    scope = _scope(session, authority, portfolio_id)
+    if scope is None:
+        return IntradayOut(interval=interval, tickers=[], offset=offset, points=[])
+    service = _service(session, settings).scoped(scope)
     tickers = _known_tickers(session, ticker)
     points, warnings, sessions_available = service.build_intraday(
         interval, force=force, tickers=tickers, session_offset=offset
@@ -316,18 +432,26 @@ def get_intraday(
 # -- transactions ------------------------------------------------------------------
 
 
-def _load_transactions(session: Session) -> list[Transaction]:
+def _load_transactions(session: Session, scope: PortfolioScope) -> list[Transaction]:
     stmt = (
         select(Transaction)
         .options(selectinload(Transaction.instrument))
+        .where(Transaction.portfolio_id == scope.portfolio.id)
         .order_by(Transaction.trade_date.desc(), Transaction.id.desc())
     )
     return list(session.execute(stmt).scalars())
 
 
-@router.get("/transactions", response_model=list[TransactionOut])
-def list_transactions(session: SessionDep) -> list[TransactionOut]:
-    return [_transaction_out(t) for t in _load_transactions(session)]
+@private_router.get("/transactions", response_model=list[TransactionOut])
+def list_transactions(
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+    portfolio_id: int | None = Query(default=None),
+) -> list[TransactionOut]:
+    scope = _scope(session, authority, portfolio_id)
+    if scope is None:
+        return []
+    return [_transaction_out(t) for t in _load_transactions(session, scope)]
 
 
 def _resolve_fx(
@@ -351,9 +475,18 @@ def _resolve_fx(
     return quote.rate, quote.rate_date, quote.provider
 
 
-@router.post("/transactions", response_model=TransactionOut, status_code=201)
+@private_router.post(
+    "/transactions",
+    response_model=TransactionOut,
+    status_code=201,
+    dependencies=[Depends(_write_guard)],
+)
 def create_transaction(
-    payload: TransactionCreate, session: SessionDep, settings: SettingsDep
+    payload: TransactionCreate,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+    settings: SettingsDep,
+    portfolio_id: int | None = Query(default=None),
 ) -> TransactionOut:
     instrument = session.execute(
         select(Instrument).where(Instrument.ticker == payload.ticker)
@@ -378,17 +511,31 @@ def create_transaction(
         fx_provider=provider,
         note=payload.note,
     )
-    session.add(txn)
-    session.commit()
+    scope = _scope(session, authority, portfolio_id, for_write=True)
+    assert scope is not None
+    scope.add(txn)
+    session.flush()
     session.refresh(txn)
     return _transaction_out(txn)
 
 
-@router.patch("/transactions/{txn_id}", response_model=TransactionOut)
+@private_router.patch(
+    "/transactions/{txn_id}",
+    response_model=TransactionOut,
+    dependencies=[Depends(_write_guard)],
+)
 def update_transaction(
-    txn_id: int, payload: TransactionPatch, session: SessionDep, settings: SettingsDep
+    txn_id: int,
+    payload: TransactionPatch,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+    settings: SettingsDep,
+    portfolio_id: int | None = Query(default=None),
 ) -> TransactionOut:
-    txn = session.get(Transaction, txn_id)
+    scope = _scope(session, authority, portfolio_id)
+    if scope is None:
+        raise HTTPException(404, f"transaction {txn_id} not found")
+    txn = scope.get(Transaction, txn_id)
     if txn is None:
         raise HTTPException(404, f"transaction {txn_id} not found")
 
@@ -411,18 +558,30 @@ def update_transaction(
         txn.fx_rate_date = rate_date
         txn.fx_provider = provider
 
-    session.commit()
+    session.flush()
     session.refresh(txn)
     return _transaction_out(txn)
 
 
-@router.delete("/transactions/{txn_id}", status_code=204)
-def delete_transaction(txn_id: int, session: SessionDep) -> None:
-    txn = session.get(Transaction, txn_id)
+@private_router.delete(
+    "/transactions/{txn_id}",
+    status_code=204,
+    dependencies=[Depends(_write_guard)],
+)
+def delete_transaction(
+    txn_id: int,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+    portfolio_id: int | None = Query(default=None),
+) -> None:
+    scope = _scope(session, authority, portfolio_id)
+    if scope is None:
+        raise HTTPException(404, f"transaction {txn_id} not found")
+    txn = scope.get(Transaction, txn_id)
     if txn is None:
         raise HTTPException(404, f"transaction {txn_id} not found")
     session.delete(txn)
-    session.commit()
+    session.flush()
 
 
 # -- instruments -------------------------------------------------------------------

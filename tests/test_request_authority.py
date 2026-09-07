@@ -65,6 +65,7 @@ class Session:
 def _api(session, endpoint, *, response_model=None) -> TestClient:
     app = FastAPI()
     app.state.session_factory = lambda: session
+    app.state.authority_session_factory = lambda: Session()
     router = APIRouter(route_class=RequestTransactionRoute)
     router.add_api_route("/private", endpoint, methods=["GET"], response_model=response_model)
     app.include_router(router)
