@@ -1,10 +1,27 @@
 // Thin API client. Everything is same-origin in production; the Vite dev server proxies
 // /api to the FastAPI app on 127.0.0.1:8000.
 
+function readableCsrfToken() {
+  if (typeof document === "undefined") return null;
+  const prefix = "__Host-fadir-csrf=";
+  const cookie = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix));
+  return cookie ? cookie.slice(prefix.length) : null;
+}
+
 async function request(path, options = {}) {
+  const method = (options.method ?? "GET").toUpperCase();
+  const headers = { "Content-Type": "application/json", ...options.headers };
+  if (["POST", "PATCH", "PUT", "DELETE"].includes(method) && path !== "/api/guest/bootstrap") {
+    const token = readableCsrfToken();
+    if (token) headers["X-CSRF-Token"] = token;
+  }
   const response = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    credentials: "include",
+    headers,
   });
   if (!response.ok) {
     let detail = `${response.status} ${response.statusText}`;
@@ -26,6 +43,7 @@ const withTickers = (params, tickers) => {
 };
 
 export const api = {
+  bootstrapGuest: () => request("/api/guest/bootstrap", { method: "POST" }),
   portfolio: () => request("/api/portfolio"),
   history: ({ from, to, freq = "D", tickers } = {}) => {
     const params = new URLSearchParams();
