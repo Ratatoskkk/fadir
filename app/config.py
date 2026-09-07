@@ -59,6 +59,12 @@ class HistoryConfig:
 
 
 @dataclass(frozen=True)
+class GoogleConfig:
+    web_client_id: str | None = None
+    verification_timeout_seconds: float = 5.0
+
+
+@dataclass(frozen=True)
 class Settings:
     fx: FxConfig = field(default_factory=FxConfig)
     liquidation: LiquidationConfig = field(default_factory=LiquidationConfig)
@@ -66,6 +72,7 @@ class Settings:
     cache: CacheConfig = field(default_factory=CacheConfig)
     refresh: RefreshConfig = field(default_factory=RefreshConfig)
     history: HistoryConfig = field(default_factory=HistoryConfig)
+    google: GoogleConfig = field(default_factory=GoogleConfig)
     db_path: Path = DEFAULT_DB_PATH
     database_url: str | None = None
 
@@ -79,6 +86,7 @@ class Settings:
             "Settings("
             f"fx={self.fx!r}, liquidation={self.liquidation!r}, tax={self.tax!r}, "
             f"cache={self.cache!r}, refresh={self.refresh!r}, history={self.history!r}, "
+            f"google={self.google!r}, "
             f"db_path={self.db_path!r}, database_url={database_url!r})"
         )
 
@@ -139,6 +147,7 @@ def load_settings(path: Path | None = None) -> Settings:
     cache_raw = raw.get("cache") or {}
     refresh_raw = raw.get("refresh") or {}
     hist_raw = raw.get("history") or {}
+    google_raw = raw.get("google") or {}
 
     overrides = {k.upper(): str(v).lower() for k, v in (fx_raw.get("overrides") or {}).items()}
 
@@ -155,6 +164,19 @@ def load_settings(path: Path | None = None) -> Settings:
         else DEFAULT_DB_PATH
     )
     database_url = os.environ["FADIR_DATABASE_URL"] if "FADIR_DATABASE_URL" in os.environ else None
+
+    google_client_id = (
+        os.environ.get("FADIR_GOOGLE_WEB_CLIENT_ID")
+        or os.environ.get("FADIR_GOOGLE_CLIENT_ID")
+        or google_raw.get("web_client_id")
+    )
+    timeout_value = (
+        os.environ.get("FADIR_GOOGLE_VERIFICATION_TIMEOUT_SECONDS")
+        or google_raw.get("verification_timeout_seconds", 5.0)
+    )
+    google_timeout = float(timeout_value)
+    if not 0.1 <= google_timeout <= 30.0:
+        raise ValueError("Google identity verification timeout is outside its allowed range")
 
     return Settings(
         fx=fx,
@@ -174,6 +196,10 @@ def load_settings(path: Path | None = None) -> Settings:
         ),
         history=HistoryConfig(
             start_date=_as_date(hist_raw.get("start_date")),
+        ),
+        google=GoogleConfig(
+            web_client_id=str(google_client_id).strip() if google_client_id else None,
+            verification_timeout_seconds=google_timeout,
         ),
         db_path=db_path,
         database_url=database_url,
