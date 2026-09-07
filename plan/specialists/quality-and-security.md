@@ -13,7 +13,7 @@ Do not read unlisted files. Do not repair, rerun tests, query application tables
 Reject claims without evidence. Require focused red proof before repair and visible browser proof for visible changes.
 
 ## Current assignment
-None. SESSION-1-FINAL returned PASS for the internal foundation; HTTP, Google, browser, and public acceptance remain outside that proof.
+None. SHARED-REFRESH-1 passed for the internal entry point; route and public proof remain open.
 
 ## Exact file lease
 Repository: Empty. Operational: Empty.

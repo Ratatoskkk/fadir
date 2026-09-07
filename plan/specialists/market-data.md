@@ -13,11 +13,11 @@ Do not read unlisted files. Do not change identity, private scope, tax, deployme
 Retain a focused failed provider or cache proof before repair. Separate local, synthetic, hosted, and public results.
 
 ## Current assignment
-SHARED-REFRESH-1 queued after a usage-limit interruption. Wait for the Senior's serial dispatch slot.
+None. SHARED-REFRESH-1 candidate and evidence frozen for Quality review.
 
 ## Exact file lease
-Repository: Empty until dispatch. The two proposed paths remain reserved for later review.
-Operational: Empty until dispatch.
+Repository: Empty; both candidate files are frozen.
+Operational: Empty.
 Read only the paths and archive inputs named in the current assignment prompt.
 
 ## Protected paths and data

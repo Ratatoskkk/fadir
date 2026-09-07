@@ -26,11 +26,11 @@ Keep it in deployment configuration. It does not prove a callback, authorized or
 | Role | Assignment | Repository lease | Operational lease | Status |
 |---|---|---|---|---|
 | Product Experience | None | Empty | Empty | Design accepted; wait for route contract |
-| Identity and Data Integrity | None | Empty | Empty | Session candidate frozen for final review |
+| Identity and Data Integrity | REQUEST-IDENTITY-CONTRACT | Empty | Official documentation research only | Define request transaction and route cutover |
 | Finance and Tax | None | Empty | Empty | MERGE-FIN-1 accepted |
-| Market Data | SHARED-REFRESH-1 queued | Empty | Empty | Wait for the serial dispatch slot |
+| Market Data | None | Empty | Empty | Shared-refresh candidate frozen for review |
 | Platform and Release | None | Empty | Empty | Strict SSH verified after owner started VM |
-| Quality and Security | None | Empty | Empty | SESSION-1-FINAL passed |
+| Quality and Security | None | Empty | Empty | SHARED-REFRESH-1 passed |
 
 Each role has one active assignment at most. The Senior reviews the worktree before every lease.
 Run only one specialist task at a time. Queue every later task, including independent work.
@@ -44,6 +44,7 @@ The Senior reviews the diff, retained failed proof, final proof, and handoff bef
 - `4b681ae` published the current coordination records.
 - `a390862` published the two-file scoped calculation service after independent acceptance and 370 isolated offline passes.
 - `c131047` records the accepted seven-file internal User Session foundation; Quality returned PASS and verified archive/source bytes and retained schema metadata.
+- `70040bb` records the accepted two-file shared-refresh entry point after Quality PASS, 46 focused passes, and 387 offline passes. Senior compared all 77 archive entries against committed source plus the two candidates: no byte or manifest differences. The reported Unicode display discrepancy is not an archive mismatch.
 - Origin `main` was even with the local branch after the last push.
 - ID-2 final proof: 18 focused passes, 365 offline passes, and 1 synthetic PostgreSQL pass.
 - ID-2 retained the startup failure and verified no private query value escaped after repair.
@@ -86,9 +87,21 @@ Open work: Inspect the exact archive file list before the next extraction or tes
 
 ## Next assignments
 
+### REQUEST-IDENTITY-CONTRACT
+
+Identity receives an empty write lease and a bounded route-integration design task. Read only `app/api/routes.py`, `app/main.py`, `app/db.py`, `app/config.py`, `app/schemas.py`, `app/models.py`, `app/services/guest_access.py`, `app/services/user_sessions.py`, `app/services/portfolio_scope.py`, `app/services/portfolio.py`, `app/providers/price_service.py`, `tests/test_api.py`, `tests/conftest.py`, `requirements.txt`, `docs/adr/0009-cookie-only-guest-workspaces.md`, and `docs/adr/0002-postgresql-for-hosted-data.md`.
+Research current official FastAPI/Starlette cookie, dependency transaction/response lifecycle, and CSRF browser semantics before prescribing integration; record URLs, retrieval date, actual installed version metadata, and limits. Package metadata reads are allowed, but no install, test, VM, account, or implementation action.
+Propose one complete request authority and private-route cutover contract with exact sequential leases. Cover Guest/User cookie precedence and invalid tokens, credential handling, CSRF, secure cookie policy, no-store responses, root transaction lifetime and error/commit behavior, Portfolio selection/default creation on first saved transaction, all existing private routes, shared refresh/background cutover, network work outside identity locks, and legacy SQLite access after hosted-only cutover. No public access before the private routes are scoped. Preserve explicit Guest Claim/Transfer/Merge; do not invent ownership or bypass the accepted PostgreSQL internal services. Keep Google verification in its already accepted separate flow and identify dependencies rather than redoing it. Return concise Facts, Limits, Uncertainty, and Open work with one next implementation lease.
+
 ### SHARED-REFRESH-1
 
 Queued after a confirmed usage-limit interruption. Its write leases are inactive until the Senior dispatches it again.
+Activated after SESSION-1 acceptance. Senior verified a clean worktree, absent new test/proof root, and origin parity after pushing `c131047` and `33e9ee9`. Use committed `c131047` as the isolated proof baseline; the two-file write lease and all other constraints below remain unchanged.
+Evidence review: candidate reports 46 focused passes and 387 offline passes. The four retained red failures prove only a missing method; they do not demonstrate the requested legacy private-row behavior. Freeze both repository files. Market receives a proof-root-only checkpoint to run one explicitly retrospective behavioral assertion against committed legacy `refresh(force=True)` with synthetic Portfolios, and freeze an exact final archive. Preserve existing XML; do not rerun the full suite. Quality reviews after this checkpoint.
+Facts: retrospective committed-source proof reported two private SQL statements and split changes in both synthetic Portfolios. Senior parsed 387 passing tests with zero XML failures/errors/skips and matched candidate hashes. Final archive SHA-256 `96cf310a0f9e02e7b7442fdf21b46ae96840c97a9f1590eb55a2404e10a0f911`; root `C:/Users/doguk/AppData/Local/Temp/fadir-shared-refresh-20260906/`.
+Limits: the actual behavior baseline was retrospective; no PostgreSQL, provider, HTTP, hosted, or public proof. Existing legacy caller behavior is intentionally unchanged until a later cutover.
+Uncertainty: concurrent refresh and request integration remain unproved.
+Open work: Quality reads the two candidate paths and the named provider/model/test dependencies below, plus this exact proof root. Empty write leases; no test rerun. Return a bounded final verdict before publication or dependent implementation.
 This Phase 4 prerequisite separates shared provider cache writes from private split application.
 The Senior checked `app/providers/price_service.py` is clean and the new test and proof root are absent.
 Write only `app/providers/price_service.py` and new `tests/test_shared_refresh.py`.

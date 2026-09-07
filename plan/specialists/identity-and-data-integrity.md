@@ -13,10 +13,10 @@ Do not read unlisted files. Do not change another role's files, private data, se
 Retain a focused failed proof before repair. Match tests to scope and database risk. Keep local, VM, hosted, private, and public proof separate.
 
 ## Current assignment
-None. SESSION-1B-FIX completed; candidate and evidence are frozen for final Quality review.
+REQUEST-IDENTITY-CONTRACT. Define request authority, transaction lifetime, and complete private-route cutover using only the Senior-named sources and official documentation.
 
 ## Exact file lease
-Repository: Empty. Operational: Empty.
+Repository: Empty. Operational: read-only official documentation and installed package version metadata. No tests, VM, account, or implementation action.
 
 ## Protected paths and data
 Protect `fadir.db`, WAL files, uploads, `config.yaml`, `.env` files, credentials, private provider permits, Portfolio rows, owner email, VM keys, and retained proof.
