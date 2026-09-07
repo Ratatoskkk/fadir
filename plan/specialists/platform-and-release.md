@@ -13,10 +13,10 @@ Do not read unlisted files. Do not change hosts, services, packages, databases, 
 Retain a failed operational precondition before repair. Separate local, synthetic VM, hosted, private, and public proof.
 
 ## Current assignment
-None. BETA-SCOPE-1 is accepted. Wait for a release prerequisite lease.
+None. VM-REACHABILITY-1 completed: strict SSH verified the existing lab after the owner started it.
 
 ## Exact file lease
-Repository: Empty. Operational: Empty. The Senior names every command and resource.
+Repository: Empty. Operational: Empty.
 
 ## Protected paths and data
 Protect private databases, WAL files, uploads, credentials, local configuration, SSH keys, VM settings, Portfolio rows, and owner email.

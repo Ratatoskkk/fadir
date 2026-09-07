@@ -1,6 +1,6 @@
 ﻿# faðir open beta manager board
 
-Date: 2026-09-06
+Date: 2026-09-07
 
 This is the only live work board. Historical records are in `plan/manager-open-beta-history.md`.
 The Senior must name exact specialist files and resources before each specialist task.
@@ -26,11 +26,11 @@ Keep it in deployment configuration. It does not prove a callback, authorized or
 | Role | Assignment | Repository lease | Operational lease | Status |
 |---|---|---|---|---|
 | Product Experience | None | Empty | Empty | Design accepted; wait for route contract |
-| Identity and Data Integrity | SESSION-1A | Existing seven-file reservation | Host proof root only for this checkpoint | Resume source and focused proof |
+| Identity and Data Integrity | None | Empty | Empty | Session candidate frozen for final review |
 | Finance and Tax | None | Empty | Empty | MERGE-FIN-1 accepted |
 | Market Data | SHARED-REFRESH-1 queued | Empty | Empty | Wait for the serial dispatch slot |
-| Platform and Release | None | Empty | Empty | BETA-SCOPE-1 accepted |
-| Quality and Security | None | Empty | Empty | ID-3A accepted and published |
+| Platform and Release | None | Empty | Empty | Strict SSH verified after owner started VM |
+| Quality and Security | None | Empty | Empty | SESSION-1-FINAL passed |
 
 Each role has one active assignment at most. The Senior reviews the worktree before every lease.
 Run only one specialist task at a time. Queue every later task, including independent work.
@@ -43,11 +43,12 @@ The Senior reviews the diff, retained failed proof, final proof, and handoff bef
 - `476df16` published the five-file PostgreSQL runtime boundary.
 - `4b681ae` published the current coordination records.
 - `a390862` published the two-file scoped calculation service after independent acceptance and 370 isolated offline passes.
+- `c131047` records the accepted seven-file internal User Session foundation; Quality returned PASS and verified archive/source bytes and retained schema metadata.
 - Origin `main` was even with the local branch after the last push.
 - ID-2 final proof: 18 focused passes, 365 offline passes, and 1 synthetic PostgreSQL pass.
 - ID-2 retained the startup failure and verified no private query value escaped after repair.
 - G2 is accepted. G3 is conditional on real PostgreSQL and private-scope proof.
-- G4 is open. No HTTP, cookie, Google identity, User Session, Claim, Transfer, Merge, hosted, or public pass exists.
+- G4 is open. Internal User Sessions passed synthetic proof. No HTTP, cookie, Google identity, Claim, Transfer, Merge, hosted, or public pass exists.
 - Existing Starlette warning remains.
 
 ## Phase order and gates
@@ -111,9 +112,66 @@ Return concise Facts, Limits, Uncertainty, and Open work with hashes and proof p
 
 ### SESSION-1
 
+Final checkpoint report: 3 repaired live cases passed (11 deselected), PostgreSQL migration proof passed 1 (14 deselected), final isolated offline suite passed 383 (85 deselected, one warning). Remote XMLs are `current-source-r6/live-issue-collision.xml`, `live-migrations.xml`, and `final-full-offline.xml` under the existing guest proof root. The nine unchanged earlier live passes remain applicable. Four failed schemas remain intentionally preserved; no new failed schema was reported. Senior matched all seven current source hashes. Quality now reviews the seven candidate paths, accepted Guest service/runtime dependencies, and exact retained host/guest proof roots; no test rerun or mutation. HTTP, browser, Google, private, hosted, and public acceptance remain absent.
+
+SESSION-1B produced the actual before-repair clock baseline: two expected PostgreSQL failures, with both schemas retained.
+The corrected candidate passed nine live cases and failed two fixture cases. No migration suite or full offline suite ran.
+The failures are a separate-connection read of an uncommitted row and a noncanonical fixed token before the intended unique collision.
+SESSION-1B-FIX writes only `tests/test_postgresql_user_sessions.py`; all product files and other tests remain frozen.
+Resumed on Luna High after a confirmed usage-limit stop. The fixture edits survived; continue their remaining proof without restarting implementation.
+Facts: Resume retained the repaired test candidate but strict SSH to `192.168.247.10` timed out twice. Archive SHA-256 `122c3fa77946e45c7a52c60b6fb3e1212a2581175b2ed1bbd3ab2c9f2c184159`; PostgreSQL test SHA-256 `904cb3ca0805374cdf66a275db7bbec186cdbed43113e034954e654b3fadbd36`.
+Limits: No new live, migration, or full offline result. Identity leases released while Platform checks reachability.
+Uncertainty: The existing VM may have stopped or changed address; no cause established.
+Resolved: The owner confirmed the VM was off and started it. Platform then verified strict SSH exit 0 at `192.168.247.10`, hostname `fadir-control-lab-01`, uptime one minute. Hyper-V metadata still requires permissions, but SSH is available. Platform leases are released; Identity resumes the retained proof archive with its prior exact scope.
+Open work: VM-REACHABILITY-1 reads only host Hyper-V state, its VM network adapter addresses, host network routes/neighbors, and the existing SSH trust host identifiers. Probe only the identified lab VM with the existing key and strict trust. No VM start, settings, trust, service, database, package, or file mutation. Return the verified address/identity or concrete blocking fact before repair.
+Inspect the issued row through its caller connection and prove a second connection cannot see it before commit.
+Use a canonical secret in the collision fixture. Cover public-identifier and secret-digest collisions without printing either secret.
+Retain the existing failures. Run only the repaired live cases first, then the named migration tests and one final isolated offline suite.
+Use the existing host/guest roots, exact archive inputs, strict SSH, timeouts, and schema controls. Stop on any new unexpected failure.
+The nine unaffected live passes remain valid because the product source is frozen. Do not restart their test cycle without a new defect.
+Retained expected-red schemas: `session1_fee5c638e63944f3afd27a4b985f7b5a` (OID 43752), `session1_6a586314a0884b689c8aff00e04df2a8` (OID 43918).
+Retained fixture-failure schemas: `session1_fe0fef40192e4b8b8f0d53fe93f1cfbd` (OID 44084), `session1_1dee1fc330ca4d0db301ca5349e70c20` (OID 45412).
+Preserve these schemas and their XML markers. Their retention is intentional; do not claim zero remaining schemas.
+
+SESSION-1A-CLOCK completed. The Senior reviewed the small source delta: both bulk methods validate one time against selected row timestamps.
+The helper-only local clock test does not demonstrate the original service-method defect; its two failures are not accepted behavioral red proof.
+SESSION-1B-PROOF removes only that duplicate helper test from `tests/test_user_sessions.py`. All product files and other tests stay frozen.
+Use the same named manual reads and exact public archive inputs. Both named host and guest proof roots are now active for synthetic proof.
+Build a fresh before-repair source using the retained r2 service bytes and current named PostgreSQL clock tests.
+Run only the two clock cases against this retained service and keep their expected failures as behavioral baseline evidence.
+Then run the named User Session and migration PostgreSQL tests against the current corrected candidate.
+Use strict SSH, the existing guest environment, `fadir_test`, exact schema prefixes, timeouts, and ownership checks from the contract below.
+Retain expected-failure schemas and report their exact identifiers. Clean only successful new test schemas with verified ownership.
+Run the full isolated offline suite once after the current candidate passes the live tests. Stop on an unexpected failure and retain it.
+No other repair, package, service, private-data, or public action is authorized. Return concise four-section evidence for final review.
+
+SESSION-1A-REVIEW returned NOT READY for one source-proved clock defect.
+`revoke_all` can write revocation before stored creation or access times. `list_active` also omits row-aware time checks.
+The Senior checked current hashes and assigns SESSION-1A-CLOCK to Identity with exactly three write paths:
+`app/services/user_sessions.py`, `tests/test_user_sessions.py`, and `tests/test_postgresql_user_sessions.py`.
+Keep the other four session candidate files frozen. Use only the existing host proof root; no VM or full-suite run.
+Retain a focused failure for backward time through list and bulk revoke. Validate the operation's time against its selected rows before returning or writing.
+Prove no target timestamp changes and no caller transaction loss on rejection. Add the matching planned PostgreSQL case without running it yet.
+Run only focused affected tests and create a fresh checked archive. Preserve all earlier proof and use the same archive/read allowlists.
+Return the repair diff, focused result, hashes, and a concise four-section handoff. The Senior will review this bounded delta before VM proof.
+The earlier broad VM approval remains valid. No new owner approval is required for the named synthetic PostgreSQL proof.
+
+SESSION-1A checkpoint completed. Both write leases are released and all seven candidate files are frozen.
+Facts: The retained absent-model/service proof has seven failures. Isolated affected proof passed 49 tests with no skips or failures.
+The Senior matched all seven candidate hashes and parsed `isolated-affected-r2.xml` in the exact host proof root.
+Candidate archive SHA-256: `4fe2dd349d574f2c91f2c418e91e1b723dc851c2731b3879ddbba2dae0b8bc83`.
+Limits: No full offline, real PostgreSQL, VM, HTTP, or public acceptance exists for this session candidate.
+Uncertainty: Transaction ownership, race behavior, and migration execution still need the later PostgreSQL proof.
+Open work: SESSION-1A-REVIEW reads only the seven candidate paths, `app/services/guest_access.py`, `app/db.py`, and the exact host proof root.
+Quality receives the contract excerpt. It may inspect Git status/diff and compare archive bytes with committed `a390862` plus those seven files.
+Review the planned live tests and success-only cleanup before activation. Run no test, repair, VM probe, or new artifact.
+Return READY or NOT READY for the next proof checkpoint, with concise Facts, Limits, Uncertainty, and Open work.
+
 Both specialist tasks stopped at a confirmed usage limit. SESSION-1A resumes first under the new serial dispatch rule.
 Checkpoint scope: finish the session source and retained focused offline tests, then stop with a concise handoff.
 Use only the existing host proof root. Do not start live PostgreSQL, the VM, or the full offline suite in this checkpoint.
+Remove inherited `FADIR_*` values in the test subprocess, then set only the synthetic configuration and path values it needs.
+Print no environment values. Keep PostgreSQL opt-in values exclusive to the later live command.
 Retain the seven-test absent-model/service failure and every partial file. No restart or repeated broad proof is required.
 The later PostgreSQL proof remains required for final acceptance and keeps its reserved resource contract below.
 Request identity needs revocable User Sessions before the final route and Google cutover.

@@ -13,10 +13,10 @@ Do not read unlisted files. Do not repair, rerun tests, query application tables
 Reject claims without evidence. Require focused red proof before repair and visible browser proof for visible changes.
 
 ## Current assignment
-ID-3A-ACCEPT complete. The Senior accepted and published the two-file candidate. Wait for a new exact review lease.
+None. SESSION-1-FINAL returned PASS for the internal foundation; HTTP, Google, browser, and public acceptance remain outside that proof.
 
 ## Exact file lease
-Repository: Empty. Operational: Empty. The Senior names every review path and command.
+Repository: Empty. Operational: Empty.
 
 ## Protected paths and data
 Protect private databases, WAL files, uploads, secrets, local configuration, Portfolio rows, owner email, VM keys, and retained proof.
