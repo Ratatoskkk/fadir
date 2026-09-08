@@ -318,3 +318,13 @@ class GoogleLoginStartOut(BaseModel):
     client_id: str
     nonce: str
     expires_at: datetime
+
+
+class GoogleLoginVerifyIn(BaseModel):
+    credential: str
+    nonce: str
+
+
+class GoogleLoginVerifyOut(BaseModel):
+    expires_at: datetime
+    choice_needed: bool = True

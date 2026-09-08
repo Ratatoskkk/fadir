@@ -194,6 +194,14 @@ class LoginTransaction(Base):
         CheckConstraint("length(state_digest) = 32", name="ck_login_transaction_state_digest_length"),
         CheckConstraint("length(nonce_digest) = 32", name="ck_login_transaction_nonce_digest_length"),
         CheckConstraint("expires_at > created_at", name="ck_login_transaction_expiry_after_creation"),
+        CheckConstraint(
+            "verified_issuer IS NULL OR length(verified_issuer) > 0",
+            name="ck_login_transaction_verified_issuer_nonempty",
+        ),
+        CheckConstraint(
+            "verified_subject IS NULL OR length(verified_subject) > 0",
+            name="ck_login_transaction_verified_subject_nonempty",
+        ),
         Index("ix_login_transaction_expires_at", "expires_at"),
     )
 
@@ -205,6 +213,11 @@ class LoginTransaction(Base):
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     consumed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    verified_issuer: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    verified_subject: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 

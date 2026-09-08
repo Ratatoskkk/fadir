@@ -28,6 +28,7 @@ OWNERSHIP_REVISION = (
 SESSION_REVISION = ROOT / "migrations" / "versions" / "0005_user_sessions.py"
 LOGIN_IDENTITY_REVISION = ROOT / "migrations" / "versions" / "0006_login_identities.py"
 LOGIN_TRANSACTION_REVISION = ROOT / "migrations" / "versions" / "0007_login_transactions.py"
+LOGIN_TRANSACTION_VERIFICATION_REVISION = ROOT / "migrations" / "versions" / "0008_login_transaction_verification.py"
 BASELINE_TABLES = {
     "instrument",
     "transaction",
@@ -534,3 +535,46 @@ def test_login_transaction_revision_is_static() -> None:
     assert "drop_all" not in source
     assert source.count("op.create_table(") == 1
     assert source.count("op.drop_table(") == 1
+
+
+def test_login_transaction_verification_revision_is_static() -> None:
+    assert LOGIN_TRANSACTION_VERIFICATION_REVISION.is_file(), (
+        "login transaction verification revision is absent"
+    )
+    source = LOGIN_TRANSACTION_VERIFICATION_REVISION.read_text(encoding="utf-8")
+    assert "0007_login_transactions" in source
+    assert "from app.models import Base" not in source
+    assert "Base.metadata" not in source
+    assert "create_all" not in source
+    assert "drop_all" not in source
+
+
+def test_login_transaction_verification_revision_cycle(tmp_path, monkeypatch) -> None:
+    database_url = _sqlite_url(tmp_path / "login-transaction-verification-migration.db")
+    monkeypatch.setenv("FADIR_DATABASE_URL", database_url)
+    config = _alembic_config()
+
+    command.upgrade(config, "head")
+    engine = create_engine(database_url)
+    try:
+        columns = {
+            column["name"]
+            for column in inspect(engine).get_columns("login_transaction")
+        }
+        assert {"verified_issuer", "verified_subject", "verified_at"} <= columns
+    finally:
+        engine.dispose()
+
+    command.downgrade(config, "0007_login_transactions")
+    engine = create_engine(database_url)
+    try:
+        columns = {
+            column["name"]
+            for column in inspect(engine).get_columns("login_transaction")
+        }
+        assert {"verified_issuer", "verified_subject", "verified_at"}.isdisjoint(columns)
+    finally:
+        engine.dispose()
+
+    command.upgrade(config, "head")
+    _assert_schema_matches_models(database_url)

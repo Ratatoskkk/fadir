@@ -62,11 +62,14 @@ from app.schemas import (
     TransactionOut,
     TransactionPatch,
     GoogleLoginStartOut,
+    GoogleLoginVerifyIn,
+    GoogleLoginVerifyOut,
 )
 from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 from app.services import guest_access
 from app.services import login_transactions
+from app.services.google_identity import GoogleIdentityError, verify_google_identity_from_settings
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
@@ -372,6 +375,40 @@ def google_login_start(
         nonce=issued.nonce.get_secret_value(),
         expires_at=issued.expires_at,
     )
+
+
+@private_router.post(
+    "/auth/google/verify",
+    response_model=GoogleLoginVerifyOut,
+    dependencies=[Depends(_write_guard)],
+)
+def google_login_verify(
+    payload: GoogleLoginVerifyIn,
+    request: Request,
+    session: RequestSessionDep,
+    _authority: AuthorityDep,
+    settings: SettingsDep,
+) -> GoogleLoginVerifyOut:
+    """Verify Google identity and stage it without consuming the login transaction."""
+    state = request.cookies.get(GOOGLE_STATE_COOKIE_NAME)
+    if state is None:
+        raise RequestAuthorityError()
+    try:
+        identity = verify_google_identity_from_settings(
+            payload.credential,
+            expected_nonce=payload.nonce,
+            settings=settings,
+        )
+        verified = login_transactions.verify_pending(
+            session,
+            state,
+            payload.nonce,
+            identity,
+            clock=lambda: datetime.now(timezone.utc),
+        )
+    except (GoogleIdentityError, login_transactions.LoginTransactionError):
+        raise RequestAuthorityError() from None
+    return GoogleLoginVerifyOut(expires_at=verified.expires_at)
 
 
 def _scope(

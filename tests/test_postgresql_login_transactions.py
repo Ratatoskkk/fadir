@@ -15,6 +15,7 @@ from sqlalchemy.engine import URL, make_url
 from sqlalchemy.orm import Session
 
 from app.services import login_transactions
+from app.services.google_identity import VerifiedGoogleIdentity
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -75,6 +76,49 @@ def test_postgresql_login_transaction_issue_consume_and_cleanup(monkeypatch) -> 
             with pytest.raises(login_transactions.LoginTransactionConsumed):
                 login_transactions.consume(
                     session, state, nonce, clock=lambda: now + timedelta(minutes=2)
+                )
+            pending = login_transactions.issue(
+                session, clock=lambda: now + timedelta(minutes=2)
+            )
+            identity = VerifiedGoogleIdentity(
+                issuer="https://accounts.google.com", subject="synthetic-subject"
+            )
+            verified = login_transactions.verify_pending(
+                session,
+                pending.state,
+                pending.nonce,
+                identity,
+                clock=lambda: now + timedelta(minutes=3),
+            )
+            assert verified.issuer == identity.issuer
+            assert verified.subject == identity.subject
+            repeated = login_transactions.verify_pending(
+                session,
+                pending.state,
+                pending.nonce,
+                identity,
+                clock=lambda: now + timedelta(minutes=4),
+            )
+            assert repeated.verified_at == verified.verified_at
+            with pytest.raises(login_transactions.LoginTransactionInvalid):
+                login_transactions.verify_pending(
+                    session,
+                    pending.state,
+                    pending.nonce,
+                    VerifiedGoogleIdentity(
+                        issuer=identity.issuer, subject="different-subject"
+                    ),
+                    clock=lambda: now + timedelta(minutes=4),
+                )
+            consumed_verified = login_transactions.consume_verified(
+                session, pending.state, clock=lambda: now + timedelta(minutes=5)
+            )
+            assert consumed_verified.consumed_at == now + timedelta(minutes=5)
+            assert consumed_verified.issuer == identity.issuer
+            assert consumed_verified.subject == identity.subject
+            with pytest.raises(login_transactions.LoginTransactionConsumed):
+                login_transactions.consume_verified(
+                    session, pending.state, clock=lambda: now + timedelta(minutes=6)
                 )
             follow_up = login_transactions.issue(
                 session, clock=lambda: now + timedelta(minutes=2)

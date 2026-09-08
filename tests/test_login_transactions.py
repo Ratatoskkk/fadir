@@ -15,6 +15,8 @@ def test_login_transaction_model_and_service_exist():
     assert hasattr(models, "LoginTransaction")
     assert callable(login_transactions.issue)
     assert callable(login_transactions.consume)
+    assert callable(login_transactions.verify_pending)
+    assert callable(login_transactions.consume_verified)
     assert "email" not in inspect(models.LoginTransaction).columns
     table = models.LoginTransaction.__table__
     assert {c.name for c in table.constraints if isinstance(c, UniqueConstraint)} == {
@@ -26,6 +28,8 @@ def test_login_transaction_model_and_service_exist():
         "ck_login_transaction_state_digest_length",
         "ck_login_transaction_nonce_digest_length",
         "ck_login_transaction_expiry_after_creation",
+        "ck_login_transaction_verified_issuer_nonempty",
+        "ck_login_transaction_verified_subject_nonempty",
     }
 
 
@@ -54,3 +58,11 @@ def test_malformed_login_transaction_secrets_fail_closed():
         )
     assert str(error.value) == "login transaction rejected"
     assert error.value.__context__ is None
+
+
+def test_consumed_verified_result_recovers_identity_for_later_transition():
+    from app.services import login_transactions
+
+    assert {"issuer", "subject"} <= set(
+        login_transactions.ConsumedLoginTransaction.model_fields
+    )

@@ -16,6 +16,7 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import Base, LoginTransaction
+from app.services.google_identity import VerifiedGoogleIdentity
 
 
 Clock = Callable[[], datetime]
@@ -72,6 +73,16 @@ class ConsumedLoginTransaction(BaseModel):
     created_at: datetime
     expires_at: datetime
     consumed_at: datetime
+    issuer: str | None = None
+    subject: str | None = None
+
+
+class VerifiedLoginTransaction(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    issuer: str
+    subject: str
+    verified_at: datetime
+    expires_at: datetime
 
 
 def _digest(value: str | SecretStr) -> bytes:
@@ -227,6 +238,97 @@ def consume(
             created_at=_utc(row["created_at"]),
             expires_at=_utc(row["expires_at"]),
             consumed_at=now,
+        )
+
+    return _run(session, operation)
+
+
+def verify_pending(
+    session: Session,
+    state: str | SecretStr,
+    nonce: str | SecretStr,
+    identity: VerifiedGoogleIdentity,
+    *,
+    clock: Clock,
+) -> VerifiedLoginTransaction:
+    """Persist a verified identity without consuming the pending transaction."""
+    state_digest = _digest(state)
+    nonce_digest = _digest(nonce)
+
+    def operation(connection):
+        row = connection.execute(
+            select(_TRANSACTION)
+            .where(_TRANSACTION.c.state_digest == state_digest)
+            .with_for_update(nowait=True)
+        ).mappings().one_or_none()
+        if row is None or row["nonce_digest"] != nonce_digest:
+            raise LoginTransactionInvalid()
+        now = _time(clock, row)
+        if now >= _utc(row["expires_at"]):
+            raise LoginTransactionExpired()
+        if row["consumed_at"] is not None:
+            raise LoginTransactionConsumed()
+        if row["verified_issuer"] is not None:
+            if (
+                row["verified_issuer"] != identity.issuer
+                or row["verified_subject"] != identity.subject
+            ):
+                raise LoginTransactionInvalid()
+            verified_at = _utc(row["verified_at"])
+        else:
+            verified_at = now
+            connection.execute(
+                update(_TRANSACTION)
+                .where(_TRANSACTION.c.id == row["id"])
+                .values(
+                    verified_issuer=identity.issuer,
+                    verified_subject=identity.subject,
+                    verified_at=verified_at,
+                )
+            )
+        return VerifiedLoginTransaction(
+            issuer=identity.issuer,
+            subject=identity.subject,
+            verified_at=verified_at,
+            expires_at=_utc(row["expires_at"]),
+        )
+
+    return _run(session, operation)
+
+
+def consume_verified(
+    session: Session,
+    state: str | SecretStr,
+    *,
+    clock: Clock,
+) -> ConsumedLoginTransaction:
+    """Consume a previously verified transaction for the later transition lease."""
+    state_digest = _digest(state)
+
+    def operation(connection):
+        row = connection.execute(
+            select(_TRANSACTION)
+            .where(_TRANSACTION.c.state_digest == state_digest)
+            .with_for_update(nowait=True)
+        ).mappings().one_or_none()
+        if row is None or row["verified_issuer"] is None or row["verified_subject"] is None:
+            raise LoginTransactionInvalid()
+        now = _time(clock, row)
+        if now >= _utc(row["expires_at"]):
+            raise LoginTransactionExpired()
+        if row["consumed_at"] is not None:
+            raise LoginTransactionConsumed()
+        connection.execute(
+            update(_TRANSACTION)
+            .where(_TRANSACTION.c.id == row["id"])
+            .values(consumed_at=now)
+        )
+        return ConsumedLoginTransaction(
+            created_at=_utc(row["created_at"]),
+            expires_at=_utc(row["expires_at"]),
+            consumed_at=now,
+            issuer=row["verified_issuer"],
+            subject=row["verified_subject"],
         )
 
     return _run(session, operation)
