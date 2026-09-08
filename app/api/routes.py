@@ -30,6 +30,7 @@ from app.api.request_authority import (
     RequestAuthorityError,
     delete_guest_cookie,
     get_request_authority,
+    set_user_cookie,
     set_guest_cookie,
 )
 from app.api.request_transaction import RequestTransactionRoute, request_session
@@ -64,11 +65,14 @@ from app.schemas import (
     GoogleLoginStartOut,
     GoogleLoginVerifyIn,
     GoogleLoginVerifyOut,
+    GoogleLoginTransitionIn,
+    GoogleLoginTransitionOut,
 )
 from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 from app.services import guest_access
 from app.services import login_transactions
+from app.services import google_login_transition as google_login_transition_service
 from app.services.google_identity import GoogleIdentityError, verify_google_identity_from_settings
 
 log = logging.getLogger(__name__)
@@ -409,6 +413,40 @@ def google_login_verify(
     except (GoogleIdentityError, login_transactions.LoginTransactionError):
         raise RequestAuthorityError() from None
     return GoogleLoginVerifyOut(expires_at=verified.expires_at)
+
+
+@private_router.post(
+    "/auth/google/transition",
+    response_model=GoogleLoginTransitionOut,
+    dependencies=[Depends(_write_guard)],
+)
+def google_login_transition(
+    payload: GoogleLoginTransitionIn,
+    request: Request,
+    response: Response,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> GoogleLoginTransitionOut:
+    """Apply an explicit Claim or Portfolio Transfer choice."""
+    state = request.cookies.get(GOOGLE_STATE_COOKIE_NAME)
+    guest_secret = request.cookies.get(GUEST_COOKIE_NAME)
+    if state is None or guest_secret is None:
+        raise RequestAuthorityError()
+    try:
+        result = google_login_transition_service.transition(
+            session,
+            authority,
+            state,
+            guest_secret,
+            payload.action,
+            rename=payload.rename,
+            clock=lambda: datetime.now(timezone.utc),
+        )
+    except google_login_transition_service.GoogleLoginTransitionError:
+        raise RequestAuthorityError() from None
+    set_user_cookie(response, result.public_id, result.secret.get_secret_value())
+    delete_guest_cookie(response)
+    return GoogleLoginTransitionOut(action=result.action)
 
 
 def _scope(

@@ -328,3 +328,13 @@ class GoogleLoginVerifyIn(BaseModel):
 class GoogleLoginVerifyOut(BaseModel):
     expires_at: datetime
     choice_needed: bool = True
+
+
+class GoogleLoginTransitionIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    action: Literal["claim", "transfer"]
+    rename: str | None = Field(default=None, max_length=128)
+
+
+class GoogleLoginTransitionOut(BaseModel):
+    action: Literal["claim", "transfer"]
