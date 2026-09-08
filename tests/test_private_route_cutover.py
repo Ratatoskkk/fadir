@@ -1,12 +1,18 @@
 from fastapi.testclient import TestClient
 from decimal import Decimal
 from datetime import date
+import inspect
 
 import pytest
 
 from app.models import Instrument, Portfolio, Side, Transaction, Workspace
 from app.api.request_authority import RequestAuthority, get_request_authority
 from app.api.csrf import CSRF_COOKIE_NAME, CSRF_HEADER_NAME, issue_csrf_token
+from app.api import routes
+
+
+def test_first_save_accepts_requested_base_currency():
+    assert "base_currency" in inspect.signature(routes.create_transaction).parameters
 
 
 @pytest.fixture
@@ -99,7 +105,7 @@ def test_empty_read_does_not_create_and_first_save_creates_default(private_clien
     assert session.query(Portfolio).filter_by(workspace_id=second.id).count() == 0
 
     response = client.post(
-        "/api/transactions",
+        "/api/transactions?base_currency=USD",
         json={
             "ticker": "SYN",
             "trade_date": "2026-02-01",
@@ -112,6 +118,7 @@ def test_empty_read_does_not_create_and_first_save_creates_default(private_clien
     assert response.status_code == 201, response.text
     portfolio = session.query(Portfolio).filter_by(workspace_id=second.id).one()
     assert portfolio.name == "Ana Portföy"
+    assert portfolio.base_currency == "USD"
     assert response.json()["id"]
 
 

@@ -461,6 +461,7 @@ def _scope(
     portfolio_id: int | None,
     *,
     for_write: bool = False,
+    base_currency: str = "TRY",
 ) -> PortfolioScope | None:
     try:
         if for_write:
@@ -468,6 +469,7 @@ def _scope(
                 session,
                 workspace_id=authority.workspace_id,
                 portfolio_id=portfolio_id,
+                base_currency=base_currency,
             )
         return PortfolioScope.select(
             session,
@@ -763,6 +765,7 @@ def create_transaction(
     authority: AuthorityDep,
     settings: SettingsDep,
     portfolio_id: int | None = Query(default=None),
+    base_currency: str | None = Query(default=None, min_length=3, max_length=3, pattern="^[A-Za-z]{3}$"),
 ) -> TransactionOut:
     instrument = session.execute(
         select(Instrument).where(Instrument.ticker == payload.ticker)
@@ -787,7 +790,13 @@ def create_transaction(
         fx_provider=provider,
         note=payload.note,
     )
-    scope = _scope(session, authority, portfolio_id, for_write=True)
+    scope = _scope(
+        session,
+        authority,
+        portfolio_id,
+        for_write=True,
+        base_currency=(base_currency or "TRY").upper(),
+    )
     assert scope is not None
     scope.add(txn)
     session.flush()
