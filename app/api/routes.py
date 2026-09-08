@@ -67,12 +67,18 @@ from app.schemas import (
     GoogleLoginVerifyOut,
     GoogleLoginTransitionIn,
     GoogleLoginTransitionOut,
+    PortfolioMergeRequest,
+    PortfolioMergeConfirmIn,
+    PortfolioMergePreviewOut,
+    PortfolioMergeConfirmOut,
 )
 from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 from app.services import guest_access
 from app.services import login_transactions
 from app.services import google_login_transition as google_login_transition_service
+from app.services import portfolio_merge as portfolio_merge_service
+from app.services.portfolio_merge import PortfolioMergeError
 from app.services.google_identity import GoogleIdentityError, verify_google_identity_from_settings
 
 log = logging.getLogger(__name__)
@@ -655,6 +661,61 @@ def _load_transactions(session: Session, scope: PortfolioScope) -> list[Transact
         .order_by(Transaction.trade_date.desc(), Transaction.id.desc())
     )
     return list(session.execute(stmt).scalars())
+
+
+def _merge_guest_secret(request: Request) -> str:
+    token = request.cookies.get(GUEST_COOKIE_NAME)
+    if not token:
+        raise RequestAuthorityError()
+    return token
+
+
+@private_router.post(
+    "/portfolio/merge/preview",
+    response_model=PortfolioMergePreviewOut,
+    dependencies=[Depends(_write_guard)],
+)
+def portfolio_merge_preview(
+    payload: PortfolioMergeRequest,
+    request: Request,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> PortfolioMergePreviewOut:
+    try:
+        return portfolio_merge_service.preview(
+            session,
+            authority=authority,
+            guest_secret=_merge_guest_secret(request),
+            source_portfolio_id=payload.source_portfolio_id,
+            target_portfolio_id=payload.target_portfolio_id,
+        )
+    except PortfolioMergeError as exc:
+        raise HTTPException(409, "request rejected") from exc
+
+
+@private_router.post(
+    "/portfolio/merge/confirm",
+    response_model=PortfolioMergeConfirmOut,
+    dependencies=[Depends(_write_guard)],
+)
+def portfolio_merge_confirm(
+    payload: PortfolioMergeConfirmIn,
+    request: Request,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> PortfolioMergeConfirmOut:
+    try:
+        return portfolio_merge_service.confirm(
+            session,
+            authority=authority,
+            guest_secret=_merge_guest_secret(request),
+            source_portfolio_id=payload.source_portfolio_id,
+            target_portfolio_id=payload.target_portfolio_id,
+            revision_token=payload.revision_token,
+            decisions=payload.decisions,
+        )
+    except PortfolioMergeError as exc:
+        raise HTTPException(409, "request rejected") from exc
 
 
 @private_router.get("/transactions", response_model=list[TransactionOut])

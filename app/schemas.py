@@ -338,3 +338,68 @@ class GoogleLoginTransitionIn(BaseModel):
 
 class GoogleLoginTransitionOut(BaseModel):
     action: Literal["claim", "transfer"]
+
+
+class PortfolioMergeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_portfolio_id: int = Field(gt=0)
+    target_portfolio_id: int = Field(gt=0)
+
+
+class PortfolioMergeDecision(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source_transaction_id: int = Field(gt=0)
+    action: Literal["keep", "skip"]
+
+
+class PortfolioMergeConfirmIn(PortfolioMergeRequest):
+    revision_token: str = Field(min_length=32, max_length=128)
+    decisions: list[PortfolioMergeDecision]
+
+
+class PortfolioMergeTransactionOut(BaseModel):
+    id: int
+    instrument_id: int
+    currency: str
+    trade_date: date
+    side: Literal["BUY", "SELL"]
+    quantity: Money
+    price_native: Money
+    fees_native: Money
+    fx_rate_to_try: Money
+    fx_rate_date: date
+    fx_provider: str
+    note: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class PortfolioMergeDifference(BaseModel):
+    field: Literal["fees_native", "fx_rate_to_try", "fx_rate_date", "fx_provider"]
+    source: str | None
+    target: str | None
+
+
+class PortfolioMergeCandidateOut(BaseModel):
+    source: PortfolioMergeTransactionOut
+    target: PortfolioMergeTransactionOut
+    source_count: int
+    target_count: int
+    differences: list[PortfolioMergeDifference]
+
+
+class PortfolioMergePreviewOut(BaseModel):
+    source_portfolio_id: int
+    target_portfolio_id: int
+    source_base_currency: str
+    target_base_currency: str
+    candidates: list[PortfolioMergeCandidateOut]
+    movable_source_rows: list[PortfolioMergeTransactionOut]
+    revision_token: str
+
+
+class PortfolioMergeConfirmOut(BaseModel):
+    moved_count: int
+    skipped_count: int
