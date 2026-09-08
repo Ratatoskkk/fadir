@@ -312,3 +312,9 @@ class GuestBootstrapOut(BaseModel):
     user: None = None
     portfolios: list[Any] = Field(default_factory=list)
     migration_required: bool = False
+
+
+class GoogleLoginStartOut(BaseModel):
+    client_id: str
+    nonce: str
+    expires_at: datetime

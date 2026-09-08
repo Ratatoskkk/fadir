@@ -26,6 +26,7 @@ from app.api.request_authority import (
     GUEST_COOKIE_MAX_AGE,
     GUEST_COOKIE_NAME,
     RequestAuthority,
+    RequestAuthorityConfigurationError,
     RequestAuthorityError,
     delete_guest_cookie,
     get_request_authority,
@@ -60,14 +61,18 @@ from app.schemas import (
     TransactionCreate,
     TransactionOut,
     TransactionPatch,
+    GoogleLoginStartOut,
 )
 from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 from app.services import guest_access
+from app.services import login_transactions
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api")
 private_router = APIRouter(prefix="/api", route_class=RequestTransactionRoute)
+GOOGLE_STATE_COOKIE_NAME = "__Host-fadir-google-state"
+GOOGLE_STATE_COOKIE_POLICY = CookiePolicy(max_age=600)
 
 SessionDep = Annotated[Session, Depends(get_session)]
 RequestSessionDep = Annotated[Session, Depends(request_session)]
@@ -330,6 +335,42 @@ def bootstrap_guest(
         response.status_code = 201
     return GuestBootstrapOut(
         created=created, guest=_guest_bootstrap_context(session, row)
+    )
+
+
+@private_router.post(
+    "/auth/google/start",
+    response_model=GoogleLoginStartOut,
+    dependencies=[Depends(_write_guard)],
+)
+def google_login_start(
+    response: Response,
+    session: RequestSessionDep,
+    _authority: AuthorityDep,
+    settings: SettingsDep,
+) -> GoogleLoginStartOut:
+    """Begin a browser-bound Google login transaction."""
+    google = getattr(settings, "google", None)
+    client_id = getattr(google, "web_client_id", None)
+    if not client_id:
+        raise RequestAuthorityConfigurationError()
+    issued = login_transactions.issue(
+        session, clock=lambda: datetime.now(timezone.utc)
+    )
+    response.set_cookie(
+        GOOGLE_STATE_COOKIE_NAME,
+        issued.state.get_secret_value(),
+        max_age=GOOGLE_STATE_COOKIE_POLICY.max_age,
+        path=GOOGLE_STATE_COOKIE_POLICY.path,
+        domain=GOOGLE_STATE_COOKIE_POLICY.domain,
+        secure=GOOGLE_STATE_COOKIE_POLICY.secure,
+        httponly=GOOGLE_STATE_COOKIE_POLICY.httponly,
+        samesite=GOOGLE_STATE_COOKIE_POLICY.samesite,
+    )
+    return GoogleLoginStartOut(
+        client_id=client_id,
+        nonce=issued.nonce.get_secret_value(),
+        expires_at=issued.expires_at,
     )
 
 
