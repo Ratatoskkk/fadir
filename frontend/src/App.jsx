@@ -77,6 +77,15 @@ function loadOrder() {
 
 const dfHm = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" });
 const dfWeekday = new Intl.DateTimeFormat("tr-TR", { weekday: "short" });
+const dfGuestExpiry = new Intl.DateTimeFormat("tr-TR", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+function guestExpiryLabel(iso) {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? String(iso) : dfGuestExpiry.format(date);
+}
 
 /** "yarın 09:30" / "16:30" — short label for when polling resumes. */
 function nextOpenLabel(iso) {
@@ -213,6 +222,8 @@ export default function App() {
   //: "is this actually still updating?" is answerable at a glance.
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState(null);
+  const [guestAccess, setGuestAccess] = useState(null);
+  const [guestNoticeDismissed, setGuestNoticeDismissed] = useState(false);
 
   // Avoids a stale-closure re-subscribe loop in the polling effect.
   const loadRef = useRef(null);
@@ -302,12 +313,33 @@ export default function App() {
     [run, loadMarket, loadLedger],
   );
 
+  const readGuestAccess = useCallback(async () => {
+    const bootstrap = await api.bootstrapGuest();
+    setGuestAccess({
+      noticeDue: bootstrap?.guest?.notice_due === true,
+      expiresAt: bootstrap?.guest?.expires_at ?? null,
+    });
+  }, []);
+
+  const reloadAfterTransaction = useCallback(async () => {
+    await loadAll();
+    try {
+      await readGuestAccess();
+    } catch {
+      // A transaction that succeeded must not become a failed UI action because this
+      // non-critical notice refresh is unavailable.
+    }
+  }, [loadAll, readGuestAccess]);
+
   // The poll wants prices, not the ledger.
   loadRef.current = () => run(() => loadMarket());
 
   useEffect(() => {
-    loadAll();
-  }, [loadAll]);
+    run(async () => {
+      await readGuestAccess();
+      await Promise.all([loadMarket(), loadLedger()]);
+    });
+  }, [run, readGuestAccess, loadMarket, loadLedger]);
 
   // Poll fast while something is trading, slowly when nothing is.
   //
@@ -483,12 +515,21 @@ export default function App() {
     }
   }
 
-  if (loading && !portfolio) {
+  if (!portfolio) {
     return (
       <div className="app">
-        <div className="empty">
-          <span className="spinner" /> Portföy yükleniyor…
-        </div>
+        {error ? (
+          <div className="banner err" role="alert">
+            <span aria-hidden="true">⚠</span>
+            <div>
+              <strong>Bağlantı hatası:</strong> {error}
+            </div>
+          </div>
+        ) : (
+          <div className="empty">
+            <span className="spinner" /> Portföy yükleniyor…
+          </div>
+        )}
       </div>
     );
   }
@@ -641,6 +682,25 @@ export default function App() {
         <div className={`refresh-bar ${fetching ? "on" : ""}`} aria-hidden="true" />
 
         <div className="content">
+      {guestAccess?.noticeDue && !guestNoticeDismissed && (
+        <div className="banner warn" role="status">
+          <span aria-hidden="true">ℹ</span>
+          <div>
+            <strong>Kaydedilen misafir çalışma alanı geçicidir.</strong> Bu alan{" "}
+            {guestExpiryLabel(guestAccess.expiresAt)} tarihinde sona erer.
+          </div>
+          <button
+            type="button"
+            className="iconbtn"
+            aria-label="Misafir çalışma alanı bildirimini kapat"
+            title="Bildirimi kapat"
+            onClick={() => setGuestNoticeDismissed(true)}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {error && (
         <div className="banner err">
           <span aria-hidden="true">⚠</span>
@@ -744,7 +804,7 @@ export default function App() {
                 <TransactionManager
                   transactions={transactions}
                   instruments={instruments}
-                  onChanged={() => loadAll()}
+                  onChanged={reloadAfterTransaction}
                 />
               )}
             </Widget>
