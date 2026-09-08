@@ -27,6 +27,7 @@ OWNERSHIP_REVISION = (
 )
 SESSION_REVISION = ROOT / "migrations" / "versions" / "0005_user_sessions.py"
 LOGIN_IDENTITY_REVISION = ROOT / "migrations" / "versions" / "0006_login_identities.py"
+LOGIN_TRANSACTION_REVISION = ROOT / "migrations" / "versions" / "0007_login_transactions.py"
 BASELINE_TABLES = {
     "instrument",
     "transaction",
@@ -40,6 +41,7 @@ APPLICATION_TABLES = BASELINE_TABLES | DOMAIN_ROOT_TABLES | {
     "guest_access",
     "user_session",
     "login_identity",
+    "login_transaction",
 }
 POSTGRESQL_URL = "postgresql+psycopg://fadir@db.example/fadir_test"
 
@@ -519,3 +521,16 @@ def test_login_identity_revision_cycle(tmp_path, monkeypatch) -> None:
 
     command.upgrade(config, "head")
     _assert_schema_matches_models(database_url)
+
+
+def test_login_transaction_revision_is_static() -> None:
+    assert LOGIN_TRANSACTION_REVISION.is_file(), "login transaction revision is absent"
+    source = LOGIN_TRANSACTION_REVISION.read_text(encoding="utf-8")
+
+    assert "0006_login_identities" in source
+    assert "from app.models import Base" not in source
+    assert "Base.metadata" not in source
+    assert "create_all" not in source
+    assert "drop_all" not in source
+    assert source.count("op.create_table(") == 1
+    assert source.count("op.drop_table(") == 1

@@ -187,6 +187,28 @@ class LoginIdentity(Base):
     user: Mapped[User] = relationship(back_populates="login_identities")
 
 
+class LoginTransaction(Base):
+    __tablename__ = "login_transaction"
+    __table_args__ = (
+        UniqueConstraint("state_digest", name="uq_login_transaction_state_digest"),
+        CheckConstraint("length(state_digest) = 32", name="ck_login_transaction_state_digest_length"),
+        CheckConstraint("length(nonce_digest) = 32", name="ck_login_transaction_nonce_digest_length"),
+        CheckConstraint("expires_at > created_at", name="ck_login_transaction_expiry_after_creation"),
+        Index("ix_login_transaction_expires_at", "expires_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    state_digest: Mapped[bytes] = mapped_column(LargeBinary(32), nullable=False)
+    nonce_digest: Mapped[bytes] = mapped_column(LargeBinary(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=utcnow
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
 class Portfolio(Base):
     __tablename__ = "portfolio"
     __table_args__ = (
