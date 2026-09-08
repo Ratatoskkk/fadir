@@ -403,3 +403,14 @@ class PortfolioMergePreviewOut(BaseModel):
 class PortfolioMergeConfirmOut(BaseModel):
     moved_count: int
     skipped_count: int
+
+
+class PortfolioMergeOptionOut(BaseModel):
+    id: int
+    name: str
+    base_currency: str
+
+
+class PortfolioMergeOptionsOut(BaseModel):
+    source: list[PortfolioMergeOptionOut]
+    target: list[PortfolioMergeOptionOut]

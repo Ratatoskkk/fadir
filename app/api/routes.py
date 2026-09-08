@@ -71,6 +71,7 @@ from app.schemas import (
     PortfolioMergeConfirmIn,
     PortfolioMergePreviewOut,
     PortfolioMergeConfirmOut,
+    PortfolioMergeOptionsOut,
 )
 from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
@@ -671,6 +672,25 @@ def _merge_guest_secret(request: Request) -> str:
     if not token:
         raise RequestAuthorityError()
     return token
+
+
+@private_router.get(
+    "/portfolio/merge/options",
+    response_model=PortfolioMergeOptionsOut,
+)
+def portfolio_merge_options(
+    request: Request,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> PortfolioMergeOptionsOut:
+    try:
+        return portfolio_merge_service.options(
+            session,
+            authority=authority,
+            guest_secret=_merge_guest_secret(request),
+        )
+    except PortfolioMergeError:
+        raise RequestAuthorityError() from None
 
 
 @private_router.post(

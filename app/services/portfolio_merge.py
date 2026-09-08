@@ -20,6 +20,8 @@ from app.schemas import (
     PortfolioMergeConfirmOut,
     PortfolioMergeDecision,
     PortfolioMergeDifference,
+    PortfolioMergeOptionOut,
+    PortfolioMergeOptionsOut,
     PortfolioMergePreviewOut,
     PortfolioMergeTransactionOut,
 )
@@ -166,6 +168,54 @@ def _locked_portfolios(
     if source.workspace_id != source_workspace_id or target.workspace_id != target_workspace_id:
         raise PortfolioMergeError()
     return source, target
+
+
+def options(
+    session: Session,
+    *,
+    authority: RequestAuthority,
+    guest_secret: str,
+) -> PortfolioMergeOptionsOut:
+    if not authority.is_user or authority.user_id is None:
+        raise PortfolioMergeError()
+    try:
+        guest = guest_access.require(
+            session, guest_secret, clock=lambda: datetime.now(timezone.utc)
+        )
+    except guest_access.GuestAccessError:
+        raise PortfolioMergeError() from None
+    workspaces = session.execute(
+        select(Workspace)
+        .where(Workspace.id.in_([guest.workspace_id, authority.workspace_id]))
+        .order_by(Workspace.id)
+        .with_for_update()
+    ).scalars().all()
+    by_id = {workspace.id: workspace for workspace in workspaces}
+    source_workspace = by_id.get(guest.workspace_id)
+    target_workspace = by_id.get(authority.workspace_id)
+    if (
+        source_workspace is None
+        or target_workspace is None
+        or source_workspace.user_id is not None
+        or target_workspace.user_id != authority.user_id
+    ):
+        raise PortfolioMergeError()
+    portfolios = session.execute(
+        select(Portfolio)
+        .where(Portfolio.workspace_id.in_([guest.workspace_id, authority.workspace_id]))
+        .order_by(Portfolio.id)
+    ).scalars().all()
+    source = [
+        PortfolioMergeOptionOut(id=portfolio.id, name=portfolio.name, base_currency=portfolio.base_currency)
+        for portfolio in portfolios
+        if portfolio.workspace_id == guest.workspace_id
+    ]
+    target = [
+        PortfolioMergeOptionOut(id=portfolio.id, name=portfolio.name, base_currency=portfolio.base_currency)
+        for portfolio in portfolios
+        if portfolio.workspace_id == authority.workspace_id
+    ]
+    return PortfolioMergeOptionsOut(source=source, target=target)
 
 
 def _pair(source_rows: Iterable[_Row], target_rows: Iterable[_Row]):
