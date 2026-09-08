@@ -53,6 +53,7 @@ from app.schemas import (
     IntradayPointOut,
     LiquidationOut,
     PortfolioOut,
+    PortfolioOptionOut,
     PositionOut,
     ProviderHealth,
     RealizedOut,
@@ -483,6 +484,19 @@ def _scope(
 
 
 # -- portfolio ---------------------------------------------------------------------
+
+
+@private_router.get("/portfolios", response_model=list[PortfolioOptionOut])
+def list_portfolios(
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> list[PortfolioOptionOut]:
+    rows = session.execute(
+        select(Portfolio.id, Portfolio.name, Portfolio.base_currency)
+        .where(Portfolio.workspace_id == authority.workspace_id)
+        .order_by(Portfolio.id)
+    )
+    return [PortfolioOptionOut.model_validate(row._mapping) for row in rows]
 
 
 @private_router.get("/portfolio", response_model=PortfolioOut)

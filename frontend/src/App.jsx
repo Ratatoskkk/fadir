@@ -21,6 +21,7 @@ import Brand from "./components/Brand.jsx";
 import GoogleIdentityPanel from "./components/GoogleIdentityPanel.jsx";
 import HeroCard from "./components/HeroCard.jsx";
 import PositionsTable from "./components/PositionsTable.jsx";
+import PortfolioSelector from "./components/PortfolioSelector.jsx";
 import TransactionManager from "./components/TransactionManager.jsx";
 
 // Recharts is by far the largest dependency and the chart sits below the fold, so the
@@ -196,6 +197,8 @@ function Widget({
 }
 
 export default function App() {
+  const [portfolios, setPortfolios] = useState([]);
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
   const [history, setHistory] = useState(null);
   const [intraday, setIntraday] = useState(null);
@@ -228,6 +231,8 @@ export default function App() {
 
   // Avoids a stale-closure re-subscribe loop in the polling effect.
   const loadRef = useRef(null);
+  const portfolioIdRef = useRef(null);
+  const loadVersionRef = useRef(0);
 
   // The selected range is read by the loaders but must not be one of their dependencies:
   // if it were, changing the range would rebuild every callback, which would retrigger
@@ -260,18 +265,19 @@ export default function App() {
   const flashMiniReturn = useFlash(portfolio?.totals?.pnl_try);
 
   const loadHistory = useCallback(
-    async (nextRange, { force = false, tickers, pan } = {}) => {
+    async (nextRange, { force = false, tickers, pan, portfolioId } = {}) => {
+      const selectedId = portfolioId ?? portfolioIdRef.current;
       const target = nextRange ?? rangeRef.current;
       const focus = tickers ?? focusRef.current;
       const at = pan ?? panRef.current;
       if (isIntradayRange(target)) {
-        setIntraday(
-          await api.intraday({ interval: "5m", force, tickers: focus, offset: at }),
-        );
+        const value = await api.intraday({ interval: "5m", force, tickers: focus, offset: at, portfolioId: selectedId });
+        if (portfolioIdRef.current === selectedId) setIntraday(value);
         return;
       }
       const { from, to } = rangeWindow(target, at);
-      setHistory(await api.history({ from, to, freq: "D", tickers: focus }));
+      const value = await api.history({ from, to, freq: "D", tickers: focus, portfolioId: selectedId });
+      if (portfolioIdRef.current === selectedId) setHistory(value);
     },
     [],
   );
@@ -280,19 +286,38 @@ export default function App() {
   // on the 1G view the whole point is that it moves, and on the longer ranges today's
   // point shifts with the price.
   const loadMarket = useCallback(
-    async ({ force = false } = {}) => {
-      const [p] = await Promise.all([api.portfolio(), loadHistory(undefined, { force })]);
-      setPortfolio(p);
+    async ({ force = false, portfolioId } = {}) => {
+      const selectedId = portfolioId ?? portfolioIdRef.current;
+      const [p] = await Promise.all([api.portfolio(selectedId), loadHistory(undefined, { force, portfolioId: selectedId })]);
+      if (portfolioIdRef.current === selectedId) setPortfolio(p);
     },
     [loadHistory],
   );
 
   // Transactions and instruments only change when the user changes them, so they are
   // fetched on mount and after a mutation rather than on every tick of the poll.
-  const loadLedger = useCallback(async () => {
-    const [t, i] = await Promise.all([api.transactions(), api.instruments()]);
-    setTransactions(t);
+  const loadLedger = useCallback(async (portfolioId) => {
+    const selectedId = portfolioId ?? portfolioIdRef.current;
+    const [t, i] = await Promise.all([api.transactions(selectedId), api.instruments()]);
+    if (portfolioIdRef.current === selectedId) setTransactions(t);
     setInstruments(i);
+  }, []);
+
+  const loadPortfolios = useCallback(async () => {
+    const value = await api.portfolios();
+    const list = (Array.isArray(value) ? value : []).filter(
+      (item) => item && Number.isFinite(Number(item.id)) && item.name && item.base_currency,
+    );
+    const current = portfolioIdRef.current;
+    const selected = list.some((item) => Number(item.id) === current)
+      ? current
+      : list.length > 0
+        ? Number(list[0].id)
+        : null;
+    portfolioIdRef.current = selected;
+    setPortfolios(list);
+    setSelectedPortfolioId(selected);
+    return selected;
   }, []);
 
   const run = useCallback(async (work) => {
@@ -310,8 +335,11 @@ export default function App() {
   }, []);
 
   const loadAll = useCallback(
-    ({ force = false } = {}) => run(() => Promise.all([loadMarket({ force }), loadLedger()])),
-    [run, loadMarket, loadLedger],
+    ({ force = false } = {}) => run(async () => {
+      const selectedId = await loadPortfolios();
+      await Promise.all([loadMarket({ force, portfolioId: selectedId }), loadLedger(selectedId)]);
+    }),
+    [run, loadPortfolios, loadMarket, loadLedger],
   );
 
   const readGuestAccess = useCallback(async () => {
@@ -347,9 +375,10 @@ export default function App() {
   useEffect(() => {
     run(async () => {
       await readGuestAccess();
-      await Promise.all([loadMarket(), loadLedger()]);
+      const selectedId = await loadPortfolios();
+      await Promise.all([loadMarket({ portfolioId: selectedId }), loadLedger(selectedId)]);
     });
-  }, [run, readGuestAccess, loadMarket, loadLedger]);
+  }, [run, readGuestAccess, loadPortfolios, loadMarket, loadLedger]);
 
   // Poll fast while something is trading, slowly when nothing is.
   //
@@ -481,6 +510,18 @@ export default function App() {
     }
   }
 
+  async function selectPortfolio(id) {
+    if (id === portfolioIdRef.current) return;
+    portfolioIdRef.current = id;
+    setSelectedPortfolioId(id);
+    setPortfolio(null);
+    setHistory(null);
+    setIntraday(null);
+    setTransactions([]);
+    setLoading(true);
+    await run(() => Promise.all([loadMarket({ portfolioId: id }), loadLedger(id)]));
+  }
+
   async function changeRange(next) {
     setRange(next);
     // A window offset measured in "1A"s means nothing once the range is "1H", so
@@ -528,6 +569,12 @@ export default function App() {
   if (!portfolio) {
     return (
       <div className="app">
+        <PortfolioSelector
+          portfolios={portfolios}
+          selectedId={selectedPortfolioId}
+          loading={loading}
+          onChange={selectPortfolio}
+        />
         {error ? (
           <div className="banner err" role="alert">
             <span aria-hidden="true">⚠</span>
@@ -692,6 +739,12 @@ export default function App() {
         <div className={`refresh-bar ${fetching ? "on" : ""}`} aria-hidden="true" />
 
         <div className="content">
+      <PortfolioSelector
+        portfolios={portfolios}
+        selectedId={selectedPortfolioId}
+        loading={loading || fetching}
+        onChange={selectPortfolio}
+      />
       {guestAccess?.noticeDue && !guestNoticeDismissed && (
         <div className="banner warn" role="status">
           <span aria-hidden="true">ℹ</span>
@@ -816,6 +869,7 @@ export default function App() {
                 <TransactionManager
                   transactions={transactions}
                   instruments={instruments}
+                  portfolioId={selectedPortfolioId}
                   onChanged={reloadAfterTransaction}
                 />
               )}

@@ -769,6 +769,26 @@ tfoot td:first-child { text-align: left; }
   border-radius: var(--radius-sm);
 }
 
+.portfolio-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 12px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.portfolio-selector > div { display: grid; gap: 3px; min-width: 0; }
+.portfolio-selector-hint, .portfolio-selector-status { font-size: 12px; color: var(--text-faint); }
+.portfolio-selector-field select { min-width: 190px; }
+
+@media (max-width: 600px) {
+  .portfolio-selector { align-items: stretch; flex-direction: column; }
+  .portfolio-selector-field select { width: 100%; min-width: 0; }
+}
+
 .group-head { cursor: pointer; }
 .group-head td { background: var(--surface); }
 .freeze-first .group-head td:first-child { background: var(--surface); }

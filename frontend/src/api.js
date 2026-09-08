@@ -42,7 +42,14 @@ const withTickers = (params, tickers) => {
   return params;
 };
 
+const withPortfolioId = (path, portfolioId) => {
+  if (portfolioId === null || portfolioId === undefined || portfolioId === "") return path;
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}portfolio_id=${encodeURIComponent(portfolioId)}`;
+};
+
 export const api = {
+  portfolios: () => request("/api/portfolios"),
   bootstrapGuest: () => request("/api/guest/bootstrap", { method: "POST" }),
   googleStart: () => request("/api/auth/google/start", { method: "POST" }),
   googleVerify: (payload) =>
@@ -54,26 +61,26 @@ export const api = {
     request("/api/portfolio/merge/preview", { method: "POST", body: JSON.stringify(payload) }),
   mergeConfirm: (payload) =>
     request("/api/portfolio/merge/confirm", { method: "POST", body: JSON.stringify(payload) }),
-  portfolio: () => request("/api/portfolio"),
-  history: ({ from, to, freq = "D", tickers } = {}) => {
+  portfolio: (portfolioId) => request(withPortfolioId("/api/portfolio", portfolioId)),
+  history: ({ from, to, freq = "D", tickers, portfolioId } = {}) => {
     const params = new URLSearchParams();
     if (from) params.set("from", from);
     if (to) params.set("to", to);
     params.set("freq", freq);
-    return request(`/api/portfolio/history?${withTickers(params, tickers)}`);
+    return request(withPortfolioId(`/api/portfolio/history?${withTickers(params, tickers)}`, portfolioId));
   },
-  intraday: ({ interval = "5m", force = false, tickers, offset = 0 } = {}) => {
+  intraday: ({ interval = "5m", force = false, tickers, offset = 0, portfolioId } = {}) => {
     const params = new URLSearchParams({ interval });
     if (force) params.set("force", "true");
     if (offset) params.set("offset", String(offset));
-    return request(`/api/portfolio/intraday?${withTickers(params, tickers)}`);
+    return request(withPortfolioId(`/api/portfolio/intraday?${withTickers(params, tickers)}`, portfolioId));
   },
-  transactions: () => request("/api/transactions"),
-  createTransaction: (payload) =>
-    request("/api/transactions", { method: "POST", body: JSON.stringify(payload) }),
-  updateTransaction: (id, payload) =>
-    request(`/api/transactions/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
-  deleteTransaction: (id) => request(`/api/transactions/${id}`, { method: "DELETE" }),
+  transactions: (portfolioId) => request(withPortfolioId("/api/transactions", portfolioId)),
+  createTransaction: (payload, portfolioId) =>
+    request(withPortfolioId("/api/transactions", portfolioId), { method: "POST", body: JSON.stringify(payload) }),
+  updateTransaction: (id, payload, portfolioId) =>
+    request(withPortfolioId(`/api/transactions/${id}`, portfolioId), { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteTransaction: (id, portfolioId) => request(withPortfolioId(`/api/transactions/${id}`, portfolioId), { method: "DELETE" }),
   instruments: () => request("/api/instruments"),
   refresh: () => request("/api/refresh", { method: "POST" }),
   health: () => request("/api/health"),

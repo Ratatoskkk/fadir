@@ -153,6 +153,12 @@ class PortfolioOut(BaseModel):
     next_market_open: datetime | None = None
 
 
+class PortfolioOptionOut(BaseModel):
+    id: int
+    name: str
+    base_currency: str
+
+
 class HistoryPointOut(BaseModel):
     date: date
     value_try: Money

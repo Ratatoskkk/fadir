@@ -65,7 +65,7 @@ function groupByTicker(transactions) {
   return [...groups.values()].sort((a, b) => b.totalTry - a.totalTry);
 }
 
-export default function TransactionManager({ transactions, instruments, onChanged }) {
+export default function TransactionManager({ transactions, instruments, portfolioId, onChanged }) {
   const [form, setForm] = useState(BLANK);
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -103,7 +103,7 @@ export default function TransactionManager({ transactions, instruments, onChange
       // auto-fetches the published rate for the trade date (US-6.1).
       if (form.fx_rate_override.trim()) payload.fx_rate_override = form.fx_rate_override;
 
-      await api.createTransaction(payload);
+      await api.createTransaction(payload, portfolioId);
       setForm({ ...BLANK, ticker: form.ticker, trade_date: form.trade_date });
       await onChanged();
     } catch (err) {
@@ -127,7 +127,7 @@ export default function TransactionManager({ transactions, instruments, onChange
       if (editing.fx_rate_override?.trim()) {
         payload.fx_rate_override = editing.fx_rate_override;
       }
-      await api.updateTransaction(id, payload);
+      await api.updateTransaction(id, payload, portfolioId);
       setEditing(null);
       await onChanged();
     } catch (err) {
@@ -145,7 +145,7 @@ export default function TransactionManager({ transactions, instruments, onChange
     setBusy(true);
     setError(null);
     try {
-      await api.deleteTransaction(txn.id);
+      await api.deleteTransaction(txn.id, portfolioId);
       await onChanged();
     } catch (err) {
       setError(err.message);
