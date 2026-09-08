@@ -40,7 +40,7 @@ class GoogleLoginTransitionBusy(GoogleLoginTransitionError):
 
 class GoogleLoginTransitionResult(BaseModel):
     model_config = ConfigDict(frozen=True)
-    action: Literal["claim", "transfer"]
+    action: Literal["claim", "transfer", "merge"]
     public_id: str = Field(exclude=True, repr=False)
     secret: SecretStr = Field(exclude=True, repr=False)
 
@@ -191,9 +191,12 @@ def transition(
             if replacement is not None:
                 raise GoogleLoginTransitionError()
             user_id = None
-        elif action == "transfer":
+        elif action in ("transfer", "merge"):
             if identity is None:
                 raise GoogleLoginTransitionError()
+            if action == "merge":
+                if _name(rename) is not None:
+                    raise GoogleLoginTransitionError()
             user = connection.execute(
                 select(_USER).where(_USER.c.id == identity["user_id"]).with_for_update(nowait=True)
             ).mappings().one_or_none()
@@ -204,9 +207,10 @@ def transition(
             ).mappings().one_or_none()
             if user is None or target_workspace is None:
                 raise GoogleLoginTransitionError()
-            transfer_plan = _transfer_portfolios(
-                connection, guest_workspace["id"], target_workspace["id"], rename
-            )
+            if action == "transfer":
+                transfer_plan = _transfer_portfolios(
+                    connection, guest_workspace["id"], target_workspace["id"], rename
+                )
             user_id = identity["user_id"]
         else:
             raise GoogleLoginTransitionError()
@@ -214,7 +218,8 @@ def transition(
         consumed = login_transactions.consume_verified(session, state, clock=lambda: now)
         if consumed.issuer != issuer or consumed.subject != subject:
             raise GoogleLoginTransitionError()
-        guest_access.revoke(session, guest_secret, clock=lambda: now)
+        if action != "merge":
+            guest_access.revoke(session, guest_secret, clock=lambda: now)
         if action == "claim":
             user_id = connection.scalar(
                 insert(_USER)
@@ -235,7 +240,7 @@ def transition(
                 .where(_WORKSPACE.c.id == guest_workspace["id"])
                 .values(user_id=user_id, updated_at=now.replace(tzinfo=None))
             )
-        else:
+        elif action == "transfer":
             for portfolio_id, new_name in transfer_plan:
                 values = {"workspace_id": target_workspace["id"]}
                 if new_name is not None:

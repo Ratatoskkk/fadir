@@ -433,7 +433,7 @@ def google_login_transition(
     session: RequestSessionDep,
     authority: AuthorityDep,
 ) -> GoogleLoginTransitionOut:
-    """Apply an explicit Claim or Portfolio Transfer choice."""
+    """Apply an explicit Claim, Portfolio Transfer, or Portfolio Merge choice."""
     state = request.cookies.get(GOOGLE_STATE_COOKIE_NAME)
     guest_secret = request.cookies.get(GUEST_COOKIE_NAME)
     if state is None or guest_secret is None:
@@ -451,7 +451,8 @@ def google_login_transition(
     except google_login_transition_service.GoogleLoginTransitionError:
         raise RequestAuthorityError() from None
     set_user_cookie(response, result.public_id, result.secret.get_secret_value())
-    delete_guest_cookie(response)
+    if result.action != "merge":
+        delete_guest_cookie(response)
     return GoogleLoginTransitionOut(action=result.action)
 
 

@@ -332,12 +332,12 @@ class GoogleLoginVerifyOut(BaseModel):
 
 class GoogleLoginTransitionIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    action: Literal["claim", "transfer"]
+    action: Literal["claim", "transfer", "merge"]
     rename: str | None = Field(default=None, max_length=128)
 
 
 class GoogleLoginTransitionOut(BaseModel):
-    action: Literal["claim", "transfer"]
+    action: Literal["claim", "transfer", "merge"]
 
 
 class PortfolioMergeRequest(BaseModel):
