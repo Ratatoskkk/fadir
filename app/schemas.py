@@ -182,6 +182,45 @@ class PortfolioOptionOut(BaseModel):
     base_currency: str
 
 
+class PortfolioExportTransactionOut(BaseModel):
+    id: int
+    portfolio_id: int
+    instrument_id: int
+    ticker: str
+    exchange: str
+    yf_symbol: str
+    currency: str
+    instrument_name: str
+    instrument_active: bool
+    trade_date: str
+    side: Literal["BUY", "SELL"]
+    quantity: str
+    price_native: str
+    fees_native: str
+    fee_currency: str | None
+    fee_fx_rate_to_try: str
+    fee_fx_rate_date: str
+    fee_fx_provider: str | None
+    fx_rate_to_try: str
+    fx_rate_date: str
+    fx_provider: str
+    note: str | None
+    created_at: str
+    updated_at: str
+
+
+class PortfolioExportSnapshotOut(BaseModel):
+    snapshot_date: str
+    payload_json: str
+    created_at: str
+
+
+class PortfolioExportOut(BaseModel):
+    portfolio: dict[str, int | str]
+    transactions: list[PortfolioExportTransactionOut]
+    snapshots: list[PortfolioExportSnapshotOut]
+
+
 class HistoryPointOut(BaseModel):
     date: date
     value_try: Money

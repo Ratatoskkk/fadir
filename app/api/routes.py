@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
@@ -29,6 +29,7 @@ from app.api.request_authority import (
     RequestAuthorityConfigurationError,
     RequestAuthorityError,
     delete_guest_cookie,
+    delete_user_cookie,
     get_request_authority,
     set_user_cookie,
     set_guest_cookie,
@@ -86,9 +87,11 @@ from app.services import login_transactions
 from app.services import google_login_transition as google_login_transition_service
 from app.services import portfolio_merge as portfolio_merge_service
 from app.services.portfolio_merge import PortfolioMergeError
+from app.services.privacy import PrivacyError, PrivacyNotFound, PrivacyService
 from app.services.google_identity import GoogleIdentityError, verify_google_identity_from_settings
 
 log = logging.getLogger(__name__)
+privacy_service = PrivacyService()
 router = APIRouter(prefix="/api")
 private_router = APIRouter(prefix="/api", route_class=RequestTransactionRoute)
 GOOGLE_STATE_COOKIE_NAME = "__Host-fadir-google-state"
@@ -525,6 +528,84 @@ def _scope(
 
 
 # -- portfolio ---------------------------------------------------------------------
+
+
+def _require_user(authority: RequestAuthority) -> int:
+    if authority.user_id is None:
+        raise RequestAuthorityError()
+    return authority.user_id
+
+
+@private_router.get("/portfolios/{portfolio_id}/export")
+def export_portfolio(
+    portfolio_id: int,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+    format: Literal["json", "csv"] = Query(default="json"),
+) -> Response:
+    try:
+        document = privacy_service.export(
+            session,
+            user_id=_require_user(authority),
+            workspace_id=authority.workspace_id,
+            portfolio_id=portfolio_id,
+            format=format,
+        )
+    except PrivacyNotFound:
+        raise HTTPException(404, "request rejected") from None
+    except PrivacyError:
+        raise RequestAuthorityError() from None
+    return Response(
+        content=document.body,
+        media_type=document.media_type,
+        headers={"Content-Disposition": f'attachment; filename="{document.filename}"'},
+    )
+
+
+@private_router.delete(
+    "/portfolios/{portfolio_id}",
+    status_code=204,
+    dependencies=[Depends(_write_guard)],
+)
+def delete_portfolio(
+    portfolio_id: int,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> None:
+    try:
+        privacy_service.delete_portfolio(
+            session,
+            user_id=_require_user(authority),
+            workspace_id=authority.workspace_id,
+            portfolio_id=portfolio_id,
+        )
+    except PrivacyNotFound:
+        raise HTTPException(404, "request rejected") from None
+    except PrivacyError:
+        raise RequestAuthorityError() from None
+
+
+@private_router.delete(
+    "/account",
+    status_code=204,
+    dependencies=[Depends(_write_guard)],
+)
+def delete_account(
+    response: Response,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> None:
+    try:
+        privacy_service.delete_account(
+            session,
+            user_id=_require_user(authority),
+            workspace_id=authority.workspace_id,
+        )
+    except PrivacyNotFound:
+        raise HTTPException(404, "request rejected") from None
+    except PrivacyError:
+        raise RequestAuthorityError() from None
+    delete_user_cookie(response)
 
 
 @private_router.get("/portfolios", response_model=list[PortfolioOptionOut])
