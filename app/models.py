@@ -86,6 +86,33 @@ class User(Base):
     login_identities: Mapped[list["LoginIdentity"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    tax_profiles: Mapped[list["TaxProfile"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class TaxProfile(Base):
+    __tablename__ = "tax_profile"
+    __table_args__ = (
+        UniqueConstraint("user_id", "jurisdiction", "tax_year", name="uq_tax_profile_user_jurisdiction_year"),
+        CheckConstraint("tax_year >= 2000", name="ck_tax_profile_year_valid"),
+        CheckConstraint("length(jurisdiction) = 2", name="ck_tax_profile_jurisdiction_length"),
+        CheckConstraint("length(currency) = 3", name="ck_tax_profile_currency_length"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    jurisdiction: Mapped[str] = mapped_column(String(2), nullable=False, default="TR")
+    tax_year: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="TRY")
+    source_url: Mapped[str] = mapped_column(String(512), nullable=False)
+    source_version: Mapped[str] = mapped_column(String(128), nullable=False)
+    assumptions_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    disclaimer: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+
+    user: Mapped[User] = relationship(back_populates="tax_profiles")
 
 
 class Workspace(Base):

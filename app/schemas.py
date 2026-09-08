@@ -138,6 +138,29 @@ class TaxOut(BaseModel):
     tax_on_fx_try: Money
     assumptions: list[str] = Field(default_factory=list)
     disclaimer: str
+    tax_year: int | None = None
+    jurisdiction: str | None = None
+    source_url: str | None = None
+    source_version: str | None = None
+
+
+class TaxProfileIn(BaseModel):
+    tax_year: int = Field(ge=2000)
+    source_url: str
+    source_version: str
+    assumptions: list[str] = Field(default_factory=list)
+    disclaimer: str
+
+
+class TaxProfileOut(BaseModel):
+    id: int
+    jurisdiction: str
+    tax_year: int
+    currency: str
+    source_url: str
+    source_version: str
+    assumptions: list[str]
+    disclaimer: str
 
 
 class PortfolioOut(BaseModel):

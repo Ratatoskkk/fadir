@@ -44,6 +44,7 @@ APPLICATION_TABLES = BASELINE_TABLES | DOMAIN_ROOT_TABLES | {
     "user_session",
     "login_identity",
     "login_transaction",
+    "tax_profile",
 }
 POSTGRESQL_URL = "postgresql+psycopg://fadir@db.example/fadir_test"
 
