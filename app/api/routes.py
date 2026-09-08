@@ -204,13 +204,17 @@ def _transaction_out(txn: Transaction) -> TransactionOut:
         quantity=txn.quantity,
         price_native=txn.price_native,
         fees_native=txn.fees_native,
+        fee_currency=txn.fee_currency,
+        fee_fx_rate_to_try=txn.fee_fx_rate_to_try,
+        fee_fx_rate_date=txn.fee_fx_rate_date,
+        fee_fx_provider=txn.fee_fx_provider,
         total_native=total_native,
         fx_rate_to_try=txn.fx_rate_to_try,
         fx_rate_date=txn.fx_rate_date,
         fx_provider=txn.fx_provider,
         fx_carried_forward=txn.fx_carried_forward,
         # Always derived, never stored (SPEC §0).
-        total_try=(total_native + txn.fees_native) * txn.fx_rate_to_try,
+        total_try=total_native * txn.fx_rate_to_try + txn.fees_native * (txn.fee_fx_rate_to_try or txn.fx_rate_to_try),
         note=txn.note,
     )
 
@@ -812,6 +816,12 @@ def create_transaction(
     rate, rate_date, provider = _resolve_fx(
         fx, instrument.currency, payload.trade_date, payload.fx_rate_override
     )
+    fee_currency = (payload.fee_currency or instrument.currency).upper()
+    fee_rate = fee_rate_date = fee_provider = None
+    if payload.fees_native and fee_currency != instrument.currency:
+        fee_rate, fee_rate_date, fee_provider = _resolve_fx(
+            fx, fee_currency, payload.trade_date, payload.fee_fx_rate_override
+        )
 
     txn = Transaction(
         instrument_id=instrument.id,
@@ -823,6 +833,10 @@ def create_transaction(
         fx_rate_to_try=rate,
         fx_rate_date=rate_date,
         fx_provider=provider,
+        fee_currency=None if fee_currency == instrument.currency else fee_currency,
+        fee_fx_rate_to_try=fee_rate,
+        fee_fx_rate_date=fee_rate_date,
+        fee_fx_provider=fee_provider,
         note=payload.note,
     )
     scope = _scope(
@@ -859,12 +873,32 @@ def update_transaction(
     if txn is None:
         raise HTTPException(404, f"transaction {txn_id} not found")
 
-    for field in ("trade_date", "quantity", "price_native", "fees_native", "note"):
+    fee_changed = any(
+        getattr(payload, field) is not None
+        for field in ("trade_date", "fees_native", "fee_currency")
+    ) or payload.fee_fx_rate_override is not None
+    for field in ("trade_date", "quantity", "price_native", "fees_native", "note", "fee_currency"):
         value = getattr(payload, field)
         if value is not None:
             setattr(txn, field, value)
     if payload.side is not None:
         txn.side = Side(payload.side)
+
+    if payload.fee_currency is not None:
+        txn.fee_currency = payload.fee_currency.upper()
+    effective_fee_currency = txn.fee_currency or txn.instrument.currency
+    if fee_changed and txn.fees_native and effective_fee_currency != txn.instrument.currency:
+        fee_rate, fee_rate_date, fee_provider = _resolve_fx(
+            FxService(session, settings), effective_fee_currency, txn.trade_date, payload.fee_fx_rate_override
+        )
+        txn.fee_fx_rate_to_try = fee_rate
+        txn.fee_fx_rate_date = fee_rate_date
+        txn.fee_fx_provider = fee_provider
+    elif fee_changed:
+        txn.fee_currency = None
+        txn.fee_fx_rate_to_try = None
+        txn.fee_fx_rate_date = None
+        txn.fee_fx_provider = None
 
     fx = FxService(session, settings)
     if payload.fx_rate_override is not None:

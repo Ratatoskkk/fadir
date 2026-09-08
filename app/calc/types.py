@@ -46,6 +46,10 @@ class TxnInput:
     fx_rate_to_try: Decimal
     fx_rate_date: date
     fx_provider: str
+    fee_currency: str | None = None
+    fee_fx_rate_to_try: Decimal | None = None
+    fee_fx_rate_date: date | None = None
+    fee_fx_provider: str | None = None
 
     @property
     def gross_native(self) -> Decimal:
@@ -54,6 +58,16 @@ class TxnInput:
     @property
     def fx_carried_forward(self) -> bool:
         return self.fx_rate_date != self.trade_date
+
+    @property
+    def fee_native_equivalent(self) -> Decimal:
+        if not self.fees_native:
+            return ZERO
+        if self.fee_currency is None or self.fee_currency == self.currency:
+            return self.fees_native
+        if self.fee_fx_rate_to_try is None:
+            raise ValueError("foreign fee requires fee FX rate")
+        return self.fees_native * self.fee_fx_rate_to_try / self.fx_rate_to_try
 
 
 @dataclass(frozen=True)

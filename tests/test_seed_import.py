@@ -165,7 +165,7 @@ def test_first_lot_is_stored_in_native_currency(session, seed):
     assert txn.quantity == Decimal("10")
     assert txn.fx_rate_to_try == Decimal("40.0")
     # No TRY total is stored anywhere on the row (SPEC §0).
-    assert not any("try" in c.name and c.name != "fx_rate_to_try" for c in txn.__table__.columns)
+    assert not any("try" in c.name and c.name not in {"fx_rate_to_try", "fee_fx_rate_to_try"} for c in txn.__table__.columns)
 
 
 def test_fees_are_read_in_native_currency(session, seed):

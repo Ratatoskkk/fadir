@@ -518,6 +518,29 @@ def test_create_transaction_with_fx_override_marks_manual(client):
     assert Decimal(body["fx_rate_to_try"]) == Decimal("48.1234")
 
 
+def test_patch_unrelated_field_preserves_foreign_fee_provenance(client):
+    created = client.post(
+        "/api/transactions",
+        json={
+            "ticker": "ERIC",
+            "trade_date": TODAY.isoformat(),
+            "quantity": "2",
+            "price_native": "20",
+            "fees_native": "3",
+            "fee_currency": "EUR",
+            "fee_fx_rate_override": "51.25",
+            "fx_rate_override": "5.00",
+        },
+    )
+    assert created.status_code == 201, created.text
+    before = created.json()
+    patched = client.patch(f"/api/transactions/{before['id']}", json={"note": "unchanged"})
+    assert patched.status_code == 200, patched.text
+    after = patched.json()
+    for field in ("fee_currency", "fee_fx_rate_to_try", "fee_fx_rate_date", "fee_fx_provider", "total_try"):
+        assert after[field] == before[field]
+
+
 def test_create_transaction_unknown_ticker_404(client):
     r = client.post(
         "/api/transactions",

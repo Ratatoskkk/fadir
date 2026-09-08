@@ -204,7 +204,7 @@ class LotBook:
                     quantity_original=txn.quantity,
                     quantity_open=txn.quantity,
                     price_native=txn.price_native,
-                    fees_native=txn.fees_native,
+                    fees_native=txn.fee_native_equivalent,
                     fx_rate_to_try=txn.fx_rate_to_try,
                     fx_rate_date=txn.fx_rate_date,
                     fx_provider=txn.fx_provider,
@@ -287,7 +287,7 @@ def _consume(book: LotBook, sell: TxnInput) -> None:
 
     # Sale fees are allocated across the shares sold, mirroring entry-fee treatment.
     sell_fee_per_unit = (
-        sell.fees_native / sell.quantity if sell.quantity != ZERO else ZERO
+        sell.fee_native_equivalent / sell.quantity if sell.quantity != ZERO else ZERO
     )
 
     for lot in book.open_lots:

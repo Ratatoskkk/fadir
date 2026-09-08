@@ -29,6 +29,7 @@ SESSION_REVISION = ROOT / "migrations" / "versions" / "0005_user_sessions.py"
 LOGIN_IDENTITY_REVISION = ROOT / "migrations" / "versions" / "0006_login_identities.py"
 LOGIN_TRANSACTION_REVISION = ROOT / "migrations" / "versions" / "0007_login_transactions.py"
 LOGIN_TRANSACTION_VERIFICATION_REVISION = ROOT / "migrations" / "versions" / "0008_login_transaction_verification.py"
+FEE_CURRENCY_REVISION = ROOT / "migrations" / "versions" / "0009_fee_currency.py"
 BASELINE_TABLES = {
     "instrument",
     "transaction",
@@ -546,6 +547,14 @@ def test_login_transaction_verification_revision_is_static() -> None:
     assert "from app.models import Base" not in source
     assert "Base.metadata" not in source
     assert "create_all" not in source
+
+
+def test_fee_currency_revision_is_additive_and_nullable() -> None:
+    source = FEE_CURRENCY_REVISION.read_text(encoding="utf-8")
+    assert 'down_revision: str | None = "0008_login_transaction_verification"' in source
+    assert source.count('op.add_column("transaction"') == 4
+    assert "nullable=True" in source
+    assert "UPDATE" not in source
     assert "drop_all" not in source
 
 

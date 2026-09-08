@@ -312,6 +312,10 @@ class Transaction(Base):
     quantity: Mapped[Decimal] = mapped_column(QTY, nullable=False)
     price_native: Mapped[Decimal] = mapped_column(PRICE, nullable=False)
     fees_native: Mapped[Decimal] = mapped_column(MONEY, nullable=False, default=Decimal("0"))
+    fee_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    fee_fx_rate_to_try: Mapped[Decimal | None] = mapped_column(RATE, nullable=True)
+    fee_fx_rate_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    fee_fx_provider: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     #: Units of TRY per one unit of the instrument's native currency, on `fx_rate_date`.
     fx_rate_to_try: Mapped[Decimal] = mapped_column(RATE, nullable=False)

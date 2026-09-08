@@ -9,7 +9,7 @@ from enum import Enum
 import hashlib
 import json
 
-from sqlalchemy import select, text
+from sqlalchemy import inspect, select, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.exc import IntegrityError
 
@@ -53,14 +53,19 @@ class SQLiteMigrationSource:
 
     def _read(self, names):
         self._require_snapshot()
-        return tuple(
-            {"table": name, **dict(row)}
-            for name in names
-            for row in self.connection.execute(select(*(
-                column for column in _TABLES[name].columns
-                if column.name != "portfolio_id"
-            )).order_by(_key(name))).mappings()
-        )
+        inspector = inspect(self.connection)
+        rows = []
+        for name in names:
+            table = _TABLES[name]
+            physical = {column["name"] for column in inspector.get_columns(name)}
+            columns = [column for column in table.columns if column.name != "portfolio_id" and column.name in physical]
+            for row in self.connection.execute(select(*columns).order_by(_key(name))).mappings():
+                values = dict(row)
+                for column in table.columns:
+                    if column.name != "portfolio_id" and column.name not in values:
+                        values[column.name] = None
+                rows.append({"table": name, **values})
+        return tuple(rows)
 
     def read_shared_rows(self):
         return self._read(_SHARED)

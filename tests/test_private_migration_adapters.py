@@ -45,6 +45,8 @@ def synthetic_rows():
                              quantity=Decimal("1.25000000"),
                              price_native=Decimal("100.125000000000"),
                              fees_native=Decimal("0.00000000"),
+                             fee_currency=None, fee_fx_rate_to_try=None,
+                             fee_fx_rate_date=None, fee_fx_provider=None,
                              fx_rate_to_try=Decimal("32.1250000000"),
                              fx_rate_date=DAY, fx_provider="synthetic",
                              note=None if i == 51 else "Türkçe\ntext",
@@ -64,7 +66,9 @@ def synthetic_source(tmp_path, monkeypatch, revision="head"):
     engine = make_engine(path)
     with engine.begin() as connection:
         for name, rows in synthetic_rows().items():
-            connection.execute(Base.metadata.tables[name].insert(), rows)
+            physical = {column["name"] for column in inspect(connection).get_columns(name)}
+            values = [{key: value for key, value in row.items() if key in physical} for row in rows]
+            connection.execute(Base.metadata.tables[name].insert(), values)
     return engine
 
 

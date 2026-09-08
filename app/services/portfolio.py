@@ -97,6 +97,10 @@ def to_txn_input(txn: Transaction, ticker: str, currency: str) -> TxnInput:
         fx_rate_to_try=txn.fx_rate_to_try,
         fx_rate_date=txn.fx_rate_date,
         fx_provider=txn.fx_provider,
+        fee_currency=txn.fee_currency,
+        fee_fx_rate_to_try=txn.fee_fx_rate_to_try,
+        fee_fx_rate_date=txn.fee_fx_rate_date,
+        fee_fx_provider=txn.fee_fx_provider,
     )
 
 

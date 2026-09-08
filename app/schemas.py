@@ -225,6 +225,10 @@ class TransactionOut(BaseModel):
     quantity: Money
     price_native: Money
     fees_native: Money
+    fee_currency: str | None = None
+    fee_fx_rate_to_try: OptMoney = None
+    fee_fx_rate_date: date | None = None
+    fee_fx_provider: str | None = None
     total_native: Money
     fx_rate_to_try: Money
     fx_rate_date: date
@@ -242,6 +246,8 @@ class TransactionCreate(BaseModel):
     quantity: Decimal = Field(gt=0)
     price_native: Decimal = Field(ge=0)
     fees_native: Decimal = Field(default=Decimal("0"), ge=0)
+    fee_currency: str | None = Field(default=None, min_length=3, max_length=3, pattern="^[A-Za-z]{3}$")
+    fee_fx_rate_override: Decimal | None = Field(default=None, gt=0)
     #: When the broker's executed rate is known and differs from the published reference
     #: rate. Setting this forces `fx_provider = 'manual'` so the UI can flag it (SPEC §7).
     fx_rate_override: Decimal | None = Field(default=None, gt=0)
@@ -254,6 +260,8 @@ class TransactionPatch(BaseModel):
     quantity: Decimal | None = Field(default=None, gt=0)
     price_native: Decimal | None = Field(default=None, ge=0)
     fees_native: Decimal | None = Field(default=None, ge=0)
+    fee_currency: str | None = Field(default=None, min_length=3, max_length=3, pattern="^[A-Za-z]{3}$")
+    fee_fx_rate_override: Decimal | None = Field(default=None, gt=0)
     fx_rate_override: Decimal | None = Field(default=None, gt=0)
     #: Re-fetch the published rate, discarding a previous manual override.
     refetch_fx: bool = False
