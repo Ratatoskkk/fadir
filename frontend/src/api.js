@@ -44,6 +44,16 @@ const withTickers = (params, tickers) => {
 
 export const api = {
   bootstrapGuest: () => request("/api/guest/bootstrap", { method: "POST" }),
+  googleStart: () => request("/api/auth/google/start", { method: "POST" }),
+  googleVerify: (payload) =>
+    request("/api/auth/google/verify", { method: "POST", body: JSON.stringify(payload) }),
+  googleTransition: (payload) =>
+    request("/api/auth/google/transition", { method: "POST", body: JSON.stringify(payload) }),
+  mergeOptions: () => request("/api/portfolio/merge/options"),
+  mergePreview: (payload) =>
+    request("/api/portfolio/merge/preview", { method: "POST", body: JSON.stringify(payload) }),
+  mergeConfirm: (payload) =>
+    request("/api/portfolio/merge/confirm", { method: "POST", body: JSON.stringify(payload) }),
   portfolio: () => request("/api/portfolio"),
   history: ({ from, to, freq = "D", tickers } = {}) => {
     const params = new URLSearchParams();

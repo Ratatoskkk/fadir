@@ -18,6 +18,7 @@ import { arrow, clockTime, money, ratioPct, toneOf } from "./format.js";
 import { isIntradayRange, isPannable, rangeDays } from "./ranges.js";
 import AttributionBar from "./components/AttributionBar.jsx";
 import Brand from "./components/Brand.jsx";
+import GoogleIdentityPanel from "./components/GoogleIdentityPanel.jsx";
 import HeroCard from "./components/HeroCard.jsx";
 import PositionsTable from "./components/PositionsTable.jsx";
 import TransactionManager from "./components/TransactionManager.jsx";
@@ -328,6 +329,15 @@ export default function App() {
     } catch {
       // A transaction that succeeded must not become a failed UI action because this
       // non-critical notice refresh is unavailable.
+    }
+  }, [loadAll, readGuestAccess]);
+
+  const refreshAfterIdentity = useCallback(async () => {
+    await loadAll();
+    try {
+      await readGuestAccess();
+    } catch {
+      // Identity transitions succeed independently of a best-effort dashboard refresh.
     }
   }, [loadAll, readGuestAccess]);
 
@@ -700,6 +710,8 @@ export default function App() {
           </button>
         </div>
       )}
+
+      <GoogleIdentityPanel onCompleted={refreshAfterIdentity} />
 
       {error && (
         <div className="banner err">
