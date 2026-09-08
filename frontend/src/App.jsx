@@ -23,6 +23,7 @@ import HeroCard from "./components/HeroCard.jsx";
 import PositionsTable from "./components/PositionsTable.jsx";
 import PortfolioSelector from "./components/PortfolioSelector.jsx";
 import TransactionManager from "./components/TransactionManager.jsx";
+import TaxProfilePanel from "./components/TaxProfilePanel.jsx";
 
 // Recharts is by far the largest dependency and the chart sits below the fold, so the
 // hero card and positions table are not made to wait on it. The data fetch starts
@@ -228,6 +229,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [guestAccess, setGuestAccess] = useState(null);
   const [guestNoticeDismissed, setGuestNoticeDismissed] = useState(false);
+  const [identityReady, setIdentityReady] = useState(false);
 
   // Avoids a stale-closure re-subscribe loop in the polling effect.
   const loadRef = useRef(null);
@@ -361,6 +363,7 @@ export default function App() {
   }, [loadAll, readGuestAccess]);
 
   const refreshAfterIdentity = useCallback(async () => {
+    setIdentityReady(true);
     await loadAll();
     try {
       await readGuestAccess();
@@ -765,6 +768,7 @@ export default function App() {
       )}
 
       <GoogleIdentityPanel onCompleted={refreshAfterIdentity} />
+      <TaxProfilePanel identityReady={identityReady} />
 
       {error && (
         <div className="banner err">

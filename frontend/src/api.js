@@ -84,4 +84,6 @@ export const api = {
   instruments: () => request("/api/instruments"),
   refresh: () => request("/api/refresh", { method: "POST" }),
   health: () => request("/api/health"),
+  taxProfile: (year) => request(`/api/tax/profile?year=${encodeURIComponent(year)}`),
+  taxEstimate: (year) => request(`/api/tax/estimate?year=${encodeURIComponent(year)}`),
 };
