@@ -15,7 +15,7 @@ from starlette.responses import Response
 
 from app import models
 from app.api import routes
-from app.api.request_authority import GUEST_COOKIE_NAME
+from app.api.request_authority import GUEST_COOKIE_NAME, USER_COOKIE_NAME
 
 
 def test_bootstrap_route_exists():
@@ -197,6 +197,160 @@ def test_registered_wrapper_commit_failure_sends_no_authority_cookies(monkeypatc
     assert result.status_code == 500
     assert "set-cookie" not in result.headers
     assert roots and roots[0].rolled_back is True
+    with engine.connect() as connection:
+        assert connection.execute(select(models.Workspace.id)).all() == []
+    engine.dispose()
+
+
+def test_recovery_clears_only_invalid_user_cookie_and_preserves_guest(monkeypatch, tmp_path):
+    """Focused red proof for the explicit stale-User recovery seam."""
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'recovery.db'}")
+    models.Base.metadata.create_all(engine)
+    monkeypatch.setattr(
+        "app.api.request_authority.user_sessions.authenticate",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        "app.api.request_authority.guest_access.require",
+        lambda *_args, **_kwargs: SimpleNamespace(workspace_id=1),
+    )
+    app = FastAPI()
+    app.state.session_factory = lambda: Session(engine)
+    app.state.authority_session_factory = lambda: Session(engine)
+    app.state.configured_origin = "https://ratatosk.dev"
+    app.include_router(routes.private_router)
+    with TestClient(app, base_url="https://ratatosk.dev") as client:
+        response = client.post(
+            "/api/auth/recover-user-cookie",
+            headers={"Origin": "https://ratatosk.dev", "X-CSRF-Token": "C" * 43},
+            cookies={
+                GUEST_COOKIE_NAME: "YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI",
+                USER_COOKIE_NAME: "YWFhYWFhYWFhYWFhYWFhYQ.YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI",
+                "__Host-fadir-csrf": "C" * 43,
+            },
+        )
+    assert response.status_code == 204
+    assert "Max-Age=0" in response.headers.get("set-cookie", "")
+    assert USER_COOKIE_NAME in response.headers.get("set-cookie", "")
+    assert GUEST_COOKIE_NAME not in response.headers.get("set-cookie", "")
+    engine.dispose()
+
+
+def test_mixed_invalid_user_and_valid_guest_stays_401_before_recovery(monkeypatch, tmp_path):
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'mixed-before.db'}")
+    models.Base.metadata.create_all(engine)
+    monkeypatch.setattr(
+        "app.api.request_authority.user_sessions.authenticate",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        "app.api.request_authority.guest_access.require",
+        lambda *_args, **_kwargs: SimpleNamespace(workspace_id=1),
+    )
+    app = FastAPI()
+    app.state.session_factory = lambda: Session(engine)
+    app.state.authority_session_factory = lambda: Session(engine)
+    app.state.configured_origin = "https://ratatosk.dev"
+    app.include_router(routes.private_router)
+    with TestClient(app, base_url="https://ratatosk.dev") as client:
+        response = client.get(
+            "/api/portfolios",
+            cookies={
+                GUEST_COOKIE_NAME: "YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI",
+                USER_COOKIE_NAME: "YWFhYWFhYWFhYWFhYWFhYQ.YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI",
+            },
+        )
+    assert response.status_code == 401
+    assert response.headers.get("cache-control") == "no-store"
+    engine.dispose()
+
+
+def test_recovery_does_not_clear_valid_user_cookie(monkeypatch, tmp_path):
+    from app.services.user_sessions import UserSessionAuthority
+
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'valid-user.db'}")
+    models.Base.metadata.create_all(engine)
+    monkeypatch.setattr(
+        "app.api.request_authority.user_sessions.authenticate",
+        lambda *_args, **_kwargs: UserSessionAuthority(
+            user_id=7, workspace_id=11, public_id="YWFhYWFhYWFhYWFhYWFhYQ"
+        ),
+    )
+    app = FastAPI()
+    app.state.session_factory = lambda: Session(engine)
+    app.state.configured_origin = "https://ratatosk.dev"
+    app.include_router(routes.private_router)
+    with TestClient(app, base_url="https://ratatosk.dev") as client:
+        response = client.post(
+            "/api/auth/recover-user-cookie",
+            headers={"Origin": "https://ratatosk.dev", "X-CSRF-Token": "C" * 43},
+            cookies={
+                USER_COOKIE_NAME: "YWFhYWFhYWFhYWFhYWFhYQ.YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI",
+                "__Host-fadir-csrf": "C" * 43,
+            },
+        )
+    assert response.status_code == 204
+    assert "set-cookie" not in response.headers
+    engine.dispose()
+
+
+def test_recovery_requires_guest_proof_before_clearing(monkeypatch, tmp_path):
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'no-guest.db'}")
+    models.Base.metadata.create_all(engine)
+    monkeypatch.setattr(
+        "app.api.request_authority.user_sessions.authenticate",
+        lambda *_args, **_kwargs: None,
+    )
+    app = FastAPI()
+    app.state.session_factory = lambda: Session(engine)
+    app.state.configured_origin = "https://ratatosk.dev"
+    app.include_router(routes.private_router)
+    with TestClient(app, base_url="https://ratatosk.dev") as client:
+        response = client.post(
+            "/api/auth/recover-user-cookie",
+            headers={"Origin": "https://ratatosk.dev", "X-CSRF-Token": "C" * 43},
+            cookies={
+                USER_COOKIE_NAME: "YWFhYWFhYWFhYWFhYWFhYQ.YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI",
+                "__Host-fadir-csrf": "C" * 43,
+            },
+        )
+    assert response.status_code == 401
+    assert "set-cookie" not in response.headers
+    engine.dispose()
+
+
+def test_recovery_allows_following_guest_request_without_data_mutation(monkeypatch, tmp_path):
+    engine = create_engine(f"sqlite+pysqlite:///{tmp_path / 'follow-up.db'}")
+    models.Base.metadata.create_all(engine)
+    monkeypatch.setattr(
+        "app.api.request_authority.user_sessions.authenticate",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        "app.api.request_authority.guest_access.require",
+        lambda *_args, **_kwargs: SimpleNamespace(workspace_id=1),
+    )
+    app = FastAPI()
+    app.state.session_factory = lambda: Session(engine)
+    app.state.authority_session_factory = lambda: Session(engine)
+    app.state.configured_origin = "https://ratatosk.dev"
+    app.include_router(routes.private_router)
+    guest = "YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI"
+    user = "YWFhYWFhYWFhYWFhYWFhYQ.YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmI"
+    with TestClient(app, base_url="https://ratatosk.dev") as client:
+        client.cookies.set(GUEST_COOKIE_NAME, guest)
+        client.cookies.set(USER_COOKIE_NAME, user)
+        client.cookies.set("__Host-fadir-csrf", "C" * 43)
+        recovery = client.post(
+            "/api/auth/recover-user-cookie",
+            headers={"Origin": "https://ratatosk.dev", "X-CSRF-Token": "C" * 43},
+        )
+    with TestClient(app, base_url="https://ratatosk.dev") as clean_client:
+        follow_up = clean_client.get(
+            "/api/portfolios", cookies={GUEST_COOKIE_NAME: guest}
+        )
+    assert recovery.status_code == 204
+    assert follow_up.status_code == 200
     with engine.connect() as connection:
         assert connection.execute(select(models.Workspace.id)).all() == []
     engine.dispose()

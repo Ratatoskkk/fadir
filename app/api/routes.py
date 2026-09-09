@@ -31,6 +31,7 @@ from app.api.request_authority import (
     delete_guest_cookie,
     delete_user_cookie,
     get_request_authority,
+    recover_invalid_user_cookie,
     set_user_cookie,
     set_guest_cookie,
 )
@@ -103,6 +104,10 @@ AuthorityDep = Annotated[RequestAuthority, Depends(get_request_authority)]
 
 
 def _write_guard(request: Request, authority: AuthorityDep) -> None:
+    validate_request_csrf(request)
+
+
+def _csrf_guard(request: Request) -> None:
     validate_request_csrf(request)
 
 
@@ -395,6 +400,23 @@ def bootstrap_guest(
     return GuestBootstrapOut(
         created=created, guest=_guest_bootstrap_context(session, row)
     )
+
+
+@private_router.post(
+    "/auth/recover-user-cookie",
+    dependencies=[Depends(_csrf_guard)],
+    status_code=204,
+)
+def recover_user_cookie(
+    request: Request,
+    response: Response,
+    session: RequestSessionDep,
+) -> Response:
+    """Explicitly clear an unusable User cookie after valid Guest proof."""
+    if recover_invalid_user_cookie(session, request.cookies):
+        delete_user_cookie(response)
+    response.status_code = 204
+    return response
 
 
 @private_router.post(

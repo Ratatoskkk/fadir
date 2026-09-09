@@ -155,6 +155,43 @@ def request_authority_from_session(session: Session, cookies: Mapping[str, str])
     return resolve_request_authority(session, cookies, clock=_clock)
 
 
+def recover_invalid_user_cookie(
+    session: Session,
+    cookies: Mapping[str, str],
+    *,
+    clock=_clock,
+) -> bool:
+    """Clear permission for an unusable User cookie only after Guest proof."""
+    user_value = cookies.get(USER_COOKIE_NAME)
+    if user_value is None:
+        return False
+
+    user_authority = None
+    try:
+        public_id, secret = _user_cookie(user_value)
+    except RequestAuthorityError:
+        public_id = secret = None
+    if public_id is not None and secret is not None:
+        try:
+            user_authority = user_sessions.authenticate(
+                session, public_id, secret, clock=clock
+            )
+        except user_sessions.UserSessionDenied:
+            user_authority = None
+    if user_authority is not None:
+        return False
+
+    guest_value = cookies.get(GUEST_COOKIE_NAME)
+    if guest_value is None:
+        raise RequestAuthorityError()
+    try:
+        token = _guest_cookie(guest_value)
+        guest_access.require(session, token, clock=clock)
+    except (RequestAuthorityError, guest_access.GuestAccessDenied):
+        raise RequestAuthorityError() from None
+    return True
+
+
 def get_request_authority(request: Request) -> RequestAuthority:
     """Resolve authority in a short, separate transaction before route data work."""
     factory = getattr(request.app.state, "authority_session_factory", None)

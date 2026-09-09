@@ -12,18 +12,36 @@ function readableCsrfToken() {
 }
 
 async function request(path, options = {}) {
-  const method = (options.method ?? "GET").toUpperCase();
-  const headers = { "Content-Type": "application/json", ...options.headers };
+  const { _recoveryAttempted = false, ...fetchOptions } = options;
+  const method = (fetchOptions.method ?? "GET").toUpperCase();
+  const headers = { "Content-Type": "application/json", ...fetchOptions.headers };
   if (["POST", "PATCH", "PUT", "DELETE"].includes(method) && path !== "/api/guest/bootstrap") {
     const token = readableCsrfToken();
     if (token) headers["X-CSRF-Token"] = token;
   }
   const response = await fetch(path, {
-    ...options,
+    ...fetchOptions,
     credentials: "include",
     headers,
   });
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      method === "GET" &&
+      !_recoveryAttempted &&
+      path !== "/api/auth/recover-user-cookie" &&
+      path !== "/api/guest/bootstrap"
+    ) {
+      try {
+        await request("/api/auth/recover-user-cookie", {
+          method: "POST",
+          _recoveryAttempted: true,
+        });
+        return request(path, { ...options, _recoveryAttempted: true });
+      } catch {
+        // Preserve the original rejected request when recovery is not applicable.
+      }
+    }
     let detail = `${response.status} ${response.statusText}`;
     try {
       const body = await response.json();
@@ -51,6 +69,7 @@ const withPortfolioId = (path, portfolioId) => {
 export const api = {
   portfolios: () => request("/api/portfolios"),
   bootstrapGuest: () => request("/api/guest/bootstrap", { method: "POST" }),
+  recoverUserCookie: () => request("/api/auth/recover-user-cookie", { method: "POST" }),
   googleStart: () => request("/api/auth/google/start", { method: "POST" }),
   googleVerify: (payload) =>
     request("/api/auth/google/verify", { method: "POST", body: JSON.stringify(payload) }),
