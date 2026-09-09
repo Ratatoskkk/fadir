@@ -512,9 +512,24 @@ def google_login_transition(
     if state is None or guest_secret is None:
         raise RequestAuthorityError()
     try:
+        transition_authority = authority
+        if authority.mode == "user":
+            try:
+                guest = guest_access.require(
+                    session,
+                    guest_secret,
+                    clock=lambda: datetime.now(timezone.utc),
+                )
+            except guest_access.GuestAccessError:
+                raise RequestAuthorityError() from None
+            transition_authority = RequestAuthority(
+                mode="guest",
+                user_id=None,
+                workspace_id=guest.workspace_id,
+            )
         result = google_login_transition_service.transition(
             session,
-            authority,
+            transition_authority,
             state,
             guest_secret,
             payload.action,
