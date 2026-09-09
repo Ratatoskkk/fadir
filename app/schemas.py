@@ -101,6 +101,24 @@ class TotalsOut(BaseModel):
     daily: DailyOut
 
 
+class UserSessionOut(BaseModel):
+    public_id: str
+    created_at: datetime
+    last_access_at: datetime
+
+
+class UserSessionsOut(BaseModel):
+    sessions: list[UserSessionOut]
+
+
+class UserSessionRevokeOut(BaseModel):
+    revoked: bool
+
+
+class UserSessionRevokeAllOut(BaseModel):
+    revoked_count: int
+
+
 class LiquidationOut(BaseModel):
     gross_proceeds_try: Money
     haircut_pct: Money

@@ -77,6 +77,10 @@ from app.schemas import (
     PortfolioMergePreviewOut,
     PortfolioMergeConfirmOut,
     PortfolioMergeOptionsOut,
+    UserSessionOut,
+    UserSessionRevokeAllOut,
+    UserSessionRevokeOut,
+    UserSessionsOut,
 )
 from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
@@ -87,6 +91,7 @@ from app.services import guest_access
 from app.services import login_transactions
 from app.services import google_login_transition as google_login_transition_service
 from app.services import portfolio_merge as portfolio_merge_service
+from app.services import user_sessions
 from app.services.portfolio_merge import PortfolioMergeError
 from app.services.privacy import PrivacyError, PrivacyNotFound, PrivacyService
 from app.services.google_identity import GoogleIdentityError, verify_google_identity_from_settings
@@ -556,6 +561,56 @@ def _require_user(authority: RequestAuthority) -> int:
     if authority.user_id is None:
         raise RequestAuthorityError()
     return authority.user_id
+
+
+@private_router.get("/user/sessions", response_model=UserSessionsOut)
+def list_user_sessions(
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> UserSessionsOut:
+    user_id = _require_user(authority)
+    rows = user_sessions.list_active(
+        session, user_id, clock=lambda: datetime.now(timezone.utc)
+    )
+    return UserSessionsOut(
+        sessions=[UserSessionOut(**row.model_dump()) for row in rows]
+    )
+
+
+@private_router.delete(
+    "/user/sessions",
+    response_model=UserSessionRevokeAllOut,
+    dependencies=[Depends(_write_guard)],
+)
+def revoke_all_user_sessions(
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> UserSessionRevokeAllOut:
+    user_id = _require_user(authority)
+    revoked_count = user_sessions.revoke_all(
+        session, user_id, clock=lambda: datetime.now(timezone.utc)
+    )
+    return UserSessionRevokeAllOut(revoked_count=revoked_count)
+
+
+@private_router.delete(
+    "/user/sessions/{public_id}",
+    response_model=UserSessionRevokeOut,
+    dependencies=[Depends(_write_guard)],
+)
+def revoke_user_session(
+    public_id: str,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> UserSessionRevokeOut:
+    user_id = _require_user(authority)
+    try:
+        revoked = user_sessions.revoke(
+            session, user_id, public_id, clock=lambda: datetime.now(timezone.utc)
+        )
+    except user_sessions.UserSessionDenied:
+        return UserSessionRevokeOut(revoked=False)
+    return UserSessionRevokeOut(revoked=revoked)
 
 
 @private_router.get("/portfolios/{portfolio_id}/export")
