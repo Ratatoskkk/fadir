@@ -11,7 +11,20 @@ function readableCsrfToken() {
   return cookie ? cookie.slice(prefix.length) : null;
 }
 
-async function request(path, options = {}) {
+let privateRequestTail = Promise.resolve();
+
+const sessionIndependentPaths = new Set([
+  "/api/health",
+  "/api/guest/bootstrap",
+]);
+
+function serializePrivateRequest(work) {
+  const next = privateRequestTail.then(work, work);
+  privateRequestTail = next.catch(() => undefined);
+  return next;
+}
+
+async function performRequest(path, options = {}) {
   const { _recoveryAttempted = false, ...fetchOptions } = options;
   const method = (fetchOptions.method ?? "GET").toUpperCase();
   const headers = { "Content-Type": "application/json", ...fetchOptions.headers };
@@ -33,11 +46,11 @@ async function request(path, options = {}) {
       path !== "/api/guest/bootstrap"
     ) {
       try {
-        await request("/api/auth/recover-user-cookie", {
+        await performRequest("/api/auth/recover-user-cookie", {
           method: "POST",
           _recoveryAttempted: true,
         });
-        return request(path, { ...options, _recoveryAttempted: true });
+        return performRequest(path, { ...fetchOptions, _recoveryAttempted: true });
       } catch {
         // Preserve the original rejected request when recovery is not applicable.
       }
@@ -54,6 +67,11 @@ async function request(path, options = {}) {
     throw error;
   }
   return response.status === 204 ? null : response.json();
+}
+
+async function request(path, options = {}) {
+  if (sessionIndependentPaths.has(path)) return performRequest(path, options);
+  return serializePrivateRequest(() => performRequest(path, options));
 }
 
 /** `tickers` narrows a series to a subset; omit or pass [] for the whole portfolio. */
