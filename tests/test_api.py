@@ -10,6 +10,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
+from sqlalchemy import text
 from fastapi.testclient import TestClient
 
 from app.models import FxCache, Instrument, Portfolio, PriceCache, Side, Transaction, Workspace
@@ -656,6 +657,38 @@ def test_portfolio_degrades_a_position_with_unconvertible_foreign_fee(client, se
     rows = {position["ticker"]: position for position in body["positions"]}
     assert rows["ERIC"]["ok"] is False
     assert "fee" in rows["ERIC"]["error"].lower()
+
+
+def test_portfolio_degrades_a_position_with_zero_fx_rate(client, session):
+    eric = next(i for i in session.query(Instrument) if i.ticker == "ERIC")
+    portfolio_id = session.query(Portfolio.id).first()[0]
+    session.add(
+        Transaction(
+            instrument_id=eric.id,
+            portfolio_id=portfolio_id,
+            trade_date=TODAY,
+            side=Side.BUY,
+            quantity=Decimal("1"),
+            price_native=Decimal("20"),
+            fees_native=Decimal("3"),
+            fee_currency="EUR",
+            fee_fx_rate_to_try=Decimal("4.20"),
+            fx_rate_to_try=Decimal("0"),
+            fx_rate_date=TODAY,
+            fx_provider="synthetic",
+        )
+    )
+    session.execute(text("PRAGMA ignore_check_constraints = ON"))
+    session.commit()
+    session.execute(text("PRAGMA ignore_check_constraints = OFF"))
+
+    response = client.get("/api/portfolio")
+
+    assert response.status_code == 200
+    body = response.json()
+    rows = {position["ticker"]: position for position in body["positions"]}
+    assert rows["ERIC"]["ok"] is False
+    assert "division" in rows["ERIC"]["error"].lower()
 
 
 def test_history_degrades_a_position_with_unconvertible_foreign_fee(client, session):

@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 
 from sqlalchemy import inspect as sa_inspect, select
 from sqlalchemy.orm import Session, selectinload
@@ -374,7 +374,7 @@ class PortfolioService:
                     for t in transactions
                 ]
                 book = build_lot_book(instrument.ticker, instrument.currency, txns)
-            except (InsufficientLots, ValueError) as exc:
+            except (InsufficientLots, ValueError, DecimalException) as exc:
                 # One malformed position must not take the whole dashboard down —
                 # otherwise the screen that can fix the bad row refuses to load.
                 log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
