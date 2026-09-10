@@ -12,9 +12,11 @@ the owner's original portfolio under the verified Google User.
 The earlier VM deployment and hosted public edge proof are accepted. The newer session-auth
 serialization repair is now deployed with its rollback copy and sanitized public
 static/health proof. The protected dry run, committed-candidate recovery, and live
-database migration are accepted within their guards. The next action is a separately
-leased authenticated owner-browser session proof; the source, candidate, serving data,
-and rollback remain preserved.
+database migration are accepted within their guards. The owner refresh still shows a
+request rejection, and the narrow diagnostic established a real `/api/portfolio` 500 in
+the trusted window. The next action is a separately leased backend root-cause repair;
+the owner red browser proof, source, candidate, serving data, and rollback remain
+preserved.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -203,6 +205,15 @@ Platform lease.
   no session/recovery tuples were retained. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r1/handoff.md`
   (SHA-256 `A1E3FF4C1BC7E3B015C88E9CAD6987C762470D68A8FD07AAC43718CA94C5C410`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-2` correlated the trusted
+  owner-refresh window with sanitized endpoint tuples. It recorded `/api/portfolios` 200,
+  `/api/portfolio` 500, `/api/portfolio/history` 200, `/api/transactions` 200, and
+  `/api/instruments` 200, with no session/recovery tuple. Attribution to an individual
+  refresh remains limited because the available records lack per-request timestamps or
+  correlation IDs, but the `/api/portfolio` 500 is a real established backend failure in
+  the bounded window. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r2/handoff.md`
+  (SHA-256 `CC69D4F6B3B8BB6E1C3AF3691C5488CF4792F881E9DC76C0700B238B688656B7`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -243,15 +254,15 @@ authoritative screenshot time window.
 
 The recovery and live migration proofs are complete within their recorded limits. The
 browser repair is deployed and public static/health proof is accepted; preserve the
-committed serving data, rollback copy, and live browser 401 proof until the separate
-authenticated owner-browser proof passes. The next step is one timestamped owner
-refresh followed by a narrow sanitized status correlation; the r1 diagnostic evidence
-remains preserved.
+committed serving data, rollback copy, and live browser rejection proof until the backend
+repair and separate authenticated owner-browser proof pass. The next step is a bounded
+backend root-cause trace and repair for the established `/api/portfolio` 500; retain both
+diagnostic handoffs and the owner red baseline.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-2` is active**.
-The Platform and Release specialist closed both deployment leases after Senior review; the owner-browser lease and diagnostic r1 stopped on insufficient hosted proof, and diagnostic r2 is the sole active specialist lease.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2 are closed; the next backend root-cause repair lease is pending**.
+The Platform and Release specialist closed both deployment leases after Senior review; the owner-browser lease and diagnostic r1/r2 stopped before acceptance, with the backend repair now the sole active delivery path.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease is closed and this deployment follow-up is active.
 
@@ -277,23 +288,24 @@ The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-1`:
 | Browser proof | Current `https://ratatosk.dev/` owner tab; refresh after deployment, capture desktop state, then verify the required mobile-width state without changing account or provider data |
 | Stop | Missing owner state, any identity/Workspace ambiguity, private request 401/403/error, cross-Workspace or empty unexpected result, browser/provider prompt requiring owner action, leaked private value, or any source/VM/database/configuration mutation |
 
-The owner-browser and diagnostic r1 leases stopped before acceptance. The next exact
-lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-2`:
+The owner-browser and diagnostic r1/r2 leases stopped before acceptance. The next exact
+lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-REPAIR-1`:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Record a trusted non-private UTC refresh window in the current owner tab, refresh the deployed bundle once, then correlate only that window with sanitized VM access/service records for the allowlisted session and portfolio endpoints |
-| Repository writes | Empty |
-| Operational resources | Current Codex in-app owner tab; approved `fadir-control-lab-01`; strict SSH using the recorded key/known-hosts pair with `IdentityAgent=none`; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r2/` and matching remote proof root |
-| Allowlist | `GET /api/user/sessions`, `POST /api/auth/recover-user-cookie`, `GET /api/portfolios`, `GET /api/portfolio`, `GET /api/portfolio/history`, `GET /api/transactions`, `GET /api/instruments`; strip query strings and retain only method/path/status/count evidence |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r2/handoff.md` |
-| Stop | Missing trusted refresh window, raw/private log content, cookies, response bodies, identity values, DB queries, service/config/Tunnel/DNS changes, restart, or ambiguous/unavailable correlation |
+| Outcome | Trace the established `/api/portfolio` 500 from route through service/schema using synthetic fixtures; implement the smallest backend repair and prove the migrated-data contract without exposing private values |
+| Repository writes | Backend source and focused regression tests only; no frontend, migration, identity, authority, service, or infrastructure changes |
+| Evidence writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-portfolio-500-repair-r1/`; exact non-repository handoff with facts, limits, uncertainty, open work, test commands/results, and changed-path hashes |
+| Read paths | `app/api/routes.py`, `app/api/request_transaction.py`, `app/services/portfolio.py`, `app/calc/`, response schemas, focused API/service tests, and the two retained diagnostic handoffs |
+| Proof | Preserve the hosted 500/401 red baseline; reproduce the failure or proving seam with synthetic data, run the focused regression and affected offline tests, and run the full offline suite once at final product-lease acceptance. Do not inspect, log, or copy private rows. |
+| Stop | No reproducible or code-proven trigger after bounded trace, response-contract ambiguity requiring owner choice, any private-data access, any authority/session/migration/service/configuration change, or any failed proof without retaining its output |
 
-Do not perform authenticated owner-browser acceptance under this deployment lease. Keep
-the live 401 browser proof and migration evidence intact; no identity, issuer, subject,
-email, holdings, transaction values, cookies, or secrets may enter ordinary artifacts.
-Any backend authority change, owner browser acceptance, service configuration change,
-or public proof outside the exact static/health probes above requires a separate lease.
+Do not perform authenticated owner-browser acceptance under this backend repair lease.
+Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
+subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
+artifacts. Any backend authority change, owner browser acceptance, service configuration
+change, or public proof outside the exact source/test scope above requires a separate
+lease.
 
 Proof root: `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/`.
 Paths in the evidence row are relative to this proof root.
