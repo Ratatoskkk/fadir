@@ -9,10 +9,12 @@ The immediate user outcome is a browser that stays signed in after refresh and s
 the owner's original portfolio under the verified Google User.
 
 **Hydration is accepted locally and published as `b22875e38a7174d823212bb291dcd78151e781bd`.**
-The VM deployment and hosted public edge proof are now accepted. The protected dry run,
+The earlier VM deployment and hosted public edge proof are accepted. The newer session-auth
+serialization repair is published but not yet serving. The protected dry run,
 committed-candidate recovery, and live database migration are accepted within their
-guards. The next action is a separately leased browser/session repair for the hosted
-owner proof; the source, candidate, and committed serving data remain preserved.
+guards. The next action is the resumable bounded deployment of the session-auth repair,
+followed by a separately leased browser/session proof; the source, candidate, and
+committed serving data remain preserved.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -169,8 +171,12 @@ Platform lease.
   recovery/serialization harness, and synthetic 1440x900/375x812 browser proof pass.
   See `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-r1/handoff.md`
   (SHA-256 `6F958254877AB59F59353538037FEEF8885452DBEDF5D657ADCBEA36739455F4`).
-- `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` is the active bounded Platform lease.
-  The retained hosted 401 remains red until this exact build is deployed.
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before VM mutation because the
+  approved SSH identity and matching strict known-hosts entry were unavailable in the
+  current session. The published build/archive passed local verification; restart count
+  is zero and the retained hosted 401 remains red until this exact build is deployed.
+  Handoff: `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-deploy-r1/handoff.md`
+  (SHA-256 `0C0EFAF4FF64750BC420C706C42054C6EE339B64B89C4005C87F6480933199B2`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -213,16 +219,18 @@ authoritative screenshot time window.
 
 The recovery and live migration proofs are complete within their recorded limits. The
 browser repair is published but not deployed; preserve the committed serving data and
-the live browser 401 proof until the new bundle passes public and owner acceptance.
+the live browser 401 proof until the new bundle passes public and owner acceptance. Resume
+the bounded deployment only after the approved SSH identity and matching strict
+known-hosts file are made available to the execution session.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published as `a270f40`; hosted owner proof is blocked until the new bundle is deployed; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` is active**.
-One Platform and Release specialist is active under the deployment lease.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published as `a270f40`; hosted owner proof is blocked until the new bundle is deployed; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` is BLOCKED before VM mutation pending approved SSH credentials**.
+The Platform and Release specialist closed the lease after the safe pre-mutation stop.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease is closed and this deployment follow-up is active.
 
-The active deployment lease is:
+The resumable deployment lease is:
 
 | Field | Exact scope |
 |---|---|
