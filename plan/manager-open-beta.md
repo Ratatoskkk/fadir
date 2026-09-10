@@ -125,9 +125,12 @@ not tied to an authoritative screenshot time window.
 
 ### Open work
 
-Obtain a protected boolean owner/provider issuer+subject match for the unique stored
-identity. After `owner_identity_match=true`, assign the fresh isolated migration dry-run
-lease below; do not open a live cutover lease until every dry-run validation passes.
+Owner action is required: manually complete Google reauthentication in the hosted
+browser, then use a protected mechanism to return only the boolean owner/provider
+issuer+subject match for the unique stored identity. Do not automate the authentication
+dialog or put identity values in chat. After `owner_identity_match=true`, assign the
+fresh isolated migration dry-run lease below; do not open a live cutover lease until
+every dry-run validation passes.
 
 ## Resumable assignment
 
