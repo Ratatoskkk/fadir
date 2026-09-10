@@ -214,12 +214,13 @@ The active live-migration lease is:
 | Proof | Before any target write, record sanitized identity/source freshness, writer/freeze, database/owner/search-path, candidate preservation, target and rollback boundary. Within one guarded transaction validate schema, identity, ownership, shared/private separation, reconciliation, value fidelity, isolation, failure behavior, and source preservation; commit only when all pass. After commit, restart/release the service and prove health plus authorized owner portfolio access after refresh. |
 | Stop | Any identity ambiguity, source/WAL mismatch, concurrent writer, guard mismatch, validation failure, unknown outcome, missing pre-commit rollback boundary, need for product/configuration changes, unexpected service effect, or any request to retry, reverse-copy, delete, clean up, expose the candidate, or alter Cloudflare/public/provider state |
 
-Do not start an owner-browser sign-in or change the product during this dry run. Private
-source and target inspection is permitted only through the protected channels named
-above; no identity, issuer, subject, email, holdings, transaction values, or secrets may
-enter ordinary artifacts. If the protected target context is not uniquely selectable,
-stop with the smallest next action. Any adapter repair, live cutover, service
-configuration change, browser acceptance, or public proof requires a separate lease.
+Do not start an owner-browser sign-in before the live lease reaches its post-commit
+hosted-acceptance step, and do not change the product. Private source and target
+inspection is permitted only through the protected channels named above; no identity,
+issuer, subject, email, holdings, transaction values, or secrets may enter ordinary
+artifacts. If the protected target context is not uniquely selectable, stop with the
+smallest next action. Any adapter repair, service configuration change, or public proof
+outside this exact lease remains excluded.
 
 Proof root: `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/`.
 Paths in the evidence row are relative to this proof root.
