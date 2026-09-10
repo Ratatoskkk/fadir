@@ -8,10 +8,11 @@ Finish the hosted private-portfolio beta in [the product brief](../docs/OPEN_BET
 The immediate user outcome is a browser that stays signed in after refresh and shows
 the owner's original portfolio under the verified Google User.
 
-**Resume the unfinished browser proof for `GOOGLE-SESSION-HYDRATION-1` first.**
-Its two frontend files are already implemented and uncommitted. The subsequent private
-migration is approved in principle but has not passed its dry run. Do not restart APP,
-identity architecture, credential rotation, or the completed Transfer repair.
+**Hydration is accepted locally and published as `b22875e38a7174d823212bb291dcd78151e781bd`.**
+The next action is a separately leased deployment proof for that frontend delta. The
+subsequent private migration is approved in principle but has not passed its dry run.
+Do not restart APP, identity architecture, credential rotation, or the completed
+Transfer repair.
 
 ## Current authority
 
@@ -39,30 +40,27 @@ identity architecture, credential rotation, or the completed Transfer repair.
 
 Authority includes the owner's 2026-09-10 instruction to publish the documentation
 cleanup and make the Senior responsible for reviewing and pushing accepted specialist
-work. This publication excludes the unfinished frontend candidate and changes no deployment.
+work. The hydration publication changes no deployment; deployment remains a separate
+Platform lease.
 
 ## Current checkpoint
 
 ### Facts
 
-- Documentation baseline published as `e785b7e779a07f9666040add586b5ecbe64bc3f7`
-  on 2026-09-10 and verified on `origin/main`. Its 21 Markdown files passed 129 local
-  link/anchor checks, staged scope review, and `git diff --check`; all 158 tracked
-  non-Markdown files remained unchanged. The frontend candidate was excluded.
-- Product source baseline: `0bb35e9a6778c66e83499b474929bc4416b47fe5`
-  (`fix: complete Google portfolio transfer`). Local `main` matched freshly fetched
-  `origin/main` before the documentation publication. Documentation-only commits may
-  follow this product baseline; verify current local/remote commit IDs before dispatch.
-- The existing uncommitted product work is exactly `frontend/src/api.js` and
-  `frontend/src/components/GoogleIdentityPanel.jsx`. Both still match the hydration
-  handoff hashes below. The pre-cleanup board is archived; old role assignments are
-  superseded by this checkpoint.
+- Documentation baseline is published through `4d7e1f6` (`docs: record published
+  coordination baseline`) and verified on `origin/main`; the earlier 21-file Markdown
+  cleanup remains recorded in `e785b7e`.
+- Hydration publication `b22875e38a7174d823212bb291dcd78151e781bd` is present on local
+  `main` and `origin/main` with exactly `frontend/src/api.js` and
+  `frontend/src/components/GoogleIdentityPanel.jsx`. The published files match the
+  frozen hashes below.
 - The hydration implementation checks `GET /api/user/sessions` on mount: 200 shows
   signed-in state, 401 returns to Google sign-in after guarded recovery, and other
   failures show a neutral retry state. Its retained handoff reports source checks
-  and a successful frontend build.
-- The r2 component harness exists. Its handoff claims no browser pass. The prior Senior
-  task ended at a usage limit after harness startup failures and opening a browser tab.
+  and a successful frontend build. Fresh r3 evidence and independent Quality review
+  accepted the component at 1440x900 and 375x812; see the evidence pointers below.
+- The retained r1 red proof and r2 harness failure remain intact. r2 was not repaired in
+  place; r3 used a separate plain-JavaScript harness that imported the real source.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -74,48 +72,47 @@ work. This publication excludes the unfinished frontend candidate and changes no
 
 ### Limits
 
-This documentation work checks links, consistency, Git scope, and candidate hashes;
-its approved publication contains Markdown only. It runs no product test, browser,
-provider, VM, private database, or deployment action. Earlier runtime results are
-retained evidence, not fresh runtime verification. No hydration browser, independent
-Quality, publication, or deployment acceptance exists. No private migration or full
-beta acceptance exists.
+Hydration acceptance is component-level local synthetic browser proof only. It has no
+persisted PNG paths; the r3 manifest, DOM observations, request log, and inline browser
+captures are retained. The current host's focused backend session-route test could not
+collect because system Python lacks `sqlalchemy`; no backend pass is inferred. No
+full-App, hosted, private, public, deployment, owner-browser, migration, or full beta
+acceptance exists.
 
 ### Uncertainty
 
-The r1 full-App synthetic fixture crashed before rendering the panel. The prior Senior
-classified it as a harness limitation, not an established App defect. The r2 harness
-has no observed desktop/375px result. Its startup commands and current port ownership
-need checking before reuse. The persisted Transfer timestamps were internally correlated
-but were not tied to an authoritative screenshot time window.
+The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
+a harness limitation, not an established App defect. The r3 signed-out mobile state
+needed one extra observation before settling. Hosted deployment, owner refresh behavior,
+and the protected migration remain unproved. The persisted Transfer timestamps were
+internally correlated but were not tied to an authoritative screenshot time window.
 
 ### Open work
 
-Review the frozen hydration candidate, complete synthetic visible proof, then obtain
-Quality acceptance. The Senior commits and pushes the accepted delta, then assigns
-deployment under an exact operational lease using existing delivery authority.
-Verify owner refresh behavior before resuming the protected private dry run and
-conditional migration.
+Assign Platform and Release a bounded deployment proof for `b22875e`, with a preserved
+static-asset rollback copy and exactly one service restart. Review its listener, delayed
+loopback, public health, and public shell evidence. Then verify owner refresh behavior
+and resume the protected private dry run and conditional migration.
 
 ## Resumable assignment
 
-Status: **checkpoint retained; no specialist was dispatched by this documentation task**.
-The old implementation lease is frozen pending proof. All other roles have no active lease.
+Status: **hydration accepted and published; no specialist is active**. The next lease is
+`GOOGLE-SESSION-HYDRATION-DEPLOY-1` for Platform and Release. The Product Experience
+browser lease and Quality review are closed.
 
-The next Senior may activate `GOOGLE-SESSION-HYDRATION-BROWSER-3` for Product Experience
-after verifying the checkpoint and worktree:
+The deployment lease must use the approved VM and existing allowlisted mechanism:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Visible refresh/session states at desktop and 375px without a false Google prompt or private session data |
-| Repository writes | Empty; keep the two implementation files frozen |
-| Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/product-experience.md`, `frontend/src/api.js`, `frontend/src/components/GoogleIdentityPanel.jsx`, `frontend/src/styles.css`, `frontend/package.json`, `frontend/vite.config.js`, `app/api/routes.py`, `app/schemas.py`, `tests/test_user_session_routes.py` |
-| Evidence reads | Under the proof root below: `session-hydration-r1/handoff.md`, `session-hydration-r1/source-red-proof.txt`, `session-hydration-r1/source-red.png`, `session-hydration-r1/browser-proof.md`, `session-hydration-r2/handoff.md`, `session-hydration-r2/manifest.md`, `session-hydration-r2/server.js`, `session-hydration-r2/harness.html`, `session-hydration-r2/harness-entry.jsx` |
-| Operational writes | New absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/session-hydration-r3/`; local synthetic harness and owned process logs/screenshots only |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/session-hydration-r3/handoff.md` |
-| Proof | Inspect the existing harness and port ownership; run it with synthetic 200, 401/recovery, and 503 responses; inspect initial checking, signed-in, signed-out, retry, no login flash, no callback loop, and no private fields at both widths |
-| Completion | Four-section handoff with actual visible evidence and owned-process cleanup; a component pass stays separate from full-App and hosted acceptance |
-| Stop | Source hash drift, an unexpected real API/provider request, an unavailable browser surface, or a new defect requiring repository writes |
+| Outcome | Deploy the published frontend bundle and prove the hosted service still serves the accepted source without touching private data |
+| Repository writes | Empty; source is already published at `b22875e` |
+| Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/platform-and-release.md`, `Makefile`, `app/main.py`, `frontend/package.json`, `frontend/package-lock.json`, `frontend/src/api.js`, `frontend/src/components/GoogleIdentityPanel.jsx` |
+| Evidence reads | `session-hydration-r3/manifest.md`, `session-hydration-r3/observations.log`, `transfer-reject-deploy-r1/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-quality-r1/handoff.md`, and `C:/Users/doguk/AppData/Local/Temp/fadir-user-session-controls-20260909/platform-deploy-r2/session-handoff.md` |
+| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r1/` only; approved VM `fadir-control-lab-01` at `192.168.247.10`, strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, service `fadir.service`, and `/opt/fadir/frontend/dist` |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r1/handoff.md` |
+| Proof | Build the published frontend, verify its manifest and hashes, preserve the deployed static bundle outside the serving tree, transfer only the bundle, restart `fadir.service` exactly once, and verify active/enabled/PID/exit/restart/listener plus delayed loopback health and sanitized public HTTPS health and shell responses |
+| Completion | Four-section handoff with source/deployed hashes, rollback path, exact restart count, delayed service proof, body-free/sanitized public probes, and cleanup; keep deployment separate from authenticated User, migration, and beta acceptance |
+| Stop | Source/remote hash drift, missing SSH/host precondition, unexpected private/provider request, failed validation, unknown restart outcome, or any need to change backend/configuration/Tunnel/DNS |
 
 Do not start Google sign-in or access the owner database for this proof. Do not patch
 `App.jsx` because an incomplete fixture crashed. If the specialist lacks a browser
@@ -142,7 +139,7 @@ changed source, failed evidence, or a newly established risk.
 | G0 Coordination | Baseline exists; current instructions reconciled | Keep this checkpoint current |
 | G2 Average Purchase Price | Accepted locally in earlier history | Retain the accepted lifetime purchase-average rule |
 | G3 PostgreSQL and private scope | Conditional synthetic acceptance; later request scope and route work published | Complete the owner's private dry run/migration and its acceptance |
-| G4 Guest and identity | Guest, Google transitions, Merge, and session controls published; owner Transfer observed | Accept hydration and finish Guest/User browser and session journeys |
+| G4 Guest and identity | Guest, Google transitions, Merge, session controls, and hydration candidate published; component hydration PASS | Accept hosted User refresh and finish Guest/User browser and session journeys |
 | G5 Portfolios, currencies, tax | Portfolio selection, Fee Currency, Tax Profile backend/UI published | Finish full user journeys and close the missing independent Tax Profile review artifact |
 | G6 Market data | Shared refresh route/worker published; direct Yahoo decision retained | Establish hosted cache, refresh, quota, source/time, and permitted public-use acceptance |
 | G7 Security and data rights | Scoped routes, exports and deletion delivered; no-cookie denial matrix recorded | Finish authenticated isolation, data-rights UI, notices, abuse controls, and the recorded missing public security headers |
@@ -153,7 +150,7 @@ G9 needs the remaining G3–G8 outcomes. A public health 200, no-cookie 401, or 
 suite pass cannot close an authenticated journey. Off-site backup and lost-Portfolio
 recovery guarantees remain outside this beta.
 
-After hydration acceptance, queue these outcomes one at a time:
+After deployment and owner refresh acceptance, queue these outcomes one at a time:
 
 1. Complete the protected migration into the verified Google User's `Ana Portföy`/TRY
    and prove that the original portfolio is accessible after refresh.
@@ -167,7 +164,10 @@ After hydration acceptance, queue these outcomes one at a time:
 
 Under the private-migration proof root above, read only the files needed by the lease:
 
-- Hydration: `session-hydration-r1/handoff.md` and `session-hydration-r2/handoff.md`.
+- Hydration: `session-hydration-r1/handoff.md`, `session-hydration-r2/handoff.md`,
+  `session-hydration-r3/manifest.md`, `session-hydration-r3/observations.log`, and
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-quality-r1/handoff.md`;
+  published as `b22875e` and verified on `origin/main`.
 - Transfer: `transfer-reject-quality-r3/handoff.md`, `transfer-reject-final-r1/handoff.md`,
   `transfer-reject-publish-r1/handoff.md`, `transfer-reject-deploy-r1/handoff.md`.
 - Persisted transition: `post-transfer-state-r1/handoff.md`; credential rotation:
