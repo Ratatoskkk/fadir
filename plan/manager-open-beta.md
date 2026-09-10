@@ -9,8 +9,9 @@ The immediate user outcome is a browser that stays signed in after refresh and s
 the owner's original portfolio under the verified Google User.
 
 **Hydration is accepted locally and published as `b22875e38a7174d823212bb291dcd78151e781bd`.**
-The next action is a separately leased deployment proof for that frontend delta. The
-subsequent private migration is approved in principle but has not passed its dry run.
+The VM deployment and hosted public edge proof are now accepted. The next action is a
+separately leased protected source/identity recheck and private migration dry run for
+the approved `Ana Portföy`/TRY mapping; live cutover remains conditional on its pass.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -81,6 +82,13 @@ Platform lease.
   precondition: the token remains absent/empty, `cloudflared.service` remains enabled
   in `activating/auto-restart` with `ExecMainStatus=255` and `NRestarts=4788`, while
   `fadir.service` remains active on `127.0.0.1:8000`. No repair or restart occurred.
+- Tunnel repair `GOOGLE-SESSION-HYDRATION-TUNNEL-2` passed. The owner-provisioned
+  token was present as root:root mode 600 without exposing its value. Exactly one
+  existing `cloudflared.service` restart left it active/enabled with `ExecMainStatus=0`;
+  the named tunnel had four healthy connections and its remote-managed configuration
+  was unchanged. Loopback health, public `/api/health`, `/`, and both referenced
+  hashed assets returned 200 and matched the deployed bundle. See
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r2/handoff.md`.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -96,52 +104,53 @@ Hydration acceptance is component-level local synthetic browser proof only. It h
 persisted PNG paths; the r3 manifest, DOM observations, request log, and inline browser
 captures are retained. The current host's focused backend session-route test could not
 collect because system Python lacks `sqlalchemy`; no backend pass is inferred. No
-full-App, hosted/public, owner-browser, authenticated User, migration, or full beta
-acceptance exists. The VM bundle and loopback service are accepted; the tunnel and
-public edge are blocked on protected credential repair.
+full-App, owner-browser, authenticated User, migration, or full beta acceptance exists.
+The VM bundle, loopback service, tunnel, and public static/health reachability are
+accepted; no authenticated or private-data acceptance is inferred.
 
 ### Uncertainty
 
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
-needed one extra observation before settling. The missing token's protected source and
-intended repair mechanism are unknown and must not be guessed. The persisted Transfer
-timestamps were internally correlated but were not tied to an authoritative screenshot
-time window.
+needed one extra observation before settling. The exact protected identity/Workspace
+binding and current source/target migration context must be rechecked at execution time.
+The persisted Transfer timestamps were internally correlated but were not tied to an
+authoritative screenshot time window.
 
 ### Open work
 
-Owner input is required for a protected secret/configuration-repair lease for the
-existing connector. After that value/mechanism is supplied, Platform can restart only
-`cloudflared.service` once and re-prove the three public probes. Do not begin owner
-refresh or private migration until the public edge is healthy.
+Assign Identity and Data Integrity the bounded private migration dry-run lease below.
+Reconfirm the protected Google issuer/subject, its exactly-one User/Workspace chain,
+the source snapshot, and an isolated non-serving target before any target write. Do not
+open a live cutover lease until every dry-run validation passes.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment passed; public edge blocked pending protected token repair**.
-No specialist is active. The next owner-gated lease is `GOOGLE-SESSION-HYDRATION-TUNNEL-2`,
-after a protected operational source/mechanism for the existing token is supplied. The
-Product Experience browser, Quality, deployment, and Tunnel-1 leases are closed.
+Status: **hydration accepted; VM deployment and public edge passed; private migration dry run pending**.
+No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-DRYRUN-1`.
+The Product Experience browser, Quality, deployment, and Tunnel leases are closed.
 
-The deployment lease must use the approved VM and existing allowlisted mechanism:
+The next migration lease must use the approved source, protected service context, and
+isolated target only:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Restore the existing `production-web-linux` connector using an owner-supplied protected token mechanism, then prove public health, shell, and bundle reachability |
-| Repository writes | Empty; source and bundle are already published |
-| Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/platform-and-release.md`, `docs/OPEN_BETA_BRIEF.md`, and the two deployment handoffs below |
-| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r1/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r2/handoff.md`, and the current board's recorded Cloudflare read-only result |
-| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r2/` only; approved VM `fadir-control-lab-01` at `192.168.247.10`, strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, protected owner-supplied token injection through its exact mechanism, existing connector service unit only, and read-only Cloudflare account `f564f7c408cccd5b898d51cc9ae26db5` tunnel `d4e1cc1b-a37a-4ca6-9684-ffb91601bcc0` |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r2/handoff.md` |
-| Proof | Capture the current unit/configuration/connector red state, record protected token injection without exposing the value, perform exactly one restart of the verified existing connector unit, then verify connector/tunnel status and sanitized public `/api/health`, `/`, and referenced asset responses |
-| Completion | Four-section handoff with red/green status, no config/DNS mutation, exact restart count, local/public probe results, and cleanup; keep hosted edge proof separate from authenticated User, migration, and beta acceptance |
-| Stop | Missing owner mechanism or token, failed/unknown restart, any Cloudflare write, private/provider request, or any need to change DNS/Tunnel configuration |
+| Outcome | Recheck the approved SQLite source and verified Google User/Workspace context, create one isolated non-serving PostgreSQL target, run the approved `Ana Portföy`/TRY dry run, and validate every mapping, ownership, isolation, fidelity, rollback, and source-preservation category |
+| Repository writes | Empty; no product or migration source change is leased |
+| Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/identity-and-data-integrity.md`, `docs/PRIVATE_MIGRATION_RUNBOOK.md`, `app/services/private_migration.py`, `app/services/private_migration_adapters.py`, relevant models/migrations, and the current board |
+| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/dryrun-r1/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/dryrun-r2/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/post-transfer-state-r1/handoff.md`, and `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/credential-rotation-r1/handoff.md` |
+| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r1/` only; source `C:/Games/Agents/dashboard C/fadir.db` through a real SQLite snapshot transaction, approved VM `fadir-control-lab-01` with strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, mandated VM interpreter `/home/fadir-agent/fadir-tests/venv/bin/python`, protected existing PostgreSQL context, and one isolated marker/OID-guarded non-serving target outside the service search path |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r1/handoff.md` |
+| Proof | Preserve or refresh a WAL-consistent snapshot as required, prove exactly one eligible Google issuer/subject -> User -> Workspace chain, validate schema, ownership, shared separation, reconciliation, value/Decimal fidelity, cross-Workspace denial, repeatability, rollback/unknown-outcome behavior, source hash/parity, target isolation, and cleanup guards without exposing private values |
+| Completion | Four-section handoff with PASS/BLOCKED/UNKNOWN status, sanitized category results and artifact hashes, protected resource/marker/OID checks, source preservation, and no live cutover or service configuration change |
+| Stop | Identity/schema ambiguity, source mismatch, invalid/unmatched rows, missing target guards, failed validation, concurrent writer/freeze requirement, unknown transaction outcome, destructive cleanup, any public/provider/Cloudflare action, or any need to modify product code/configuration |
 
-Do not start Google sign-in or access the owner database for this proof. Do not patch
-`App.jsx` because an incomplete fixture crashed. If the specialist lacks a browser
-surface, it can prepare a reproducible harness for Senior acceptance; it cannot claim
-the missing browser result. If new evidence requires a rebuild or source repair, the
-Senior revises the lease before execution.
+Do not start an owner-browser sign-in or change the product during this dry run. Private
+source and target inspection is permitted only through the protected channels named
+above; no identity, issuer, subject, email, holdings, transaction values, or secrets may
+enter ordinary artifacts. If the protected target context is not uniquely selectable,
+stop with the smallest next action. Any adapter repair, live cutover, service
+configuration change, browser acceptance, or public proof requires a separate lease.
 
 Proof root: `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/`.
 Paths in the evidence row are relative to this proof root.
