@@ -89,6 +89,12 @@ Platform lease.
   was unchanged. Loopback health, public `/api/health`, `/`, and both referenced
   hashed assets returned 200 and matched the deployed bundle. See
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r2/handoff.md`.
+- `PRIVATE-MIGRATION-DRYRUN-1` stopped before target creation. The fresh SQLite
+  snapshot/restore proof passed and the protected service context had exactly one
+  eligible Google issuer/subject -> User -> Workspace chain with no Portfolio, but a
+  fresh owner/provider issuer+subject comparison was unavailable. No target, schema,
+  migration, cleanup, freeze, or serving-state change occurred. See
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r1/handoff.md`.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -113,25 +119,25 @@ accepted; no authenticated or private-data acceptance is inferred.
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
 needed one extra observation before settling. The exact protected identity/Workspace
-binding and current source/target migration context must be rechecked at execution time.
-The persisted Transfer timestamps were internally correlated but were not tied to an
-authoritative screenshot time window.
+binding still needs a fresh owner/provider issuer+subject comparison; uniqueness alone
+is not sufficient. The persisted Transfer timestamps were internally correlated but were
+not tied to an authoritative screenshot time window.
 
 ### Open work
 
-Assign Identity and Data Integrity the bounded private migration dry-run lease below.
-Reconfirm the protected Google issuer/subject, its exactly-one User/Workspace chain,
-the source snapshot, and an isolated non-serving target before any target write. Do not
-open a live cutover lease until every dry-run validation passes.
+Obtain a protected boolean owner/provider issuer+subject match for the unique stored
+identity. After `owner_identity_match=true`, assign the fresh isolated migration dry-run
+lease below; do not open a live cutover lease until every dry-run validation passes.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment and public edge passed; private migration dry run pending**.
-No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-DRYRUN-1`.
-The Product Experience browser, Quality, deployment, and Tunnel leases are closed.
+Status: **hydration accepted; VM deployment and public edge passed; migration preflight blocked on protected identity match**.
+No specialist is active. The next bounded action is the protected owner/provider identity
+match, followed by a fresh `PRIVATE-MIGRATION-DRYRUN-2` lease. The Product Experience
+browser, Quality, deployment, Tunnel, and DRYRUN-1 leases are closed.
 
-The next migration lease must use the approved source, protected service context, and
-isolated target only:
+The next migration lease, after the protected boolean match is true, must use the
+approved source, protected service context, and isolated target only:
 
 | Field | Exact scope |
 |---|---|
