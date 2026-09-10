@@ -32,14 +32,12 @@ created and verified the rollback copy, replaced only the backend file, restarte
 and passed sanitized health/static proof. Owner-browser r6 still shows the same visible
 request rejection after exactly one refresh, while trace-3 reproduced the complete
 startup sequence locally with only the expected signed-out session 401 and all later
-routes at 200. R7 supplied a fresh trusted UTC window and remains red; the next action
-was the allowlisted service correlation of that exact window. That diagnostic stopped
-before the SSH query because the approved VM hostname `fadir-control-lab-01` did not
-resolve, so no route/status attribution was obtained. No source repair or further
-browser proof is authorized without that evidence; the exact diagnostic can be rerun
-when the approved VM endpoint is available.
-Do not restart APP, identity architecture, credential rotation, or the completed
-Transfer repair.
+routes at 200. R7 supplied a fresh trusted UTC window and the rerun correlation via the
+approved static endpoint verified the VM and found only successful Guest bootstrap,
+portfolio-list, and instruments records; no failing route correlated to the rejection.
+The rejection remains attribution-blocked, so no source repair or further browser proof
+is authorized without a safe per-request correlation surface. Do not restart APP,
+identity architecture, credential rotation, or the completed Transfer repair.
 
 ## Current authority
 
@@ -394,6 +392,15 @@ Platform lease.
   mutation occurred. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r4/handoff.md`
   (SHA-256 `26482B44B019939DEE8794C875BE7C49844FD88453FE4609A53E8258A0D7B25F`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-5` reran the same read-only
+  correlation through the approved static endpoint and verified remote hostname
+  `fadir-control-lab-01`. It retained only Guest bootstrap 200, portfolios 200, and
+  instruments 200 in the trusted window; no failing User-session or portfolio tuple
+  appeared. Service state remained active/enabled with `NRestarts=0` and listener
+  `127.0.0.1:8000` before and after. Verdict:
+  `CORRELATED-BUT-BLOCKED — VISIBLE-REJECTION-UNAVAILABLE-EVIDENCE`. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r5/handoff.md`
+  (SHA-256 `895E5CAC4ED6D616D124FE8FE47EC3008597067494FD6AF2AA5E49E59655B382`).
 - `G5-TAX-PROFILE-QUALITY-1` returned `PASS` for the bounded Turkey Tax Profile
   source/privacy/contract slice. The review verified User/jurisdiction/year scope,
   User-Portfolio aggregation, Turkey/TRY and realized-disposal semantics, source and
@@ -538,9 +545,9 @@ before mutation because its rollback proof was unavailable; deployment-2 then pa
 with the fresh rollback and sanitized static/health proof. No authenticated route or
 browser acceptance is inferred. Owner-browser r6 is blocked by the same visible request
 rejection with no route/status tuple, trace-3 is a local attribution blocker, and r7
-provides the exact window needed for a separate service correlation. The owner-diagnostic
-r4 lease stopped before query because the approved VM hostname did not resolve, so the
-remaining rejection is still unattributed. Retain all diagnostic handoffs, all browser
+provided the exact window for a separate service correlation. The owner-diagnostic r5
+query verified the VM and found only successful allowlisted records, so the remaining
+rejection is still unattributed. Retain all diagnostic handoffs, all browser
 red proofs, all source/deployment handoffs, and the owner red baseline. The bounded
 Tax Profile Quality and synthetic browser reviews are accepted for their separate local
 slices; hosted/public endpoint and full-user acceptance remain open. The source repair
@@ -554,15 +561,15 @@ refresh. The known request rejection and other G4-G8 outcomes remain separate.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 source-header repair is published as `4edf393`, Quality is PASS for its bounded slice, and Deployment-2 accepted the public header sub-gate; G7 data-rights UI source is published as `721bd6d`, synthetic browser proof is PASS in the bounded r2 handoff, independent data-rights Quality is PASS for its bounded local slice, and its guarded frontend deployment is accepted; delegated owner-browser r1 is BLOCKED before action for missing tab; Senior-run owner-browser r2 is BLOCKED after exactly one refresh by the visible request rejection; hosted owner acceptance and remaining G4-G8 gates remain open**.
-The Senior-run G7 data-rights owner-browser r2 lease is closed as BLOCKED after exactly one refresh; it retained the visible `Bağlantı hatası: request rejected` result and did not enter the required desktop/375px acceptance states. Its separate handoff is recorded above. The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r4 stopped before SSH query because the approved VM hostname did not resolve.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3/r4 are closed; owner-diagnostic r5 is closed as correlated-but-blocked because no failing route tuple was retained; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 source-header repair is published as `4edf393`, Quality is PASS for its bounded slice, and Deployment-2 accepted the public header sub-gate; G7 data-rights UI source is published as `721bd6d`, synthetic browser proof is PASS in the bounded r2 handoff, independent data-rights Quality is PASS for its bounded local slice, and its guarded frontend deployment is accepted; delegated owner-browser r1 is BLOCKED before action for missing tab; Senior-run owner-browser r2 is BLOCKED after exactly one refresh by the visible request rejection; hosted owner acceptance and remaining G4-G8 gates remain open**.
+The Senior-run G7 data-rights owner-browser r2 lease is closed as BLOCKED after exactly one refresh; it retained the visible `Bağlantı hatası: request rejected` result and did not enter the required desktop/375px acceptance states. Its separate handoff is recorded above. The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r5 found only successful allowlisted records and remains an attribution blocker.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
-owner-browser r2/r3/r4/r5/r6, diagnostic r3, session-401 source repair, session-401
+owner-browser r2/r3/r4/r5/r6, diagnostic r3/r5, session-401 source repair, session-401
 deployment, remaining-rejection trace-2, and history deployment-1 are closed, history
 deployment-2 is accepted, owner-browser r5/r6/r7 are closed as blocked, trace-3 is
 closed as an attribution blocker, owner-diagnostic r4 is closed as a VM hostname
-proof blocker, G5 Tax Profile Quality and synthetic browser reviews are accepted for
+proof blocker and r5 is closed as a correlation blocker, G5 Tax Profile Quality and synthetic browser reviews are accepted for
 their bounded slices, and the G7 public security-header sub-gate is accepted after
 Deployment-2. The G7 source-header repair is published and locally accepted; the
 hosted owner rejection and the other G4-G8 outcomes remain separate. No remaining
