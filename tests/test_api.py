@@ -658,6 +658,35 @@ def test_portfolio_degrades_a_position_with_unconvertible_foreign_fee(client, se
     assert "fee" in rows["ERIC"]["error"].lower()
 
 
+def test_history_degrades_a_position_with_unconvertible_foreign_fee(client, session):
+    eric = next(i for i in session.query(Instrument) if i.ticker == "ERIC")
+    portfolio_id = session.query(Portfolio.id).first()[0]
+    session.add(
+        Transaction(
+            instrument_id=eric.id,
+            portfolio_id=portfolio_id,
+            trade_date=TODAY,
+            side=Side.BUY,
+            quantity=Decimal("1"),
+            price_native=Decimal("20"),
+            fees_native=Decimal("3"),
+            fee_currency="EUR",
+            fee_fx_rate_to_try=None,
+            fx_rate_to_try=Decimal("4.20"),
+            fx_rate_date=TODAY,
+            fx_provider="synthetic",
+        )
+    )
+    session.commit()
+
+    response = client.get("/api/portfolio/history", params=LONG_WINDOW)
+
+    assert response.status_code == 200
+    points = response.json()["points"]
+    assert points
+    assert any(Decimal(point["value_try"]) > 0 for point in points)
+
+
 def test_delete_missing_transaction_404(client):
     assert client.delete("/api/transactions/99999").status_code == 404
 

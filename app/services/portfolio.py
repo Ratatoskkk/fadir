@@ -469,14 +469,20 @@ class PortfolioService:
             transactions = transactions_by_instrument.get(instrument.id, [])
             if not transactions:
                 continue
+            try:
+                txns = [
+                    to_txn_input(t, instrument.ticker, instrument.currency)
+                    for t in transactions
+                ]
+                build_lot_book(instrument.ticker, instrument.currency, txns)
+            except (InsufficientLots, ValueError) as exc:
+                log.error("history position failed for %s: %s", instrument.ticker, exc)
+                continue
             positions.append(
                 PositionHistoryInput(
                     ticker=instrument.ticker,
                     currency=instrument.currency,
-                    transactions=[
-                        to_txn_input(t, instrument.ticker, instrument.currency)
-                        for t in transactions
-                    ],
+                    transactions=txns,
                 )
             )
             closes[instrument.ticker] = self.prices.cached_closes(
