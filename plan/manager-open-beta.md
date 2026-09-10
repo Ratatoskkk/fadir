@@ -254,6 +254,18 @@ Platform lease.
   Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r3/handoff.md`
   (SHA-256 `04572B10358DD437C7F7FCD6A96132DD3A142748867FD9FF9BF4F87C44EAF85C`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-SESSION-401-REPAIR-1` accepted the smallest
+  frontend repair and published it as `600289e`. The local synthetic fetch boundary
+  proved that `POST /api/guest/bootstrap`, although authority-independent at the
+  route, still participates in the browser session boundary and was incorrectly
+  outside the FIFO; it could overlap User-session renewal and trigger PostgreSQL
+  `NOWAIT` contention. Only `GET /api/health` now bypasses the queue. The focused
+  synthetic recovery/concurrency proof passed with `maxPrivate=1`; `node --check`,
+  `git diff --check`, and `npm run build` (844 modules) passed. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-session-401-repair-r1/handoff.md`
+  (SHA-256 `6ED4D1BA36A1D311E21AE6120094CE978D26051D497FE3E96A7FA39160D68E1E`).
+  The accepted source hash is
+  `9860B1E150AA7D52E6C8A64456C0A36A75BED20D0D477A19549FD546B5F7929E`.
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -297,20 +309,21 @@ browser repair and backend 500 repair are deployed with their rollback copies; p
 static/health and sanitized loopback health are accepted. The authenticated portfolio
 probe remains authorization-blocked, so preserve the committed serving data, rollback
 copies, and live browser rejection proof until the separate owner-browser proof passes.
-The r3 timestamped service correlation is closed as unavailable evidence. Retain all
-diagnostic handoffs, the repair handoff, the deployment handoff, and the owner red
-baseline before attempting another browser proof. The next lease is a local synthetic
-request-boundary repair; no VM, database, authority, browser, or public mutation is
-allowed under it.
+The r3 timestamped service correlation is closed as unavailable evidence. The source
+repair is published but not deployed; retain all diagnostic handoffs, the repair
+handoff, the deployment handoff, and the owner red baseline before attempting another
+browser proof. The next lease is a bounded frontend deployment; no database, authority,
+browser, or public mutation is allowed under the source/deployment handoff until its
+own proof passes.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2 stopped on visible request rejection; session-401 repair is the active source lease**.
-The Platform and Release specialist closed both frontend deployment leases after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployment are accepted, and the session-401 source repair is now the sole active delivery path.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2 stopped on visible request rejection; session-401 repair is published as `600289e`; its bounded VM deployment is the active lease**.
+The Platform and Release specialist closed both frontend deployment leases after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployment are accepted, the session-401 source repair is accepted, and its bounded deployment is now the sole active delivery path.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
-owner-browser r2, and diagnostic r3 leases are closed, and the session-401 source
-repair is active.
+owner-browser r2, diagnostic r3, and session-401 source repair leases are closed, and
+the session-401 frontend deployment is active.
 
 The completed deployment retry lease was:
 
@@ -379,7 +392,7 @@ The completed diagnostic lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAG
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r3/handoff.md` |
 | Stop | Missing trusted window, raw/private log content, cookies, response bodies, identity values, DB/private-row queries, service/config/Tunnel/DNS changes, restart, or ambiguous/unavailable correlation |
 
-The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-SESSION-401-REPAIR-1`:
+The completed source lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-SESSION-401-REPAIR-1`:
 
 | Field | Exact scope |
 |---|---|
@@ -393,8 +406,22 @@ The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-SESSION-401-REPAIR-1`
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-session-401-repair-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-Do not perform any follow-up mutation under the completed diagnostic lease; the new
-session-401 repair lease is the only active assignment.
+The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-SESSION-401-DEPLOY-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Platform and Release; build exactly the accepted `600289e` frontend, preserve the currently served bundle under a fresh rollback path, replace only `/opt/fadir/frontend/dist`, restart `fadir.service` exactly once, and prove service/static/health reachability |
+| Current checkpoint | Source repair `600289e` is reviewed, published, and locally proven. It serializes `/api/guest/bootstrap` with User-session and dashboard requests; only `/api/health` bypasses the FIFO. Retain owner-browser r2 and diagnostic r3 as red/blocked evidence. No authenticated owner acceptance is inferred. |
+| Read paths | `frontend/src/api.js`, `frontend/package.json`, the accepted source handoff, the deployed frontend r2 handoff, `plan/manager-open-beta.md`, and the published commit manifest only |
+| Repository writes | Empty; use published `600289e` and its exact local Vite build/archive only |
+| Operational writes/resources | Approved VM `fadir-control-lab-01`; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-session-401-deploy-r1/`; approved writable `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/`; strict key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, and `IdentityAgent=none`; preserve the current frontend bundle under a fresh lease-owned remote rollback path; one `fadir.service` restart |
+| Proof | Build/archive from `600289e`; verify transfer bytes, manifest, and source hash before replacement; verify the rollback copy; replace only the frontend bundle; restart exactly once; prove active/enabled/listener, `NRestarts=0`, loopback `/api/health`, public `/api/health`, `/`, and every hashed asset referenced by the shell. Do not claim authenticated route or browser acceptance. |
+| Excluded/stop | No database/WAL/migration/private-row/identity/authority/session-state change, no service configuration/Tunnel/DNS/Cloudflare/provider write, no extra restart, no browser refresh, no rollback deletion, no source change, and stop on any source/archive mismatch, missing rollback, failed readiness/static/health proof, or unknown replacement state |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-session-401-deploy-r1/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
+Do not perform any follow-up mutation under the completed diagnostic or source leases;
+the session-401 frontend deployment is the only active assignment.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, service configuration change, or public proof
