@@ -502,6 +502,18 @@ Platform lease.
   identity, or private value was accessed. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-owner-browser-r3/handoff.md`
   (SHA-256 `FABA36A65034BADB2FA473180C60FE6CE5E1F5A94516A9941878468073C9022B`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-TRACE-2` reproduced a distinct
+  malformed zero-FX-rate position locally: `DecimalException` escaped the existing
+  per-position guard and caused the route-level 500. The smallest repair adds that
+  exception family to the guard; focused/affected tests passed (12), the final
+  offline suite passed, and Quality returned bounded PASS. Source `f538d36` is
+  published on `origin/main`; no hosted or browser acceptance is inferred. Source
+  handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-trace-r1/handoff.md`
+  (SHA-256 `4F6833C9FCA854ADABE4EDC42FEEAD9213623A85EC12188A017360EB84559549`);
+  Quality handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-quality-r1/handoff.md`
+  (SHA-256 `DC2EF7A6E6A3080FCDCE2056B9BA22190536A06D7D5D061BB667DD4E4CFBE362`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -565,14 +577,15 @@ Deployment-2 used the previously approved static endpoint with strict remote ide
 verification to accept the public security-header sub-gate. No remaining action should
 repeat that sub-gate without a new failure. The Senior-run hosted owner-browser check
 against the deployed data-rights bundle is closed as blocked by the same visible request
-rejection; obtain a separate `/api/portfolio` 500 source trace/repair lease before
-another owner refresh. The known request rejection and other G4-G8 outcomes remain
-separate.
+rejection; the `/api/portfolio` 500 source trace/repair is accepted and published as
+`f538d36`, so the next bounded action is its separate backend-only deployment lease
+before another owner refresh. The known request rejection and other G4-G8 outcomes
+remain separate.
 
 ## Resumable assignment
 
 Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3/r4 are closed; owner-diagnostic r5 is closed as correlated-but-blocked because no failing route tuple was retained; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 source-header repair is published as `4edf393`, Quality is PASS for its bounded slice, and Deployment-2 accepted the public header sub-gate; G7 data-rights UI source is published as `721bd6d`, synthetic browser proof is PASS in the bounded r2 handoff, independent data-rights Quality is PASS for its bounded local slice, and its guarded frontend deployment is accepted; delegated owner-browser r1 is BLOCKED before action for missing tab; Senior-run owner-browser r2 is BLOCKED after exactly one refresh by the visible request rejection; hosted owner acceptance and remaining G4-G8 gates remain open**.
-The Senior-run G7 data-rights owner-browser r2 lease is closed as BLOCKED after exactly one refresh; it retained the visible `Bağlantı hatası: request rejected` result and did not enter the required desktop/375px acceptance states. The follow-up read-only browser r3 handoff is closed with concrete `GET /api/portfolio` 500 evidence from that existing page load. Its separate handoff is recorded above. The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r5 found only successful allowlisted records and remains an attribution blocker.
+The Senior-run G7 data-rights owner-browser r2 lease is closed as BLOCKED after exactly one refresh; it retained the visible `Bağlantı hatası: request rejected` result and did not enter the required desktop/375px acceptance states. The follow-up read-only browser r3 handoff is closed with concrete `GET /api/portfolio` 500 evidence from that existing page load. Its separate handoff is recorded above. The accepted portfolio-500 trace/repair is published as `f538d36`; its separate backend deployment lease follows. The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r5 found only successful allowlisted records and remains an attribution blocker.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
 owner-browser r2/r3/r4/r5/r6, diagnostic r3/r5, session-401 source repair, session-401
@@ -1043,6 +1056,20 @@ The completed read-only browser diagnostic is `G7-DATA-RIGHTS-UI-OWNER-BROWSER-3
 | Limits | Status/timing metadata only; no response bodies, headers, cookies, identity values, holdings, transactions, private values, or 375px proof. Preserve the prior red browser and diagnostic handoffs. |
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-owner-browser-r3/handoff.md` (SHA-256 `FABA36A65034BADB2FA473180C60FE6CE5E1F5A94516A9941878468073C9022B`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `max` |
+
+The active lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-DEPLOY-2`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Platform and Release; deploy only the accepted `f538d36` backend repair for malformed portfolio FX positions, preserve a fresh rollback copy, restart `fadir.service` exactly once, and prove sanitized service/health reachability |
+| Current checkpoint | Browser-level evidence established `GET /api/portfolio` HTTP 500. Source `f538d36` adds the reviewed `DecimalException` degradation guard; focused/affected and final offline tests passed, and Quality is PASS for the bounded local slice. No hosted repair or authenticated browser acceptance is inferred. |
+| Read paths | `plan/specialists/platform-and-release.md`, `docs/OPEN_BETA_BRIEF.md`, current portfolio-500 facts in `plan/manager-open-beta.md`, `app/services/portfolio.py`, published commit `f538d36`, source/Quality/browser handoffs, and the previous accepted portfolio-500 deployment handoff only |
+| Repository writes | Empty; use the published `f538d36` source only |
+| Operational writes/resources | Approved VM `fadir-control-lab-01` at static SSH endpoint `192.168.247.10`; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-deploy-r1/`; matching writable remote proof root `/home/fadir-agent/fadir-tests/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-deploy-r1/`; strict key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, and `IdentityAgent=none`; preserve `/opt/fadir/app/services/portfolio.py` under a fresh remote rollback path and replace only that file; one `fadir.service` restart; no database/WAL/migration/identity/authority/session/frontend/configuration/Tunnel/DNS/Cloudflare/provider/browser write |
+| Proof | Verify published source/served-file bytes and remote hostname exactly; prove rollback bytes; replace only `/opt/fadir/app/services/portfolio.py`; restart once; verify service active/enabled, `ExecMainStatus=0`, `NRestarts=0`, listener `127.0.0.1:8000`, loopback `/api/health`, public `/api/health`, and presence-only shell/static reachability. Do not claim authenticated route or browser acceptance. |
+| Excluded/stop | Stop before mutation on strict SSH/hostname, source/hash, rollback, readiness/health/static, or replacement failure; stop on extra restart, any database/configuration/Tunnel/DNS/Cloudflare/provider/browser action, or any private response/body/row exposure. |
+| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-deploy-r1/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
 Do not perform any follow-up mutation under the completed diagnostic, source, or
 deployment/browser/trace leases. The source repair above is local-only and has no
