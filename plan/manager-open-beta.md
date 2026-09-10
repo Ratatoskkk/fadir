@@ -531,7 +531,7 @@ slices; hosted/public endpoint and full-user acceptance remain open. The source 
 is published as `4edf393`, independent Quality is PASS for its bounded local slice, and
 Deployment-2 used the previously approved static endpoint with strict remote identity
 verification to accept the public security-header sub-gate. No remaining action should
-  repeat that sub-gate without a new failure. The next concrete G7 action is synthetic
+repeat that sub-gate without a new failure. The next concrete G7 action is synthetic
   desktop/375px proof of the new data-rights controls and quiet notices; the hosted owner
   rejection and other G4-G8 outcomes remain separate.
 
