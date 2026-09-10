@@ -134,6 +134,14 @@ Platform lease.
   the rehearsal script's invalid unused access and PASS gates; and use a fresh
   isolated target only if the historical outcome remains unrecoverable. No candidate
   or source reinsertion, cleanup, or serving change is authorized by this instruction.
+- `PRIVATE-MIGRATION-XID-RECOVERY-1` correlated all five migration-table row groups
+  to one full transaction ID and `pg_xact_status(full_xid::xid8)` returned `committed`.
+  Candidate/source/database mutation count was zero; no fresh target was created. A
+  fresh repaired copy removed the invalid unused `target.transaction` access, records
+  `database_outcome` before later checks, and gates PASS on an explicit validation map.
+  Its idempotent-rerun and failure/rollback checks were not run against the preserved
+  candidate, so the lease verdict is BLOCKED_VALIDATION, not migration PASS. See
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-xid-recovery-r1/handoff.md`.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -158,35 +166,36 @@ accepted; no authenticated or private-data acceptance is inferred.
 
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
-needed one extra observation before settling. The DRYRUN-2 candidate content is fully
-reconciled and guarded, but the direct row-transaction-status check has not yet been
-run; the previous audit omitted it. The persisted Transfer timestamps were internally
-correlated but were not tied to an authoritative screenshot time window.
+needed one extra observation before settling. The migration transaction is now directly
+classified COMMITTED. Idempotent-rerun and failure/rollback behavior remain unproved
+for the preserved candidate because they must not successfully reinsert or alter its
+rows. The persisted Transfer timestamps were internally correlated but were not tied
+to an authoritative screenshot time window.
 
 ### Open work
 
-Run the owner-authorized protected transaction-status recovery and repair lease below.
-Preserve the existing candidate/source; use a fresh isolated target only when the
-direct status result is unrecoverable.
+Run the bounded protected committed-candidate behavior checks below. Preserve the
+existing candidate/source and require zero successful row reinsertion; use a fresh
+isolated target only if a later independent outcome becomes unrecoverable.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 content is complete; direct transaction-status recovery and corrected rehearsal are active next**.
-No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-XID-RECOVERY-1`.
+Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 candidate is COMMITTED with content validation accepted; two guarded behavior checks remain**.
+No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-COMMITTED-CHECKS-1`.
 The Product Experience browser, Quality, deployment, Tunnel, DRYRUN-1, and DRYRUN-2
 leases are closed.
 
-The next recovery lease is:
+The next committed-candidate check lease is:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Re-guard the existing candidate; correlate candidate-row `xmin` transaction IDs to the DRYRUN-2 attempt; derive the correct full `xid8`; query `pg_xact_status(xid8)` directly; classify COMMITTED/ABORTED/IN-PROGRESS/NULL without guessing |
+| Outcome | Re-guard the committed candidate and complete idempotent-rerun and failure/rollback checks without any successful row reinsertion or change to the candidate's committed content |
 | Repository writes | Empty; no product or migration source change is leased |
-| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-outcome-audit-r1/handoff.md`, `protected-outcome-audit-output.txt`, `private-migration-r2/protected-dryrun.py`, and prior target-validation/verification/DRYRUN-2 evidence |
-| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-xid-recovery-r1/` only; preserve candidate/source/snapshot; a fresh isolated non-serving target is permitted only if direct status is unrecoverable |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-xid-recovery-r1/handoff.md` |
-| Proof | Repair a fresh script copy: remove the unused invalid attribute access; emit confirmed database outcome before later checks; gate PASS on every schema/ownership/reconciliation/fidelity/isolation/repeatability/failure validation; if committed, finish read-only checks without reinserting candidate data; if unrecoverable, preserve UNKNOWN and run corrected rehearsal in the fresh target |
-| Stop | Guard mismatch, missing/ambiguous `xmin` correlation, incorrect/full-XID conversion failure, `pg_xact_status` NULL/IN-PROGRESS/contradictory result, any candidate/source mutation, any unguarded PASS, any public/provider/service action, or any need to modify product code/configuration |
+| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-xid-recovery-r1/handoff.md`, `protected-xid-status-output.txt`, repaired `protected-dryrun.py`, and prior target-validation/verification/DRYRUN-2 evidence |
+| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/` only; candidate/source/snapshot remain preserved; no successful candidate row write is authorized |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/handoff.md` |
+| Proof | Re-guard candidate/database/owner/marker/OID/search path; capture pre/post sanitized content fingerprints; run only guarded idempotent-rerun and invalid-portfolio rollback behavior; require rollback and unchanged content; retain database_outcome=COMMITTED separately from validation outcome |
+| Stop | Guard mismatch, any successful candidate insertion/content change, unknown rollback outcome, any candidate/source cleanup, any public/provider/service action, or any need to modify product code/configuration |
 
 Do not start an owner-browser sign-in or change the product during this dry run. Private
 source and target inspection is permitted only through the protected channels named
