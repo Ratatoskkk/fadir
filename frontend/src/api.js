@@ -15,7 +15,6 @@ let privateRequestTail = Promise.resolve();
 
 const sessionIndependentPaths = new Set([
   "/api/health",
-  "/api/guest/bootstrap",
 ]);
 
 function serializePrivateRequest(work) {
