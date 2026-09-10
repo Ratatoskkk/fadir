@@ -193,6 +193,10 @@ Platform lease.
   The public shell includes Cloudflare Insights injection; its application asset
   references and hashed JS/CSS match the published manifest. No authenticated owner
   acceptance is inferred.
+- The first post-deployment owner-tab refresh loaded the published JS/CSS but still
+  visibly rendered `Bağlantı hatası: request rejected` with `Ana Portföy · TRY` selected.
+  The owner-browser lease stopped before acceptance; no cookie, identity, private row,
+  response body, or provider action was captured.
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -234,12 +238,13 @@ authoritative screenshot time window.
 The recovery and live migration proofs are complete within their recorded limits. The
 browser repair is deployed and public static/health proof is accepted; preserve the
 committed serving data, rollback copy, and live browser 401 proof until the separate
-authenticated owner-browser proof passes.
+authenticated owner-browser proof passes. The next step is a read-only status
+correlation for the failed refresh.
 
 ## Resumable assignment
 
 Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted**.
-The Platform and Release specialist closed both deployment leases after Senior review; the separate hosted owner-browser proof is next.
+The Platform and Release specialist closed both deployment leases after Senior review; the owner-browser lease stopped on a live request-rejected result and its bounded diagnostic follow-up is next.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease is closed and this deployment follow-up is active.
 
@@ -264,6 +269,18 @@ The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-1`:
 | Evidence writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r1/`; sanitized observations and request status/method/path tuples only; no cookies, identity values, email, session identifiers, holdings, transactions, or response bodies |
 | Browser proof | Current `https://ratatosk.dev/` owner tab; refresh after deployment, capture desktop state, then verify the required mobile-width state without changing account or provider data |
 | Stop | Missing owner state, any identity/Workspace ambiguity, private request 401/403/error, cross-Workspace or empty unexpected result, browser/provider prompt requiring owner action, leaked private value, or any source/VM/database/configuration mutation |
+
+The owner-browser lease stopped before acceptance. The next exact lease is
+`GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-1`:
+
+| Field | Exact scope |
+|---|---|
+| Outcome | Correlate the failed refresh with sanitized VM access/service records for only the allowlisted session and portfolio endpoints; report method/path/status counts and whether the FIFO repair reached the service |
+| Repository writes | Empty |
+| Operational resources | Approved `fadir-control-lab-01`; strict SSH using the recorded key/known-hosts pair with `IdentityAgent=none`; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r1/` and matching remote proof root |
+| Allowlist | `GET /api/user/sessions`, `POST /api/auth/recover-user-cookie`, `GET /api/portfolios`, `GET /api/portfolio`, `GET /api/portfolio/history`, `GET /api/transactions`, `GET /api/instruments`; strip query strings and retain only method/path/status/count evidence |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r1/handoff.md` |
+| Stop | Raw/private log content, cookies, response bodies, identity values, DB queries, service/config/Tunnel/DNS changes, restart, or ambiguous/unavailable correlation |
 
 Do not perform authenticated owner-browser acceptance under this deployment lease. Keep
 the live 401 browser proof and migration evidence intact; no identity, issuer, subject,
