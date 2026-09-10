@@ -95,6 +95,11 @@ Platform lease.
   fresh owner/provider issuer+subject comparison was unavailable. No target, schema,
   migration, cleanup, freeze, or serving-state change occurred. See
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r1/handoff.md`.
+- A fresh owner-authenticated hosted browser state is now visible: the panel reports
+  `Google User` session active with User Workspace access, while the portfolio remains
+  empty as expected before migration. No cookies, identity values, or private rows
+  were emitted. This enables a new protected identity/session binding lease; it is not
+  itself migration or portfolio acceptance.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -110,7 +115,8 @@ Hydration acceptance is component-level local synthetic browser proof only. It h
 persisted PNG paths; the r3 manifest, DOM observations, request log, and inline browser
 captures are retained. The current host's focused backend session-route test could not
 collect because system Python lacks `sqlalchemy`; no backend pass is inferred. No
-full-App, owner-browser, authenticated User, migration, or full beta acceptance exists.
+full-App, authenticated User journey, migration, or full beta acceptance exists. The
+current owner browser shows the User state but has not yet shown migrated private data.
 The VM bundle, loopback service, tunnel, and public static/health reachability are
 accepted; no authenticated or private-data acceptance is inferred.
 
@@ -118,29 +124,28 @@ accepted; no authenticated or private-data acceptance is inferred.
 
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
-needed one extra observation before settling. The exact protected identity/Workspace
-binding still needs a fresh owner/provider issuer+subject comparison; uniqueness alone
-is not sufficient. The persisted Transfer timestamps were internally correlated but were
+needed one extra observation before settling. The fresh browser User state must be bound
+in protected execution to the unique stored Google identity/User/Workspace chain before
+target creation. The persisted Transfer timestamps were internally correlated but were
 not tied to an authoritative screenshot time window.
 
 ### Open work
 
-Owner action is required: manually complete Google reauthentication in the hosted
-browser, then use a protected mechanism to return only the boolean owner/provider
-issuer+subject match for the unique stored identity. Do not automate the authentication
-dialog or put identity values in chat. After `owner_identity_match=true`, assign the
-fresh isolated migration dry-run lease below; do not open a live cutover lease until
-every dry-run validation passes.
+Assign Identity and Data Integrity the fresh protected identity/session binding and
+isolated migration dry-run lease below. The owner has completed the browser action;
+return only a boolean match and sanitized validation results. Do not expose identity
+values or open a live cutover lease until every dry-run validation passes.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment and public edge passed; migration preflight blocked on protected identity match**.
-No specialist is active. The next bounded action is the protected owner/provider identity
-match, followed by a fresh `PRIVATE-MIGRATION-DRYRUN-2` lease. The Product Experience
-browser, Quality, deployment, Tunnel, and DRYRUN-1 leases are closed.
+Status: **hydration accepted; VM deployment and public edge passed; owner User state visible; protected migration dry run pending**.
+No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-DRYRUN-2`.
+The Product Experience browser, Quality, deployment, Tunnel, and DRYRUN-1 leases are
+closed.
 
-The next migration lease, after the protected boolean match is true, must use the
-approved source, protected service context, and isolated target only:
+The next migration lease must first bind the authenticated browser User to the approved
+stored identity, then use the approved source, protected service context, and isolated
+target only:
 
 | Field | Exact scope |
 |---|---|
@@ -148,8 +153,8 @@ approved source, protected service context, and isolated target only:
 | Repository writes | Empty; no product or migration source change is leased |
 | Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/identity-and-data-integrity.md`, `docs/PRIVATE_MIGRATION_RUNBOOK.md`, `app/services/private_migration.py`, `app/services/private_migration_adapters.py`, relevant models/migrations, and the current board |
 | Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/dryrun-r1/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/dryrun-r2/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/post-transfer-state-r1/handoff.md`, and `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/credential-rotation-r1/handoff.md` |
-| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r1/` only; source `C:/Games/Agents/dashboard C/fadir.db` through a real SQLite snapshot transaction, approved VM `fadir-control-lab-01` with strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, mandated VM interpreter `/home/fadir-agent/fadir-tests/venv/bin/python`, protected existing PostgreSQL context, and one isolated marker/OID-guarded non-serving target outside the service search path |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r1/handoff.md` |
+| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r2/` only; source `C:/Games/Agents/dashboard C/fadir.db` through a real SQLite snapshot transaction, approved VM `fadir-control-lab-01` with strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, mandated VM interpreter `/home/fadir-agent/fadir-tests/venv/bin/python`, protected existing PostgreSQL context, and one isolated marker/OID-guarded non-serving target outside the service search path |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r2/handoff.md` |
 | Proof | Preserve or refresh a WAL-consistent snapshot as required, prove exactly one eligible Google issuer/subject -> User -> Workspace chain, validate schema, ownership, shared separation, reconciliation, value/Decimal fidelity, cross-Workspace denial, repeatability, rollback/unknown-outcome behavior, source hash/parity, target isolation, and cleanup guards without exposing private values |
 | Completion | Four-section handoff with PASS/BLOCKED/UNKNOWN status, sanitized category results and artifact hashes, protected resource/marker/OID checks, source preservation, and no live cutover or service configuration change |
 | Stop | Identity/schema ambiguity, source mismatch, invalid/unmatched rows, missing target guards, failed validation, concurrent writer/freeze requirement, unknown transaction outcome, destructive cleanup, any public/provider/Cloudflare action, or any need to modify product code/configuration |
