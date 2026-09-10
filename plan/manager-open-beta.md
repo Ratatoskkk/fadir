@@ -16,12 +16,13 @@ database migration are accepted within their guards. The owner refresh still sho
 request rejection, and the narrow diagnostic established a real `/api/portfolio` 500 in
 the trusted window. The backend root cause is repaired and deployed as `71eacca`, with
 its rollback copy preserved; the sanitized portfolio probe is still authorization-blocked.
-The new owner-browser refresh still shows `Bağlantı hatası: request rejected`. The
-separately leased r3 service correlation returned no allowlisted records for the exact
-trusted window, so it could not attribute a route or status. The next action is a
-bounded local source proof and smallest repair of the User-session request boundary;
-the owner red browser proof, source, candidate, serving data, and rollback remain
-preserved.
+The new owner-browser r5 refresh still shows `Bağlantı hatası: request rejected` after
+the accepted `cf6e9a3` bundle; the selector remains `Ana Portföy · TRY`, but the browser
+surface exposes no route/status tuple. The separately leased r3 service correlation
+returned no allowlisted records for its exact trusted window, so it could not attribute
+a route or status. The next action is a bounded local synthetic trace of the frontend
+startup call graph and private portfolio/related route contracts; the owner red browser
+proof, source, candidate, serving data, and rollback remain preserved.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -310,6 +311,14 @@ Platform lease.
   authenticated route or browser acceptance is inferred. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-deploy-r1/handoff.md`
   (SHA-256 `7F5DFF6279B6CCD1DF2380DD1341613B5D93B6BAED04C0379E77E2E79F3789CC`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-5` performed exactly one refresh
+  in the existing authorized owner tab after `cf6e9a3` deployment. After a bounded
+  2.5-second settle, the selector still showed `Ana Portföy · TRY` and the page still
+  showed `Bağlantı hatası: request rejected`. The browser exposed no sanitized
+  route/status tuple, so the required 375px proof was stopped before viewport change.
+  Verdict: `BLOCKED-BY-REQUEST-REJECTION`. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r5/handoff.md`
+  (SHA-256 `EFEEB26E276E9AE26FE509089F71B3E491543944E7AE59CBE14D1E03A6ADE58A`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -351,23 +360,25 @@ authoritative screenshot time window.
 The recovery and live migration proofs are complete within their recorded limits. The
 browser repair and backend 500 repair are deployed with their rollback copies; public
 static/health and sanitized loopback health are accepted. The authenticated portfolio
-probe remains authorization-blocked, so preserve the committed serving data, rollback
-copies, and live browser rejection proof until the separate owner-browser proof passes.
+probe remains authorization-blocked, and owner-browser r5 is blocked by the same visible
+request rejection, so preserve the committed serving data, rollback copies, and all
+browser red proofs.
 The r3 timestamped service correlation is closed as unavailable evidence. Both source
 repairs and their bounded deployments are accepted with rollback and sanitized
 static/health proof. Retain all diagnostic handoffs, all browser red proofs, all
-source/deployment handoffs, and the owner red baseline. The next lease is the separate
-owner-browser acceptance for the new bundle.
+source/deployment handoffs, and the owner red baseline. The next lease is a bounded
+local synthetic source trace of the remaining rejection; no browser refresh or
+hosted/VM action is authorized by that lease.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; owner-browser r5 is the active acceptance lease**.
-The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, and owner-browser r5 is now the sole active delivery path.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is the active lease**.
+The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, and the bounded remaining-rejection trace-2 lease is now the sole active delivery path.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
 owner-browser r2/r3/r4, diagnostic r3, session-401 source repair, session-401
 deployment, and remaining-rejection trace/deployment leases are closed, and
-owner-browser r5 is active.
+owner-browser r5 is closed as blocked, and remaining-rejection trace-2 is active.
 
 The completed deployment retry lease was:
 
@@ -518,21 +529,36 @@ The completed deployment lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-deploy-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-5`:
+The completed blocked lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-5`:
 
 | Field | Exact scope |
 |---|---|
-| Role and outcome | Senior/Product Experience; use the existing authorized `https://ratatosk.dev/` owner tab after the accepted `cf6e9a3` deployment, perform exactly one trusted refresh, and prove Google User hydration, `Ana Portföy · TRY` selection, successful private portfolio/related requests, no request-rejected surface, and required desktop/375px visible states |
-| Current checkpoint | Owner-browser r4 is the fresh red baseline: exactly one refresh after `600289e` still settled on `Ana Portföy · TRY` with `Bağlantı hatası: request rejected`; no route/status tuple was available. The second source repair handles invalid Guest bootstrap 401 locally and its deployment is accepted with rollback/static/health proof. No authenticated acceptance is inferred. |
+| Role and outcome | Senior/Product Experience; use the existing authorized owner tab after the accepted `cf6e9a3` deployment, perform exactly one trusted refresh, and prove Google User hydration, `Ana Portföy · TRY` selection, successful private portfolio/related requests, no request-rejected surface, and required desktop/375px visible states |
+| Current checkpoint | Exactly one refresh at `2026-09-10T20:38:41.188Z` settled at `2026-09-10T20:38:45.089Z` on `Ana Portföy · TRY` with `Bağlantı hatası: request rejected`; no route/status tuple was available. The required 375px proof was stopped before viewport change. No authenticated acceptance is inferred. |
 | Repository writes | Empty; do not edit source or board |
-| Evidence writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r5/`; sanitized UI observations and method/path/status/count tuples only; no cookies, identity values, email, session identifiers, holdings, transactions, response bodies, or private values |
-| Browser proof | Current Codex in-app browser tab at `https://ratatosk.dev/`; verify the authorized tab exists before acting; exactly one refresh after the new deployment; capture settled desktop state and then the required 375px viewport without changing account or provider data. Keep browser evidence distinct from synthetic/source/VM evidence. |
+| Evidence writes | Fresh `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r5/`; sanitized UI observations only; no cookies, identity values, email, session identifiers, holdings, transactions, response bodies, or private values |
+| Browser proof | Existing Codex in-app browser tab at `https://ratatosk.dev/`; one trusted refresh after the new deployment was performed and the settled desktop state was recorded. Browser proof is blocked by the visible request rejection; mobile proof was not started. |
 | Excluded/stop | Missing authorized owner tab, identity/Workspace ambiguity, any private request 401/403/error, cross-Workspace or empty unexpected result, provider prompt requiring owner action, leaked private value, extra refresh/navigation, raw/private response/log/cookie capture, or any source/VM/database/configuration mutation |
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r5/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
+The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-TRACE-2`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Identity and Data Integrity; trace the r5 rejection through the frontend startup call graph and private portfolio/related route contracts using synthetic local fixtures, establish one concrete 401/403/500 trigger or a bounded attribution blocker, and implement the smallest repair only if a source trigger is proven |
+| Current checkpoint | Owner-browser r5 is a fresh red proof: exactly one refresh after `cf6e9a3` still settled on `Ana Portföy · TRY` with `Bağlantı hatası: request rejected`; the browser exposed no route/status tuple and 375px proof was stopped. Preserve r2, r3, r4, and r5 red/blocked evidence. Do not infer that the remaining cause is session contention, Guest bootstrap, or portfolio calculation without a proving trigger. |
+| Read paths | `frontend/src/api.js`, `frontend/src/App.jsx`, `frontend/src/components/GoogleIdentityPanel.jsx`, `app/api/request_authority.py`, `app/api/request_transaction.py`, relevant private routes in `app/api/routes.py`, `app/services/user_sessions.py`, `app/services/portfolio.py`, response schemas, focused API/session/portfolio tests, and the r2/r3/r4/r5 handoffs only |
+| Repository writes | Only the smallest proven source repair and focused regression tests; likely `app/...`/`tests/...` or `frontend/src/...` as established by the trace. No migration, deployment, board, or infrastructure files. If no trigger is proven, write no repository files. |
+| Operational writes/resources | Empty; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-trace-r2/` handoff only |
+| Proof | Preserve the fresh r5 red browser proof. Run a focused synthetic request sequence covering bootstrap, User-session hydration, recovery/retry, portfolio list/view/history, transactions, and instruments with no private values; run the relevant local regression and full offline suite only if source changes are made. Keep hosted/browser/VM proof separate. |
+| Excluded/stop | No browser refresh/navigation, hosted/public request, VM/SSH/service restart, database/WAL/private-row query, live authority/lock change, cookie/identity/provider action, raw/private log capture, or speculative repair; stop with a bounded blocker if no concrete route/source trigger is proven or an owner choice is required |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-trace-r2/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
 Do not perform any follow-up mutation under the completed diagnostic, source, or
-deployment/browser/trace leases; owner-browser r5 is the only active assignment.
+deployment/browser/trace leases; the bounded remaining-rejection trace is the only
+active assignment.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, service configuration change, or public proof
