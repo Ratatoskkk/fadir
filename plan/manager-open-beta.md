@@ -14,9 +14,9 @@ serialization repair is now deployed with its rollback copy and sanitized public
 static/health proof. The protected dry run, committed-candidate recovery, and live
 database migration are accepted within their guards. The owner refresh still shows a
 request rejection, and the narrow diagnostic established a real `/api/portfolio` 500 in
-the trusted window. The next action is a separately leased backend root-cause repair;
-the owner red browser proof, source, candidate, serving data, and rollback remain
-preserved.
+the trusted window. The backend root cause is now repaired and published as `71eacca`;
+the next action is a separately leased VM deployment of that backend commit. The owner
+red browser proof, source, candidate, serving data, and rollback remain preserved.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -214,6 +214,16 @@ Platform lease.
   the bounded window. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r2/handoff.md`
   (SHA-256 `CC69D4F6B3B8BB6E1C3AF3691C5488CF4792F881E9DC76C0700B238B688656B7`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-REPAIR-1` proved the source trigger
+  with synthetic SQLite data: a migrated-style transaction with a foreign fee and no fee
+  FX rate raised `ValueError` while building the current lot book, which the request
+  transaction boundary sanitized to HTTP 500. `PortfolioService.build_view` now isolates
+  that malformed position as `ok=false` and continues rendering the portfolio; authority,
+  session, route, response-schema, and frontend contracts are unchanged. Focused,
+  affected, and full offline suites passed. The accepted source/test commit is `71eacca`.
+  Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-portfolio-500-repair-r1/handoff.md`
+  (SHA-256 `29B374876A0EADCF0C65723F0E9C038B48FF180CCBFD388B808122521BFE2D52`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -253,18 +263,19 @@ authoritative screenshot time window.
 ### Open work
 
 The recovery and live migration proofs are complete within their recorded limits. The
-browser repair is deployed and public static/health proof is accepted; preserve the
-committed serving data, rollback copy, and live browser rejection proof until the backend
-repair and separate authenticated owner-browser proof pass. The next step is a bounded
-backend root-cause trace and repair for the established `/api/portfolio` 500; retain both
-diagnostic handoffs and the owner red baseline.
+browser repair is deployed and public static/health proof is accepted; the backend 500
+repair is published but not yet serving. Preserve the committed serving data, rollback
+copy, and live browser rejection proof until the backend deployment and separate
+authenticated owner-browser proof pass. The next step is the bounded VM deployment of
+`71eacca`; retain both diagnostic handoffs, the repair handoff, and the owner red baseline.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2 are closed; the next backend root-cause repair lease is pending**.
-The Platform and Release specialist closed both deployment leases after Senior review; the owner-browser lease and diagnostic r1/r2 stopped before acceptance, with the backend repair now the sole active delivery path.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2 are closed; backend 500 repair is published as `71eacca`; its VM deployment is pending**.
+The Platform and Release specialist closed both deployment leases after Senior review; the owner-browser and diagnostic r1/r2 leases stopped before acceptance, the backend repair is accepted locally and published, and its deployment is now the sole active delivery path.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
-closed; the earlier deployment lease is closed and this deployment follow-up is active.
+closed; the earlier deployment lease and backend repair lease are closed, and this
+backend deployment follow-up is active.
 
 The completed deployment retry lease was:
 
@@ -278,7 +289,7 @@ The completed deployment retry lease was:
 | Proof | Build/archive from the published commit; verify transfer bytes and manifest before replacement; verify rollback copy; replace only the frontend bundle; restart once; after readiness poll prove service state/listener, loopback `/api/health`, public `/api/health`, `/`, and every hashed asset referenced by the shell. Keep the old public 401 proof and do not claim authenticated owner acceptance. |
 | Stop | Source/build/archive mismatch, missing rollback path, failed service/readiness/health/static probe, unknown replacement state, any database or service-config change, tunnel/DNS/public API write, extra restart, or any request to remove the rollback copy or alter private data |
 
-The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-1`:
+The stopped owner-browser lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-1`:
 
 | Field | Exact scope |
 |---|---|
@@ -288,8 +299,8 @@ The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-1`:
 | Browser proof | Current `https://ratatosk.dev/` owner tab; refresh after deployment, capture desktop state, then verify the required mobile-width state without changing account or provider data |
 | Stop | Missing owner state, any identity/Workspace ambiguity, private request 401/403/error, cross-Workspace or empty unexpected result, browser/provider prompt requiring owner action, leaked private value, or any source/VM/database/configuration mutation |
 
-The owner-browser and diagnostic r1/r2 leases stopped before acceptance. The next exact
-lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-REPAIR-1`:
+The owner-browser and diagnostic r1/r2 leases stopped before acceptance. The completed
+backend repair lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-REPAIR-1`:
 
 | Field | Exact scope |
 |---|---|
@@ -300,11 +311,22 @@ lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-REPAIR-1`:
 | Proof | Preserve the hosted 500/401 red baseline; reproduce the failure or proving seam with synthetic data, run the focused regression and affected offline tests, and run the full offline suite once at final product-lease acceptance. Do not inspect, log, or copy private rows. |
 | Stop | No reproducible or code-proven trigger after bounded trace, response-contract ambiguity requiring owner choice, any private-data access, any authority/session/migration/service/configuration change, or any failed proof without retaining its output |
 
-Do not perform authenticated owner-browser acceptance under this backend repair lease.
+The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-DEPLOY-1`:
+
+| Field | Exact scope |
+|---|---|
+| Outcome | Deploy the published backend commit `71eacca` containing the accepted portfolio 500 repair; prove service health and the repaired route, then preserve a rollback path |
+| Repository writes | Empty; use the published commit and its exact backend source only |
+| Evidence writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-portfolio-500-deploy-r1/`; sanitized service/route statuses, hashes, restart count, and exact handoff only |
+| Operational resources | Approved `fadir-control-lab-01`; strict SSH with `C:/ProgramData/fadir-agent-control/lab_ed25519`, `C:/ProgramData/fadir-agent-control/lab_known_hosts`, and `IdentityAgent=none`; approved remote proof root; preserve the current backend under a fresh rollback path; no database, WAL, migration, identity, Tunnel, DNS, Cloudflare, provider, or frontend write |
+| Proof | Verify source/archive bytes and manifest before replacement; prove rollback copy; replace only the backend application files required by `71eacca`; restart `fadir.service` exactly once; verify active/enabled/listener, loopback health, and sanitized `/api/portfolio` status with the existing owner red baseline retained. Do not claim authenticated browser acceptance. |
+| Stop | Source/archive mismatch, missing rollback path, failed readiness/health/route probe, unknown replacement state, extra restart, any database or service-config change, private response/body/row exposure, or any Tunnel/DNS/Cloudflare/provider action |
+
+Do not perform authenticated owner-browser acceptance under this backend deployment lease.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, owner browser acceptance, service configuration
-change, or public proof outside the exact source/test scope above requires a separate
+change, or public proof outside the exact deployment scope above requires a separate
 lease.
 
 Proof root: `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/`.
