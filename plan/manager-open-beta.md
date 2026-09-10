@@ -61,6 +61,10 @@ Platform lease.
   accepted the component at 1440x900 and 375x812; see the evidence pointers below.
 - The retained r1 red proof and r2 harness failure remain intact. r2 was not repaired in
   place; r3 used a separate plain-JavaScript harness that imported the real source.
+- Platform deployment attempt `GOOGLE-SESSION-HYDRATION-DEPLOY-1` stopped before
+  mutation: local build/archive and VM preflight passed, but the approved remote rollback
+  parent was absent. The service remains unchanged with restart count zero. See the
+  retained stop handoff at `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r1/handoff.md`.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -76,29 +80,30 @@ Hydration acceptance is component-level local synthetic browser proof only. It h
 persisted PNG paths; the r3 manifest, DOM observations, request log, and inline browser
 captures are retained. The current host's focused backend session-route test could not
 collect because system Python lacks `sqlalchemy`; no backend pass is inferred. No
-full-App, hosted, private, public, deployment, owner-browser, migration, or full beta
-acceptance exists.
+full-App, hosted, private, public, deployed-frontend, owner-browser, migration, or full
+beta acceptance exists.
 
 ### Uncertainty
 
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
 needed one extra observation before settling. Hosted deployment, owner refresh behavior,
-and the protected migration remain unproved. The persisted Transfer timestamps were
+and the protected migration remain unproved. The exact dated rollback parent must be
+created before a retry; the persisted Transfer timestamps were
 internally correlated but were not tied to an authoritative screenshot time window.
 
 ### Open work
 
-Assign Platform and Release a bounded deployment proof for `b22875e`, with a preserved
-static-asset rollback copy and exactly one service restart. Review its listener, delayed
-loopback, public health, and public shell evidence. Then verify owner refresh behavior
-and resume the protected private dry run and conditional migration.
+Resume Platform and Release with the bounded deployment follow-up below: create only the
+missing approved remote parent, preserve the prior static bundle, and complete the
+single-restart/public-shell proof. Then verify owner refresh behavior and resume the
+protected private dry run and conditional migration.
 
 ## Resumable assignment
 
-Status: **hydration accepted and published; no specialist is active**. The next lease is
-`GOOGLE-SESSION-HYDRATION-DEPLOY-1` for Platform and Release. The Product Experience
-browser lease and Quality review are closed.
+Status: **hydration accepted and published; deployment attempt 1 stopped safely**.
+Platform and Release receives the bounded follow-up `GOOGLE-SESSION-HYDRATION-DEPLOY-2`.
+The Product Experience browser lease and Quality review are closed.
 
 The deployment lease must use the approved VM and existing allowlisted mechanism:
 
@@ -107,12 +112,12 @@ The deployment lease must use the approved VM and existing allowlisted mechanism
 | Outcome | Deploy the published frontend bundle and prove the hosted service still serves the accepted source without touching private data |
 | Repository writes | Empty; source is already published at `b22875e` |
 | Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/platform-and-release.md`, `Makefile`, `app/main.py`, `frontend/package.json`, `frontend/package-lock.json`, `frontend/src/api.js`, `frontend/src/components/GoogleIdentityPanel.jsx` |
-| Evidence reads | `session-hydration-r3/manifest.md`, `session-hydration-r3/observations.log`, `transfer-reject-deploy-r1/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-quality-r1/handoff.md`, and `C:/Users/doguk/AppData/Local/Temp/fadir-user-session-controls-20260909/platform-deploy-r2/session-handoff.md` |
-| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r1/` only; approved VM `fadir-control-lab-01` at `192.168.247.10`, strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, service `fadir.service`, and `/opt/fadir/frontend/dist` |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r1/handoff.md` |
+| Evidence reads | `session-hydration-r3/manifest.md`, `session-hydration-r3/observations.log`, `transfer-reject-deploy-r1/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-quality-r1/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r1/handoff.md`, and `C:/Users/doguk/AppData/Local/Temp/fadir-user-session-controls-20260909/platform-deploy-r2/session-handoff.md` |
+| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r2/` only; create the exact missing remote parent `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/`, then use its `session-hydration-deploy-r2/` child for rollback metadata. Approved VM `fadir-control-lab-01` at `192.168.247.10`, strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, service `fadir.service`, and `/opt/fadir/frontend/dist` remain in scope |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r2/handoff.md` |
 | Proof | Build the published frontend, verify its manifest and hashes, preserve the deployed static bundle outside the serving tree, transfer only the bundle, restart `fadir.service` exactly once, and verify active/enabled/PID/exit/restart/listener plus delayed loopback health and sanitized public HTTPS health and shell responses |
 | Completion | Four-section handoff with source/deployed hashes, rollback path, exact restart count, delayed service proof, body-free/sanitized public probes, and cleanup; keep deployment separate from authenticated User, migration, and beta acceptance |
-| Stop | Source/remote hash drift, missing SSH/host precondition, unexpected private/provider request, failed validation, unknown restart outcome, or any need to change backend/configuration/Tunnel/DNS |
+| Stop | Source/remote hash drift, any precondition beyond the named parent creation, unexpected private/provider request, failed validation, unknown restart outcome, or any need to change backend/configuration/Tunnel/DNS |
 
 Do not start Google sign-in or access the owner database for this proof. Do not patch
 `App.jsx` because an incomplete fixture crashed. If the specialist lacks a browser
