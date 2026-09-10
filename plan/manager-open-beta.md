@@ -24,8 +24,12 @@ a route or status. The bounded local trace now proves a second concrete trigger:
 malformed foreign fees without a fee FX rate made `/api/portfolio/history` raise
 `ValueError` and the request boundary return 500. The smallest backend repair is
 published as `eb03b07`; the owner red browser proof, source, candidate, serving data,
-and rollback remain preserved. The next action is a separate backend deployment of
-that accepted commit.
+and rollback remain preserved. Deployment attempt
+`GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-HISTORY-DEPLOY-1` stopped
+before application mutation because its fresh remote rollback copy could not be proven;
+the serving file and service remain unchanged. The next action is a fresh bounded
+deployment retry that explicitly creates and verifies its lease-owned rollback copy
+before replacement.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -333,6 +337,12 @@ Platform lease.
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-trace-r2/handoff.md`
   (SHA-256 `0F8BA3899AA46F980C6B2BC53AEC218CE53395E70AC7998B7EDF3060768C62B9`).
   Source hashes: `app/services/portfolio.py` `C8030A1826FCA801EDEBCF13085A1E0C183758157EC45D370ACFB35A43C1D043`; `tests/test_api.py` `43B269AAEF42760173ACE17D088BD9B977BAFFF8B0FBDCC0DDE154EDFE006CCB`.
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-HISTORY-DEPLOY-1` stopped
+  before application mutation because the lease-owned remote rollback proof was
+  absent at `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r1/rollback/portfolio.py.previous`.
+  The accepted source/archive matched: source hash `C8030A1826FCA801EDEBCF13085A1E0C183758157EC45D370ACFB35A43C1D043`, archive hash `928938F31D0698B88A0ACAFEB1C50932E487C6D7C75C267C73DE563BAA5A661E`, and remote staged source hash matched. The served file remained `077DB3B44D907AF7F244C99DE4EB5CDBD3D644673E6348DDE5FBD749B32119FB`; preflight service remained active/enabled with MainPID `70084`, `NRestarts=0`, listener `127.0.0.1:8000`, and no restart occurred. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r1/handoff.md`
+  (SHA-256 `24BE4CDFA4FA008985482A2E174CED5D42DF2A4DA84A33EFD0F770FEC07EEAF5`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -379,21 +389,21 @@ request rejection, so preserve the committed serving data, rollback copies, and 
 browser red proofs.
 The r3 timestamped service correlation is closed as unavailable evidence. The session
 and history source repairs are accepted locally; the earlier deployments remain
-accepted with rollback and sanitized static/health proof, while `eb03b07` awaits its
-own bounded backend deployment. Retain all diagnostic handoffs, all browser red proofs,
+accepted with rollback and sanitized static/health proof. History deployment-1 stopped
+before mutation because its rollback proof was unavailable; no route, health, or
+browser acceptance is inferred. Retain all diagnostic handoffs, all browser red proofs,
 all source/deployment handoffs, and the owner red baseline. The next lease is the
-separate backend deployment; no browser refresh is authorized by that lease.
+separate history deployment retry; no browser refresh is authorized by that lease.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment is the active lease**.
-The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, and the bounded remaining-rejection history deployment is now the sole active delivery path.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation; history deployment-2 is the active lease**.
+The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, and the bounded history deployment-2 retry is now the sole active delivery path.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
 owner-browser r2/r3/r4, diagnostic r3, session-401 source repair, session-401
-deployment, remaining-rejection trace-2, and the earlier trace/deployment leases are
-closed, owner-browser r5 is closed as blocked, and remaining-rejection history deploy is
-active.
+deployment, remaining-rejection trace-2, and history deployment-1 are closed, owner-
+browser r5 is closed as blocked, and remaining-rejection history deploy-2 is active.
 
 The completed deployment retry lease was:
 
@@ -571,24 +581,39 @@ The completed source lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJE
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-trace-r2/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-HISTORY-DEPLOY-1`:
+The completed blocked lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-HISTORY-DEPLOY-1`:
 
 | Field | Exact scope |
 |---|---|
 | Role and outcome | Platform and Release; deploy the accepted backend commit `eb03b07` containing the history-position repair, preserve a rollback copy, restart `fadir.service` exactly once, and prove service health and sanitized reachability |
-| Current checkpoint | The source repair is reviewed, published, locally proven, and changes only `app/services/portfolio.py` plus its focused regression. Owner-browser r5 remains a fresh red proof with no route/status tuple; no authenticated acceptance is inferred. |
+| Current checkpoint | Source/archive transfer and remote staged-source hash matched the accepted `eb03b07` source. The lease stopped before application mutation because the required rollback proof was absent at `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r1/rollback/portfolio.py.previous`; the served file and service remained unchanged. |
 | Read paths | `app/services/portfolio.py`, the accepted trace-2 handoff, `plan/manager-open-beta.md`, and the published commit manifest only |
 | Repository writes | Empty; use published `eb03b07` and its exact backend source only |
 | Evidence writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r1/`; sanitized service/route statuses, hashes, restart count, rollback proof, and exact handoff only |
 | Operational writes/resources | Approved `fadir-control-lab-01`; strict SSH with `C:/ProgramData/fadir-agent-control/lab_ed25519`, `C:/ProgramData/fadir-agent-control/lab_known_hosts`, and `IdentityAgent=none`; approved writable `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r1/`; preserve the current `/opt/fadir/app/services/portfolio.py` under a fresh lease-owned rollback path; replace only that application file; one `fadir.service` restart |
-| Proof | Verify source/archive bytes and source hash before replacement; prove the rollback copy; replace only `/opt/fadir/app/services/portfolio.py`; restart exactly once; verify active/enabled/listener, `NRestarts=0`, loopback `/api/health`, and sanitized public health/static reachability. Do not claim authenticated history or browser acceptance. |
-| Excluded/stop | No database/WAL/migration/private-row/identity/authority/session-state change, no service configuration/Tunnel/DNS/Cloudflare/provider write, no extra restart, no browser refresh, no rollback deletion, no frontend change, and stop on any source/archive mismatch, missing rollback, failed readiness/health/static proof, or unknown replacement state |
+| Proof | Verify source/archive bytes and source hash before replacement; create and prove the fresh rollback copy before replacement; replace only `/opt/fadir/app/services/portfolio.py`; restart exactly once; verify active/enabled/listener, `NRestarts=0`, loopback `/api/health`, and sanitized public health/static reachability. Do not claim authenticated history or browser acceptance. |
+| Excluded/stop | No database/WAL/migration/private-row/identity/authority/session-state change, no service configuration/Tunnel/DNS/Cloudflare/provider write, no restart after an unproven rollback, no browser refresh, no rollback deletion, no frontend change, and stop on any source/archive mismatch, missing rollback, failed readiness/health/static proof, or unknown replacement state |
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
+The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-HISTORY-DEPLOY-2`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Platform and Release; retry deployment of the accepted backend commit `eb03b07`, explicitly create and verify a fresh rollback copy of the currently served file before replacement, restart `fadir.service` exactly once only after rollback proof passes, and prove service health and sanitized reachability |
+| Current checkpoint | Deployment-1 stopped before mutation because the rollback proof was absent; source/archive and remote staged source matched, the served file remained `077DB3B44D907AF7F244C99DE4EB5CDBD3D644673E6348DDE5FBD749B32119FB`, and service remained active/enabled with MainPID `70084`, `NRestarts=0`, listener `127.0.0.1:8000`. Preserve the deployment-1 stop handoff and r5 browser red proof. |
+| Read paths | `app/services/portfolio.py`, the accepted trace-2 handoff, deployment-1 stop handoff, `plan/manager-open-beta.md`, and the published commit manifest only |
+| Repository writes | Empty; use published `eb03b07` and its exact backend source only |
+| Evidence writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r2/`; sanitized service/route statuses, hashes, restart count, rollback proof, and exact handoff only |
+| Operational writes/resources | Approved `fadir-control-lab-01`; strict SSH with `C:/ProgramData/fadir-agent-control/lab_ed25519`, `C:/ProgramData/fadir-agent-control/lab_known_hosts`, and `IdentityAgent=none`; fresh approved remote proof root `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r2/`; create and verify `rollback/portfolio.py.previous` there by copying the currently served `/opt/fadir/app/services/portfolio.py`; replace only that application file; one `fadir.service` restart |
+| Proof | Verify source/archive bytes and source hash before transfer; prove rollback bytes equal the pre-mutation served file; replace only `/opt/fadir/app/services/portfolio.py`; restart exactly once; verify active/enabled/listener, `NRestarts=0`, loopback `/api/health`, and sanitized public health/static reachability. Do not claim authenticated history or browser acceptance. |
+| Excluded/stop | No database/WAL/migration/private-row/identity/authority/session-state change, no service configuration/Tunnel/DNS/Cloudflare/provider write, no extra restart, no browser refresh, no rollback deletion, no frontend change, and stop on any source/archive mismatch, missing rollback proof, failed readiness/health/static proof, or unknown replacement state |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-history-deploy-r2/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
 Do not perform any follow-up mutation under the completed diagnostic, source, or
-deployment/browser/trace leases; the bounded history deployment is the only active
-assignment.
+deployment/browser/trace leases; the bounded history deployment-2 retry is the only
+active assignment.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, service configuration change, or public proof
