@@ -57,7 +57,7 @@ function loadGoogleIdentityServices() {
 }
 
 export default function GoogleIdentityPanel({ onCompleted }) {
-  const [phase, setPhase] = useState("idle");
+  const [phase, setPhase] = useState("checking");
   const [choice, setChoice] = useState(null);
   const [rename, setRename] = useState("");
   const [error, setError] = useState(null);
@@ -67,6 +67,34 @@ export default function GoogleIdentityPanel({ onCompleted }) {
   const nonceRef = useRef(null);
   const googleButtonRef = useRef(null);
   const googleIdentityRef = useRef(null);
+  const hydrationRequestRef = useRef(0);
+
+  const hydrateUserSession = useCallback(async () => {
+    const requestId = hydrationRequestRef.current + 1;
+    hydrationRequestRef.current = requestId;
+    setPhase("checking");
+    setError(null);
+    try {
+      await api.userSessions();
+      if (hydrationRequestRef.current !== requestId) return;
+      setPhase("signed-in");
+    } catch (err) {
+      if (hydrationRequestRef.current !== requestId) return;
+      if (err?.status === 401) {
+        setPhase("idle");
+        return;
+      }
+      setError("User oturumu doğrulanamadı. Tekrar deneyin.");
+      setPhase("error");
+    }
+  }, []);
+
+  useEffect(() => {
+    hydrateUserSession();
+    return () => {
+      hydrationRequestRef.current += 1;
+    };
+  }, [hydrateUserSession]);
 
   useEffect(() => {
     if (phase !== "awaiting" || !googleIdentityRef.current || !googleButtonRef.current) return;
@@ -96,6 +124,7 @@ export default function GoogleIdentityPanel({ onCompleted }) {
   }, []);
 
   async function startSignIn() {
+    hydrationRequestRef.current += 1;
     setBusy(true);
     setError(null);
     setResult(null);
@@ -180,6 +209,27 @@ export default function GoogleIdentityPanel({ onCompleted }) {
             <button className="btn primary" type="button" onClick={startSignIn} disabled={busy}>
               {busy ? "başlatılıyor…" : "Google ile devam et"}
             </button>
+          </div>
+        )}
+
+        {phase === "checking" && (
+          <div className="identity-status" role="status" aria-live="polite" aria-busy="true">
+            User oturumu kontrol ediliyor…
+          </div>
+        )}
+
+        {phase === "error" && (
+          <div className="identity-start">
+            <p className="hint">User oturumu şu anda kontrol edilemedi. Google girişi başlatılmadı.</p>
+            <button className="btn ghost" type="button" onClick={hydrateUserSession}>
+              Tekrar dene
+            </button>
+          </div>
+        )}
+
+        {phase === "signed-in" && (
+          <div className="identity-status" role="status" aria-live="polite">
+            Google User oturumu etkin. Bu tarayıcı User Workspace erişimine sahip.
           </div>
         )}
 

@@ -49,7 +49,9 @@ async function request(path, options = {}) {
     } catch {
       /* response had no JSON body */
     }
-    throw new Error(detail);
+    const error = new Error(detail);
+    error.status = response.status;
+    throw error;
   }
   return response.status === 204 ? null : response.json();
 }
@@ -75,6 +77,7 @@ export const api = {
     request("/api/auth/google/verify", { method: "POST", body: JSON.stringify(payload) }),
   googleTransition: (payload) =>
     request("/api/auth/google/transition", { method: "POST", body: JSON.stringify(payload) }),
+  userSessions: () => request("/api/user/sessions"),
   mergeOptions: () => request("/api/portfolio/merge/options"),
   mergePreview: (payload) =>
     request("/api/portfolio/merge/preview", { method: "POST", body: JSON.stringify(payload) }),
