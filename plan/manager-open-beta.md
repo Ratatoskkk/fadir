@@ -177,6 +177,12 @@ Platform lease.
   is zero and the retained hosted 401 remains red until this exact build is deployed.
   Handoff: `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-deploy-r1/handoff.md`
   (SHA-256 `0C0EFAF4FF64750BC420C706C42054C6EE339B64B89C4005C87F6480933199B2`).
+- A fresh strict read-only SSH preflight now succeeds with the approved control paths
+  `C:/ProgramData/fadir-agent-control/lab_ed25519` and
+  `C:/ProgramData/fadir-agent-control/lab_known_hosts`, while bypassing a stale local
+  SSH-agent pipe. It proves the expected hostname, active `fadir.service`, and the
+  port-8000 listener without changing the VM. The r1 stop evidence remains preserved;
+  the deployment retry uses a fresh r2 proof root.
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -220,25 +226,25 @@ authoritative screenshot time window.
 The recovery and live migration proofs are complete within their recorded limits. The
 browser repair is published but not deployed; preserve the committed serving data and
 the live browser 401 proof until the new bundle passes public and owner acceptance. Resume
-the bounded deployment only after the approved SSH identity and matching strict
-known-hosts file are made available to the execution session.
+the bounded deployment through the fresh r2 proof root, using the approved SSH identity
+and matching strict known-hosts file with the stale local agent bypassed.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published as `a270f40`; hosted owner proof is blocked until the new bundle is deployed; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` is BLOCKED before VM mutation pending approved SSH credentials**.
-The Platform and Release specialist closed the lease after the safe pre-mutation stop.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published as `a270f40`; hosted owner proof is blocked until the new bundle is deployed; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is active**.
+The Platform and Release specialist closed the r1 lease after the safe pre-mutation stop; the r2 retry is the sole active specialist lease.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease is closed and this deployment follow-up is active.
 
-The resumable deployment lease is:
+The active deployment retry lease is:
 
 | Field | Exact scope |
 |---|---|
 | Outcome | Deploy exactly the published `a270f4072d86b2c72b3e9560f4e40402ec6bb6d8` frontend build, preserve a rollback copy, restart `fadir.service` once, and prove loopback plus public static/health reachability |
 | Repository writes | Empty; use the published commit and exact local build only |
 | Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-r1/handoff.md`, `frontend/src/api.js`, the local Vite manifest/hashes, retained deployment/tunnel r1/r2 handoffs, and `plan/manager-open-beta.md` |
-| Operational writes/resources | Approved VM `fadir-control-lab-01`; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-deploy-r1/`; approved writable `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/`; preserve the prior `/opt/fadir/frontend/dist` under a fresh lease-owned `dist.previous`; one `fadir.service` restart; no database/WAL/source/candidate/configuration/Tunnel/DNS/Cloudflare/provider write and no tunnel restart |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-deploy-r1/handoff.md` |
+| Operational writes/resources | Approved VM `fadir-control-lab-01`; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-deploy-r2/`; approved writable `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/`; strict key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, and `IdentityAgent=none`; preserve the prior `/opt/fadir/frontend/dist` under a fresh lease-owned `dist.previous`; one `fadir.service` restart; no database/WAL/source/candidate/configuration/Tunnel/DNS/Cloudflare/provider write and no tunnel restart |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-deploy-r2/handoff.md` |
 | Proof | Build/archive from the published commit; verify transfer bytes and manifest before replacement; verify rollback copy; replace only the frontend bundle; restart once; after readiness poll prove service state/listener, loopback `/api/health`, public `/api/health`, `/`, and every hashed asset referenced by the shell. Keep the old public 401 proof and do not claim authenticated owner acceptance. |
 | Stop | Source/build/archive mismatch, missing rollback path, failed service/readiness/health/static probe, unknown replacement state, any database or service-config change, tunnel/DNS/public API write, extra restart, or any request to remove the rollback copy or alter private data |
 
