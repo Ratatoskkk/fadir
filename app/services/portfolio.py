@@ -364,29 +364,32 @@ class PortfolioService:
         instruments, transactions_by_instrument = self._calculation_inputs()
 
         for instrument in instruments:
-            txns = [
-                to_txn_input(t, instrument.ticker, instrument.currency)
-                for t in transactions_by_instrument.get(instrument.id, [])
-            ]
-            if not txns:
+            transactions = transactions_by_instrument.get(instrument.id, [])
+            if not transactions:
                 continue
 
             try:
+                txns = [
+                    to_txn_input(t, instrument.ticker, instrument.currency)
+                    for t in transactions
+                ]
                 book = build_lot_book(instrument.ticker, instrument.currency, txns)
-            except InsufficientLots as exc:
-                # A SELL that exceeds the lots on file cannot be valued, but it must not
-                # take the whole dashboard down with it — otherwise the one screen that
-                # can fix the bad row is the screen that refuses to load. Degrade this
-                # position and keep the rest, exactly as a dead symbol is handled
-                # (SPEC §8).
-                log.error("lot matching failed for %s: %s", instrument.ticker, exc)
+            except (InsufficientLots, ValueError) as exc:
+                # One malformed position must not take the whole dashboard down —
+                # otherwise the screen that can fix the bad row refuses to load.
+                log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
                 warnings.append(f"{instrument.ticker}: {exc}")
                 book = build_lot_book(instrument.ticker, instrument.currency, [])
                 quote = self._current_quote(instrument, now_utc, warnings)
+                error = (
+                    f"lot uyuşmazlığı: {exc}"
+                    if isinstance(exc, InsufficientLots)
+                    else f"veri uyumsuzluğu: {exc}"
+                )
                 positions.append(
                     position_metrics(
                         book,
-                        replace(quote, ok=False, stale=True, error=f"lot uyuşmazlığı: {exc}"),
+                        replace(quote, ok=False, stale=True, error=error),
                     )
                 )
                 continue
