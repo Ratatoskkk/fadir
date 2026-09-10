@@ -450,6 +450,19 @@ select.small, input.small {
 .tax-profile-assumptions ul { margin: 5px 0 0; padding-left: 18px; }
 .tax-profile-disclaimer { padding-top: 10px; border-top: 1px solid var(--border); }
 
+.data-rights-panel .panel-body { display: grid; gap: 18px; }
+.data-rights-actions, .data-rights-account {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px;
+}
+.data-rights-actions > div:first-child, .data-rights-account > div:first-child { min-width: 0; }
+.data-rights-actions .hint, .data-rights-account .hint { margin: 5px 0 0; }
+.data-rights-account { padding-top: 18px; border-top: 1px solid var(--border); }
+.quiet-notices {
+  display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 8px 0 0;
+  font-size: 12px; line-height: 1.5; color: var(--text-faint);
+}
+.quiet-notices span { overflow-wrap: anywhere; }
+
 /* -- hero: flat tiles on a hairline grid --------------------------------------- */
 
 /* A 1px gap over a border-coloured backing gives hairline separation without
@@ -804,6 +817,9 @@ tfoot td:first-child { text-align: left; }
   .portfolio-selector-field select { width: 100%; min-width: 0; }
   .tax-year-form { align-items: stretch; flex-direction: column; }
   .tax-year-form .field, .tax-year-form button { width: 100%; }
+  .data-rights-actions, .data-rights-account { align-items: stretch; flex-direction: column; }
+  .data-rights-actions .identity-actions, .data-rights-account button { width: 100%; }
+  .data-rights-actions .identity-actions .btn { flex: 1 1 auto; }
 }
 
 .group-head { cursor: pointer; }

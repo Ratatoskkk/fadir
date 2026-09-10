@@ -24,7 +24,7 @@ function serializePrivateRequest(work) {
 }
 
 async function performRequest(path, options = {}) {
-  const { _recoveryAttempted = false, ...fetchOptions } = options;
+  const { _recoveryAttempted = false, _responseType = "json", ...fetchOptions } = options;
   const method = (fetchOptions.method ?? "GET").toUpperCase();
   const headers = { "Content-Type": "application/json", ...fetchOptions.headers };
   if (["POST", "PATCH", "PUT", "DELETE"].includes(method) && path !== "/api/guest/bootstrap") {
@@ -49,12 +49,19 @@ async function performRequest(path, options = {}) {
           method: "POST",
           _recoveryAttempted: true,
         });
-        return performRequest(path, { ...fetchOptions, _recoveryAttempted: true });
+        return performRequest(path, {
+          ...fetchOptions,
+          _recoveryAttempted: true,
+          _responseType,
+        });
       } catch {
         // Preserve the original rejected request when recovery is not applicable.
       }
     }
     let detail = `${response.status} ${response.statusText}`;
+    if (_responseType === "blob") {
+      throw new Error("İndirme gerçekleştirilemedi.");
+    }
     try {
       const body = await response.json();
       if (body?.detail) detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
@@ -65,7 +72,13 @@ async function performRequest(path, options = {}) {
     error.status = response.status;
     throw error;
   }
-  return response.status === 204 ? null : response.json();
+  if (response.status === 204) return null;
+  if (_responseType === "blob") {
+    const match = response.headers.get("Content-Disposition")?.match(/filename="?([^";]+)"?/i);
+    const filename = (match?.[1] ?? "portfolio-export").replace(/[\\/:*?"<>|]/g, "_");
+    return { blob: await response.blob(), filename };
+  }
+  return response.json();
 }
 
 async function request(path, options = {}) {
@@ -127,6 +140,13 @@ export const api = {
   updateTransaction: (id, payload, portfolioId) =>
     request(withPortfolioId(`/api/transactions/${id}`, portfolioId), { method: "PATCH", body: JSON.stringify(payload) }),
   deleteTransaction: (id, portfolioId) => request(withPortfolioId(`/api/transactions/${id}`, portfolioId), { method: "DELETE" }),
+  exportPortfolio: (portfolioId, format) =>
+    serializePrivateRequest(() => performRequest(
+      withPortfolioId(`/api/portfolios/${portfolioId}/export?format=${encodeURIComponent(format)}`, null),
+      { _responseType: "blob" },
+    )),
+  deletePortfolio: (portfolioId) => request(`/api/portfolios/${encodeURIComponent(portfolioId)}`, { method: "DELETE" }),
+  deleteAccount: () => request("/api/account", { method: "DELETE" }),
   instruments: () => request("/api/instruments"),
   refresh: () => request("/api/refresh", { method: "POST" }),
   health: () => request("/api/health"),

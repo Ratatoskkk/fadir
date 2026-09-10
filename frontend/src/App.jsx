@@ -51,6 +51,8 @@ const INCEPTION = "2026-03-29";
 //: nothing to gain from the fast cadence — but plenty to lose from not polling at all.
 const CLOSED_POLL_SECONDS = 900;
 
+const GENERIC_RIGHTS_ERROR = "Bu işlem şu anda tamamlanamadı. Lütfen tekrar deneyin.";
+
 // The page is four screens tall, so the rail is navigation rather than decoration.
 // `meta` puts the one number worth knowing before you jump next to each entry.
 // Özet is not in this list: it is the pinned summary that condenses into the topbar on
@@ -230,6 +232,9 @@ export default function App() {
   const [guestAccess, setGuestAccess] = useState(null);
   const [guestNoticeDismissed, setGuestNoticeDismissed] = useState(false);
   const [identityReady, setIdentityReady] = useState(false);
+  const [rightsBusy, setRightsBusy] = useState(false);
+  const [rightsError, setRightsError] = useState(null);
+  const [rightsNotice, setRightsNotice] = useState(null);
 
   // Avoids a stale-closure re-subscribe loop in the polling effect.
   const loadRef = useRef(null);
@@ -352,6 +357,15 @@ export default function App() {
     });
   }, []);
 
+  const readUserAccess = useCallback(async () => {
+    try {
+      await api.userSessions();
+      setIdentityReady(true);
+    } catch (err) {
+      if (err?.status !== 401) setIdentityReady(false);
+    }
+  }, []);
+
   const reloadAfterTransaction = useCallback(async () => {
     await loadAll();
     try {
@@ -378,10 +392,11 @@ export default function App() {
   useEffect(() => {
     run(async () => {
       await readGuestAccess();
+      await readUserAccess();
       const selectedId = await loadPortfolios();
       await Promise.all([loadMarket({ portfolioId: selectedId }), loadLedger(selectedId)]);
     });
-  }, [run, readGuestAccess, loadPortfolios, loadMarket, loadLedger]);
+  }, [run, readGuestAccess, readUserAccess, loadPortfolios, loadMarket, loadLedger]);
 
   // Poll fast while something is trading, slowly when nothing is.
   //
@@ -523,6 +538,69 @@ export default function App() {
     setTransactions([]);
     setLoading(true);
     await run(() => Promise.all([loadMarket({ portfolioId: id }), loadLedger(id)]));
+  }
+
+  function startDownload({ blob, filename }) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  async function exportSelectedPortfolio(format) {
+    if (!identityReady || selectedPortfolioId === null) return;
+    setRightsBusy(true);
+    setRightsError(null);
+    try {
+      const document = await api.exportPortfolio(selectedPortfolioId, format);
+      startDownload(document);
+    } catch {
+      setRightsError(GENERIC_RIGHTS_ERROR);
+    } finally {
+      setRightsBusy(false);
+    }
+  }
+
+  async function deleteSelectedPortfolio() {
+    if (!identityReady || selectedPortfolioId === null) return;
+    const name = portfolios.find((item) => Number(item.id) === Number(selectedPortfolioId))?.name ?? "bu Portföy";
+    if (!window.confirm(`“${name}” Portföyü silinsin mi? Bu işlem geri alınamaz.`)) return;
+    setRightsBusy(true);
+    setRightsError(null);
+    try {
+      await api.deletePortfolio(selectedPortfolioId);
+      setRightsNotice("Portföy silindi.");
+      await loadAll();
+    } catch {
+      setRightsError(GENERIC_RIGHTS_ERROR);
+    } finally {
+      setRightsBusy(false);
+    }
+  }
+
+  async function deleteUserAccount() {
+    if (!identityReady) return;
+    if (!window.confirm("User hesabı ve bağlı Portföyler silinsin mi? Bu işlem geri alınamaz.")) return;
+    setRightsBusy(true);
+    setRightsError(null);
+    try {
+      await api.deleteAccount();
+      setIdentityReady(false);
+      setGuestAccess(null);
+      setPortfolio(null);
+      setPortfolios([]);
+      setSelectedPortfolioId(null);
+      setRightsNotice("User verileri silindi.");
+    } catch {
+      setRightsError(GENERIC_RIGHTS_ERROR);
+    } finally {
+      setRightsBusy(false);
+    }
   }
 
   async function changeRange(next) {
@@ -770,6 +848,45 @@ export default function App() {
       <GoogleIdentityPanel onCompleted={refreshAfterIdentity} />
       <TaxProfilePanel identityReady={identityReady} />
 
+      {identityReady && (
+        <section className="panel data-rights-panel" aria-labelledby="data-rights-title">
+          <div className="panel-head">
+            <h2 id="data-rights-title">Veri hakları</h2>
+            <span className="panel-sub">User Workspace verilerinizi yönetin</span>
+          </div>
+          <div className="panel-body">
+            <div className="data-rights-actions">
+              <div>
+                <strong>Seçili Portföy</strong>
+                <p className="hint">Portföy verilerinizi CSV veya JSON olarak indirebilirsiniz.</p>
+              </div>
+              <div className="identity-actions" role="group" aria-label="Portföy dışa aktarma">
+                <button className="btn" type="button" onClick={() => exportSelectedPortfolio("csv")} disabled={rightsBusy || selectedPortfolioId === null}>
+                  CSV indir
+                </button>
+                <button className="btn" type="button" onClick={() => exportSelectedPortfolio("json")} disabled={rightsBusy || selectedPortfolioId === null}>
+                  JSON indir
+                </button>
+                <button className="btn danger" type="button" onClick={deleteSelectedPortfolio} disabled={rightsBusy || selectedPortfolioId === null}>
+                  Portföyü sil
+                </button>
+              </div>
+            </div>
+            <div className="data-rights-account">
+              <div>
+                <strong>User hesabı</strong>
+                <p className="hint">Hesabınızı ve bağlı Portföyleri kalıcı olarak siler.</p>
+              </div>
+              <button className="btn danger" type="button" onClick={deleteUserAccount} disabled={rightsBusy}>
+                User hesabını sil
+              </button>
+            </div>
+            {rightsError && <div className="form-error" role="alert">{rightsError}</div>}
+            {rightsNotice && <div className="banner warn" role="status">{rightsNotice}</div>}
+          </div>
+        </section>
+      )}
+
       {error && (
         <div className="banner err">
           <span aria-hidden="true">⚠</span>
@@ -879,6 +996,13 @@ export default function App() {
               )}
             </Widget>
           ))}
+          <footer className="quiet-notices" aria-label="Bilgilendirmeler">
+            <span>Gizlilik: Özel Portföy verileri Operator araçlarına veya normal loglara girmez.</span>
+            <span>Koşullar: faðir beta kişisel kullanım içindir.</span>
+            <span>Vergi: Turkey Tax Estimate vergi danışmanlığı değildir.</span>
+            <span>Piyasa verisi: Beta mevcut Yahoo kaynağını kullanır.</span>
+            <span>Guest saklama: Erişimsiz Guest verileri 90 gün sonra silinir.</span>
+          </footer>
         </div>
       </div>
     </div>
