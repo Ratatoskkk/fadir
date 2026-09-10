@@ -912,7 +912,8 @@ The completed lease was `G7-PUBLIC-SECURITY-HEADERS-DEPLOY-2`:
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-public-headers-deploy-r2/handoff.md` (full-file SHA-256 `2AD77316E3D8CB2A93E5A2C51307D37CEEF3500C2EEE7CE5279F8DCB1EA70502`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `G7-DATA-RIGHTS-UI-SOURCE-1`:
+The active lease is `G7-DATA-RIGHTS-UI-SOURCE-1` (Product Experience specialist
+`01a08d6d-e250-7a50-8105-2022b4703a04`):
 
 | Field | Exact scope |
 |---|---|
