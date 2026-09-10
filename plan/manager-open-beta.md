@@ -106,6 +106,13 @@ Platform lease.
   claimed; candidate target state is unknown and must be verified before retry or
   cleanup. No serving or public state changed. See
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r2/handoff.md`.
+- `PRIVATE-MIGRATION-TARGET-VERIFY-1` found exactly one task-owned candidate with
+  valid database/owner/marker/OID guards, the accepted-or-superset table set, the
+  accepted Alembic head, and root/shared/private row-presence categories. No active
+  transaction or per-schema commit/rollback evidence was available, so the candidate
+  remains UNKNOWN and is preserved. The read-only protected database/service
+  mutation count was zero. See
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-target-verify-r1/handoff.md`.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -130,38 +137,38 @@ accepted; no authenticated or private-data acceptance is inferred.
 
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
-needed one extra observation before settling. The DRYRUN-2 candidate target outcome is
-unknown after sanitized target setup failure; its database/schema/marker/OID state must
-be checked without retry or cleanup. The persisted Transfer timestamps were internally
-correlated but were not tied to an authoritative screenshot time window.
+needed one extra observation before settling. The DRYRUN-2 candidate is guarded and
+preserved, but its commit/rollback outcome and row-level reconciliation remain unknown;
+validation must precede any retry or cleanup. The persisted Transfer timestamps were
+internally correlated but were not tied to an authoritative screenshot time window.
 
 ### Open work
 
-Assign Identity and Data Integrity the bounded protected target-outcome verification
-lease below. Inspect only task-owned candidate markers and guarded state; do not retry,
-clean up, or open a live cutover lease until the outcome is confirmed.
+Assign Identity and Data Integrity the bounded protected candidate-validation lease
+below. Inspect the preserved task-owned candidate inside the protected session and
+compare it to the retained source/snapshot without retry, cleanup, or serving changes.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 target outcome requires protected verification**.
-No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-TARGET-VERIFY-1`.
+Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 candidate is preserved but its outcome requires protected validation**.
+No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-TARGET-VALIDATE-1`.
 The Product Experience browser, Quality, deployment, Tunnel, DRYRUN-1, and DRYRUN-2
 leases are closed.
 
-The next verification lease must inspect the preserved candidate outcome without
-creating, retrying, or deleting any target:
+The next validation lease must inspect the preserved candidate without creating,
+retrying, deleting, or connecting any target to serving traffic:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Determine whether DRYRUN-2 created a candidate PostgreSQL schema/transaction and whether its outcome is absent, committed, rolled back, or unknown, using task-owned marker/database/owner/OID guards |
+| Outcome | Determine whether the guarded candidate is a complete valid migration, a partial/invalid target, or an unresolved unknown outcome by protected row-level reconciliation; do not infer commit or rollback from the prior failure |
 | Repository writes | Empty; no product or migration source change is leased |
 | Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/identity-and-data-integrity.md`, `docs/PRIVATE_MIGRATION_RUNBOOK.md`, the migration handoffs, and the current board |
-| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-r2/handoff.md`, `protected-dryrun-output.txt`, `protected-dryrun.py`, and the retained r1/r2 failed handoffs |
-| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-target-verify-r1/` only; approved VM `fadir-control-lab-01`, strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, mandated VM interpreter `/home/fadir-agent/fadir-tests/venv/bin/python`, and protected existing PostgreSQL context |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-target-verify-r1/handoff.md` |
-| Proof | Read-only enumerate only task-owned candidate markers/OIDs/database/owner/search-path/schema state; emit sanitized hashes/counts and no private values; do not create, retry, commit, rollback, delete, or clean any candidate |
-| Completion | Four-section handoff with ABSENT/COMMITTED/ROLLED-BACK/UNKNOWN result, protected guard evidence, no mutation, and the smallest next lease |
-| Stop | Missing/ambiguous marker or guard, any unknown state, any required retry/cleanup, any public/provider/service action, or any need to modify product code/configuration |
+| Evidence reads | The completed `private-migration-target-verify-r1/handoff.md` and `protected-verification-output.txt`, retained `private-migration-r2/handoff.md`, `protected-dryrun-output.txt`, `protected-dryrun.py`, and the retained r1 failed handoff |
+| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-target-validate-r1/` only; approved VM `fadir-control-lab-01`, strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, mandated VM interpreter `/home/fadir-agent/fadir-tests/venv/bin/python`, and protected existing PostgreSQL context |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-target-validate-r1/handoff.md` |
+| Proof | Read-only guarded comparison of candidate schema, source/snapshot row identity and sanitized value/reconciliation hashes, ownership, shared separation, constraints, and source preservation; emit no private values; do not create, retry, commit, rollback, delete, clean, or alter service state |
+| Completion | Four-section handoff with COMPLETE-VALIDATION, PARTIAL/INVALID, or UNKNOWN result, protected guard evidence, no mutation, and the smallest next lease; a PASS must prove every runbook validation category that can be checked before live cutover |
+| Stop | Missing/ambiguous guard, any required mutation or cleanup, unresolvable source/target comparison, any public/provider/service action, or any need to modify product code/configuration |
 
 Do not start an owner-browser sign-in or change the product during this dry run. Private
 source and target inspection is permitted only through the protected channels named
