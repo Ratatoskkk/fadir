@@ -142,6 +142,14 @@ Platform lease.
   Its idempotent-rerun and failure/rollback checks were not run against the preserved
   candidate, so the lease verdict is BLOCKED_VALIDATION, not migration PASS. See
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-xid-recovery-r1/handoff.md`.
+- `PRIVATE-MIGRATION-COMMITTED-CHECKS-1` completed the two remaining guarded behavior
+  checks without successful reinsertion. The duplicate rerun returned
+  `ROLLED_BACK/TARGET_CONSTRAINT_CONFLICT`; the invalid-portfolio path returned
+  `ROLLED_BACK/INVALID_PORTFOLIO_ID`; pre/post content, row-key, and row-count
+  fingerprints matched, with `successful_reinsert_count=0` and
+  `candidate_mutation_count=0`. The bounded validation outcome is PASS while the
+  candidate remains isolated. See
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/handoff.md`.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -166,36 +174,37 @@ accepted; no authenticated or private-data acceptance is inferred.
 
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
-needed one extra observation before settling. The migration transaction is now directly
-classified COMMITTED. Idempotent-rerun and failure/rollback behavior remain unproved
-for the preserved candidate because they must not successfully reinsert or alter its
-rows. The persisted Transfer timestamps were internally correlated but were not tied
-to an authoritative screenshot time window.
+needed one extra observation before settling. The candidate's transaction outcome,
+content reconciliation, idempotent rerun, and failure/rollback behavior are now
+confirmed within the recorded guards. The candidate is still not a serving target;
+live writer/freeze, cutover, rollback-window, and hosted owner checks remain separate.
+The persisted Transfer timestamps were internally correlated but were not tied to an
+authoritative screenshot time window.
 
 ### Open work
 
-Run the bounded protected committed-candidate behavior checks below. Preserve the
-existing candidate/source and require zero successful row reinsertion; use a fresh
-isolated target only if a later independent outcome becomes unrecoverable.
+The recovery proof is complete. Keep the committed candidate isolated and open a
+separate live-migration lease only after fresh writer/freeze, rollback-boundary, and
+serving-scope decisions are named.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 candidate is COMMITTED with content validation accepted; two guarded behavior checks remain**.
-No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-COMMITTED-CHECKS-1`.
+Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 candidate is COMMITTED and its bounded content/behavior validation is PASS; live cutover remains separately leased**.
+No specialist is active. `PRIVATE-MIGRATION-COMMITTED-CHECKS-1` is closed.
 The Product Experience browser, Quality, deployment, Tunnel, DRYRUN-1, and DRYRUN-2
 leases are closed.
 
-The next committed-candidate check lease is:
+The next action is a separate live-migration lease:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Re-guard the committed candidate and complete idempotent-rerun and failure/rollback checks without any successful row reinsertion or change to the candidate's committed content |
-| Repository writes | Empty; no product or migration source change is leased |
-| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-xid-recovery-r1/handoff.md`, `protected-xid-status-output.txt`, repaired `protected-dryrun.py`, and prior target-validation/verification/DRYRUN-2 evidence |
-| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/` only; candidate/source/snapshot remain preserved; no successful candidate row write is authorized |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/handoff.md` |
-| Proof | Re-guard candidate/database/owner/marker/OID/search path; capture pre/post sanitized content fingerprints; run only guarded idempotent-rerun and invalid-portfolio rollback behavior; require rollback and unchanged content; retain database_outcome=COMMITTED separately from validation outcome |
-| Stop | Guard mismatch, any successful candidate insertion/content change, unknown rollback outcome, any candidate/source cleanup, any public/provider/service action, or any need to modify product code/configuration |
+| Outcome | Name a separate live-migration lease that revalidates identity/source freshness, all writers and freeze control, committed target/database/owner/marker/OID/search-path guards, serving cutover, rollback boundary, and hosted owner acceptance |
+| Repository writes | Empty until the live lease names exact documentation or product paths |
+| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/handoff.md`, `protected-committed-check-output.txt`, `private-migration-xid-recovery-r1/handoff.md`, `protected-xid-status-output.txt`, repaired script, and the runbook |
+| Operational writes | None under this closed recovery lease. Keep the committed candidate/source/snapshot preserved and isolated; any service/configuration/database cutover needs its own exact scope |
+| Handoff | A new exact path must be named when the live-migration lease is opened |
+| Proof | Live execution must preserve source/snapshot, prove write freeze and rollback boundary, revalidate every runbook gate, and prove hosted owner access after refresh; recovery PASS is not live acceptance |
+| Stop | Missing writer/freeze or rollback scope, guard mismatch, any unapproved service/configuration/public/provider action, or any need to modify product code/configuration |
 
 Do not start an owner-browser sign-in or change the product during this dry run. Private
 source and target inspection is permitted only through the protected channels named
