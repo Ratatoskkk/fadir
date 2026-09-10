@@ -423,6 +423,19 @@ Platform lease.
   sanitized evidence SHA-256 `7C6011C49BCBF663801CE7CE8270CEE55C9A237B49E7948DB411FA2BBD8BACF0`.
   This proves a real shell/header gap and a separate health public-proof blocker;
   it is not G7 or beta completion.
+- `G7-PUBLIC-SECURITY-HEADERS-SOURCE-REPAIR-1` is published as `4edf393` on
+  `origin/main`. The local middleware adds the five named headers while preserving
+  shell `Cache-Control: no-cache` and private denial `Cache-Control: no-store`;
+  its CSP explicitly covers the current inline theme bootstrap, React inline styles,
+  data favicon, and Google Identity Services script/frame. Senior independently ran
+  the focused proof (2 passed), affected regressions (76 passed), and full offline
+  suite (540 passed); `git diff --check` passed. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-public-headers-source-repair-r1/handoff.md`
+  (SHA-256 `185794452D5B43D3EFAD7B18A1C5CC51EC5BD178A2A5D2D3684EA31DFBBB02CB`).
+  Changed-path hashes are `app/main.py` `74CE187A46B93F18A4AD354E38D121EA364EF8570DB3389E9E21D6C71816F299` and
+  `tests/test_security_headers.py` `30BAFA772FC5547DADCAE8D06BD0931D3BE1EA1624D55CDDF206BE39A3D05AC3`.
+  This is a local source acceptance only; it is not deployed, public, browser, G7,
+  or beta acceptance.
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -481,14 +494,16 @@ red proofs, all source/deployment handoffs, and the owner red baseline. The boun
 Tax Profile Quality and synthetic browser reviews are accepted for their separate local
 slices; hosted/public endpoint and full-user acceptance remain open. The public recheck
 proves the shell security-header gap remains, while `/api/health` is still unclassified
-because the public response was unavailable. A separate narrow source repair may now
-address the named headers; it must not infer or repair the health proof, change
-transport/Tunnel/configuration, or refresh the owner browser. Rerun the exact service
-diagnostic only after the approved VM endpoint is available.
+because the public response was unavailable. The narrow source repair is published and
+locally accepted as `4edf393`, but it is not deployed or publicly verified. The next
+lease is an independent Quality review; deployment and public proof remain separate and
+must not infer or repair the health response, change transport/Tunnel/configuration, or
+refresh the owner browser. Rerun the exact service diagnostic only after the approved
+VM endpoint is available.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 recheck proves the shell security-header gap and is blocked on health response; a narrow source-header repair is active**.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 recheck proves the shell security-header gap and is blocked on health response; G7 source-header repair is published as `4edf393` and locally accepted; independent Quality review is next**.
 The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r4 stopped before SSH query because the approved VM hostname did not resolve.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
@@ -498,7 +513,8 @@ deployment-2 is accepted, owner-browser r5/r6/r7 are closed as blocked, trace-3 
 closed as an attribution blocker, owner-diagnostic r4 is closed as a VM hostname
 proof blocker, G5 Tax Profile Quality and synthetic browser reviews are accepted for
 their bounded slices, and the G7 public security-header recheck is closed with a
-real shell/header gap and a separate health-proof blocker.
+real shell/header gap and a separate health-proof blocker. The G7 source-header repair
+is published and locally accepted; independent Quality review is next.
 
 The completed deployment retry lease was:
 
@@ -803,7 +819,7 @@ The completed lease was `G7-PUBLIC-SECURITY-HEADERS-RECHECK-1`:
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-public-headers-recheck-r1/handoff.md` (full-file SHA-256 `265599F23FA080FBECB73177E6FB0FFD9F93B144CE57C5827489FAFCFA336D10`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `G7-PUBLIC-SECURITY-HEADERS-SOURCE-REPAIR-1`:
+The completed lease was `G7-PUBLIC-SECURITY-HEADERS-SOURCE-REPAIR-1`:
 
 | Field | Exact scope |
 |---|---|
@@ -814,7 +830,21 @@ The next exact lease is `G7-PUBLIC-SECURITY-HEADERS-SOURCE-REPAIR-1`:
 | Operational writes/resources | Empty; local synthetic test process only. No VM/SSH, database/WAL/private rows, browser, hosted/public request, Tunnel/DNS/Cloudflare/provider/configuration write, or restart |
 | Proof | Preserve the accepted red public shell evidence; add behavior-level tests for all five headers on a normal HTML shell response and an API response, preserving existing `Cache-Control`/`no-store` behavior. Run the focused tests and affected offline regressions; report changed-path hashes. Do not claim public, `/api/health`, browser, G7, or beta acceptance. |
 | Excluded/stop | No CSP design beyond the explicit named-header contract, no authentication/authority change, no response-body or secret capture, no public probe, no deployment, and stop if the correct header policy or test seam is not established by the named paths |
-| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-public-headers-source-repair-r1/handoff.md` |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-public-headers-source-repair-r1/handoff.md` (SHA-256 `185794452D5B43D3EFAD7B18A1C5CC51EC5BD178A2A5D2D3684EA31DFBBB02CB`) |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
+The next exact lease is `G7-PUBLIC-SECURITY-HEADERS-QUALITY-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Quality and Security; independently review the published `4edf393` security-header source candidate, its focused tests, CSP compatibility evidence, and retained red public proof, then return PASS/FAIL/INCONCLUSIVE for the bounded local source/privacy/contract slice |
+| Current checkpoint | The source candidate is locally accepted by Senior at `4edf393`; focused, affected, and full offline tests passed. The public shell gap remains pre-repair evidence; `/api/health` has no usable public result, and no public propagation is claimed. |
+| Read paths | `plan/specialists/quality-and-security.md`, `docs/OPEN_BETA_BRIEF.md`, `plan/manager-open-beta.md`, `app/main.py`, `tests/test_security_headers.py`, `frontend/index.html`, `frontend/src/components/GoogleIdentityPanel.jsx`, and the G7 recheck/source-repair handoffs only |
+| Repository writes | Empty; no product, board, test, service, configuration, or documentation edits |
+| Operational writes/resources | Empty; read-only local repository/evidence inspection only. No VM/SSH, database/WAL/private rows, browser, hosted/public request, provider, Tunnel/DNS/Cloudflare action, restart, deployment, secrets, cookies, or private data |
+| Proof | Independently verify the five headers, cache/no-store preservation, CSP compatibility with the named current frontend paths, changed-path scope/hashes, focused/full proof claims, and the explicit public/health/browser limits. Do not rerun tests or claim public/G7/beta acceptance. Return exactly four headings and a handoff hash. |
+| Excluded/stop | No repair, deployment, public probe, CSP expansion beyond the reviewed current-app contract, authentication/authority change, response-body or secret capture; report the smallest bounded defect or uncertainty |
+| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-public-headers-quality-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
 Do not perform any follow-up mutation under the completed diagnostic, source, or
