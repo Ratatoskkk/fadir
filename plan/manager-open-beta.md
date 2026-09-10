@@ -45,6 +45,10 @@ work. This publication excludes the unfinished frontend candidate and changes no
 
 ### Facts
 
+- Documentation baseline published as `e785b7e779a07f9666040add586b5ecbe64bc3f7`
+  on 2026-09-10 and verified on `origin/main`. Its 21 Markdown files passed 129 local
+  link/anchor checks, staged scope review, and `git diff --check`; all 158 tracked
+  non-Markdown files remained unchanged. The frontend candidate was excluded.
 - Product source baseline: `0bb35e9a6778c66e83499b474929bc4416b47fe5`
   (`fix: complete Google portfolio transfer`). Local `main` matched freshly fetched
   `origin/main` before the documentation publication. Documentation-only commits may
@@ -90,8 +94,8 @@ but were not tied to an authoritative screenshot time window.
 Review the frozen hydration candidate, complete synthetic visible proof, then obtain
 Quality acceptance. The Senior commits and pushes the accepted delta, then assigns
 deployment under an exact operational lease using existing delivery authority.
-Verify owner refresh behavior before resuming the
-protected private dry run and conditional migration.
+Verify owner refresh behavior before resuming the protected private dry run and
+conditional migration.
 
 ## Resumable assignment
 
