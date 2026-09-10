@@ -402,6 +402,15 @@ Platform lease.
   performed; G5 and beta completion are not claimed. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g5-tax-profile-quality-r1/handoff.md`
   (SHA-256 `E273141A97E7C26B18FDCE9FFE32E61320B30D8272E39B70A2B8E7AAC4BB761E`).
+- `G5-TAX-PROFILE-BROWSER-1` returned `PASS` for the local synthetic component
+  browser proof at exact `1440x900` and `375x812` viewports. The matrix covered
+  identity gating, valid profile/estimate rendering, year validation, 403 and generic
+  failures, safe/unsafe source URLs, disclaimer/assumptions, absence of hidden fields,
+  sanitized request evidence, and no mobile overflow. The retained fixture failure and
+  fixture-only adjustment are recorded; no product source changed. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g5-tax-profile-browser-r1/handoff.md`
+  (SHA-256 `668B2177F898F941FD8AA5DDDB6C667979E415D29F86277C1585CE73CD9D5EA9`).
+  This is not hosted, public, full-user, G5, or beta acceptance.
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -457,15 +466,15 @@ provides the exact window needed for a separate service correlation. The owner-d
 r4 lease stopped before query because the approved VM hostname did not resolve, so the
 remaining rejection is still unattributed. Retain all diagnostic handoffs, all browser
 red proofs, all source/deployment handoffs, and the owner red baseline. The bounded
-Tax Profile Quality review is now accepted for its source/privacy/contract slice; its
-visible synthetic proof and hosted/public endpoint proof remain open. The next lease
-is the synthetic desktop/375px Tax Profile browser proof, which has no VM dependency.
+Tax Profile Quality and synthetic browser reviews are accepted for their separate local
+slices; hosted/public endpoint and full-user acceptance remain open. The next lease is
+a sanitized public security-header recheck, which has no VM or owner-browser dependency.
 Rerun the exact service diagnostic only after the approved VM endpoint is available.
 No owner-browser refresh or source repair is authorized meanwhile.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy review is accepted; G5 Tax Profile browser proof is active**.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 public security-header recheck is active**.
 The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r4 stopped before SSH query because the approved VM hostname did not resolve.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
@@ -473,8 +482,8 @@ owner-browser r2/r3/r4/r5/r6, diagnostic r3, session-401 source repair, session-
 deployment, remaining-rejection trace-2, and history deployment-1 are closed, history
 deployment-2 is accepted, owner-browser r5/r6/r7 are closed as blocked, trace-3 is
 closed as an attribution blocker, owner-diagnostic r4 is closed as a VM hostname
-proof blocker, G5 Tax Profile Quality review is accepted for its bounded slice, and the
-G5 Tax Profile browser proof is active.
+proof blocker, G5 Tax Profile Quality and synthetic browser reviews are accepted for
+their bounded slices, and the G7 public security-header recheck is active.
 
 The completed deployment retry lease was:
 
@@ -750,7 +759,7 @@ The completed lease was `G5-TAX-PROFILE-QUALITY-1`:
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g5-tax-profile-quality-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `G5-TAX-PROFILE-BROWSER-1`:
+The completed lease was `G5-TAX-PROFILE-BROWSER-1`:
 
 | Field | Exact scope |
 |---|---|
@@ -764,10 +773,25 @@ The next exact lease is `G5-TAX-PROFILE-BROWSER-1`:
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g5-tax-profile-browser-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
+The next exact lease is `G7-PUBLIC-SECURITY-HEADERS-RECHECK-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Platform and Release; make one sanitized read-only public HTTPS recheck of the deployed shell and health route, determine whether the recorded security-header gap remains, and return status plus allowlisted header presence only |
+| Current checkpoint | The archived deployment acceptance recorded public `/api/health` and shell success but missing `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`, and `Referrer-Policy`. Later source/deployment repairs may have changed the result; fresh public evidence is required before a repair lease. |
+| Read paths | `plan/specialists/platform-and-release.md`, `docs/OPEN_BETA_BRIEF.md`, `plan/manager-open-beta.md`, `plan/archive/manager-open-beta-2026-09-10.md` (USER-SESSION-CONTROLS-1-DEPLOY2-ACCEPTANCE section only), and `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-session-401-deploy-r1/handoff.md` |
+| Repository writes | Empty |
+| Operational writes/resources | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-public-headers-recheck-r1/`; approved public domain `https://ratatosk.dev`; no VM/SSH/database/private-row/provider/configuration/Tunnel/DNS/Cloudflare write |
+| Allowlist | `GET https://ratatosk.dev/` and `GET https://ratatosk.dev/api/health` only; retain status, content type, length, and presence/value-free booleans for the five named security headers plus `Cache-Control`, `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options`, `Content-Security-Policy`, and `Referrer-Policy` |
+| Proof | Use a fresh strict timeout and no cookies/auth headers. Retain only sanitized status/header-presence/length evidence; do not store response bodies, hashes of private content, Cloudflare identifiers, cookies, credentials, or raw logs. Write exactly the four-heading handoff and hash. |
+| Excluded/stop | No repository edit, product repair, VM/SSH/service restart, Tunnel/DNS/Cloudflare/provider mutation, browser refresh, identity/session/private route, response-body capture, or secret capture; stop on public failure or unexpected header content and report the smallest next lease |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-public-headers-recheck-r1/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
 Do not perform any follow-up mutation under the completed diagnostic, source, or
-deployment/browser/trace leases. The active G5 browser proof is synthetic-only and
-has no repository, VM, hosted, or owner-browser scope. Rerun the service diagnostic
-only after the approved VM hostname/SSH endpoint is available.
+deployment/browser/trace leases. The active G7 recheck is read-only public evidence
+only and has no repository, VM, browser, identity, or private-data scope. Rerun the
+service diagnostic only after the approved VM hostname/SSH endpoint is available.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, service configuration change, or public proof
@@ -794,7 +818,7 @@ changed source, failed evidence, or a newly established risk.
 | G2 Average Purchase Price | Accepted locally in earlier history | Retain the accepted lifetime purchase-average rule |
 | G3 PostgreSQL and private scope | Conditional synthetic acceptance; later request scope and route work published | Complete the owner's private dry run/migration and its acceptance |
 | G4 Guest and identity | Guest, Google transitions, Merge, session controls, and hydration candidate published; component hydration PASS | Accept hosted User refresh and finish Guest/User browser and session journeys |
-| G5 Portfolios, currencies, tax | Portfolio selection, Fee Currency, Tax Profile backend/UI published; bounded Quality source/privacy review PASS | Complete synthetic visible Tax Profile proof, then hosted/public endpoint and full-user acceptance |
+| G5 Portfolios, currencies, tax | Portfolio selection, Fee Currency, Tax Profile backend/UI published; bounded Quality source/privacy and synthetic browser proofs PASS | Complete hosted/public endpoint and full-user acceptance |
 | G6 Market data | Shared refresh route/worker published; direct Yahoo decision retained | Establish hosted cache, refresh, quota, source/time, and permitted public-use acceptance |
 | G7 Security and data rights | Scoped routes, exports and deletion delivered; no-cookie denial matrix recorded | Finish authenticated isolation, data-rights UI, notices, abuse controls, and the recorded missing public security headers |
 | G8 VM and public service | VM/Tunnel service, HTTPS health, bounded Guest denial and Google start observed | Accept the deployed user journeys and exact final release state |
