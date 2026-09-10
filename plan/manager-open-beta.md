@@ -9,9 +9,11 @@ The immediate user outcome is a browser that stays signed in after refresh and s
 the owner's original portfolio under the verified Google User.
 
 **Hydration is accepted locally and published as `b22875e38a7174d823212bb291dcd78151e781bd`.**
-The VM deployment and hosted public edge proof are now accepted. The next action is a
-separately leased protected source/identity recheck and private migration dry run for
-the approved `Ana Portföy`/TRY mapping; live cutover remains conditional on its pass.
+The VM deployment and hosted public edge proof are now accepted. The protected dry run
+and committed-candidate recovery are also accepted within their guards. The next action
+is a separately leased live migration into the existing serving `public` context for
+the approved `Ana Portföy`/TRY mapping; the source, candidate, and existing serving
+state remain preserved until the live lease's pre-commit gate passes.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -150,6 +152,12 @@ Platform lease.
   `candidate_mutation_count=0`. The bounded validation outcome is PASS while the
   candidate remains isolated. See
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/handoff.md`.
+- `PRIVATE-MIGRATION-LIVE-1` is now the active bounded lease. It may write only through
+  the protected VM migration channel and its fresh proof directory. The intended target
+  is the existing serving PostgreSQL `public` context, preserving the existing verified
+  Google User, Workspace, Login Identity, and User Sessions. The service remains on its
+  current configuration; a short writer freeze and one bounded service stop/start are
+  permitted only after the lease proves the writer set and rollback boundary.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -183,28 +191,28 @@ authoritative screenshot time window.
 
 ### Open work
 
-The recovery proof is complete. Keep the committed candidate isolated and open a
-separate live-migration lease only after fresh writer/freeze, rollback-boundary, and
-serving-scope decisions are named.
+The recovery proof is complete. `PRIVATE-MIGRATION-LIVE-1` is the separate live lease;
+keep the committed candidate isolated and stop before mutation if its fresh guards,
+writer/freeze control, source freshness, or serving-scope decision cannot be proved.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 candidate is COMMITTED and its bounded content/behavior validation is PASS; live cutover remains separately leased**.
-No specialist is active. `PRIVATE-MIGRATION-COMMITTED-CHECKS-1` is closed.
+Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 candidate is COMMITTED and its bounded content/behavior validation is PASS; `PRIVATE-MIGRATION-LIVE-1` is active**.
+One Identity and Data Integrity specialist is active under the live lease.
 The Product Experience browser, Quality, deployment, Tunnel, DRYRUN-1, and DRYRUN-2
 leases are closed.
 
-The next action is a separate live-migration lease:
+The active live-migration lease is:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Name a separate live-migration lease that revalidates identity/source freshness, all writers and freeze control, committed target/database/owner/marker/OID/search-path guards, serving cutover, rollback boundary, and hosted owner acceptance |
-| Repository writes | Empty until the live lease names exact documentation or product paths |
-| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/handoff.md`, `protected-committed-check-output.txt`, `private-migration-xid-recovery-r1/handoff.md`, `protected-xid-status-output.txt`, repaired script, and the runbook |
-| Operational writes | None under this closed recovery lease. Keep the committed candidate/source/snapshot preserved and isolated; any service/configuration/database cutover needs its own exact scope |
-| Handoff | A new exact path must be named when the live-migration lease is opened |
-| Proof | Live execution must preserve source/snapshot, prove write freeze and rollback boundary, revalidate every runbook gate, and prove hosted owner access after refresh; recovery PASS is not live acceptance |
-| Stop | Missing writer/freeze or rollback scope, guard mismatch, any unapproved service/configuration/public/provider action, or any need to modify product code/configuration |
+| Outcome | Revalidate the verified Google identity/User/Workspace binding, fresh WAL-consistent source snapshot, all relevant writers, candidate/source/serving guards, and every runbook validation; then migrate into the existing serving `public` context and prove hosted owner access after refresh |
+| Repository writes | Empty; no product, migration-core, service-config, or frontend change is leased |
+| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-committed-check-r1/handoff.md`, `protected-committed-check-output.txt`, `private-migration-xid-recovery-r1/handoff.md`, `protected-xid-status-output.txt`, `private-migration-target-validate-r1/handoff.md`, `docs/PRIVATE_MIGRATION_RUNBOOK.md`, and the live service context |
+| Operational writes/resources | Approved VM `fadir-control-lab-01`; protected `/home/fadir-agent/fadir-tests/venv/bin/python`; protected source/snapshot channels; serving PostgreSQL `public`; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-live-r1/`; temporary `fadir.service` writer freeze and one bounded restart only after pre-commit checks; no Cloudflare, DNS, provider, source deletion, candidate cleanup, or public configuration write |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-live-r1/handoff.md` |
+| Proof | Before any target write, record sanitized identity/source freshness, writer/freeze, database/owner/search-path, candidate preservation, target and rollback boundary. Within one guarded transaction validate schema, identity, ownership, shared/private separation, reconciliation, value fidelity, isolation, failure behavior, and source preservation; commit only when all pass. After commit, restart/release the service and prove health plus authorized owner portfolio access after refresh. |
+| Stop | Any identity ambiguity, source/WAL mismatch, concurrent writer, guard mismatch, validation failure, unknown outcome, missing pre-commit rollback boundary, need for product/configuration changes, unexpected service effect, or any request to retry, reverse-copy, delete, clean up, expose the candidate, or alter Cloudflare/public/provider state |
 
 Do not start an owner-browser sign-in or change the product during this dry run. Private
 source and target inspection is permitted only through the protected channels named
