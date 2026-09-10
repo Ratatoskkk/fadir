@@ -77,6 +77,10 @@ Platform lease.
   `/etc/cloudflared/token` is absent/empty. No connector restart, secret/config repair,
   Cloudflare write, DNS/Tunnel change, or application restart occurred. See
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r1/handoff.md`.
+- A fresh read-only VM recheck after the Tunnel-1 handoff found the same protected
+  precondition: the token remains absent/empty, `cloudflared.service` remains enabled
+  in `activating/auto-restart` with `ExecMainStatus=255` and `NRestarts=4788`, while
+  `fadir.service` remains active on `127.0.0.1:8000`. No repair or restart occurred.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
