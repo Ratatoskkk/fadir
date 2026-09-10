@@ -72,6 +72,11 @@ Platform lease.
   `production-web-linux` (`d4e1cc1b-a37a-4ca6-9684-ffb91601bcc0`) is `down` with no
   connections; its saved route still points `ratatosk.dev` to `http://localhost:8000`.
   See `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r2/handoff.md`.
+- Tunnel repair `GOOGLE-SESSION-HYDRATION-TUNNEL-1` stopped read-only. The existing
+  `cloudflared.service` is enabled but auto-restarting with `ExecMainStatus=255` because
+  `/etc/cloudflared/token` is absent/empty. No connector restart, secret/config repair,
+  Cloudflare write, DNS/Tunnel change, or application restart occurred. See
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r1/handoff.md`.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -88,43 +93,45 @@ persisted PNG paths; the r3 manifest, DOM observations, request log, and inline 
 captures are retained. The current host's focused backend session-route test could not
 collect because system Python lacks `sqlalchemy`; no backend pass is inferred. No
 full-App, hosted/public, owner-browser, authenticated User, migration, or full beta
-acceptance exists. The VM bundle and loopback service are accepted; the tunnel is not.
+acceptance exists. The VM bundle and loopback service are accepted; the tunnel and
+public edge are blocked on protected credential repair.
 
 ### Uncertainty
 
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
-needed one extra observation before settling. The tunnel connector's systemd unit and
-local connector state still need a protected read-only check; do not infer a repair path
-from the Cloudflare API status alone. The persisted Transfer timestamps were internally
-correlated but were not tied to an authoritative screenshot time window.
+needed one extra observation before settling. The missing token's protected source and
+intended repair mechanism are unknown and must not be guessed. The persisted Transfer
+timestamps were internally correlated but were not tied to an authoritative screenshot
+time window.
 
 ### Open work
 
-Assign Platform and Release a read-only Cloudflare/Tunnel repair lease below. Restore
-only the existing connector if its verified unit and configuration are present, then
-re-prove the three public probes. Do not begin owner refresh or private migration until
-the public edge is healthy.
+Owner input is required for a protected secret/configuration-repair lease for the
+existing connector. After that value/mechanism is supplied, Platform can restart only
+`cloudflared.service` once and re-prove the three public probes. Do not begin owner
+refresh or private migration until the public edge is healthy.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment passed; public edge blocked by a down tunnel**.
-Platform and Release receives the bounded follow-up `GOOGLE-SESSION-HYDRATION-TUNNEL-1`.
-The Product Experience browser lease and Quality review are closed.
+Status: **hydration accepted; VM deployment passed; public edge blocked pending protected token repair**.
+No specialist is active. The next owner-gated lease is `GOOGLE-SESSION-HYDRATION-TUNNEL-2`,
+after a protected operational source/mechanism for the existing token is supplied. The
+Product Experience browser, Quality, deployment, and Tunnel-1 leases are closed.
 
 The deployment lease must use the approved VM and existing allowlisted mechanism:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Restore the existing `production-web-linux` connector only if its verified VM unit/configuration is present, then prove public health, shell, and bundle reachability |
+| Outcome | Restore the existing `production-web-linux` connector using an owner-supplied protected token mechanism, then prove public health, shell, and bundle reachability |
 | Repository writes | Empty; source and bundle are already published |
 | Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/platform-and-release.md`, `docs/OPEN_BETA_BRIEF.md`, and the two deployment handoffs below |
 | Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r1/handoff.md`, `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-deploy-r2/handoff.md`, and the current board's recorded Cloudflare read-only result |
-| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r1/` only; approved VM `fadir-control-lab-01` at `192.168.247.10`, strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, existing connector service unit only after exact read-only identification, and read-only Cloudflare account `f564f7c408cccd5b898d51cc9ae26db5` tunnel `d4e1cc1b-a37a-4ca6-9684-ffb91601bcc0` |
-| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r1/handoff.md` |
-| Proof | Capture the current unit/configuration/connector red state, confirm the Cloudflare configuration is unchanged, perform at most one restart of the verified existing connector unit, then verify connector/tunnel status and sanitized public `/api/health`, `/`, and referenced asset responses |
+| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r2/` only; approved VM `fadir-control-lab-01` at `192.168.247.10`, strict SSH key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, protected owner-supplied token injection through its exact mechanism, existing connector service unit only, and read-only Cloudflare account `f564f7c408cccd5b898d51cc9ae26db5` tunnel `d4e1cc1b-a37a-4ca6-9684-ffb91601bcc0` |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-hydration-tunnel-r2/handoff.md` |
+| Proof | Capture the current unit/configuration/connector red state, record protected token injection without exposing the value, perform exactly one restart of the verified existing connector unit, then verify connector/tunnel status and sanitized public `/api/health`, `/`, and referenced asset responses |
 | Completion | Four-section handoff with red/green status, no config/DNS mutation, exact restart count, local/public probe results, and cleanup; keep hosted edge proof separate from authenticated User, migration, and beta acceptance |
-| Stop | Missing/disabled/ambiguous connector unit or config, token/config repair requirement, failed/unknown restart, any Cloudflare write, private/provider request, or any need to change DNS/Tunnel configuration |
+| Stop | Missing owner mechanism or token, failed/unknown restart, any Cloudflare write, private/provider request, or any need to change DNS/Tunnel configuration |
 
 Do not start Google sign-in or access the owner database for this proof. Do not patch
 `App.jsx` because an incomplete fixture crashed. If the specialist lacks a browser
