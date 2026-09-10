@@ -290,6 +290,17 @@ Platform lease.
   attributed. Verdict: `BLOCKED-BY-REQUEST-REJECTION`. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r4/handoff.md`
   (SHA-256 `189B7AFF45C96DB728D97030557523D23018F49922A3E4E8172AB8F7D0CD9E17`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-TRACE-1` proved a concrete
+  local trigger: an invalid/revoked Guest cookie makes `POST /api/guest/bootstrap`
+  return 401 and App stops before loading private portfolios. The smallest repair is
+  one client retry after that 401 so the browser applies the server's deletion cookie
+  before the fresh bootstrap. Synthetic red/green proof passed; focused API/session/
+  portfolio checks passed (81), the full offline suite passed (513 passed, 110
+  deselected), and `node --check`, `git diff --check`, and the frontend build (844
+  modules) passed. The accepted source is `cf6e9a3`. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-trace-r1/handoff.md`
+  (SHA-256 `C5C6B0A3A4DA49014CD8794BFC87850AA343A20C840BABF3AA36C5921314BC9F`).
+  Source hash: `1251F3B6F57DF17FA9A75352237DB3659D3F0FD7D7F3FEA2F78F72F68A3BC037`.
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -333,21 +344,22 @@ browser repair and backend 500 repair are deployed with their rollback copies; p
 static/health and sanitized loopback health are accepted. The authenticated portfolio
 probe remains authorization-blocked, so preserve the committed serving data, rollback
 copies, and live browser rejection proof until the separate owner-browser proof passes.
-The r3 timestamped service correlation is closed as unavailable evidence. The source
-repair and bounded frontend deployment are accepted with rollback and sanitized
-static/health proof. Retain all diagnostic handoffs, both repair/deployment handoffs,
-the blocked browser r3 handoff, the fresh browser r4 red proof, and the owner red
-baseline. The next lease is a local source/route trace of the remaining rejection; do
-not repeat the browser proof until that trace is resolved.
+The r3 timestamped service correlation is closed as unavailable evidence. The first
+source repair/deployment are accepted with rollback and sanitized static/health proof;
+the second source repair is published but not deployed. Retain all diagnostic
+handoffs, both browser red proofs, both source/deployment handoffs, and the owner red
+baseline. The next lease is the bounded deployment of `cf6e9a3`; do not repeat the
+browser proof until it passes its own deployment checks.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source trace is the active lease**.
-The Platform and Release specialist closed the session-401 deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 source/deployment are accepted, and the remaining-rejection trace is now the sole active delivery path.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3`; its bounded deployment is the active lease**.
+The Platform and Release specialist closed the prior session-401 deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and earlier bounded VM deployments are accepted, the session-401 source/deployment are accepted, and the remaining-rejection deployment is now the sole active delivery path.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
-owner-browser r2/r3/r4, diagnostic r3, session-401 source repair, and session-401
-deployment leases are closed, and the remaining-rejection trace is active.
+owner-browser r2/r3/r4, diagnostic r3, session-401 source repair, session-401
+deployment, and remaining-rejection trace leases are closed, and the remaining-
+rejection deployment is active.
 
 The completed deployment retry lease was:
 
@@ -470,7 +482,7 @@ The completed blocked lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r4/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-TRACE-1`:
+The completed source trace lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-TRACE-1`:
 
 | Field | Exact scope |
 |---|---|
@@ -484,8 +496,22 @@ The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-T
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-trace-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
+The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-DEPLOY-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Platform and Release; build exactly the accepted `cf6e9a3` frontend, preserve the currently served bundle under a fresh rollback path, replace only `/opt/fadir/frontend/dist`, restart `fadir.service` exactly once, and prove service/static/health reachability |
+| Current checkpoint | The accepted source retry handles an invalid Guest bootstrap 401 by issuing one serialized retry; local synthetic, focused, full offline, and build proofs pass. The currently served bundle is the prior `600289e` deployment; owner-browser r4 remains the fresh red baseline. No authenticated acceptance is inferred. |
+| Read paths | `frontend/src/api.js`, `frontend/package.json`, the accepted remaining-rejection handoff, the prior session-401 deployment handoff, `plan/manager-open-beta.md`, and the published commit manifest only |
+| Repository writes | Empty; use published `cf6e9a3` and its exact local Vite build/archive only |
+| Operational writes/resources | Approved VM `fadir-control-lab-01`; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-deploy-r1/`; approved writable `/home/fadir-agent/fadir-tests/fadir-private-migration-20260910/`; strict key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, and `IdentityAgent=none`; preserve the current frontend bundle under a fresh lease-owned remote rollback path; one `fadir.service` restart |
+| Proof | Build/archive from `cf6e9a3`; verify transfer bytes, manifest, and source hash before replacement; verify the rollback copy; replace only the frontend bundle; restart exactly once; prove active/enabled/listener, `NRestarts=0`, loopback `/api/health`, public `/api/health`, `/`, and every hashed asset referenced by the shell. Do not claim authenticated route or browser acceptance. |
+| Excluded/stop | No database/WAL/migration/private-row/identity/authority/session-state change, no service configuration/Tunnel/DNS/Cloudflare/provider write, no extra restart, no browser refresh, no rollback deletion, no source change, and stop on any source/archive mismatch, missing rollback, failed readiness/static/health proof, or unknown replacement state |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-deploy-r1/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
 Do not perform any follow-up mutation under the completed diagnostic, source, or
-deployment/browser leases; the remaining-rejection trace is the only active assignment.
+deployment/browser/trace leases; the remaining-rejection deployment is the only active assignment.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, service configuration change, or public proof
