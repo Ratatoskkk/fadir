@@ -87,7 +87,14 @@ const withPortfolioId = (path, portfolioId) => {
 
 export const api = {
   portfolios: () => request("/api/portfolios"),
-  bootstrapGuest: () => request("/api/guest/bootstrap", { method: "POST" }),
+  bootstrapGuest: async () => {
+    try {
+      return await request("/api/guest/bootstrap", { method: "POST" });
+    } catch (error) {
+      if (error?.status !== 401) throw error;
+      return request("/api/guest/bootstrap", { method: "POST" });
+    }
+  },
   recoverUserCookie: () => request("/api/auth/recover-user-cookie", { method: "POST" }),
   googleStart: () => request("/api/auth/google/start", { method: "POST" }),
   googleVerify: (payload) =>
