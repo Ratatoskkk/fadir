@@ -394,6 +394,14 @@ Platform lease.
   mutation occurred. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r4/handoff.md`
   (SHA-256 `26482B44B019939DEE8794C875BE7C49844FD88453FE4609A53E8258A0D7B25F`).
+- `G5-TAX-PROFILE-QUALITY-1` returned `PASS` for the bounded Turkey Tax Profile
+  source/privacy/contract slice. The review verified User/jurisdiction/year scope,
+  User-Portfolio aggregation, Turkey/TRY and realized-disposal semantics, source and
+  disclaimer serialization, frontend identity/year/URL-safety boundaries, and the
+  stated synthetic evidence limits. No tests or external/hosted/browser actions were
+  performed; G5 and beta completion are not claimed. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g5-tax-profile-quality-r1/handoff.md`
+  (SHA-256 `E273141A97E7C26B18FDCE9FFE32E61320B30D8272E39B70A2B8E7AAC4BB761E`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -448,15 +456,16 @@ rejection with no route/status tuple, trace-3 is a local attribution blocker, an
 provides the exact window needed for a separate service correlation. The owner-diagnostic
 r4 lease stopped before query because the approved VM hostname did not resolve, so the
 remaining rejection is still unattributed. Retain all diagnostic handoffs, all browser
-red proofs, all source/deployment handoffs, and the owner red baseline. The next
-bounded lease is an independent Quality review of the published Tax Profile source and
-retained synthetic evidence; it has no VM or browser dependency and cannot close hosted
-owner acceptance. Rerun the exact service diagnostic only after the approved VM endpoint
-is available. No browser refresh or source repair is authorized meanwhile.
+red proofs, all source/deployment handoffs, and the owner red baseline. The bounded
+Tax Profile Quality review is now accepted for its source/privacy/contract slice; its
+visible synthetic proof and hosted/public endpoint proof remain open. The next lease
+is the synthetic desktop/375px Tax Profile browser proof, which has no VM dependency.
+Rerun the exact service diagnostic only after the approved VM endpoint is available.
+No owner-browser refresh or source repair is authorized meanwhile.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality review is active**.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy review is accepted; G5 Tax Profile browser proof is active**.
 The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r4 stopped before SSH query because the approved VM hostname did not resolve.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
@@ -464,7 +473,8 @@ owner-browser r2/r3/r4/r5/r6, diagnostic r3, session-401 source repair, session-
 deployment, remaining-rejection trace-2, and history deployment-1 are closed, history
 deployment-2 is accepted, owner-browser r5/r6/r7 are closed as blocked, trace-3 is
 closed as an attribution blocker, owner-diagnostic r4 is closed as a VM hostname
-proof blocker, and G5 Tax Profile Quality review is active.
+proof blocker, G5 Tax Profile Quality review is accepted for its bounded slice, and the
+G5 Tax Profile browser proof is active.
 
 The completed deployment retry lease was:
 
@@ -726,7 +736,7 @@ The completed blocked lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOS
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r4/handoff.md` (SHA-256 `26482B44B019939DEE8794C875BE7C49844FD88453FE4609A53E8258A0D7B25F`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `G5-TAX-PROFILE-QUALITY-1`:
+The completed lease was `G5-TAX-PROFILE-QUALITY-1`:
 
 | Field | Exact scope |
 |---|---|
@@ -740,10 +750,24 @@ The next exact lease is `G5-TAX-PROFILE-QUALITY-1`:
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g5-tax-profile-quality-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
+The next exact lease is `G5-TAX-PROFILE-BROWSER-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Product Experience; prove the real Tax Profile component with synthetic intercepted responses at desktop `1440x900` and mobile `375x812`, including identity gating, valid profile/estimate rendering, year validation, 403/generic error behavior, safe source-link rendering, disclaimer/assumption visibility, no private-field rendering, and no horizontal overflow |
+| Current checkpoint | The independent Quality source/privacy/contract review is PASS only for its bounded slice. The Tax Profile UI is published in the current source but has no independent visible browser proof; the hosted owner journey and VM endpoint remain separate blockers. |
+| Read paths | `plan/specialists/product-experience.md`, `docs/OPEN_BETA_BRIEF.md`, `docs/adr/0008-turkey-first-with-tax-jurisdiction-adapters.md`, `plan/manager-open-beta.md`, `frontend/src/components/TaxProfilePanel.jsx`, `frontend/src/api.js`, `frontend/src/App.jsx`, `frontend/src/styles.css`, and the retained hydration browser-proof harness patterns at `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/session-hydration-r4/manifest.md` and `browser-proof.md` |
+| Repository writes | Empty |
+| Operational writes/resources | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g5-tax-profile-browser-r1/`; local synthetic Node/Vite harness only; no VM, database, provider, hosted/public request, or external service |
+| Proof | Use the real component/source through the local build or Vite transform and synthetic API responses only. Capture DOM/accessibility and request evidence for identity false, valid 200, 403, generic error, invalid year, safe `http/https` URL, unsafe text URL, disclaimer/assumptions, exact viewport dimensions, and overflow. Preserve any failing fixture, then use a fixture-only harness adjustment if needed; do not change `App.jsx` or product source. Stop/stash owned process state and return exact four-heading handoff. |
+| Excluded/stop | No repository edit, product repair, test rerun, full-App/hosted/public/provider request, VM/SSH/database/private-row query, owner-browser refresh, private value/cookie/identity capture, or tax-advice claim; stop if the real component cannot be rendered without a source change and report the fixture blocker |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g5-tax-profile-browser-r1/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
 Do not perform any follow-up mutation under the completed diagnostic, source, or
-deployment/browser/trace leases. The active G5 review is read-only and has no product
-write or VM scope. Rerun the service diagnostic only after the approved VM
-hostname/SSH endpoint is available.
+deployment/browser/trace leases. The active G5 browser proof is synthetic-only and
+has no repository, VM, hosted, or owner-browser scope. Rerun the service diagnostic
+only after the approved VM hostname/SSH endpoint is available.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, service configuration change, or public proof
@@ -770,7 +794,7 @@ changed source, failed evidence, or a newly established risk.
 | G2 Average Purchase Price | Accepted locally in earlier history | Retain the accepted lifetime purchase-average rule |
 | G3 PostgreSQL and private scope | Conditional synthetic acceptance; later request scope and route work published | Complete the owner's private dry run/migration and its acceptance |
 | G4 Guest and identity | Guest, Google transitions, Merge, session controls, and hydration candidate published; component hydration PASS | Accept hosted User refresh and finish Guest/User browser and session journeys |
-| G5 Portfolios, currencies, tax | Portfolio selection, Fee Currency, Tax Profile backend/UI published | Finish full user journeys and close the missing independent Tax Profile review artifact |
+| G5 Portfolios, currencies, tax | Portfolio selection, Fee Currency, Tax Profile backend/UI published; bounded Quality source/privacy review PASS | Complete synthetic visible Tax Profile proof, then hosted/public endpoint and full-user acceptance |
 | G6 Market data | Shared refresh route/worker published; direct Yahoo decision retained | Establish hosted cache, refresh, quota, source/time, and permitted public-use acceptance |
 | G7 Security and data rights | Scoped routes, exports and deletion delivered; no-cookie denial matrix recorded | Finish authenticated isolation, data-rights UI, notices, abuse controls, and the recorded missing public security headers |
 | G8 VM and public service | VM/Tunnel service, HTTPS health, bounded Guest denial and Google start observed | Accept the deployed user journeys and exact final release state |
