@@ -1,6 +1,10 @@
 # fadir — Multi-Currency Portfolio PnL Tracker
 
-**Build spec for Claude Code.** Local-only server. No cloud, no auth, no external hosting.
+**Historical local-v1 build spec.** Preserved for section references in source and tests.
+Its local-only deployment, single-portfolio scope, tax exclusion, backlog, and parallel
+agent decomposition are superseded by the [Open Beta Brief](OPEN_BETA_BRIEF.md),
+[current agent rules](../AGENTS.md), and [live board](../plan/manager-open-beta.md).
+Do not execute this document as a current implementation plan.
 
 ---
 

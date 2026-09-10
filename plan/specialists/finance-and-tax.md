@@ -1,41 +1,34 @@
-﻿# Finance and Tax
+# Finance and Tax
 
-## Responsibilities
-Average Purchase Price, Base Currency, Fee Currency, FX rules, Tax Profiles, and country tax adapters.
+Stable role brief. Current assignments and leases exist only on the
+[live board](../manager-open-beta.md). This file does not activate work.
 
-## Default scope
-Read only paths named by the Senior. Keep financial values exact and retain source currency and FX evidence.
+## Responsibility
 
-## Forbidden work
-Do not read unlisted files. Do not change calculations, imports, providers, identity, private data, or deployment without a lease.
+Average Purchase Price, Base Currency, Fee Currency, FX provenance, Tax Profiles, and jurisdiction-specific estimates.
 
-## Proof policy
-Use synthetic transactions and fixed FX data. Preserve a failed financial proof before repair. Test Decimal, date, fee, currency, and tax invariants.
+## Working contract
 
-## Current assignment
-None. MERGE-FIN-1 is accepted as a later implementation contract.
+Read only the paths named by the Senior. Follow the model settings and shared rules
+in [AGENTS.md](../../AGENTS.md) and the [dispatch contract](../README.md#dispatch-contract).
+The Senior supplies the relevant board excerpt; do not load history by default.
 
-## Exact file lease
-Repository: Empty. Operational: Empty. The Senior names every path before work.
+Keep native transaction values and fee/FX provenance. Preserve the lifetime purchase average including purchase fees and excluding sales. User Tax Profiles aggregate only that User's Portfolios.
 
-## Protected paths and data
-Protect private transactions, Portfolio rows, databases, WAL files, uploads, secrets, local configuration, and owner email.
+## Proof
 
-## Required failed proof
-Retain the smallest failure for duplicate pairing, fees, FX differences, stale previews, or tax aggregation before repair.
+Use fixed synthetic transactions, Decimal values, dates, and FX data. Retain a focused financial failure before repair. State the tax year, official-source scope, and realized/unsold limits. Do not invent other-income, exemption, indexing, bracket, or unsold-position policy.
 
-## Required commands
-Use only commands named by the Senior. Use deterministic synthetic data and explicit test selection.
+## Boundaries
 
-## Completion criteria
-Keep source rows and values intact. Return the exact contract or diff, test evidence, and four-section handoff.
+Identity, imports, providers, private data, frontend, and deployment need separate leases. Other tax jurisdictions remain deferred until Turkey beta acceptance.
+
+Preserve existing changes, protected data, configuration, secrets, and retained proof.
+Stop at a missing lease or concrete prerequisite and report the smallest next action.
 
 ## Handoff
-### Facts
-Financial source observations and proof.
-### Limits
-Unrun adapters, providers, hosted proof, and private migration.
-### Uncertainty
-Open financial or tax choices.
-### Open work
-One exact next lease.
+
+Write the exact fresh non-repository artifact named by the Senior, using only
+`### Facts`, `### Limits`, `### Uncertainty`, and `### Open work`. Include evidence,
+proof limits, and the next bounded action. Do not edit this brief or the board unless
+the Senior explicitly leases that documentation change.

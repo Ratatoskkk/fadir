@@ -2,6 +2,9 @@
 
 faðir is a hosted service for private investment portfolios. It keeps a person's sign-in identity separate from each Portfolio.
 
+These are product terms. The [beta brief](docs/OPEN_BETA_BRIEF.md) defines beta scope;
+the [live board](plan/manager-open-beta.md) records implementation and acceptance.
+
 ## Language
 
 **User**:
@@ -21,7 +24,7 @@ A Workspace that has no User and depends on its browser session for access. It e
 _Avoid_: Guest account, temporary database, User
 
 **Login Identity**:
-A verified sign-in method attached to one User. A User can attach both Google and an email magic link.
+A verified sign-in method attached to one User. The beta supports Google only. The model can support additional identities later; email magic-link recovery is deferred.
 _Avoid_: Login account
 
 **User Session**:

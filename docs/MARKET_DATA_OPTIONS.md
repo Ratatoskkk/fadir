@@ -1,12 +1,15 @@
 # Market Data Options for the faðir Open Beta
 
-Date: 2026-08-31
+Research date: 2026-08-31. Provider prices, terms, availability, and coverage below are
+a dated snapshot, not refreshed during the 2026-09-10 documentation cleanup.
+Recheck official sources before using this report for a new provider decision.
 
 ## Owner decision
 
 The beta will keep the current direct Yahoo integration under the owner's written permit. The team will defer the provider seam until a source change becomes necessary.
 
-The comparison below remains the fallback record.
+The comparison below remains a fallback record. [ADR 0010](adr/0010-keep-yahoo-direct-for-beta.md)
+controls the beta. No sales outreach or provider migration is an active assignment.
 
 ## Purpose
 
@@ -28,9 +31,10 @@ The project owner has a written Yahoo grant for the beta. This report does not r
 
 Keep the approved Yahoo source for the beta, subject to the exact written grant.
 
-Add a provider-neutral seam before public release. This seam makes a later source change safe.
+The original research recommended a provider-neutral seam before release. The owner
+rejected that timing in ADR 0010; defer the seam until a source change is needed.
 
-Run a short sales check with Marketstack, Twelve Data, and EODHD.
+If a replacement becomes necessary, refresh the research and seek a separately authorized sales check.
 
 - Marketstack is the only studied source near the target budget.
 - Its paid plans state commercial use.
@@ -358,7 +362,9 @@ Send the same questions to each short-list provider.
 19. What price applies at 1,000 monthly users and 100 active symbols?
 20. Will the provider sign a display and redistribution addendum?
 
-## Migration seam
+## Deferred migration seam
+
+The following sketch is historical fallback design, not beta implementation scope.
 
 Do not replace `yfinance` calls with another provider throughout the code.
 
@@ -416,15 +422,15 @@ Add contract tests against fixed adapter fixtures. Keep the current Yahoo adapte
 
 Run the new provider beside Yahoo before the switch. Compare dates, raw closes, currencies, and split events.
 
-## Recommended beta decision
+## Historical recommendation and current disposition
 
 1. Keep Yahoo under the written beta grant.
 2. Record the exact grant terms outside the public repository.
 3. Convert those terms into a short internal policy.
-4. Add the provider-neutral seam before public traffic.
-5. Ask Marketstack for a written customer-display grant.
-6. Ask Twelve Data for a Borsa Istanbul redistribution quote.
-7. Ask EODHD for its smallest public-display Custom quote.
+4. Original seam-before-public-traffic recommendation: superseded by ADR 0010; deferred.
+5. Deferred fallback research: ask Marketstack for a written customer-display grant.
+6. Deferred fallback research: ask Twelve Data for a Borsa Istanbul redistribution quote.
+7. Deferred fallback research: ask EODHD for its smallest public-display Custom quote.
 8. Select a replacement only after a symbol and license proof.
 
 The beta can use delayed or end-of-day Borsa Istanbul data. It does not need real-time exchange data.

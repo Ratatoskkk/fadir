@@ -1,5 +1,9 @@
 # faðir Open Beta Brief
 
+Current product decisions, reconciled on 2026-09-10. This is the product contract from
+the original design interview plus later owner decisions. It describes the target;
+the [live board](../plan/manager-open-beta.md) records what is implemented and accepted.
+
 ## Product goal
 
 faðir is a hosted service for private investment portfolios. A person can use the full product as a Guest or as a User.
@@ -16,7 +20,7 @@ Each Portfolio has a unique name inside its Workspace. The first saved transacti
 
 Each Portfolio has one Base Currency. A currency change revalues views and does not rewrite source transactions.
 
-The current private portfolio will move through a private administrator action. The action will target the owner's verified Google User.
+The original private SQLite portfolio will move through a protected administrator migration into the owner's existing verified Google User Workspace. The owner selected `Ana Portföy`, TRY Base Currency, and mapping every legacy Transaction and Snapshot to it. See the [migration runbook](PRIVATE_MIGRATION_RUNBOOK.md).
 
 ## Guest use
 
@@ -94,8 +98,10 @@ Deletion revokes active sessions at once. If the beta retains encrypted backups,
 
 ## Delivery order
 
-1. Set up the Senior Agent and stable specialists.
-2. Add Average Purchase Price as the first isolated product change.
+This is the dependency order, not a restart checklist. Resume the live board checkpoint.
+
+1. Maintain the existing Senior and specialist coordination baseline.
+2. Preserve the accepted Average Purchase Price contract and proof.
 3. Add PostgreSQL, migrations, and the User, Workspace, and Portfolio scopes.
 4. Add Guest access, Google sign-in, Claim, Transfer, and Merge.
 5. Add multiple Portfolios, Base Currency, Fee Currency, and the Tax Profile.
@@ -106,10 +112,36 @@ Deletion revokes active sessions at once. If the beta retains encrypted backups,
 
 ## Work model
 
-The Senior Agent coordinates the project and edits plan or agent instruction files only. It does not edit product code.
+The Senior uses Luna Max (`gpt-5.6-luna`, `max`) and coordinates, reviews, and maintains
+documentation. Specialists use Luna Medium (`gpt-5.6-luna`, `medium`) and implement
+product and operational work, one specialist at a time.
 
-Six stable specialists own Product Experience, Identity and Data Integrity, Finance and Tax, Market Data, Platform and Release, and Quality and Security.
+The Senior checks each specialist's actual changes and required evidence. When they
+meet the acceptance criteria, the Senior commits and pushes the accepted paths under
+existing delivery authority. Incomplete candidates receive a bounded follow-up before
+publication. This responsibility is part of coordination and does not authorize the
+Senior to implement product changes.
 
-Each assignment uses an exact file lease. A specialist must show a focused failed proof before a repair.
+The six stable roles and exact dispatch format are in [plan/README.md](../plan/README.md).
+[AGENTS.md](../AGENTS.md) owns the shared proof and handoff policy. The live board owns
+current leases and delivery authority, including existing reviewed commit/push and
+release approval. Do not reimpose the original setup-only approval pause.
 
-Each handoff separates Facts, Limits, Uncertainty, and Open work. No agent can commit, push, or publish without owner approval.
+## Settled decisions
+
+| Decision | Record |
+|---|---|
+| Hosted-only product; local development/recovery remains | [ADR 0001](adr/0001-hosted-service-only.md) |
+| One hosted PostgreSQL database with private scopes | [ADR 0002](adr/0002-postgresql-for-hosted-data.md) |
+| Owner-managed VM; off-site backups deferred | [ADR 0003](adr/0003-owner-managed-vm-for-open-beta.md) |
+| Google-only beta; email recovery deferred | [ADR 0004](adr/0004-google-primary-with-email-magic-link.md) |
+| Cloudflare Tunnel and quiet abuse controls | [ADR 0005](adr/0005-cloudflare-tunnel-for-public-ingress.md) |
+| Base Currency per Portfolio | [ADR 0006](adr/0006-base-currency-per-portfolio.md) |
+| Operator tools exclude Portfolio content | [ADR 0007](adr/0007-keep-portfolio-data-out-of-operator-tools.md) |
+| Turkey first; Tax Profiles at User level | [ADR 0008](adr/0008-turkey-first-with-tax-jurisdiction-adapters.md) |
+| Cookie-only Guests and explicit transitions | [ADR 0009](adr/0009-cookie-only-guest-workspaces.md) |
+| Direct Yahoo for beta; provider seam deferred | [ADR 0010](adr/0010-keep-yahoo-direct-for-beta.md) |
+
+Do not add teams, shared Portfolios, email recovery, another tax jurisdiction, a stack
+rewrite, off-site backups, or a speculative provider seam to the beta without a new
+owner decision. Missing acceptance evidence does not change the product contract.

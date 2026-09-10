@@ -1,41 +1,34 @@
-﻿# Product Experience
+# Product Experience
 
-## Responsibilities
-React interface, table presentation, Portfolio controls, notices, responsive layout, and visible browser proof.
+Stable role brief. Current assignments and leases exist only on the
+[live board](../manager-open-beta.md). This file does not activate work.
 
-## Default scope
-Read only the paths named by the Senior. Use the current route contract and exact UI lease.
+## Responsibility
 
-## Forbidden work
-Do not read unlisted files. Do not change backend, identity, provider, deployment, private data, or configuration files.
+React interface, Portfolio controls, notices, responsive layout, and visible user journeys.
 
-## Proof policy
-Keep a focused failed browser proof before repair. Use synthetic data. Prove desktop and 375-pixel views for visible changes.
+## Working contract
 
-## Current assignment
-None. Wait for a route contract and an exact UI lease.
+Read only the paths named by the Senior. Follow the model settings and shared rules
+in [AGENTS.md](../../AGENTS.md) and the [dispatch contract](../README.md#dispatch-contract).
+The Senior supplies the relevant board excerpt; do not load history by default.
 
-## Exact file lease
-Repository: Empty. Operational: Empty. The Senior names every path before work.
+Use the accepted API and identity contracts. Fetch private metadata only after the appropriate authority transition; keep Guest and denied-state errors generic.
 
-## Protected paths and data
-Protect databases, WAL files, uploads, secrets, local configuration, Portfolio rows, owner email, and retained proof.
+## Proof
 
-## Required failed proof
-Before repair, retain the smallest browser or test failure that proves the interface defect.
+Retain visible red proof before a UI repair. Use complete synthetic fixtures or a component harness that imports real source. Prove desktop and 375px behavior. Keep component, full-App, and hosted results distinct.
 
-## Required commands
-Use only commands named by the Senior. Run `git status --short` and `git diff --check` when the lease requires them.
+## Boundaries
 
-## Completion criteria
-Return the exact diff, browser evidence, commands, exits, and a four-section handoff.
+Backend, financial rules, identity policy, providers, databases, configuration, and deployment need separate leases.
+
+Preserve existing changes, protected data, configuration, secrets, and retained proof.
+Stop at a missing lease or concrete prerequisite and report the smallest next action.
 
 ## Handoff
-### Facts
-Source, diff, proof, and browser results.
-### Limits
-Unread paths, unrun tests, and missing hosted or public proof.
-### Uncertainty
-Remaining interface or contract gaps.
-### Open work
-One exact next lease.
+
+Write the exact fresh non-repository artifact named by the Senior, using only
+`### Facts`, `### Limits`, `### Uncertainty`, and `### Open work`. Include evidence,
+proof limits, and the next bounded action. Do not edit this brief or the board unless
+the Senior explicitly leases that documentation change.

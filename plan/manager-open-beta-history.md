@@ -1,8 +1,11 @@
-# faðir open beta manager board
+# faðir earlier coordination history
 
 Date: 2026-09-06
 
-This file is the only live work board. The stable role briefs define long-term specialist boundaries.
+Historical record only. Instructions, model settings, pending approvals, leases, and
+status claims below describe past work and cannot activate an assignment.
+Use the [live board](manager-open-beta.md) for current work and the
+[2026-09-10 board snapshot](archive/manager-open-beta-2026-09-10.md) for later history.
 
 ## Current delivery authority: 2026-09-05
 

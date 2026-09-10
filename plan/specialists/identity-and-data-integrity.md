@@ -1,41 +1,34 @@
-﻿# Identity and Data Integrity
+# Identity and Data Integrity
 
-## Responsibilities
-PostgreSQL, migrations, User, Workspace, Portfolio scope, sessions, Google identity, Claim, Transfer, Merge, and private migration.
+Stable role brief. Current assignments and leases exist only on the
+[live board](../manager-open-beta.md). This file does not activate work.
 
-## Default scope
-Read only paths named by the Senior. Use the exact lease and synthetic proof root on the live board.
+## Responsibility
 
-## Forbidden work
-Do not read unlisted files. Do not change another role's files, private data, secrets, providers, public services, or deployment.
+PostgreSQL, migrations, User/Workspace/Portfolio ownership, sessions, Google identity, Claim, Transfer, Merge, and private migration.
 
-## Proof policy
-Retain a focused failed proof before repair. Match tests to scope and database risk. Keep local, VM, hosted, private, and public proof separate.
+## Working contract
 
-## Current assignment
-REQUEST-IDENTITY-CONTRACT. Define request authority, transaction lifetime, and complete private-route cutover using only the Senior-named sources and official documentation.
+Read only the paths named by the Senior. Follow the model settings and shared rules
+in [AGENTS.md](../../AGENTS.md) and the [dispatch contract](../README.md#dispatch-contract).
+The Senior supplies the relevant board excerpt; do not load history by default.
 
-## Exact file lease
-Repository: Empty. Operational: read-only official documentation and installed package version metadata. No tests, VM, account, or implementation action.
+Derive ownership from verified request authority. Preserve explicit data transitions, transaction boundaries, CSRF/origin controls, generic errors, and no-store responses.
 
-## Protected paths and data
-Protect `fadir.db`, WAL files, uploads, `config.yaml`, `.env` files, credentials, private provider permits, Portfolio rows, owner email, VM keys, and retained proof.
+## Proof
 
-## Required failed proof
-Preserve the two actual backward-clock failures and the two PostgreSQL fixture failures. Do not replace or delete their XML, archives, or retained schemas.
+Retain a focused actual-boundary failure before repair. Use synthetic SQLite and guarded PostgreSQL only as leased. Verify database, owner, marker, and OID before success-only synthetic cleanup. Unknown migration outcomes require verification before retry.
 
-## Required commands
-Run only the repaired issue and collision PostgreSQL cases, then the named PostgreSQL migration tests. Run one final isolated offline suite with explicit pytest options and fresh basetemp/XML paths. Use the existing synthetic database, strict SSH, verified success-only schema cleanup, and no package installs.
+## Boundaries
 
-## Completion criteria
-Keep product files frozen. Return source and archive hashes, affected live and migration results, final offline XML counts, and cleanup evidence. Stop on an unexpected failure and retain its evidence.
+Private migration requires the current board and runbook scope. Other product areas, providers, public actions, deployment, and destructive cleanup need separate leases.
+
+Preserve existing changes, protected data, configuration, secrets, and retained proof.
+Stop at a missing lease or concrete prerequisite and report the smallest next action.
 
 ## Handoff
-### Facts
-Source, diff, commands, tests, hashes, and cleanup.
-### Limits
-Unscoped callers, hosted proof, public proof, and later refresh or split leases.
-### Uncertainty
-Remaining identity, route, and private-scope gaps.
-### Open work
-One exact dependent lease.
+
+Write the exact fresh non-repository artifact named by the Senior, using only
+`### Facts`, `### Limits`, `### Uncertainty`, and `### Open work`. Include evidence,
+proof limits, and the next bounded action. Do not edit this brief or the board unless
+the Senior explicitly leases that documentation change.

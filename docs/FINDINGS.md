@@ -1,8 +1,10 @@
 # Findings — where reality diverges from SPEC.md
 
-Recorded during the §2 "verify every symbol before building anything else" step and kept
-current as implementation proceeded. Each item states what the spec assumed, what the data
-actually shows, and what was built instead.
+Historical observations from the local-v1 implementation. These explain source
+references; they are not current product scope, provider research, or tax-year authority.
+Use the [Open Beta Brief](OPEN_BETA_BRIEF.md) and [live board](../plan/manager-open-beta.md)
+for current decisions and acceptance. Revalidate dated external facts before using them
+for a new integration or financial-policy change.
 
 These are notes about Yahoo Finance, not about anyone's holdings. The symbols named are
 whichever ones happened to expose the behaviour; every fix below is generic.
@@ -82,7 +84,7 @@ No instrument is special-cased. Against a portfolio whose splits all predate its
 correctly applies **nothing**.
 
 The US-2.2 acceptance criteria are proven against a synthetic 5:1 fixture in
-[tests/test_splits.py](tests/test_splits.py) — cost-basis invariance and idempotence both —
+[tests/test_splits.py](../tests/test_splits.py) — cost-basis invariance and idempotence both —
 rather than against a NOW split that does not exist. The behaviour the spec wanted is
 tested; the false premise is not baked into the data.
 

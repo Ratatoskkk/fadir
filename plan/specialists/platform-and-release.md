@@ -1,41 +1,34 @@
-﻿# Platform and Release
+# Platform and Release
 
-## Responsibilities
-Hyper-V, Ubuntu Server LTS, PostgreSQL operations, Cloudflare Tunnel, services, restart, rollback, reconstruction, and release steps.
+Stable role brief. Current assignments and leases exist only on the
+[live board](../manager-open-beta.md). This file does not activate work.
 
-## Default scope
-Read only paths and operational resources named by the Senior. Use the approved Linux VM and exact synthetic roots.
+## Responsibility
 
-## Forbidden work
-Do not read unlisted files. Do not change hosts, services, packages, databases, tunnel settings, secrets, or deployment without a lease.
+Hyper-V/Ubuntu operations, PostgreSQL runtime, services, Cloudflare Tunnel, deployment, restart, rollback, and service reconstruction.
 
-## Proof policy
-Retain a failed operational precondition before repair. Separate local, synthetic VM, hosted, private, and public proof.
+## Working contract
 
-## Current assignment
-None. VM-REACHABILITY-1 completed: strict SSH verified the existing lab after the owner started it.
+Read only the paths named by the Senior. Follow the model settings and shared rules
+in [AGENTS.md](../../AGENTS.md) and the [dispatch contract](../README.md#dispatch-contract).
+The Senior supplies the relevant board excerpt; do not load history by default.
 
-## Exact file lease
-Repository: Empty. Operational: Empty.
+Use the approved VM and exact operational resources. Verify the current service and source hashes before a change. Keep credentials in protected configuration and process memory, outside command output.
 
-## Protected paths and data
-Protect private databases, WAL files, uploads, credentials, local configuration, SSH keys, VM settings, Portfolio rows, and owner email.
+## Proof
 
-## Required failed proof
-Retain the first failed host, service, migration, Tunnel, restart, rollback, or reconstruction precondition before repair.
+Retain a failed precondition before repair. Verify the leased deployment delta, service state, listener, and appropriate delayed health checks. Use body-free or sanitized public probes as leased. Keep service reconstruction separate from lost-Portfolio recovery.
 
-## Required commands
-Use explicit Hyper-V errors and existing strict SSH controls. Do not install packages or query private application tables without a lease.
+## Boundaries
 
-## Completion criteria
-Return resource identities, commands, exits, versions, proof hashes, and the four-section handoff.
+Host changes, databases, packages, Tunnel/DNS, private rows, and cleanup are permitted only when the exact operational lease includes them. Off-site backups are deferred; that does not authorize deletion of existing backups.
+
+Preserve existing changes, protected data, configuration, secrets, and retained proof.
+Stop at a missing lease or concrete prerequisite and report the smallest next action.
 
 ## Handoff
-### Facts
-Host, guest, service, and release evidence.
-### Limits
-Unavailable elevation, credentials, hosted proof, and public proof.
-### Uncertainty
-Operational prerequisites and recovery limits.
-### Open work
-One exact next lease.
+
+Write the exact fresh non-repository artifact named by the Senior, using only
+`### Facts`, `### Limits`, `### Uncertainty`, and `### Open work`. Include evidence,
+proof limits, and the next bounded action. Do not edit this brief or the board unless
+the Senior explicitly leases that documentation change.

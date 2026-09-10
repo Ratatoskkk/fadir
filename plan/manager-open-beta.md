@@ -1,319 +1,184 @@
-﻿# faðir open beta manager board
+# faðir open beta manager board
 
-Date: 2026-09-07
+Updated: 2026-09-10. This is the only live work board.
 
-This is the only live work board. Historical records are in `plan/manager-open-beta-history.md`.
-The Senior must name exact specialist files and resources before each specialist task.
-Specialists read only the named paths. They do not read repository files by default.
+## Goal and next action
+
+Finish the hosted private-portfolio beta in [the product brief](../docs/OPEN_BETA_BRIEF.md).
+The immediate user outcome is a browser that stays signed in after refresh and shows
+the owner's original portfolio under the verified Google User.
+
+**Resume the unfinished browser proof for `GOOGLE-SESSION-HYDRATION-1` first.**
+Its two frontend files are already implemented and uncommitted. The subsequent private
+migration is approved in principle but has not passed its dry run. Do not restart APP,
+identity architecture, credential rotation, or the completed Transfer repair.
 
 ## Current authority
 
-The owner approved continued delivery, VM use, reviewed commits, and normal pushes.
-The Senior coordinates and reviews. Specialists implement only under exact leases.
-The owner selected `ratatosk.dev` and Google-only sign-in for the beta.
-Email recovery and off-site backups are deferred. Do not claim lost-data recovery.
-Restart, rollback, and service reconstruction proof remain required.
-Protect private databases, WAL files, uploads, secrets, local configuration, Portfolio rows, and the owner's email.
-Use synthetic resources for proof. Confirm destructive action on existing owner data or infrastructure.
+- Senior: `gpt-5.6-luna` / `max`. Specialists: `gpt-5.6-luna` / `medium`.
+  Use the [shared work rules](../AGENTS.md) and [dispatch contract](README.md#dispatch-contract).
+- The owner approved continued delivery through product completion, VM and public
+  release, recovery proof, reviewed commits, and normal pushes to the existing origin.
+  The Senior reviews; specialists implement under exact leases, one at a time.
+- The owner explicitly assigned review and publication to the Senior: inspect each
+  specialist's changes and required proof, then commit and push accepted paths to
+  `origin/main`. Return unfinished work for repair/proof. Verify the remote commit
+  and update the board before dependent implementation; no routine approval pause.
+- Existing VM use, needed dependency installation in the VM, and Cloudflare MCP use
+  are approved. Bound each operational change to its named resources and proof.
+- `ratatosk.dev` is the approved domain. Google-only sign-in, deferred email recovery,
+  deferred off-site backups, and direct Yahoo under the private permit remain settled.
+- Private row inspection, a protected WAL-consistent snapshot, a private dry run, and
+  conditional live migration after all validations were approved. The owner selected
+  `Ana Portföy`, TRY Base Currency, and all legacy Transactions and Snapshots mapped
+  to that Portfolio. The [migration runbook](../docs/PRIVATE_MIGRATION_RUNBOOK.md) separates
+  those approvals from the technical preconditions still to be proved.
+- Do not ask for those approvals again. Obtain only a missing concrete owner value or
+  a new charge/destructive scope. No source deletion or destructive cleanup is authorized.
+  Secrets and private values stay out of ordinary artifacts.
 
-Public DNS currently delegates to `mina.ns.cloudflare.com` and `sevki.ns.cloudflare.com`.
-This proves delegation only. It does not prove Cloudflare account access, TLS, Tunnel, or a public faðir service.
-The owner supplied Google Web client ID `133938753454-ivjems9e1a27jftdfrpkcckdbcfqgh1a.apps.googleusercontent.com`.
-Keep it in deployment configuration. It does not prove a callback, authorized origin, or successful sign-in.
+Authority includes the owner's 2026-09-10 instruction to publish the documentation
+cleanup and make the Senior responsible for reviewing and pushing accepted specialist
+work. This publication excludes the unfinished frontend candidate and changes no deployment.
 
-## Active assignments
-
-| Role | Assignment | Repository lease | Operational lease | Status |
-|---|---|---|---|---|
-| Product Experience | None | Empty | Empty | Design accepted; wait for route contract |
-| Identity and Data Integrity | REQUEST-IDENTITY-CONTRACT | Empty | Official documentation research only | Define request transaction and route cutover |
-| Finance and Tax | None | Empty | Empty | MERGE-FIN-1 accepted |
-| Market Data | None | Empty | Empty | Shared-refresh candidate frozen for review |
-| Platform and Release | None | Empty | Empty | Strict SSH verified after owner started VM |
-| Quality and Security | None | Empty | Empty | SHARED-REFRESH-1 passed |
-
-Each role has one active assignment at most. The Senior reviews the worktree before every lease.
-Run only one specialist task at a time. Queue every later task, including independent work.
-Resume retained evidence after an interruption. Use focused and affected tests during repair; reserve the full suite for final lease acceptance.
-The Senior reviews the diff, retained failed proof, final proof, and handoff before dependent work.
-
-## Current accepted state
-
-- `04bab50` published the seven-file Guest foundation.
-- `476df16` published the five-file PostgreSQL runtime boundary.
-- `4b681ae` published the current coordination records.
-- `a390862` published the two-file scoped calculation service after independent acceptance and 370 isolated offline passes.
-- `c131047` records the accepted seven-file internal User Session foundation; Quality returned PASS and verified archive/source bytes and retained schema metadata.
-- `70040bb` records the accepted two-file shared-refresh entry point after Quality PASS, 46 focused passes, and 387 offline passes. Senior compared all 77 archive entries against committed source plus the two candidates: no byte or manifest differences. The reported Unicode display discrepancy is not an archive mismatch.
-- Origin `main` was even with the local branch after the last push.
-- ID-2 final proof: 18 focused passes, 365 offline passes, and 1 synthetic PostgreSQL pass.
-- ID-2 retained the startup failure and verified no private query value escaped after repair.
-- G2 is accepted. G3 is conditional on real PostgreSQL and private-scope proof.
-- G4 is open. Internal User Sessions passed synthetic proof. No HTTP, cookie, Google identity, Claim, Transfer, Merge, hosted, or public pass exists.
-- Existing Starlette warning remains.
-
-## Phase order and gates
-
-1. Coordination baseline — G0
-2. Average Purchase Price — G2
-3. PostgreSQL and private data scopes — G3
-4. Guest access and identity — G4
-5. Multiple Portfolios, currencies, and Tax Profiles — G5
-6. Public market-data behavior — G6
-7. Security, privacy, export, deletion, and abuse controls — G7
-8. Hyper-V VM and public release — G8
-9. Full acceptance and recovery proof — G9
-
-Dependencies: G2 precedes scope work. G3 precedes HTTP and identity work. G4 precedes public access.
-G5 depends on User, Workspace, Portfolio, Base Currency, and Tax Profile scope.
-G6 depends on provider permissions, cache boundaries, and scoped calculations.
-G7 depends on identity and route isolation. G8 depends on hosted service and Tunnel proof.
-G9 depends on all earlier gates plus restart, rollback, reconstruction, and acceptance evidence.
-
-## ID-3A acceptance
-
-Facts: Commit `a390862` published the two-file scoped calculation service after Quality returned PASS.
-The Senior matched both source hashes and compared archived files with committed `476df16` plus the two candidates.
-Retained red proof: five absent-method failures. Final focused proof: five passes. Final isolated combined proof: 370 passes.
-Evidence root: `C:/Users/doguk/AppData/Local/Temp/fadir-id3a-scope-20260906/`.
-Final XML: `isolated-full-r5.xml`. Archive: `id3a-scope-candidate-r5.tar`, 85 entries.
-Archive SHA-256: `9ebcf92962595396e1fa3d77bef7cf030b4fa00db0df9e04e90781f7dbbe66f8`.
-Both write leases are released. Preserve every earlier archive, failure, and final proof.
-Limits: The earlier canonical test run is not accepted isolated proof and may have read canonical configuration.
-R5 copied three unneeded committed scripts outside the named paths: bootstrap, tray, and symbol verification.
-Their source matched the commit, with newline-only tray differences. This scope error supplies no proof for those scripts.
-Uncertainty: PostgreSQL request isolation, concurrent writes, HTTP, browser, and public behavior remain unproved.
-Open work: Inspect the exact archive file list before the next extraction or test. Connect request identity and route scope.
-
-## Next assignments
-
-### REQUEST-IDENTITY-CONTRACT
-
-Identity receives an empty write lease and a bounded route-integration design task. Read only `app/api/routes.py`, `app/main.py`, `app/db.py`, `app/config.py`, `app/schemas.py`, `app/models.py`, `app/services/guest_access.py`, `app/services/user_sessions.py`, `app/services/portfolio_scope.py`, `app/services/portfolio.py`, `app/providers/price_service.py`, `tests/test_api.py`, `tests/conftest.py`, `requirements.txt`, `docs/adr/0009-cookie-only-guest-workspaces.md`, and `docs/adr/0002-postgresql-for-hosted-data.md`.
-Research current official FastAPI/Starlette cookie, dependency transaction/response lifecycle, and CSRF browser semantics before prescribing integration; record URLs, retrieval date, actual installed version metadata, and limits. Package metadata reads are allowed, but no install, test, VM, account, or implementation action.
-Propose one complete request authority and private-route cutover contract with exact sequential leases. Cover Guest/User cookie precedence and invalid tokens, credential handling, CSRF, secure cookie policy, no-store responses, root transaction lifetime and error/commit behavior, Portfolio selection/default creation on first saved transaction, all existing private routes, shared refresh/background cutover, network work outside identity locks, and legacy SQLite access after hosted-only cutover. No public access before the private routes are scoped. Preserve explicit Guest Claim/Transfer/Merge; do not invent ownership or bypass the accepted PostgreSQL internal services. Keep Google verification in its already accepted separate flow and identify dependencies rather than redoing it. Return concise Facts, Limits, Uncertainty, and Open work with one next implementation lease.
-
-### SHARED-REFRESH-1
-
-Queued after a confirmed usage-limit interruption. Its write leases are inactive until the Senior dispatches it again.
-Activated after SESSION-1 acceptance. Senior verified a clean worktree, absent new test/proof root, and origin parity after pushing `c131047` and `33e9ee9`. Use committed `c131047` as the isolated proof baseline; the two-file write lease and all other constraints below remain unchanged.
-Evidence review: candidate reports 46 focused passes and 387 offline passes. The four retained red failures prove only a missing method; they do not demonstrate the requested legacy private-row behavior. Freeze both repository files. Market receives a proof-root-only checkpoint to run one explicitly retrospective behavioral assertion against committed legacy `refresh(force=True)` with synthetic Portfolios, and freeze an exact final archive. Preserve existing XML; do not rerun the full suite. Quality reviews after this checkpoint.
-Facts: retrospective committed-source proof reported two private SQL statements and split changes in both synthetic Portfolios. Senior parsed 387 passing tests with zero XML failures/errors/skips and matched candidate hashes. Final archive SHA-256 `96cf310a0f9e02e7b7442fdf21b46ae96840c97a9f1590eb55a2404e10a0f911`; root `C:/Users/doguk/AppData/Local/Temp/fadir-shared-refresh-20260906/`.
-Limits: the actual behavior baseline was retrospective; no PostgreSQL, provider, HTTP, hosted, or public proof. Existing legacy caller behavior is intentionally unchanged until a later cutover.
-Uncertainty: concurrent refresh and request integration remain unproved.
-Open work: Quality reads the two candidate paths and the named provider/model/test dependencies below, plus this exact proof root. Empty write leases; no test rerun. Return a bounded final verdict before publication or dependent implementation.
-This Phase 4 prerequisite separates shared provider cache writes from private split application.
-The Senior checked `app/providers/price_service.py` is clean and the new test and proof root are absent.
-Write only `app/providers/price_service.py` and new `tests/test_shared_refresh.py`.
-Read only those two paths plus `app/models.py`, `app/config.py`, `app/providers/yf_client.py`, `app/providers/base.py`,
-`app/providers/market_hours.py`, `tests/test_splits.py`, `tests/test_providers.py`, and `tests/conftest.py`.
-The code skill and relevant knowledge leaves are permitted. Use the supplied excerpt, not the board or history.
-Add an explicit shared-only refresh entry point with the existing provider inputs and report shape.
-It may update PriceCache and CorporateAction. It must never read Transaction relationships or mutate private rows.
-Force may refresh provider data and split metadata; it must never apply splits to Transactions through this entry point.
-Preserve the existing local refresh behavior until its later route/background cutover. Keep its formulas and split tests unchanged.
-Require a clean caller Session before shared refresh. Reject pending ORM writes before provider calls or flushes.
-Do not commit, roll back, or close the caller Session. No separate connection, model, migration, route, or split-reconciler change belongs here.
-Retain focused red proof for forced refresh with shared Instruments and multiple private Portfolios, cold relationships, and pending caller writes.
-Prove SQL has no private-row query or write, shared data updates, caller rollback works, and existing local split behavior remains.
-Use only `C:/Users/doguk/AppData/Local/Temp/fadir-shared-refresh-20260906/`, after an absence check.
-Build isolated source from committed `a390862` plus only the two candidates, with the same exact public archive paths specified for SESSION-1.
-Inspect the file list before extraction/tests. Use committed public configuration, existing Windows packages, synthetic SQLite, and stubbed providers.
-Run focused and full offline proof with explicit `-o addopts= -m "not live"`, fresh XML/basetemp, scoped temporary files, and no bytecode/cache writes.
-Keep all archives and failures. No VM, live provider, package, private-data, public, commit, or push action is authorized.
-Return concise Facts, Limits, Uncertainty, and Open work with hashes and proof paths/counts.
-
-### SESSION-1
-
-Final checkpoint report: 3 repaired live cases passed (11 deselected), PostgreSQL migration proof passed 1 (14 deselected), final isolated offline suite passed 383 (85 deselected, one warning). Remote XMLs are `current-source-r6/live-issue-collision.xml`, `live-migrations.xml`, and `final-full-offline.xml` under the existing guest proof root. The nine unchanged earlier live passes remain applicable. Four failed schemas remain intentionally preserved; no new failed schema was reported. Senior matched all seven current source hashes. Quality now reviews the seven candidate paths, accepted Guest service/runtime dependencies, and exact retained host/guest proof roots; no test rerun or mutation. HTTP, browser, Google, private, hosted, and public acceptance remain absent.
-
-SESSION-1B produced the actual before-repair clock baseline: two expected PostgreSQL failures, with both schemas retained.
-The corrected candidate passed nine live cases and failed two fixture cases. No migration suite or full offline suite ran.
-The failures are a separate-connection read of an uncommitted row and a noncanonical fixed token before the intended unique collision.
-SESSION-1B-FIX writes only `tests/test_postgresql_user_sessions.py`; all product files and other tests remain frozen.
-Resumed on Luna High after a confirmed usage-limit stop. The fixture edits survived; continue their remaining proof without restarting implementation.
-Facts: Resume retained the repaired test candidate but strict SSH to `192.168.247.10` timed out twice. Archive SHA-256 `122c3fa77946e45c7a52c60b6fb3e1212a2581175b2ed1bbd3ab2c9f2c184159`; PostgreSQL test SHA-256 `904cb3ca0805374cdf66a275db7bbec186cdbed43113e034954e654b3fadbd36`.
-Limits: No new live, migration, or full offline result. Identity leases released while Platform checks reachability.
-Uncertainty: The existing VM may have stopped or changed address; no cause established.
-Resolved: The owner confirmed the VM was off and started it. Platform then verified strict SSH exit 0 at `192.168.247.10`, hostname `fadir-control-lab-01`, uptime one minute. Hyper-V metadata still requires permissions, but SSH is available. Platform leases are released; Identity resumes the retained proof archive with its prior exact scope.
-Open work: VM-REACHABILITY-1 reads only host Hyper-V state, its VM network adapter addresses, host network routes/neighbors, and the existing SSH trust host identifiers. Probe only the identified lab VM with the existing key and strict trust. No VM start, settings, trust, service, database, package, or file mutation. Return the verified address/identity or concrete blocking fact before repair.
-Inspect the issued row through its caller connection and prove a second connection cannot see it before commit.
-Use a canonical secret in the collision fixture. Cover public-identifier and secret-digest collisions without printing either secret.
-Retain the existing failures. Run only the repaired live cases first, then the named migration tests and one final isolated offline suite.
-Use the existing host/guest roots, exact archive inputs, strict SSH, timeouts, and schema controls. Stop on any new unexpected failure.
-The nine unaffected live passes remain valid because the product source is frozen. Do not restart their test cycle without a new defect.
-Retained expected-red schemas: `session1_fee5c638e63944f3afd27a4b985f7b5a` (OID 43752), `session1_6a586314a0884b689c8aff00e04df2a8` (OID 43918).
-Retained fixture-failure schemas: `session1_fe0fef40192e4b8b8f0d53fe93f1cfbd` (OID 44084), `session1_1dee1fc330ca4d0db301ca5349e70c20` (OID 45412).
-Preserve these schemas and their XML markers. Their retention is intentional; do not claim zero remaining schemas.
-
-SESSION-1A-CLOCK completed. The Senior reviewed the small source delta: both bulk methods validate one time against selected row timestamps.
-The helper-only local clock test does not demonstrate the original service-method defect; its two failures are not accepted behavioral red proof.
-SESSION-1B-PROOF removes only that duplicate helper test from `tests/test_user_sessions.py`. All product files and other tests stay frozen.
-Use the same named manual reads and exact public archive inputs. Both named host and guest proof roots are now active for synthetic proof.
-Build a fresh before-repair source using the retained r2 service bytes and current named PostgreSQL clock tests.
-Run only the two clock cases against this retained service and keep their expected failures as behavioral baseline evidence.
-Then run the named User Session and migration PostgreSQL tests against the current corrected candidate.
-Use strict SSH, the existing guest environment, `fadir_test`, exact schema prefixes, timeouts, and ownership checks from the contract below.
-Retain expected-failure schemas and report their exact identifiers. Clean only successful new test schemas with verified ownership.
-Run the full isolated offline suite once after the current candidate passes the live tests. Stop on an unexpected failure and retain it.
-No other repair, package, service, private-data, or public action is authorized. Return concise four-section evidence for final review.
-
-SESSION-1A-REVIEW returned NOT READY for one source-proved clock defect.
-`revoke_all` can write revocation before stored creation or access times. `list_active` also omits row-aware time checks.
-The Senior checked current hashes and assigns SESSION-1A-CLOCK to Identity with exactly three write paths:
-`app/services/user_sessions.py`, `tests/test_user_sessions.py`, and `tests/test_postgresql_user_sessions.py`.
-Keep the other four session candidate files frozen. Use only the existing host proof root; no VM or full-suite run.
-Retain a focused failure for backward time through list and bulk revoke. Validate the operation's time against its selected rows before returning or writing.
-Prove no target timestamp changes and no caller transaction loss on rejection. Add the matching planned PostgreSQL case without running it yet.
-Run only focused affected tests and create a fresh checked archive. Preserve all earlier proof and use the same archive/read allowlists.
-Return the repair diff, focused result, hashes, and a concise four-section handoff. The Senior will review this bounded delta before VM proof.
-The earlier broad VM approval remains valid. No new owner approval is required for the named synthetic PostgreSQL proof.
-
-SESSION-1A checkpoint completed. Both write leases are released and all seven candidate files are frozen.
-Facts: The retained absent-model/service proof has seven failures. Isolated affected proof passed 49 tests with no skips or failures.
-The Senior matched all seven candidate hashes and parsed `isolated-affected-r2.xml` in the exact host proof root.
-Candidate archive SHA-256: `4fe2dd349d574f2c91f2c418e91e1b723dc851c2731b3879ddbba2dae0b8bc83`.
-Limits: No full offline, real PostgreSQL, VM, HTTP, or public acceptance exists for this session candidate.
-Uncertainty: Transaction ownership, race behavior, and migration execution still need the later PostgreSQL proof.
-Open work: SESSION-1A-REVIEW reads only the seven candidate paths, `app/services/guest_access.py`, `app/db.py`, and the exact host proof root.
-Quality receives the contract excerpt. It may inspect Git status/diff and compare archive bytes with committed `a390862` plus those seven files.
-Review the planned live tests and success-only cleanup before activation. Run no test, repair, VM probe, or new artifact.
-Return READY or NOT READY for the next proof checkpoint, with concise Facts, Limits, Uncertainty, and Open work.
-
-Both specialist tasks stopped at a confirmed usage limit. SESSION-1A resumes first under the new serial dispatch rule.
-Checkpoint scope: finish the session source and retained focused offline tests, then stop with a concise handoff.
-Use only the existing host proof root. Do not start live PostgreSQL, the VM, or the full offline suite in this checkpoint.
-Remove inherited `FADIR_*` values in the test subprocess, then set only the synthetic configuration and path values it needs.
-Print no environment values. Keep PostgreSQL opt-in values exclusive to the later live command.
-Retain the seven-test absent-model/service failure and every partial file. No restart or repeated broad proof is required.
-The later PostgreSQL proof remains required for final acceptance and keeps its reserved resource contract below.
-Request identity needs revocable User Sessions before the final route and Google cutover.
-The Senior verified three existing files have no diff and four new paths are absent.
-Write exactly `app/models.py`, `app/services/user_sessions.py`, `migrations/versions/0005_user_sessions.py`,
-`tests/test_user_sessions.py`, `tests/test_postgresql_user_sessions.py`, `tests/test_migrations.py`, and `tests/test_postgresql_migrations.py`.
-Manual read scope is those seven paths plus `app/services/guest_access.py`, `app/db.py`, `app/config.py`,
-`migrations/env.py`, `migrations/versions/`, `tests/test_guest_access.py`, `tests/test_postgresql_guest_access.py`,
-`tests/conftest.py`, `pytest.ini`, and `requirements-migrate.txt`. The code skill and relevant knowledge leaves are permitted.
-The Senior supplies this excerpt; read no board history or unrelated source.
-
-Add User Session persistence and internal issue, authenticate, list, revoke-one, and revoke-all operations.
-Issue only for an existing User with its Workspace. Create no User, Workspace, Login Identity, Google flow, or HTTP endpoint.
-Use a random opaque session token, store only its 32-byte digest, and expose a separate opaque public session identifier.
-Store aware creation, last-access, and revocation times. Expire after exactly 30 days without successful authenticated access.
-List only the caller User's active sessions with public identifier and dates. Never expose token digests or private fields.
-Return User and Workspace authority only within the caller-owned PostgreSQL root transaction.
-Follow the accepted Guest rules for supported psycopg transactions, parameter hiding, pending security-state rejection, trusted time, and stable errors.
-Use consistent User, Workspace, then User Session lock order and fresh post-lock checks. Preserve unrelated caller state and transaction ownership.
-Make cross-User revocation indistinguishable from an unknown session. Repeated own-session revocation is a bounded no-op.
-Do not refresh inactive clocks on failed authentication or session list/revoke targets. The authenticated current session can renew normally.
-No operation reads Portfolio contents. Use no email, browser fingerprint, user agent, or device identifier.
-
-Retain focused failed proof before implementation. Test expiry boundary, rotation/collision safety, revocation, ownership, rollback, clock failure, and secret-safe errors.
-Use real PostgreSQL for locking, same-User concurrency, revocation races, caller-state preservation, and migration proof.
-Proof roots: `C:/Users/doguk/AppData/Local/Temp/fadir-user-sessions-20260906/` and `/home/fadir-agent/fadir-tests/user-sessions-20260906/`.
-Verify both roots are absent before creation. Preserve every existing resource.
-Build proof source from committed `a390862` plus only the seven leased files.
-Archive-only read scope: committed `app/`, `tests/`, `migrations/`, `alembic.ini`, `requirements*.txt`, `pytest.ini`, `config.yaml`,
-`scripts/make_golden.py`, and `examples/seed_transactions.example.csv`. Inspect exact entries before extraction or tests.
-Use the existing Windows environment and guest environment. Install no package. Force configuration to the extracted public file.
-Run focused tests with `-o addopts= -m "not live"`, fresh XML and basetemp, and no bytecode or pytest cache writes.
-Run the full offline suite once at final lease acceptance. Earlier broad runs require a cross-cutting change or a specific new failure.
-Use existing strict SSH to `fadir-agent@192.168.247.10`; key `C:/ProgramData/fadir-agent-control/lab_ed25519`, trust `C:/ProgramData/fadir-agent-control/lab_known_hosts`.
-Use the key only for authentication. Preserve key and trust contents and permissions.
-Live tests use only the existing synthetic `fadir_test` database through `postgresql+psycopg:///fadir_test` and the established explicit opt-in variables.
-Select only the new session PostgreSQL test and PostgreSQL migration tests. Bound the command to 300 seconds, SQL waits, and worker joins.
-Create only new `session1_<32hex>` or migration-test `db6a_<32hex>` schemas. Confirm database, name, owner, marker, and OID before success-only cleanup.
-Retain failed or unconfirmed schemas and all archives/XML. Change no role, package, service, database configuration, private data, or public resource.
-Return only concise Facts, Limits, Uncertainty, and Open work with source hashes and proof summaries. The Senior owns review and publication.
-
-GOOGLE-CONTRACT defines the Google sign-in boundary before implementation.
-Quality may read only `app/models.py`, `app/services/guest_access.py`, and `docs/adr/0004-google-primary-with-email-magic-link.md`.
-The Senior supplies the relevant beta excerpt and official Google source URLs. Both write leases are empty.
-Recommend one flow, server verification rules, browser binding, replay controls, User Session lifecycle, and minimal stored identity fields.
-Use issuer and subject, never email matching. Preserve explicit Guest Claim, Transfer, and Merge choices.
-Specify concrete required owner configuration without requesting secrets in chat. Do not claim Google account or public proof.
-Return concise Facts, Limits, Uncertainty, and Open work, with source URLs, retrieval date, version scope, and research limits.
-The first report recommends a redirect POST but leaves its transaction-cookie policy unresolved.
-Quality must resolve that browser boundary before acceptance. Compare GIS popup with a same-origin credential POST.
-Specify nonce storage and expiry, one-use consumption, CSRF, cookie policy, issuer normalization, key-cache failures, and exact owner configuration.
-Keep the same source and documentation read scope. This refinement permits no implementation or account action.
-
-Google contract review: accept GIS JavaScript popup and a same-origin credential POST as the implementation direction.
-Use authorized origin `https://ratatosk.dev`. This flow needs no Google redirect URI or client secret.
-Use a ten-minute, browser-bound login transaction, nonce, CSRF checks, exact audience, signature, expiry, and canonical issuer plus subject.
-Consume verification once. Store no raw Google credential. Omit email unless a later explicit product need requires it.
-Use hashed opaque User Session tokens, 30-day inactivity, successful-access renewal, and revocation.
-Keep network verification outside database locks, with bounded timeout and public-key cache expiry. Fail closed if verification is unavailable.
-Senior correction: do not create an empty Workspace that defeats the accepted new-User Claim flow.
-Resolve the verified identity first. Finalize new User and Workspace creation with the explicit Guest choice in one transaction.
-An incomplete sign-in transaction grants no User or private-data authority. Existing Users keep their Workspace and explicit Transfer/Merge choices.
-Limits: This is a contract, not Google, session, or browser proof. Package version and concrete implementation tests remain required.
-Official sources retrieved 2026-09-06: `https://developers.google.com/identity/gsi/web/guides/verify-google-id-token`,
-`https://developers.google.com/identity/gsi/web/guides/display-button`, `https://developers.google.com/identity/gsi/web/reference/js-reference`,
-and `https://google-auth.readthedocs.io/en/latest/reference/google.oauth2.id_token.html`.
-Version scope: current Web GIS documentation and the reported google-auth 2.38.0 reference; no installed version or account UI was verified.
-
-SPLIT-SCOPE-DESIGN resolves the corporate-action boundary needed before scoped public routes.
-Market Data may read only `app/providers/price_service.py`, `app/services/portfolio.py`, `app/models.py`,
-`app/services/portfolio_scope.py`, `tests/test_splits.py`, and `docs/SPEC.md` section 5.
-The Senior supplies the beta requirements in the prompt. Both write leases are empty; run no test or provider call.
-Trace the shared applied flag, late transactions, retries, partial failure, and concurrent Portfolio work.
-Propose one precise split-application contract that preserves stored-cost invariance and keeps shared refresh out of private rows.
-Identify any model or migration need and sequential exact leases. Treat unproved behavior as uncertainty.
-Return only a concise Facts, Limits, Uncertainty, and Open work handoff. Full implementation waits for review.
-Report complete: a unique Transaction/action application record can cover independent Portfolios and late historical rows.
-The shared applied flag cannot prove which legacy rows received a split. Do not guess that mapping or rewrite private values.
-The Senior will preserve the private migration gate. New synthetic data can prove the new contract without an owner-data decision.
-
-Complete the internal User Session foundation, then assign request identity, route selection, and private CRUD under a new exact lease.
-Then assign shared refresh and split application as separate leases.
-Then complete Google verification, Claim, Transfer, and Merge with the accepted session and scope boundaries.
-Product Experience receives a route contract before browser implementation.
-Quality receives each final candidate with empty write leases and proof-only access.
-Platform receives a separate operational lease for explicit PostgreSQL migrations, services, Tunnel, and release.
-
-## Proof and handoff standard
-
-Every repair keeps its first focused failure. Tests must match the risk.
-Visible interface changes require desktop and 375-pixel browser proof.
-Separate local, synthetic VM, hosted, private, and public proof.
-Use only named synthetic schemas and verify their database, owner, marker, and OID before cleanup.
-Never copy private configuration, databases, WAL files, uploads, secrets, or Portfolio rows into proof archives.
-
-Test policy: retain one focused red proof before each repair; run the focused proof and targeted regressions after repair; run the full offline suite once at final lease acceptance or sooner only for a cross-cutting change. Run PostgreSQL, VM, browser, hosted, and public checks only when the lease requires them. A new defect adds one focused regression and an affected-set rerun. After two failed design reviews without executable progress, stop expanding tests and require an architecture or owner decision.
-
-Apply the global Elonmusk rule: do not optimize something that should not exist; cut as much as possible before breaking the project; then fix and clean up only what remains.
-
-Every handoff contains only these sections:
+## Current checkpoint
 
 ### Facts
 
-Current source observations, commands, evidence, and results.
+- Product source baseline: `0bb35e9a6778c66e83499b474929bc4416b47fe5`
+  (`fix: complete Google portfolio transfer`). Local `main` matched freshly fetched
+  `origin/main` before the documentation publication. Documentation-only commits may
+  follow this product baseline; verify current local/remote commit IDs before dispatch.
+- The existing uncommitted product work is exactly `frontend/src/api.js` and
+  `frontend/src/components/GoogleIdentityPanel.jsx`. Both still match the hydration
+  handoff hashes below. The pre-cleanup board is archived; old role assignments are
+  superseded by this checkpoint.
+- The hydration implementation checks `GET /api/user/sessions` on mount: 200 shows
+  signed-in state, 401 returns to Google sign-in after guarded recovery, and other
+  failures show a neutral retry state. Its retained handoff reports source checks
+  and a successful frontend build.
+- The r2 component harness exists. Its handoff claims no browser pass. The prior Senior
+  task ended at a usage limit after harness startup failures and opening a browser tab.
+- The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
+  PostgreSQL, and final offline evidence report PASS; the final offline suite had
+  512 passes. The deployment handoff records the route delta, one restart, and
+  loopback/public health 200. Those results predate the hydration candidate.
+- A later owner-visible Transfer succeeded. The retained read-only state handoff records
+  one identity/User/Workspace chain, active User Sessions, consumed login, revoked
+  Guest access, and zero Portfolios. Credential rotation has a successful retained
+  handoff and is not unfinished work.
 
 ### Limits
 
-Unread sources, unrun tests, and proof classes outside the lease.
+This documentation work checks links, consistency, Git scope, and candidate hashes;
+its approved publication contains Markdown only. It runs no product test, browser,
+provider, VM, private database, or deployment action. Earlier runtime results are
+retained evidence, not fresh runtime verification. No hydration browser, independent
+Quality, publication, or deployment acceptance exists. No private migration or full
+beta acceptance exists.
 
 ### Uncertainty
 
-Unresolved behavior or evidence gaps.
+The r1 full-App synthetic fixture crashed before rendering the panel. The prior Senior
+classified it as a harness limitation, not an established App defect. The r2 harness
+has no observed desktop/375px result. Its startup commands and current port ownership
+need checking before reuse. The persisted Transfer timestamps were internally correlated
+but were not tied to an authoritative screenshot time window.
 
 ### Open work
 
-One safe next assignment, exact lease, and required owner value.
+Review the frozen hydration candidate, complete synthetic visible proof, then obtain
+Quality acceptance. The Senior commits and pushes the accepted delta, then assigns
+deployment under an exact operational lease using existing delivery authority.
+Verify owner refresh behavior before resuming the
+protected private dry run and conditional migration.
 
-## Owner decisions
+## Resumable assignment
 
-- Domain: `ratatosk.dev`.
-- Nameservers: `mina.ns.cloudflare.com`, `sevki.ns.cloudflare.com`.
-- Sign-in: Google only for beta.
-- Email magic-link recovery: deferred.
-- Off-site backups: deferred.
-- No assumed identity mapping or private-data migration.
-- No paid service without owner approval.
-- No public deployment claim from local tests.
+Status: **checkpoint retained; no specialist was dispatched by this documentation task**.
+The old implementation lease is frozen pending proof. All other roles have no active lease.
 
-## Historical record
+The next Senior may activate `GOOGLE-SESSION-HYDRATION-BROWSER-3` for Product Experience
+after verifying the checkpoint and worktree:
 
-The prior board contains setup work, completed assignments, failed proofs, architecture traces, VM investigations, and earlier prompts.
-It is retained in `plan/manager-open-beta-history.md` for evidence only.
+| Field | Exact scope |
+|---|---|
+| Outcome | Visible refresh/session states at desktop and 375px without a false Google prompt or private session data |
+| Repository writes | Empty; keep the two implementation files frozen |
+| Repository reads | `AGENTS.md`, `plan/README.md`, `plan/specialists/product-experience.md`, `frontend/src/api.js`, `frontend/src/components/GoogleIdentityPanel.jsx`, `frontend/src/styles.css`, `frontend/package.json`, `frontend/vite.config.js`, `app/api/routes.py`, `app/schemas.py`, `tests/test_user_session_routes.py` |
+| Evidence reads | Under the proof root below: `session-hydration-r1/handoff.md`, `session-hydration-r1/source-red-proof.txt`, `session-hydration-r1/source-red.png`, `session-hydration-r1/browser-proof.md`, `session-hydration-r2/handoff.md`, `session-hydration-r2/manifest.md`, `session-hydration-r2/server.js`, `session-hydration-r2/harness.html`, `session-hydration-r2/harness-entry.jsx` |
+| Operational writes | New absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/session-hydration-r3/`; local synthetic harness and owned process logs/screenshots only |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/session-hydration-r3/handoff.md` |
+| Proof | Inspect the existing harness and port ownership; run it with synthetic 200, 401/recovery, and 503 responses; inspect initial checking, signed-in, signed-out, retry, no login flash, no callback loop, and no private fields at both widths |
+| Completion | Four-section handoff with actual visible evidence and owned-process cleanup; a component pass stays separate from full-App and hosted acceptance |
+| Stop | Source hash drift, an unexpected real API/provider request, an unavailable browser surface, or a new defect requiring repository writes |
+
+Do not start Google sign-in or access the owner database for this proof. Do not patch
+`App.jsx` because an incomplete fixture crashed. If the specialist lacks a browser
+surface, it can prepare a reproducible harness for Senior acceptance; it cannot claim
+the missing browser result. If new evidence requires a rebuild or source repair, the
+Senior revises the lease before execution.
+
+Proof root: `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260909/`.
+Paths in the evidence row are relative to this proof root.
+
+| Frozen file | SHA-256 |
+|---|---|
+| `frontend/src/api.js` | `D72B7038A066D920A3FA9CEBE157129E6F435851C146C0E9A9CCE666231BFADC` |
+| `frontend/src/components/GoogleIdentityPanel.jsx` | `FADE560CA442CCB5A867FCAB06C3A1608CE18B1D17EE8D4B6BB28F1E71C524F2` |
+
+## Delivery sequence and acceptance gates
+
+The original phase order remains the dependency map. These are bounded recorded
+results, not a fresh release certification. Do not repeat a completed gate without
+changed source, failed evidence, or a newly established risk.
+
+| Gate | Recorded state | Remaining outcome |
+|---|---|---|
+| G0 Coordination | Baseline exists; current instructions reconciled | Keep this checkpoint current |
+| G2 Average Purchase Price | Accepted locally in earlier history | Retain the accepted lifetime purchase-average rule |
+| G3 PostgreSQL and private scope | Conditional synthetic acceptance; later request scope and route work published | Complete the owner's private dry run/migration and its acceptance |
+| G4 Guest and identity | Guest, Google transitions, Merge, and session controls published; owner Transfer observed | Accept hydration and finish Guest/User browser and session journeys |
+| G5 Portfolios, currencies, tax | Portfolio selection, Fee Currency, Tax Profile backend/UI published | Finish full user journeys and close the missing independent Tax Profile review artifact |
+| G6 Market data | Shared refresh route/worker published; direct Yahoo decision retained | Establish hosted cache, refresh, quota, source/time, and permitted public-use acceptance |
+| G7 Security and data rights | Scoped routes, exports and deletion delivered; no-cookie denial matrix recorded | Finish authenticated isolation, data-rights UI, notices, abuse controls, and the recorded missing public security headers |
+| G8 VM and public service | VM/Tunnel service, HTTPS health, bounded Guest denial and Google start observed | Accept the deployed user journeys and exact final release state |
+| G9 Final acceptance and recovery | Earlier bounded VM rollback/reconstruction proof exists | Final browser/product/release acceptance; carry its version and data-recovery limits forward |
+
+G9 needs the remaining G3–G8 outcomes. A public health 200, no-cookie 401, or local
+suite pass cannot close an authenticated journey. Off-site backup and lost-Portfolio
+recovery guarantees remain outside this beta.
+
+After hydration acceptance, queue these outcomes one at a time:
+
+1. Complete the protected migration into the verified Google User's `Ana Portföy`/TRY
+   and prove that the original portfolio is accessible after refresh.
+2. Reconcile and close the remaining G4–G7 product and security acceptance items against
+   the beta brief. Check Guest product parity, including tax behavior; do not silently
+   redefine full Guest use around the currently implemented User-only Tax Profile panel.
+3. Complete G8/G9 on the accepted release, with browser, restart, rollback, and service
+   reconstruction evidence appropriate to the actual change.
+
+## Evidence pointers
+
+Under the private-migration proof root above, read only the files needed by the lease:
+
+- Hydration: `session-hydration-r1/handoff.md` and `session-hydration-r2/handoff.md`.
+- Transfer: `transfer-reject-quality-r3/handoff.md`, `transfer-reject-final-r1/handoff.md`,
+  `transfer-reject-publish-r1/handoff.md`, `transfer-reject-deploy-r1/handoff.md`.
+- Persisted transition: `post-transfer-state-r1/handoff.md`; credential rotation:
+  `credential-rotation-r1/handoff.md`.
+- Stopped private dry runs: `dryrun-r1/handoff.md` and `dryrun-r2/handoff.md`.
+  These older handoffs contain superseded approval requests; use current authority above.
+
+Older accepted evidence and its limits:
+
+- [G2 acceptance](manager-open-beta-history.md#g2-acceptance).
+- [Conditional G3 acceptance](manager-open-beta-history.md#g3-acceptance-and-g3-record).
+- [Tax Profile bounded Senior review](archive/manager-open-beta-2026-09-10.md#g5-tax-profile-1-senior-review-r1-acceptance).
+- [Bounded VM rollback and reconstruction](archive/manager-open-beta-2026-09-10.md#vm-rollback-reconstruction-1-acceptance).
+- [No-cookie private-route denial](archive/manager-open-beta-2026-09-10.md#g8-public-unauthenticated-private-gate-1-acceptance).
+- [Session deployment and missing security headers](archive/manager-open-beta-2026-09-10.md#user-session-controls-1-deploy2-acceptance).
+
+Keep old failed proofs and raw artifacts intact. Record only concise accepted summaries
+here; move closed chronology into [history](README.md#historical-reference).

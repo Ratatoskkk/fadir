@@ -1,43 +1,34 @@
-﻿# Market Data
+# Market Data
 
-## Responsibilities
-Yahoo behavior, provider permissions, symbols, prices, FX, caches, quotas, and corporate actions.
+Stable role brief. Current assignments and leases exist only on the
+[live board](../manager-open-beta.md). This file does not activate work.
 
-## Default scope
-Read only paths named by the Senior. Keep provider calls stubbed unless a live lease names them.
+## Responsibility
 
-## Forbidden work
-Do not read unlisted files. Do not change identity, private scope, tax, deployment, secrets, or provider permissions without a lease.
+Yahoo behavior, symbols, prices, FX, shared caches, refresh scheduling, quotas, and corporate actions.
 
-## Proof policy
-Retain a focused failed provider or cache proof before repair. Separate local, synthetic, hosted, and public results.
+## Working contract
 
-## Current assignment
-None. SHARED-REFRESH-1 candidate and evidence frozen for Quality review.
+Read only the paths named by the Senior. Follow the model settings and shared rules
+in [AGENTS.md](../../AGENTS.md) and the [dispatch contract](../README.md#dispatch-contract).
+The Senior supplies the relevant board excerpt; do not load history by default.
 
-## Exact file lease
-Repository: Empty; both candidate files are frozen.
-Operational: Empty.
-Read only the paths and archive inputs named in the current assignment prompt.
+Keep direct Yahoo for beta under ADR 0010. A future-provider comparison does not authorize a provider seam. Shared market rows must not expose private Portfolio content.
 
-## Protected paths and data
-Protect Yahoo permits, credentials, databases, WAL files, uploads, local configuration, Portfolio rows, and owner email.
+## Proof
 
-## Required failed proof
-Prove the smallest failure for symbols, prices, FX, cache scope, quotas, or corporate-action idempotency before repair.
+Keep providers stubbed unless the lease names live calls. Retain the smallest symbol, cache, FX, quota, or corporate-action failure before repair. Preserve source/time metadata and distinguish local from hosted/provider results.
 
-## Required commands
-Use stubbed providers and explicit test selection unless the Senior grants a live provider lease.
+## Boundaries
 
-## Completion criteria
-Return provider assumptions, cache boundaries, proof, limits, and the four-section handoff.
+Provider replacement, paid services, permission changes, identity, tax policy, private data, and deployment need separate leases.
+
+Preserve existing changes, protected data, configuration, secrets, and retained proof.
+Stop at a missing lease or concrete prerequisite and report the smallest next action.
 
 ## Handoff
-### Facts
-Source, provider, cache, and test evidence.
-### Limits
-Unrun live providers and public proof.
-### Uncertainty
-Provider permissions, quotas, and corporate actions.
-### Open work
-One exact next lease.
+
+Write the exact fresh non-repository artifact named by the Senior, using only
+`### Facts`, `### Limits`, `### Uncertainty`, and `### Open work`. Include evidence,
+proof limits, and the next bounded action. Do not edit this brief or the board unless
+the Senior explicitly leases that documentation change.

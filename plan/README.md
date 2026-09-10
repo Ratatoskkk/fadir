@@ -1,40 +1,73 @@
-﻿# faðir coordination index
+# faðir coordination
 
-`manager-open-beta.md` is the only live work board.
-`manager-open-beta-history.md` contains historical evidence and does not activate leases.
-Read only the live board sections and exact paths named by the Senior.
-Specialists do not read repository files by default.
-The Senior sends only the relevant board excerpt and named source paths.
-The Senior does not send historical board material or unrelated documents by default.
+The [manager board](manager-open-beta.md) is the only live work board.
+The Senior uses Luna Max; specialists use Luna Medium, as specified in [AGENTS.md](../AGENTS.md).
+Only one specialist runs at a time. The Senior reviews each specialist's changes and
+evidence, then commits and pushes accepted work before dependent implementation.
+See [Senior review and publication](../AGENTS.md#senior-review-and-publication).
 
 ## Stable roles
 
-| Role | Brief |
-|---|---|
-| Product Experience | [product-experience.md](specialists/product-experience.md) |
-| Identity and Data Integrity | [identity-and-data-integrity.md](specialists/identity-and-data-integrity.md) |
-| Finance and Tax | [finance-and-tax.md](specialists/finance-and-tax.md) |
-| Market Data | [market-data.md](specialists/market-data.md) |
-| Platform and Release | [platform-and-release.md](specialists/platform-and-release.md) |
-| Quality and Security | [quality-and-security.md](specialists/quality-and-security.md) |
+| Role | Responsibility | Brief |
+|---|---|---|
+| Product Experience | React interface and visible acceptance | [Product](specialists/product-experience.md) |
+| Identity and Data Integrity | Ownership, sessions, transitions, PostgreSQL, migration | [Identity](specialists/identity-and-data-integrity.md) |
+| Finance and Tax | Calculation rules, currency, fees, Tax Profiles | [Finance](specialists/finance-and-tax.md) |
+| Market Data | Yahoo, symbols, prices, FX, shared caches and refresh | [Market](specialists/market-data.md) |
+| Platform and Release | VM, services, Tunnel, deployment and operational recovery | [Platform](specialists/platform-and-release.md) |
+| Quality and Security | Independent review, isolation, privacy and release acceptance | [Quality](specialists/quality-and-security.md) |
 
-Use one active assignment per role. The Senior names the exact repository and operational lease.
-The Senior reviews the current worktree before each lease and releases the lease before dependent work.
-Use Luna High for specialists unless the Senior assigns another model and effort for a specific need.
+These briefs are stable role boundaries. Current status and leases belong only on the
+board, so an old role handoff cannot accidentally become a new assignment.
 
-## Assignment flow
+## Dispatch contract
 
-1. Senior selects one bounded assignment.
-2. Senior names the exact files, resources, commands, and proof boundaries.
-3. Specialist reads only those named paths.
-4. Specialist retains a focused failed proof before repair.
-5. Specialist returns Facts, Limits, Uncertainty, and Open work.
-6. Senior reviews the diff, proof, and handoff before dependent work.
+The Senior checks the worktree and supplies one small, complete assignment:
 
-Keep proof summaries on the live board. Store full XML, archives, and logs outside prompt context.
-Use only the four handoff sections. Keep each section concise and evidence-based.
+```text
+Role and assignment ID:
+Outcome and acceptance criteria:
+Current checkpoint and retained failed proof:
+Read paths: exact repository paths and evidence files; no default exploration.
+Repository writes: exact paths, or Empty.
+Operational writes/resources: exact paths, processes, databases, or services, or Empty.
+Commands and proof: focused checks, affected regressions, required proof classes.
+Excluded scope and stop conditions:
+Handoff: one exact absent non-repository .md path.
+Model: gpt-5.6-luna; reasoning effort: medium.
+```
 
-## Protected state
+Name the role brief and any shared instructions the specialist needs in its read lease.
+Check operational targets before mutation. A read-only review still needs an explicit
+write lease for its handoff artifact. Do not overwrite a previous handoff to manufacture
+completion; a resumed assignment gets a fresh artifact and links its checkpoint.
 
-Protect private databases, WAL files, uploads, secrets, local configuration, Portfolio rows, owner email, VM keys, and retained proof.
-Keep local, synthetic VM, hosted, private, and public proof separate.
+The handoff has exactly four sections: `### Facts`, `### Limits`, `### Uncertainty`,
+and `### Open work`. Include a review verdict when applicable. The Senior verifies the
+actual diff and required proof, records acceptance or a bounded follow-up, and releases
+or resumes the lease. After acceptance, the Senior commits only the accepted paths,
+pushes them, verifies the remote commit, and records it on the board. Specialists do
+not publish an unreviewed candidate.
+
+Reuse the stable role while context is sufficient. Before an interruption, preserve
+the current diff, failed proof, final artifacts, and one next action. Start a fresh
+specialist with that checkpoint if its accumulated context exceeds 400k or its remaining
+budget cannot finish the bounded assignment. Do not overlap the old and new task.
+
+## Keep the board small
+
+Keep the objective, current authority, latest accepted state, one active or resumable
+assignment, queued outcomes, and open acceptance gates on the board. Replace stale
+status instead of appending another narrative. Move closed chronology to history and
+leave a short evidence pointer. A new run starts at the checkpoint, not at phase one.
+
+## Historical reference
+
+Read only the named section when a current question needs it:
+
+- [Earlier coordination history](manager-open-beta-history.md).
+- [Board snapshot before the 2026-09-10 cleanup](archive/manager-open-beta-2026-09-10.md).
+- [Original local manual and measurements](../docs/archive/local-v1-readme.md).
+- [Earlier private migration control plan](../docs/archive/private-migration-runbook-2026-09-04.md).
+
+These records preserve evidence and superseded instructions. They grant no active lease.
