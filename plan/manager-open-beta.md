@@ -10,11 +10,11 @@ the owner's original portfolio under the verified Google User.
 
 **Hydration is accepted locally and published as `b22875e38a7174d823212bb291dcd78151e781bd`.**
 The earlier VM deployment and hosted public edge proof are accepted. The newer session-auth
-serialization repair is published but not yet serving. The protected dry run,
-committed-candidate recovery, and live database migration are accepted within their
-guards. The next action is the resumable bounded deployment of the session-auth repair,
-followed by a separately leased browser/session proof; the source, candidate, and
-committed serving data remain preserved.
+serialization repair is now deployed with its rollback copy and sanitized public
+static/health proof. The protected dry run, committed-candidate recovery, and live
+database migration are accepted within their guards. The next action is a separately
+leased authenticated owner-browser session proof; the source, candidate, serving data,
+and rollback remain preserved.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -183,6 +183,16 @@ Platform lease.
   SSH-agent pipe. It proves the expected hostname, active `fadir.service`, and the
   port-8000 listener without changing the VM. The r1 stop evidence remains preserved;
   the deployment retry uses a fresh r2 proof root.
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` passed. The published `a270f40` bundle
+  was transferred and verified, the prior frontend directory remains at the approved
+  remote `dist.previous` rollback path, and exactly one `fadir.service` restart left
+  the service active with `NRestarts=0` and listener `127.0.0.1:8000`. Loopback and
+  public health/shell/hashed shell assets returned 200. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-deploy-r2/handoff.md`
+  (SHA-256 `0C9F01C09487603B7E7D6D9429C438CE643F6B91AFE5125F8DC4C485451CCCB7`).
+  The public shell includes Cloudflare Insights injection; its application asset
+  references and hashed JS/CSS match the published manifest. No authenticated owner
+  acceptance is inferred.
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -205,10 +215,8 @@ collect because system Python lacks `sqlalchemy`; no backend pass is inferred. N
 full-App, authenticated User journey, migration, or full beta acceptance exists. The
 current owner browser shows the User state and portfolio selector but has not yet shown
 migrated private data; the live lease recorded a reproducible private-request 401. The
-published repair is not yet in the serving bundle.
-The currently deployed bundle, loopback service, tunnel, and public static/health
-reachability are accepted; the newly published bundle is awaiting deployment. No
-authenticated or private-data acceptance is inferred.
+deployed bundle, loopback service, tunnel, and public static/health reachability are
+accepted. No authenticated or private-data acceptance is inferred.
 
 ### Uncertainty
 
@@ -224,19 +232,18 @@ authoritative screenshot time window.
 ### Open work
 
 The recovery and live migration proofs are complete within their recorded limits. The
-browser repair is published but not deployed; preserve the committed serving data and
-the live browser 401 proof until the new bundle passes public and owner acceptance. Resume
-the bounded deployment through the fresh r2 proof root, using the approved SSH identity
-and matching strict known-hosts file with the stale local agent bypassed.
+browser repair is deployed and public static/health proof is accepted; preserve the
+committed serving data, rollback copy, and live browser 401 proof until the separate
+authenticated owner-browser proof passes.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published as `a270f40`; hosted owner proof is blocked until the new bundle is deployed; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is active**.
-The Platform and Release specialist closed the r1 lease after the safe pre-mutation stop; the r2 retry is the sole active specialist lease.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted**.
+The Platform and Release specialist closed both deployment leases after Senior review; the separate hosted owner-browser proof is next.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease is closed and this deployment follow-up is active.
 
-The active deployment retry lease is:
+The completed deployment retry lease was:
 
 | Field | Exact scope |
 |---|---|
@@ -247,6 +254,16 @@ The active deployment retry lease is:
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-deploy-r2/handoff.md` |
 | Proof | Build/archive from the published commit; verify transfer bytes and manifest before replacement; verify rollback copy; replace only the frontend bundle; restart once; after readiness poll prove service state/listener, loopback `/api/health`, public `/api/health`, `/`, and every hashed asset referenced by the shell. Keep the old public 401 proof and do not claim authenticated owner acceptance. |
 | Stop | Source/build/archive mismatch, missing rollback path, failed service/readiness/health/static probe, unknown replacement state, any database or service-config change, tunnel/DNS/public API write, extra restart, or any request to remove the rollback copy or alter private data |
+
+The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-1`:
+
+| Field | Exact scope |
+|---|---|
+| Outcome | Refresh the existing authorized owner browser against the deployed `a270f40` bundle; prove Google User session hydration, `Ana Portföy · TRY` selection, successful private portfolio/related requests, no request-rejected surface, and no cross-Workspace disclosure |
+| Repository writes | Empty; use the current Codex in-app browser tab only |
+| Evidence writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r1/`; sanitized observations and request status/method/path tuples only; no cookies, identity values, email, session identifiers, holdings, transactions, or response bodies |
+| Browser proof | Current `https://ratatosk.dev/` owner tab; refresh after deployment, capture desktop state, then verify the required mobile-width state without changing account or provider data |
+| Stop | Missing owner state, any identity/Workspace ambiguity, private request 401/403/error, cross-Workspace or empty unexpected result, browser/provider prompt requiring owner action, leaked private value, or any source/VM/database/configuration mutation |
 
 Do not perform authenticated owner-browser acceptance under this deployment lease. Keep
 the live 401 browser proof and migration evidence intact; no identity, issuer, subject,
