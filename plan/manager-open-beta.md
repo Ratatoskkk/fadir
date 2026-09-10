@@ -467,10 +467,9 @@ Platform lease.
   (full-file SHA-256 `2AD77316E3D8CB2A93E5A2C51307D37CEEF3500C2EEE7CE5279F8DCB1EA70502`).
   The G7 public-header sub-gate is accepted; authenticated, browser, full G7, and beta
   acceptance remain open.
-- The public-header sub-gate is now closed. The Product Experience source lease has
-  since added the User-gated export/deletion controls and quiet notices, but visible
-  desktop/375px acceptance remains a separate proof lease; no deletion or private-data
-  action is authorized by this source result.
+- The public-header sub-gate is now closed. The Product Experience source and local
+  synthetic desktop/375px proof now pass for the User-gated export/deletion controls and
+  quiet notices; this is still a bounded local result, not full G7 or beta acceptance.
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -531,13 +530,13 @@ slices; hosted/public endpoint and full-user acceptance remain open. The source 
 is published as `4edf393`, independent Quality is PASS for its bounded local slice, and
 Deployment-2 used the previously approved static endpoint with strict remote identity
 verification to accept the public security-header sub-gate. No remaining action should
-repeat that sub-gate without a new failure. The next concrete G7 action is synthetic
-  desktop/375px proof of the new data-rights controls and quiet notices; the hosted owner
-  rejection and other G4-G8 outcomes remain separate.
+repeat that sub-gate without a new failure. The next concrete G7 action is independent
+Quality review of the accepted data-rights source and synthetic browser evidence; the
+hosted owner rejection and other G4-G8 outcomes remain separate.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 source-header repair is published as `4edf393`, Quality is PASS for its bounded slice, and Deployment-2 accepted the public header sub-gate; G7 data-rights UI source is published as `721bd6d`; hosted owner acceptance, visible data-rights proof, and remaining G4-G8 gates remain open**.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 source-header repair is published as `4edf393`, Quality is PASS for its bounded slice, and Deployment-2 accepted the public header sub-gate; G7 data-rights UI source is published as `721bd6d` and synthetic browser proof is PASS in the bounded r2 handoff; hosted owner acceptance, independent data-rights Quality, and remaining G4-G8 gates remain open**.
 The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r4 stopped before SSH query because the approved VM hostname did not resolve.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
@@ -927,7 +926,11 @@ the exact handoff is `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-
 | Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-source-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `G7-DATA-RIGHTS-UI-BROWSER-1`:
+The completed lease is `G7-DATA-RIGHTS-UI-BROWSER-1` (Product Experience specialist
+`01a08d76-5d1d-7a63-a41a-8d81810ed240`). The first r1 candidate is retained with its
+hash mismatch; the bounded screenshot repair is accepted from fresh r2 evidence:
+`C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-browser-r2/handoff.md`
+(`49A2E6E115CE620C6FB5F50CAE183367F66B9D6D48E7D45FB7781D60A90D55F6`).
 
 | Field | Exact scope |
 |---|---|
@@ -938,7 +941,21 @@ The next exact lease is `G7-DATA-RIGHTS-UI-BROWSER-1`:
 | Operational writes/resources | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-browser-r1/` handoff and lease-owned local synthetic HTTP/browser harness only; no VM/SSH, database/WAL/private rows, owner browser, hosted/public request, deletion request, provider/Tunnel/DNS/Cloudflare action, cookie, identity, secret, or private data |
 | Proof | Serve the published frontend locally with complete synthetic User/session/portfolio/tax responses and no external provider. Capture sanitized DOM/accessible observations and screenshots or equivalent visible evidence at exactly `1440x900` and `375x812`; verify User-only panel visibility, CSV/JSON buttons, delete controls, confirmation before destructive calls, generic failure text, all five notices, and no horizontal overflow. Do not click a destructive action or invoke a real export; mock those boundaries only. |
 | Excluded/stop | No repository edit, backend/API change, legal-text expansion, real download/delete, owner-browser refresh, hosted/public/VM/provider action, private-value/cookie/identity capture, or G7/beta claim; stop if the published source cannot be rendered with a complete synthetic fixture and report the smallest fixture/harness blocker |
-| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-browser-r1/handoff.md` |
+| Handoff | Retained r1 `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-browser-r1/handoff.md` (actual SHA-256 `359908F3A05DB81D3C444516B66556C4C985BB091632EBC4742A551EBC9F0C4E`); accepted repair r2 `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-browser-r2/handoff.md` (SHA-256 `49A2E6E115CE620C6FB5F50CAE183367F66B9D6D48E7D45FB7781D60A90D55F6`) |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
+The next exact lease is `G7-DATA-RIGHTS-UI-QUALITY-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Quality and Security; independently review the published `721bd6d` data-rights UI source, its local synthetic API/browser proof, User gating, export/deletion privacy contract, notice copy, retained r1/r2 proof limits, and changed-path scope; return PASS, FAIL, or INCONCLUSIVE for this bounded local source/privacy/browser slice |
+| Current checkpoint | Product Experience source review and synthetic browser proof are accepted for their bounded scopes. Source handoff SHA-256 is `32F2414D511B6EA5CA654845184331903B3670A3A73D7ADC945B78B2A4CB674`; accepted browser repair handoff r2 SHA-256 is `49A2E6E115CE620C6FB5F50CAE183367F66B9D6D48E7D45FB7781D60A90D55F6`. The retained r1 handoff hash mismatch and all earlier hosted owner red proofs remain preserved. No deployment, hosted, public, owner, private-data, or real deletion/export acceptance exists. |
+| Read paths | `plan/specialists/quality-and-security.md`, `docs/OPEN_BETA_BRIEF.md`, `plan/manager-open-beta.md` (current G7 data-rights entries only), `frontend/src/App.jsx`, `frontend/src/api.js`, `frontend/src/styles.css`, `app/api/routes.py` privacy routes only, `app/services/privacy.py`, `app/schemas.py` export/portfolio schemas only, source handoff, browser r1/r2 handoffs/evidence, and published commit `721bd6d` |
+| Repository writes | Empty; no product, test, board, or documentation edits |
+| Operational writes/resources | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-quality-r1/handoff.md`; read-only local source/evidence only; no VM/SSH, database/WAL/private rows, browser, hosted/public request, provider/Tunnel/DNS/Cloudflare action, deletion/export call, cookie, identity, secret, or private data |
+| Proof | Independently inspect changed-path scope/hashes, API route/response semantics, User-only gate, explicit confirmation and generic error behavior, safe filename/download handling, notice alignment with the brief, synthetic exact-viewport evidence, nested-scroll limit, server cleanup, and retained failed r1 proof. Do not rerun tests, repair source, perform a real export/delete, or infer G7/beta/hosted acceptance. |
+| Excluded/stop | No source repair, test rerun, deployment, owner-browser refresh, hosted/public/VM/provider action, private-data/cookie/identity capture, or board edit; report the smallest bounded defect or uncertainty |
+| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-quality-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
 Do not perform any follow-up mutation under the completed diagnostic, source, or
