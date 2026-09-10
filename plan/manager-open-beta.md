@@ -962,7 +962,8 @@ The completed lease is `G7-DATA-RIGHTS-UI-QUALITY-1` (Quality and Security speci
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-quality-r1/handoff.md` (SHA-256 `92E287A3E4F14905AB78A1B55FFF480C0F0F763EF67FA8D9ED59A0B5F2A5D5BE`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `G7-DATA-RIGHTS-UI-DEPLOY-1`:
+The active lease is `G7-DATA-RIGHTS-UI-DEPLOY-1` (Platform and Release specialist
+`01a08d88-2016-7540-8738-d0b36a37e518`):
 
 | Field | Exact scope |
 |---|---|
