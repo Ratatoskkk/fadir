@@ -128,6 +128,12 @@ Platform lease.
   repository/public mutation count was zero, so the candidate remains UNKNOWN and
   isolated. See
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-outcome-audit-r1/handoff.md`.
+- The owner has now authorized a bounded recovery: preserve and isolate the existing
+  candidate/source; correlate candidate-row `xmin` values to this attempt; query
+  PostgreSQL 16 `pg_xact_status(xid8)` with the correct full transaction ID; repair
+  the rehearsal script's invalid unused access and PASS gates; and use a fresh
+  isolated target only if the historical outcome remains unrecoverable. No candidate
+  or source reinsertion, cleanup, or serving change is authorized by this instruction.
 - The earlier Transfer repair was published as `0bb35e9`. Retained Quality, focused
   PostgreSQL, and final offline evidence report PASS; the final offline suite had
   512 passes. The deployment handoff records the route delta, one restart, and
@@ -153,37 +159,34 @@ accepted; no authenticated or private-data acceptance is inferred.
 The r1 full-App synthetic fixture still crashes before rendering the panel; this remains
 a harness limitation, not an established App defect. The r3 signed-out mobile state
 needed one extra observation before settling. The DRYRUN-2 candidate content is fully
-reconciled and guarded, but no independent durable audit record can classify its
-original commit/rollback outcome. Any retry, repair, cleanup, or exposure now needs a
-new concrete owner/operator scope. The persisted Transfer timestamps were internally
+reconciled and guarded, but the direct row-transaction-status check has not yet been
+run; the previous audit omitted it. The persisted Transfer timestamps were internally
 correlated but were not tied to an authoritative screenshot time window.
 
 ### Open work
 
-The protected audit path is exhausted. Obtain either an independent durable audit
-source for this attempt or a new concrete owner/operator scope for outcome-preserving
-repair/cleanup; do not retry, repair, clean up, or change serving state implicitly.
+Run the owner-authorized protected transaction-status recovery and repair lease below.
+Preserve the existing candidate/source; use a fresh isolated target only when the
+direct status result is unrecoverable.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 content is complete but its transaction outcome remains unknown; owner/operator scope is required**.
-No specialist is active. `PRIVATE-MIGRATION-OUTCOME-AUDIT-1` is closed; no dependent
-lease may start until the UNKNOWN outcome is resolved or explicitly accepted for a
-separately scoped repair/cleanup decision.
+Status: **hydration accepted; VM deployment and public edge passed; DRYRUN-2 content is complete; direct transaction-status recovery and corrected rehearsal are active next**.
+No specialist is active. The next bounded lease is `PRIVATE-MIGRATION-XID-RECOVERY-1`.
 The Product Experience browser, Quality, deployment, Tunnel, DRYRUN-1, and DRYRUN-2
 leases are closed.
 
-The next action is an owner/operator decision, not an implicit database operation:
+The next recovery lease is:
 
 | Field | Exact scope |
 |---|---|
-| Outcome | Supply a durable audit source that covers the attempt, or choose a separately scoped outcome-preserving repair/cleanup decision that accepts the candidate as UNKNOWN; do not infer from content persistence |
-| Repository writes | Empty until the owner/operator supplies the next scope |
-| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-outcome-audit-r1/handoff.md`, `protected-outcome-audit-output.txt`, and prior target-validation/verification/DRYRUN-2 evidence |
-| Operational writes | Empty until the owner/operator supplies the next scope. The candidate remains preserved and isolated; no source, snapshot, database, service, browser, provider, or public mutation is authorized |
-| Handoff | A new exact path must be named only after the owner/operator chooses the next scope |
-| Proof | Any next lease must re-guard database/owner/marker/OID, preserve the candidate and source, emit sanitized evidence, and keep the unknown-outcome distinction explicit |
-| Stop | Missing owner/operator scope, unavailable durable audit, any unapproved retry/repair/cleanup, any public/provider/service action, or any need to modify product code/configuration |
+| Outcome | Re-guard the existing candidate; correlate candidate-row `xmin` transaction IDs to the DRYRUN-2 attempt; derive the correct full `xid8`; query `pg_xact_status(xid8)` directly; classify COMMITTED/ABORTED/IN-PROGRESS/NULL without guessing |
+| Repository writes | Empty; no product or migration source change is leased |
+| Evidence reads | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-outcome-audit-r1/handoff.md`, `protected-outcome-audit-output.txt`, `private-migration-r2/protected-dryrun.py`, and prior target-validation/verification/DRYRUN-2 evidence |
+| Operational writes | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-xid-recovery-r1/` only; preserve candidate/source/snapshot; a fresh isolated non-serving target is permitted only if direct status is unrecoverable |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/private-migration-xid-recovery-r1/handoff.md` |
+| Proof | Repair a fresh script copy: remove the unused invalid attribute access; emit confirmed database outcome before later checks; gate PASS on every schema/ownership/reconciliation/fidelity/isolation/repeatability/failure validation; if committed, finish read-only checks without reinserting candidate data; if unrecoverable, preserve UNKNOWN and run corrected rehearsal in the fresh target |
+| Stop | Guard mismatch, missing/ambiguous `xmin` correlation, incorrect/full-XID conversion failure, `pg_xact_status` NULL/IN-PROGRESS/contradictory result, any candidate/source mutation, any unguarded PASS, any public/provider/service action, or any need to modify product code/configuration |
 
 Do not start an owner-browser sign-in or change the product during this dry run. Private
 source and target inspection is permitted only through the protected channels named
