@@ -478,6 +478,15 @@ Platform lease.
   delegated Codex browser inventory had zero open tabs. No refresh or hosted result was
   obtained; the parent browser context now exposes the authorized tab for a separate
   Senior-run lease.
+- `G7-DATA-RIGHTS-UI-OWNER-BROWSER-2` performed exactly one trusted refresh on the
+  existing owner tab after the `721bd6d` deployment. After the bounded settle, the
+  selector still showed `Ana Portföy · TRY` and the page still showed
+  `Bağlantı hatası: request rejected`; the viewport was not changed and no controls,
+  export, deletion, response bodies, cookies, identity values, private values, or
+  route/status tuples were captured. The lease is blocked and does not establish
+  hosted, G7, or beta acceptance. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-owner-browser-r2/handoff.md`
+  (SHA-256 `D6CCACC335E6337124336E58E0D67F2E8A170E6BCF9C62BA8D5F8967A8A1C8A7`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -538,14 +547,15 @@ slices; hosted/public endpoint and full-user acceptance remain open. The source 
 is published as `4edf393`, independent Quality is PASS for its bounded local slice, and
 Deployment-2 used the previously approved static endpoint with strict remote identity
 verification to accept the public security-header sub-gate. No remaining action should
-repeat that sub-gate without a new failure. The next concrete G7 action is a separate
-Senior-run hosted owner-browser check against the deployed data-rights bundle; the known
-request rejection and other G4-G8 outcomes remain separate.
+repeat that sub-gate without a new failure. The Senior-run hosted owner-browser check
+against the deployed data-rights bundle is closed as blocked by the same visible request
+rejection; obtain a separate bounded diagnostic or repair lease before another owner
+refresh. The known request rejection and other G4-G8 outcomes remain separate.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 source-header repair is published as `4edf393`, Quality is PASS for its bounded slice, and Deployment-2 accepted the public header sub-gate; G7 data-rights UI source is published as `721bd6d`, synthetic browser proof is PASS in the bounded r2 handoff, independent data-rights Quality is PASS for its bounded local slice, and its guarded frontend deployment is accepted; delegated owner-browser r1 is BLOCKED before action for missing tab; hosted owner acceptance and remaining G4-G8 gates remain open**.
-The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r4 stopped before SSH query because the approved VM hostname did not resolve.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4/r5/r6/r7 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source repair is published as `cf6e9a3` and deployed with rollback; remaining-rejection trace-2 is accepted as `eb03b07`; remaining-rejection history deployment-1 stopped before mutation and deployment-2 is accepted; remaining-rejection trace-3 is closed as an attribution blocker; owner-browser r7 is closed as blocked; owner-diagnostic r4 stopped before query as a VM hostname proof blocker; G5 Tax Profile Quality source/privacy and synthetic browser proofs are accepted for their bounded slices; G7 source-header repair is published as `4edf393`, Quality is PASS for its bounded slice, and Deployment-2 accepted the public header sub-gate; G7 data-rights UI source is published as `721bd6d`, synthetic browser proof is PASS in the bounded r2 handoff, independent data-rights Quality is PASS for its bounded local slice, and its guarded frontend deployment is accepted; delegated owner-browser r1 is BLOCKED before action for missing tab; Senior-run owner-browser r2 is BLOCKED after exactly one refresh by the visible request rejection; hosted owner acceptance and remaining G4-G8 gates remain open**.
+The Senior-run G7 data-rights owner-browser r2 lease is closed as BLOCKED after exactly one refresh; it retained the visible `Bağlantı hatası: request rejected` result and did not enter the required desktop/375px acceptance states. Its separate handoff is recorded above. The Platform and Release specialist closed the remaining-rejection deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 and remaining-rejection source/deployments are accepted, history deployment-1 stopped safely before mutation, deployment-2 is accepted with rollback/static/health proof, owner-browser r6/r7 stopped on the same visible rejection, trace-3 found no new local trigger, and owner-diagnostic r4 stopped before SSH query because the approved VM hostname did not resolve.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
 owner-browser r2/r3/r4/r5/r6, diagnostic r3, session-401 source repair, session-401
@@ -991,18 +1001,18 @@ specialist `01a08d8e-fe98-71f3-8678-9d58ae9d453d`); no action occurred. Handoff:
 `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-owner-browser-r1/handoff.md`
 (`7D126F5F47CF2D86706EA6E913384F0F2CF39A3DD77DD148C29956195A541B42`).
 
-The active lease is `G7-DATA-RIGHTS-UI-OWNER-BROWSER-2` (Senior-run browser acceptance):
+The completed blocked lease is `G7-DATA-RIGHTS-UI-OWNER-BROWSER-2` (Senior-run browser acceptance):
 
 | Field | Exact scope |
 |---|---|
 | Role and outcome | Senior/Product Experience; use the existing authorized `https://ratatosk.dev/` owner tab after the accepted `721bd6d` frontend deployment, perform exactly one trusted refresh, and determine whether the User-gated data-rights panel/notices are visibly reachable without the known request rejection; capture only sanitized UI observations and allowlisted method/path/status tuples if available |
-| Current checkpoint | Owner-browser r7 remains the retained red proof: after the prior accepted backend/frontend repairs it still showed `Ana Portföy · TRY` with `Bağlantı hatası: request rejected`, with no route/status tuple. The new `721bd6d` bundle is deployed with rollback and sanitized public/static/health proof; no authenticated acceptance is inferred. Do not conflate this check with the local synthetic browser proof or with public static reachability. |
+| Current checkpoint | Owner-browser r7 remains the retained red proof, and this lease's fresh single refresh showed the same `Ana Portföy · TRY` selector with `Bağlantı hatası: request rejected` after the `721bd6d` deployment. No route/status tuple or authenticated acceptance was obtained. Do not conflate this check with the local synthetic browser proof or with public static reachability. |
 | Read paths | `plan/specialists/product-experience.md`, `docs/OPEN_BETA_BRIEF.md`, `plan/manager-open-beta.md` (current G7 data-rights entries and retained owner-browser red proof only), the accepted `721bd6d` deployment handoff, `frontend/src/App.jsx`, `frontend/src/api.js`, `frontend/src/styles.css`, and the retained owner-browser r7 handoff only |
 | Repository writes | Empty; do not edit source, tests, board, or configuration |
-| Operational writes/resources | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-owner-browser-r2/`; current authorized Codex in-app browser tab at `https://ratatosk.dev/` only; no VM/SSH, database/WAL/private rows, provider, Tunnel/DNS/Cloudflare, cookie, identity, secret, or private-data action |
+| Operational writes/resources | Existing authorized Codex in-app browser tab at `https://ratatosk.dev/` only; no VM/SSH, database/WAL/private rows, provider, Tunnel/DNS/Cloudflare, cookie, identity, secret, or private-data action |
 | Browser proof | Verify the existing tab and authorized User state before acting; perform exactly one refresh after the new deployment; after bounded settle, record sanitized desktop UI and required 375px state only if the desktop state is healthy. Allowlist only `/api/user/sessions`, `/api/auth/recover-user-cookie`, `/api/portfolios`, `/api/portfolio`, `/api/portfolio/history`, `/api/transactions`, `/api/instruments`, and `/api/tax/profile|estimate`; strip query strings and retain only method/path/status/count evidence. No response bodies, cookies, identity values, holdings, transactions, or private values. |
 | Excluded/stop | Stop before viewport change on missing/ambiguous owner state, any request rejection/401/403/error, empty unexpected result, provider prompt, leaked private data, extra refresh/navigation, or any source/VM/database/configuration/provider mutation. Do not click export or deletion controls. Do not claim G7 or beta acceptance from a blocked result. |
-| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-owner-browser-r2/handoff.md` |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/g7-data-rights-ui-owner-browser-r2/handoff.md` (SHA-256 `D6CCACC335E6337124336E58E0D67F2E8A170E6BCF9C62BA8D5F8967A8A1C8A7`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
 Do not perform any follow-up mutation under the completed diagnostic, source, or
