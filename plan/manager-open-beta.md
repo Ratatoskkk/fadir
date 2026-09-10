@@ -282,6 +282,14 @@ Platform lease.
   occurred. Verdict: `BLOCKED`. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r3/handoff.md`
   (SHA-256 `20BD62F770A1B3ED94665A9374CEEF8BE93D14C712D0A89595E770C6C388A11F`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-4` performed exactly one refresh
+  in the authorized owner tab after `600289e` deployment. After a bounded settle, the
+  selector still showed `Ana Portföy · TRY` and the page still showed
+  `Bağlantı hatası: request rejected`. The required 375px proof was stopped, and the
+  browser exposed no sanitized route/status tuple, so no individual endpoint is
+  attributed. Verdict: `BLOCKED-BY-REQUEST-REJECTION`. Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r4/handoff.md`
+  (SHA-256 `189B7AFF45C96DB728D97030557523D23018F49922A3E4E8172AB8F7D0CD9E17`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -328,18 +336,18 @@ copies, and live browser rejection proof until the separate owner-browser proof 
 The r3 timestamped service correlation is closed as unavailable evidence. The source
 repair and bounded frontend deployment are accepted with rollback and sanitized
 static/health proof. Retain all diagnostic handoffs, both repair/deployment handoffs,
-the blocked browser r3 handoff, and the owner red baseline before attempting another
-browser proof. Reissue the owner-browser acceptance only after the existing authorized
-tab is available; no database, authority, or service mutation is allowed under it.
+the blocked browser r3 handoff, the fresh browser r4 red proof, and the owner red
+baseline. The next lease is a local source/route trace of the remaining rejection; do
+not repeat the browser proof until that trace is resolved.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; owner-browser r4 is the active acceptance lease**.
-The Platform and Release specialist closed the session-401 deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 source/deployment are accepted, and owner-browser r4 is now the sole active delivery path.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2/r3/r4 stopped before acceptance; session-401 repair is published as `600289e` and deployed with rollback; remaining-rejection source trace is the active lease**.
+The Platform and Release specialist closed the session-401 deployment after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployments are accepted, the session-401 source/deployment are accepted, and the remaining-rejection trace is now the sole active delivery path.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
 closed; the earlier deployment lease, backend repair lease, backend deployment lease,
-owner-browser r2/r3, diagnostic r3, session-401 source repair, and session-401
-deployment leases are closed, and owner-browser r4 is active.
+owner-browser r2/r3/r4, diagnostic r3, session-401 source repair, and session-401
+deployment leases are closed, and the remaining-rejection trace is active.
 
 The completed deployment retry lease was:
 
@@ -449,7 +457,7 @@ The completed blocked lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r3/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
-The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-4`:
+The completed blocked lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-4`:
 
 | Field | Exact scope |
 |---|---|
@@ -462,8 +470,22 @@ The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-4`:
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r4/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
+The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-REMAINING-REJECTION-TRACE-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Identity and Data Integrity; trace the fresh owner-browser rejection through the frontend call graph and the private route/session/portfolio contracts using synthetic local fixtures, establish one concrete 401/403/500 trigger or a bounded attribution blocker, and implement the smallest repair only if a source trigger is proven |
+| Current checkpoint | The source FIFO repair `600289e` is deployed and public static/health proof passes, but owner-browser r4 still visibly rejects after exactly one refresh. No browser route/status tuple is available; preserve r2, r3, and r4 red/blocked proofs. Do not infer that the remaining cause is session contention or portfolio calculation without a proving trigger. |
+| Read paths | `frontend/src/api.js`, `frontend/src/App.jsx`, `frontend/src/components/GoogleIdentityPanel.jsx`, `app/api/request_authority.py`, `app/api/request_transaction.py`, relevant `app/api/routes.py` private routes, `app/services/user_sessions.py`, `app/services/portfolio.py`, focused API/session/portfolio tests, and the r2/r3/r4 handoffs only |
+| Repository writes | Only the smallest proven source repair and its focused regression tests; likely `app/...`/`tests/...` or `frontend/src/...` as established by the trace. No migration, deployment, board, or infrastructure files. If no trigger is proven, write no repository files. |
+| Operational writes/resources | Empty; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-trace-r1/` handoff only |
+| Proof | Preserve the fresh r4 red browser proof. Run a focused synthetic request sequence covering bootstrap, User-session hydration, recovery/retry, portfolio list/view/history, transactions, and instruments with no private values; run the relevant local regression and full offline suite only if source changes are made. Keep hosted/browser/VM proof separate. |
+| Excluded/stop | No browser refresh/navigation, hosted/public request, VM/SSH/service restart, database/WAL/private-row query, live authority/lock change, cookie/identity/provider action, raw/private log capture, or speculative repair; stop with a bounded blocker if no concrete route/source trigger is proven or an owner choice is required |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-remaining-rejection-trace-r1/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
 Do not perform any follow-up mutation under the completed diagnostic, source, or
-deployment leases; owner-browser r4 is the only active assignment.
+deployment/browser leases; the remaining-rejection trace is the only active assignment.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, service configuration change, or public proof
