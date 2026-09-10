@@ -16,9 +16,12 @@ database migration are accepted within their guards. The owner refresh still sho
 request rejection, and the narrow diagnostic established a real `/api/portfolio` 500 in
 the trusted window. The backend root cause is repaired and deployed as `71eacca`, with
 its rollback copy preserved; the sanitized portfolio probe is still authorization-blocked.
-The new owner-browser refresh still shows `Bağlantı hatası: request rejected`, so the
-next action is a separately leased timestamped VM/service correlation. The owner red
-browser proof, source, candidate, serving data, and rollback remain preserved.
+The new owner-browser refresh still shows `Bağlantı hatası: request rejected`. The
+separately leased r3 service correlation returned no allowlisted records for the exact
+trusted window, so it could not attribute a route or status. The next action is a
+bounded local source proof and smallest repair of the User-session request boundary;
+the owner red browser proof, source, candidate, serving data, and rollback remain
+preserved.
 Do not restart APP, identity architecture, credential rotation, or the completed
 Transfer repair.
 
@@ -242,6 +245,15 @@ Platform lease.
   acceptance is claimed. Handoff:
   `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-browser-r2/handoff.md`
   (SHA-256 `A111599C56F2FE98DF1DD9B2B963BA356FD704638FB4E483051E348370460ED3`).
+- `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-3` was read-only and returned no
+  allowlisted service records for the exact trusted browser window or its small
+  clock-safe margin. It retained no raw log lines and proved the hostname, active/
+  enabled service, MainPID `66511`, `NRestarts=0`, and listener unchanged before and
+  after. Verdict: `CORRELATED-BUT-BLOCKED`; it does not establish a User-session 401,
+  renewal, `/api/portfolio` status, another portfolio route, or service behavior.
+  Handoff:
+  `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r3/handoff.md`
+  (SHA-256 `04572B10358DD437C7F7FCD6A96132DD3A142748867FD9FF9BF4F87C44EAF85C`).
 - The retained 401 is a real hosted defect: the browser starts concurrent private requests while
   `user_sessions.authenticate` renews one User Session under PostgreSQL `NOWAIT`, so
   lock contention can become a sanitized 401. The repair stays at the browser request
@@ -285,17 +297,20 @@ browser repair and backend 500 repair are deployed with their rollback copies; p
 static/health and sanitized loopback health are accepted. The authenticated portfolio
 probe remains authorization-blocked, so preserve the committed serving data, rollback
 copies, and live browser rejection proof until the separate owner-browser proof passes.
-The next step is a bounded timestamped service correlation for the owner-browser refresh;
-retain both earlier diagnostic handoffs, the repair handoff, the deployment handoff, and
-the owner red baseline before attempting another browser proof.
+The r3 timestamped service correlation is closed as unavailable evidence. Retain all
+diagnostic handoffs, the repair handoff, the deployment handoff, and the owner red
+baseline before attempting another browser proof. The next lease is a local synthetic
+request-boundary repair; no VM, database, authority, browser, or public mutation is
+allowed under it.
 
 ## Resumable assignment
 
-Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2 stopped on visible request rejection; diagnostic r3 is pending**.
-The Platform and Release specialist closed both frontend deployment leases after Senior review; the owner-browser and diagnostic r1/r2 leases stopped before acceptance, the backend repair and bounded VM deployment are accepted, and diagnostic r3 is now the sole active delivery path.
+Status: **hydration accepted; VM deployment/public edge passed for the earlier hydration bundle; DRYRUN-2 candidate is COMMITTED; live migration committed and passed protected validation; browser repair published and deployed as `a270f40`; hosted owner proof is pending under a separate browser lease; `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-1` stopped before mutation and `GOOGLE-SESSION-AUTH-SERIALIZATION-DEPLOY-2` is accepted; owner diagnostics r1/r2/r3 are closed; backend 500 repair is published and deployed as `71eacca`; owner-browser r2 stopped on visible request rejection; session-401 repair is the active source lease**.
+The Platform and Release specialist closed both frontend deployment leases after Senior review; the owner-browser and diagnostic leases stopped before acceptance, the backend repair and bounded VM deployment are accepted, and the session-401 source repair is now the sole active delivery path.
 The Product Experience browser, Quality, Tunnel, DRYRUN-1, and DRYRUN-2 leases are
-closed; the earlier deployment lease, backend repair lease, backend deployment lease, and
-owner-browser r2 lease are closed, and the diagnostic follow-up is active.
+closed; the earlier deployment lease, backend repair lease, backend deployment lease,
+owner-browser r2, and diagnostic r3 leases are closed, and the session-401 source
+repair is active.
 
 The completed deployment retry lease was:
 
@@ -352,7 +367,7 @@ The stopped owner-browser lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BRO
 | Browser proof | Current `https://ratatosk.dev/` owner tab; one trusted refresh after deployment, then desktop and 375px browser observations without changing account or provider data |
 | Stop | Missing owner state, identity/Workspace ambiguity, private request 401/403/error, cross-Workspace or empty unexpected result, provider prompt requiring owner action, leaked private value, or any source/VM/database/configuration mutation |
 
-The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-3`:
+The completed diagnostic lease was `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-3`:
 
 | Field | Exact scope |
 |---|---|
@@ -364,7 +379,22 @@ The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-3`:
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-owner-diagnostic-r3/handoff.md` |
 | Stop | Missing trusted window, raw/private log content, cookies, response bodies, identity values, DB/private-row queries, service/config/Tunnel/DNS changes, restart, or ambiguous/unavailable correlation |
 
-Do not perform any follow-up mutation under this diagnostic lease.
+The next exact lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-SESSION-401-REPAIR-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Product Experience; reproduce the owner-visible session/request rejection with a local synthetic fetch boundary, trace the exact concurrent request sequence, and implement the smallest frontend repair that prevents same-browser User-session renewal contention while preserving the existing recovery contract |
+| Current checkpoint | Published `a270f40` serializes session-dependent calls in one tab, but the hosted owner refresh still rejects. Diagnostic r3 returned no allowlisted VM records, so no route/status attribution is accepted. Preserve owner-browser r2 and all diagnostic handoffs as red evidence. |
+| Read paths | `frontend/src/api.js`, `frontend/src/App.jsx`, `frontend/src/components/GoogleIdentityPanel.jsx`, `frontend/package.json`, the published session-serialization handoff, owner-browser r2 handoff, diagnostic r3 handoff, and the relevant API/session route contracts only |
+| Repository writes | `frontend/src/api.js` and focused frontend regression harness/tests only; no backend, migration, identity, authority, service, or infrastructure files |
+| Operational writes/resources | Empty; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-session-401-repair-r1/` handoff only |
+| Proof | Preserve the current red baseline; use synthetic responses and no private values to prove the initial User-session check, dashboard requests, 401 recovery/retry behavior, and concurrent same-browser calls do not produce an avoidable rejection. Run the focused harness, `npm run build`, and any affected offline checks. Keep desktop/375px browser acceptance and VM deployment for separate leases. |
+| Excluded/stop | No browser refresh, hosted/public request, VM/SSH/service restart, database/WAL/private-row query, authority/lock change, cookie/identity/provider action, or raw/private log capture; stop if the source contract cannot prove a minimal repair or if a product/authority choice is required |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260910/session-auth-serialization-session-401-repair-r1/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
+Do not perform any follow-up mutation under the completed diagnostic lease; the new
+session-401 repair lease is the only active assignment.
 Keep the live browser rejection proof and migration evidence intact; no identity, issuer,
 subject, email, holdings, transaction values, cookies, or secrets may enter ordinary
 artifacts. Any backend authority change, service configuration change, or public proof
