@@ -1271,25 +1271,39 @@ The completed blocked lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOST
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-owner-diagnostic-r8/handoff.md` (SHA-256 `54C90836DB36851A428FC3FCD6EE48B1B9CD0598437EB98F12DA209227871885`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `max` |
 
-The active lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-TRACE-5`:
+The completed blocked lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-TRACE-5`:
 
 | Field | Exact scope |
 |---|---|
 | Role and outcome | Finance/Tax; trace the current published `GET /api/portfolio` 500 backward through the route/service/calculation/response chain using synthetic local data, and only if a concrete trigger is reproduced implement the smallest repair and black-box regression |
-| Current checkpoint | Owner-diagnostic r8 proves the route still returns HTTP 500 after published `c4be011` and deployment. The zero-FX post-lot-book failure is already repaired; remaining candidate paths include current-quote construction, portfolio totals/liquidation/tax calculation, and response serialization. Preserve the browser route-level red proof and all prior source/deployment handoffs. |
+| Current checkpoint | The permitted synthetic route/service/calculation/response trace did not reproduce a second concrete trigger after the accepted zero-FX repair. A NaN FX-cache probe stopped at SQLite NOT NULL persistence and an extreme finite price returned 200; these are fixture/contract results, not product failures. Focused 13, affected API 46, and final offline 534 tests passed; no repository files changed. |
 | Read paths | `plan/specialists/finance-and-tax.md`, `docs/OPEN_BETA_BRIEF.md`, current portfolio-500 facts in `plan/manager-open-beta.md`, `app/api/routes.py` portfolio route and serialization helpers only, `app/services/portfolio.py`, the portfolio calculation modules used by `build_view`, `app/schemas.py` portfolio response models only, `tests/conftest.py`, relevant `tests/test_api.py`, published `c4be011`, and the owner-diagnostic r8 handoff only |
 | Repository writes | `app/services/portfolio.py`, `tests/test_api.py`, and no other product, board, migration, configuration, or deployment path |
-| Operational writes/resources | Local synthetic SQLite/test fixtures only; no VM/SSH, hosted/public request, database/WAL/private rows, browser refresh, provider/Tunnel/DNS/Cloudflare, cookie, identity, secret, or private-data action; fresh absent handoff `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-trace-r4/handoff.md` |
+| Operational writes/resources | Local synthetic SQLite/test fixtures only; no VM/SSH, hosted/public request, database/WAL/private rows, browser refresh, provider/Tunnel/DNS/Cloudflare, cookie, identity, secret, or private-data action; fresh handoff `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-trace-r4/handoff.md` |
 | Proof | Preserve the current route-level red proof. Reproduce the 500 with a black-box synthetic fixture matching the portfolio route contract; trace backward to the original invalid input or calculation; add the smallest regression and repair only when the trigger is proven; run focused and affected tests, then the final offline suite if source changes. Return exact changed-path hashes and a four-heading handoff. Do not claim hosted or browser acceptance. |
 | Stop | No reproducible synthetic cause, fixture/contract ambiguity, need for a path outside the named files, speculative broad exception handling, any private-data access, or any authority/session/deployment/browser action; report the smallest blocker instead. |
-| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-trace-r4/handoff.md` |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-trace-r4/handoff.md` (SHA-256 `E85DA471A867C5E0E79D1A40110CBD5CEB7ED7663FABA1213BE1F968B9138E07`) |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
+
+The active lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-SERVER-DIAGNOSTIC-1`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Platform/Release; correlate the exact owner-browser `/api/portfolio` 500 window against existing approved VM access/service records and retain only a privacy-safe route/status/timestamp/count tuple plus an exception class or bounded absence result |
+| Current checkpoint | Owner-diagnostic r8 proves `GET /api/portfolio` HTTP 500 at `2026-09-11T00:18:44.285Z` after deployed `c4be011`; TRACE-5 found no second synthetic trigger. A new read-only server-side correlation is required before selecting another source repair. |
+| Read paths | `plan/specialists/platform-and-release.md`, `docs/OPEN_BETA_BRIEF.md`, current portfolio-500 facts in `plan/manager-open-beta.md`, owner-diagnostic r8 handoff, prior server correlation handoff `session-auth-serialization-owner-diagnostic-r7/handoff.md`, deployed `app/services/portfolio.py` at `c4be011` only, and the VM's existing service/access/journal surfaces required for the exact time window |
+| Repository writes | Empty; do not edit source, tests, board, migration, configuration, or deployment paths |
+| Operational writes/resources | Approved VM `fadir-control-lab-01` at static SSH endpoint `192.168.247.10`; strict key `C:/ProgramData/fadir-agent-control/lab_ed25519`, known hosts `C:/ProgramData/fadir-agent-control/lab_known_hosts`, `IdentityAgent=none`; fresh absent local handoff `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-server-diagnostic-r1/handoff.md`; fresh writable remote proof root `/home/fadir-agent/fadir-tests/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-server-diagnostic-r1/`; read-only service/access/journal query only; no restart, file/configuration/package/database/WAL/private-row/identity/authority/session/Tunnel/DNS/Cloudflare/provider/browser write |
+| Proof | Verify strict SSH and remote hostname exactly `fadir-control-lab-01`, then query only the clock-safe window around `2026-09-11T00:18:44.285Z` and the allowlisted startup routes. Retain sanitized method/path/status/count/timestamp evidence and, if available, exception class/module or a request-correlation marker with messages/arguments stripped. Prove service/listener unchanged before and after. Keep raw logs, bodies, headers, cookies, identifiers, private values, and full journal output out of artifacts. |
+| Stop | Failed identity/hostname, missing or ambiguous time/correlation surface, raw/private log exposure, unallowlisted route, mutation requirement, or any restart/provider/database/browser action. Do not infer a source repair from absent records. |
+| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-server-diagnostic-r1/handoff.md` |
 | Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
 Do not perform any follow-up mutation under the completed diagnostic, source, or
 deployment/browser/trace leases. The source repair above is local-only and has no
 repository board, VM, browser, identity, or private-data scope beyond its named paths.
 Keep the live browser rejection proof and migration evidence intact; this separate
-synthetic trace must complete before any repair deployment or owner-browser refresh.
+server correlation must complete before any repair deployment or owner-browser refresh.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration
