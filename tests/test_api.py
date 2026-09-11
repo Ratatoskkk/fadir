@@ -691,6 +691,50 @@ def test_portfolio_degrades_a_position_with_zero_fx_rate(client, session):
     assert "division" in rows["ERIC"]["error"].lower()
 
 
+def test_portfolio_zero_fx_rate_after_lot_book_does_not_500(client, session):
+    zero = Instrument(
+        ticker="ZERO",
+        exchange="NASDAQ",
+        yf_symbol="ZERO",
+        currency="USD",
+        name="Synthetic zero FX position",
+    )
+    session.add(zero)
+    session.flush()
+    portfolio_id = session.query(Portfolio.id).first()[0]
+    session.add(
+        PriceCache(
+            instrument_id=zero.id,
+            price_date=TODAY,
+            close_native=Decimal("10"),
+            is_adjusted=False,
+        )
+    )
+    session.add(
+        Transaction(
+            instrument_id=zero.id,
+            portfolio_id=portfolio_id,
+            trade_date=TODAY,
+            side=Side.BUY,
+            quantity=Decimal("1"),
+            price_native=Decimal("10"),
+            fees_native=Decimal("0"),
+            fx_rate_to_try=Decimal("0"),
+            fx_rate_date=TODAY,
+            fx_provider="synthetic",
+        )
+    )
+    session.execute(text("PRAGMA ignore_check_constraints = ON"))
+    session.commit()
+    session.execute(text("PRAGMA ignore_check_constraints = OFF"))
+
+    response = client.get("/api/portfolio")
+
+    assert response.status_code == 200
+    row = next(position for position in response.json()["positions"] if position["ticker"] == "ZERO")
+    assert row["ok"] is False
+
+
 def test_history_degrades_a_position_with_unconvertible_foreign_fee(client, session):
     eric = next(i for i in session.query(Instrument) if i.ticker == "ERIC")
     portfolio_id = session.query(Portfolio.id).first()[0]

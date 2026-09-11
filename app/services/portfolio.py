@@ -395,7 +395,23 @@ class PortfolioService:
                 continue
 
             quote = self._current_quote(instrument, now_utc, warnings)
-            positions.append(position_metrics(book, quote))
+            try:
+                positions.append(position_metrics(book, quote))
+            except DecimalException as exc:
+                log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
+                warnings.append(f"{instrument.ticker}: {exc}")
+                empty_book = build_lot_book(instrument.ticker, instrument.currency, [])
+                positions.append(
+                    position_metrics(
+                        empty_book,
+                        replace(
+                            quote,
+                            ok=False,
+                            stale=True,
+                            error=f"veri uyumsuzluğu: {exc}",
+                        ),
+                    )
+                )
 
         # Open positions first, then fully-closed ones that still carry realized PnL.
         positions.sort(key=lambda p: (p.quantity == 0, -p.market_value_try, p.ticker))
