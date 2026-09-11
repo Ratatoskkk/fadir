@@ -1258,25 +1258,39 @@ The completed blocked lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-BROWSER-
 | Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-owner-browser-r9/handoff.md` (SHA-256 `5A71930B9152AEFC66E8C4BCFEF7927BEF4019E941042E056359D02241908DF9`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `max` |
 
-The active lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-8`:
+The completed blocked lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-OWNER-DIAGNOSTIC-8`:
 
 | Field | Exact scope |
 |---|---|
 | Role and outcome | Senior/Product Experience; inspect only the current existing owner-tab page-load timing/status metadata after owner-browser r9 and retain the failing allowlisted method/path/status/timestamp tuple if exposed, without another browser action |
-| Current checkpoint | Owner-browser r9 performed exactly one refresh after the accepted `c4be011` backend deployment and stopped on the same visible `Bağlantı hatası: request rejected`. Prior diagnostics correlated the route to `GET /api/portfolio` HTTP 500. This lease must not refresh or otherwise act on the tab. |
+| Current checkpoint | The read-only CDP surface retained the current settled startup tuple: `GET /api/portfolio` HTTP 500 at `2026-09-11T00:18:44.285Z` with 521 ms duration, while Guest bootstrap, User sessions, portfolios, history, transactions, and instruments were 200. The visible owner tab remained on `Ana Portföy · TRY` with `Bağlantı hatası: request rejected`; no browser action occurred in this lease. |
 | Repository writes | Empty; do not edit source, tests, board, or configuration during the diagnostic |
 | Operational writes/resources | Existing Codex in-app browser tab at `https://ratatosk.dev/` only; fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-owner-diagnostic-r8/`; no VM/SSH, database/WAL/private rows, provider, Tunnel/DNS/Cloudflare, cookie, identity, secret, or private-data action |
 | Proof | Use the supported read-only CDP `Runtime.evaluate` surface against existing performance entries only. Retain allowlisted `/api/guest/bootstrap`, `/api/user/sessions`, `/api/auth/recover-user-cookie`, `/api/portfolios`, `/api/portfolio`, `/api/portfolio/history`, `/api/transactions`, and `/api/instruments` method/path/status/timestamp/duration evidence; strip query strings and bodies. |
 | Stop | Any refresh/navigation/viewport/control action, unavailable or ambiguous tab, response body/header/cookie/identity/private value, unallowlisted route, or need for VM/log/provider access. Do not infer hosted recovery or beta acceptance from timing metadata alone. |
-| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-owner-diagnostic-r8/handoff.md` |
+| Handoff | `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-owner-diagnostic-r8/handoff.md` (SHA-256 `54C90836DB36851A428FC3FCD6EE48B1B9CD0598437EB98F12DA209227871885`) |
 | Model | `gpt-5.6-luna`; reasoning effort: `max` |
+
+The active lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-TRACE-5`:
+
+| Field | Exact scope |
+|---|---|
+| Role and outcome | Finance/Tax; trace the current published `GET /api/portfolio` 500 backward through the route/service/calculation/response chain using synthetic local data, and only if a concrete trigger is reproduced implement the smallest repair and black-box regression |
+| Current checkpoint | Owner-diagnostic r8 proves the route still returns HTTP 500 after published `c4be011` and deployment. The zero-FX post-lot-book failure is already repaired; remaining candidate paths include current-quote construction, portfolio totals/liquidation/tax calculation, and response serialization. Preserve the browser route-level red proof and all prior source/deployment handoffs. |
+| Read paths | `plan/specialists/finance-and-tax.md`, `docs/OPEN_BETA_BRIEF.md`, current portfolio-500 facts in `plan/manager-open-beta.md`, `app/api/routes.py` portfolio route and serialization helpers only, `app/services/portfolio.py`, the portfolio calculation modules used by `build_view`, `app/schemas.py` portfolio response models only, `tests/conftest.py`, relevant `tests/test_api.py`, published `c4be011`, and the owner-diagnostic r8 handoff only |
+| Repository writes | `app/services/portfolio.py`, `tests/test_api.py`, and no other product, board, migration, configuration, or deployment path |
+| Operational writes/resources | Local synthetic SQLite/test fixtures only; no VM/SSH, hosted/public request, database/WAL/private rows, browser refresh, provider/Tunnel/DNS/Cloudflare, cookie, identity, secret, or private-data action; fresh absent handoff `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-trace-r4/handoff.md` |
+| Proof | Preserve the current route-level red proof. Reproduce the 500 with a black-box synthetic fixture matching the portfolio route contract; trace backward to the original invalid input or calculation; add the smallest regression and repair only when the trigger is proven; run focused and affected tests, then the final offline suite if source changes. Return exact changed-path hashes and a four-heading handoff. Do not claim hosted or browser acceptance. |
+| Stop | No reproducible synthetic cause, fixture/contract ambiguity, need for a path outside the named files, speculative broad exception handling, any private-data access, or any authority/session/deployment/browser action; report the smallest blocker instead. |
+| Handoff | Fresh absent `C:/Users/doguk/AppData/Local/Temp/fadir-private-migration-20260911/session-auth-serialization-portfolio-500-trace-r4/handoff.md` |
+| Model | `gpt-5.6-luna`; reasoning effort: `medium` |
 
 Do not perform any follow-up mutation under the completed diagnostic, source, or
 deployment/browser/trace leases. The source repair above is local-only and has no
 repository board, VM, browser, identity, or private-data scope beyond its named paths.
-Keep the live browser rejection proof and migration evidence intact; the concrete
-`/api/portfolio` 500 now requires a separate bounded source trace/repair and deployment
-sequence before another owner-browser refresh. No
+Keep the live browser rejection proof and migration evidence intact; this separate
+synthetic trace must complete before any repair deployment or owner-browser refresh.
+No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration
 change, deployment, or public proof requires a separate lease.
