@@ -1343,8 +1343,15 @@ Tax auto-load (owner instruction 2026-11-06), source accepted locally but not de
   `tests/test_tax.py` pass. The full offline suite shows 519 passed, 109 skipped, and
   2 failed. The 2 failures are `test_api.py` zero-FX fixtures that also fail on
   unmodified `main` (`ck_transaction_fx_positive`).
-- Not deployed: the backend file swap and `fadir.service` restart were blocked pending
-  owner approval. The VM files still match the pre-change `main` hashes.
+- Deployed on 2026-11-06 with owner approval. Before the swap the VM files matched
+  pre-change `main`. Three backend files and the frontend bundle were replaced.
+  Rollback copies: `/home/fadir-agent/fadir-tests/rollback-tax-autoload-20261106/` and
+  `frontend/dist.previous.tax-autoload-20261106`. `fadir.service` restarted once
+  (active at 11:21:38 UTC). Afterwards the VM file hashes match `6ee7a36`, loopback and
+  public health return 200, and the site serves `index-DVTfsv_E.js`. On the signed-in
+  owner page, `/api/tax/profile` and `/api/tax/estimate?year=2026` returned 200, and the
+  panel showed the Tebliğ 332 source with a 15% marginal rate, without any manual step.
+  It showed no alerts at 375px.
 - Remaining: the hero liquidation estimate still reads the 2025 brackets in
   `config.yaml`. The remaining G4–G9 outcomes are unchanged.
 No
