@@ -1315,9 +1315,15 @@ On 2026-11-06 the owner approved the redacted `/api/portfolio` diagnostic
 - On 2026-11-06 public `https://ratatosk.dev/` renders the Guest state without the
   rejection banner. Signed-in owner acceptance is still unproven.
 
-Next action: the owner signs in on `ratatosk.dev`, refreshes once, and confirms
-`Ana Portföy` loads. If the rejection returns, rerun the diagnostic script immediately,
-while the failing cache state still exists.
+**Hosted owner refresh is accepted (2026-11-06).** The owner signed in with Google on
+`ratatosk.dev` and the page was refreshed once. Afterwards `GET /api/user/sessions`,
+`/api/portfolios`, `/api/portfolio?portfolio_id=1`, its history, and transactions all
+returned 200. The page shows the signed-in User, `Ana Portföy · TRY`, and 6 positions,
+with no rejection banner.
+
+Open defect: with no Tax Profile for the selected year, `/api/tax/profile` and
+`/api/tax/estimate` return 404, and the panel shows the generic "could not load, try
+later" error instead of an empty state. The remaining G4–G9 outcomes are unchanged.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration
