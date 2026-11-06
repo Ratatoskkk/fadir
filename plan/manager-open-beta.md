@@ -1400,6 +1400,15 @@ pairs (counts only). The owner's chart has not been checked in the browser:
   failures.
 - Page split (overview, breakdown, and chart on one page; positions and transactions
   on their own pages) is frontend-only; both lists already have their own endpoints.
+
+Security hardening (owner instruction 2026-11-07). Commits `434538f` and `54d4046`
+close all 15 leads from security audit run 1 and were deployed to the VM on
+2026-11-06 at 23:51 UTC after owner approval. All 14 files (13 app files and
+`config.yaml`) matched `4c4caad` before the deploy and `54d4046` after it, with one
+restart. Rollback archive: `/home/fadir-agent/fadir-tests/rollback-hardening/files.tar`.
+Loopback and public health returned 200, a foreign Host header returned 400, and public
+health now reports `history_start` as null. Not yet seen on PostgreSQL: the per-instrument
+refresh savepoints and the daily guest purge.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration
