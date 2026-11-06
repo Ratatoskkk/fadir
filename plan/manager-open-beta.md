@@ -1301,12 +1301,23 @@ The completed blocked lease is `GOOGLE-SESSION-AUTH-SERIALIZATION-PORTFOLIO-500-
 
 No active product or operational lease is open. The live browser rejection proof,
 route-level 500 correlation, and all source/deployment handoffs remain preserved.
-The next action requires an owner decision: approve a separate, route-specific,
-redacted diagnostic lease that records only the `/api/portfolio` exception
-class/module and a non-secret request-correlation marker for one controlled refresh,
-or decline and leave hosted owner acceptance open. Do not add broad logging, expose
-request bodies/cookies/private values, infer a source repair from the bounded absence,
-or repeat a browser refresh without that decision.
+On 2026-11-06 the owner approved the redacted `/api/portfolio` diagnostic
+(`PORTFOLIO-500-REDACTED-DIAG-1`). Results, with no private values emitted:
+
+- Running the real `get_portfolio` handler plus response validation and JSON
+  serialization on the VM for the single migrated Portfolio, inside a rolled-back
+  transaction, returned OK (6 positions, 0 warnings). Output:
+  `/home/fadir-agent/fadir-tests/fadir-private-migration-20261106/portfolio-500-redacted-diag-r1/output.txt`.
+- The journal's route/status counts show the last `GET /api/portfolio` 500 at
+  2026-09-11 02:50 UTC. From 03:00 UTC onward the route returned thousands of 200s
+  with no intervening restart, which points to transient, data-dependent failures
+  (missing FX or price cache) that cleared once the cache filled.
+- On 2026-11-06 public `https://ratatosk.dev/` renders the Guest state without the
+  rejection banner. Signed-in owner acceptance is still unproven.
+
+Next action: the owner signs in on `ratatosk.dev`, refreshes once, and confirms
+`Ana Portföy` loads. If the rejection returns, rerun the diagnostic script immediately,
+while the failing cache state still exists.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration
