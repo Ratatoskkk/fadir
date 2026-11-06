@@ -1355,8 +1355,15 @@ Tax auto-load (owner instruction 2026-11-06), source accepted locally but not de
 - Hero, history, and intraday tax: in source, these figures now use
   `with_official_brackets`, the newest official tariff in force this year. The 2025
   bracket block is removed from `config.yaml`. The full offline suite shows 520 passed,
-  109 skipped, and the same 2 pre-existing zero-FX failures. It is not deployed yet: the
-  deploy is waiting on owner approval, and the VM still runs `10c125b`'s backend.
+  109 skipped, and the same 2 pre-existing zero-FX failures. Deployed on 2026-11-06 with
+  owner approval. Before the swap, the VM's copies of `portfolio.py`, `routes.py`,
+  `tax_sources.py`, and `config.yaml` matched `10c125b`. They were replaced from
+  `63868e2` (LF). Rollback copies are in
+  `/home/fadir-agent/fadir-tests/rollback-tax-hero-20261106/`. `fadir.service`
+  restarted once (active at 11:25:12 UTC). Afterwards the files match `63868e2`, and
+  loopback and public health return 200. The deployed settings resolve to the 2026
+  tariff: a synthetic 200,000 TL gain gives 30,500 TL. The owner's live hero shows a
+  taxable gain of 0 (overall loss), so the page cannot show a visual difference.
 - The remaining G4–G9 outcomes are unchanged.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
