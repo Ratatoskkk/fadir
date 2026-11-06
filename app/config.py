@@ -24,7 +24,7 @@ class FxConfig:
     #: currency -> provider name. Absent currencies use `default_provider`.
     overrides: dict[str, str] = field(default_factory=dict)
     max_lookback_days: int = 7
-    tcmb_api_key: str | None = None
+    tcmb_api_key: str | None = field(default=None, repr=False)
 
     def provider_for(self, currency: str) -> str:
         return self.overrides.get(currency.upper(), self.default_provider)
@@ -65,6 +65,12 @@ class GoogleConfig:
 
 
 @dataclass(frozen=True)
+class ServerConfig:
+    #: Host headers the app answers to; anything else gets 400 (DNS-rebinding defence).
+    allowed_hosts: tuple[str, ...] = ("ratatosk.dev", "localhost", "127.0.0.1", "testserver")
+
+
+@dataclass(frozen=True)
 class Settings:
     fx: FxConfig = field(default_factory=FxConfig)
     liquidation: LiquidationConfig = field(default_factory=LiquidationConfig)
@@ -73,6 +79,7 @@ class Settings:
     refresh: RefreshConfig = field(default_factory=RefreshConfig)
     history: HistoryConfig = field(default_factory=HistoryConfig)
     google: GoogleConfig = field(default_factory=GoogleConfig)
+    server: ServerConfig = field(default_factory=ServerConfig)
     db_path: Path = DEFAULT_DB_PATH
     database_url: str | None = None
 
@@ -86,7 +93,7 @@ class Settings:
             "Settings("
             f"fx={self.fx!r}, liquidation={self.liquidation!r}, tax={self.tax!r}, "
             f"cache={self.cache!r}, refresh={self.refresh!r}, history={self.history!r}, "
-            f"google={self.google!r}, "
+            f"google={self.google!r}, server={self.server!r}, "
             f"db_path={self.db_path!r}, database_url={database_url!r})"
         )
 
@@ -148,6 +155,7 @@ def load_settings(path: Path | None = None) -> Settings:
     refresh_raw = raw.get("refresh") or {}
     hist_raw = raw.get("history") or {}
     google_raw = raw.get("google") or {}
+    server_raw = raw.get("server") or {}
 
     overrides = {k.upper(): str(v).lower() for k, v in (fx_raw.get("overrides") or {}).items()}
 
@@ -200,6 +208,13 @@ def load_settings(path: Path | None = None) -> Settings:
         google=GoogleConfig(
             web_client_id=str(google_client_id).strip() if google_client_id else None,
             verification_timeout_seconds=google_timeout,
+        ),
+        server=ServerConfig(
+            allowed_hosts=tuple(
+                str(h).strip().lower()
+                for h in (server_raw.get("allowed_hosts") or ServerConfig.allowed_hosts)
+                if str(h).strip()
+            ),
         ),
         db_path=db_path,
         database_url=database_url,

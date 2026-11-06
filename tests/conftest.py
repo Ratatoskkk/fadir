@@ -122,3 +122,17 @@ def _reset_abuse_limits():
     yield
     guest_access.reset_issue_limits()
     instruments.reset_creation_budget()
+
+
+@pytest.fixture(autouse=True)
+def _reset_process_level_throttles():
+    """Cooldowns and negative caches are process state; every test starts without them."""
+    from app.services import portfolio as portfolio_module
+
+    from app.providers import fx_service
+
+    portfolio_module.reset_forced_refresh_state()
+    fx_service.reset_negative_cache()
+    yield
+    portfolio_module.reset_forced_refresh_state()
+    fx_service.reset_negative_cache()

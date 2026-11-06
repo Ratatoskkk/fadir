@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
@@ -187,8 +188,16 @@ def test_intraday_cache_serves_within_ttl_and_refetches_after(monkeypatch):
     service.prices(["AAPL"])
     assert calls["n"] == 1  # second read served from cache
 
+    clock = {"now": time.monotonic()}
+    monkeypatch.setattr(mod.time, "monotonic", lambda: clock["now"])
+    service = mod.IntradayService(ttl_seconds=300)
+    service.prices(["AAPL"])
+    assert calls["n"] == 2
     service.prices(["AAPL"], force=True)
-    assert calls["n"] == 2  # force bypasses the TTL
+    assert calls["n"] == 2  # a fresh entry is not refetched on demand
+    clock["now"] += mod.FORCE_MIN_AGE_SECONDS + 1
+    service.prices(["AAPL"], force=True)
+    assert calls["n"] == 3  # force bypasses the TTL once the entry is old enough
 
 
 def test_intraday_cache_is_bounded_by_symbol_not_by_uptime(monkeypatch):

@@ -16,6 +16,7 @@ current rate carries a short TTL.
 from __future__ import annotations
 
 import logging
+import time
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -33,6 +34,35 @@ from app.registry import BASE_CURRENCY
 log = logging.getLogger(__name__)
 
 MANUAL_PROVIDER = "manual"
+
+#: How long a failed or empty provider fetch is remembered. Without it every request that
+#: misses the cache repeats the fetch (up to three retried Yahoo calls with sleeps).
+NEGATIVE_TTL_SECONDS = 600.0
+
+#: Process-level, because `FxService` is built per request. Keys are `("quote", currency,
+#: date)` and `("current", currency)`; values are `time.monotonic()` of the failed attempt.
+_failed_fetches: dict[tuple, float] = {}
+
+
+def reset_negative_cache() -> None:
+    """Test hook: forget every remembered failed fetch."""
+    _failed_fetches.clear()
+
+
+def _recently_failed(key: tuple) -> bool:
+    at = _failed_fetches.get(key)
+    if at is None:
+        return False
+    if time.monotonic() - at < NEGATIVE_TTL_SECONDS:
+        return True
+    del _failed_fetches[key]
+    return False
+
+
+def _remember_failure(key: tuple) -> None:
+    if len(_failed_fetches) > 1024:  # bounded: dates come from request input
+        _failed_fetches.clear()
+    _failed_fetches[key] = time.monotonic()
 
 
 def build_providers(settings: Settings) -> dict[str, FxProvider]:
@@ -226,9 +256,16 @@ class FxService:
             )
 
         row = self._cached_on_or_before(currency, on, lookback)
-        if row is None and allow_fetch:
-            self.warm(currency, on - timedelta(days=lookback), on)
+        key = ("quote", currency, on)
+        if row is None and allow_fetch and not _recently_failed(key):
+            try:
+                self.warm(currency, on - timedelta(days=lookback), on)
+            except ProviderError:
+                _remember_failure(key)
+                raise
             row = self._cached_on_or_before(currency, on, lookback)
+            if row is None:
+                _remember_failure(key)
 
         if row is None:
             raise RateUnavailable(
@@ -264,13 +301,18 @@ class FxService:
             age = (utcnow().replace(tzinfo=None) - row.fetched_at).total_seconds()
             stale = age > self.settings.cache.fx_current_ttl_seconds
 
-        if force or stale:
+        key = ("current", currency)
+        if (force or stale) and (force or not _recently_failed(key)):
             try:
                 self.warm(currency, today - timedelta(days=10), today)
             except ProviderError:
+                _remember_failure(key)
                 if row is None:
                     raise
                 log.warning("using stale cached %s/TRY; refresh failed", currency)
+            else:
+                if not self.status.get(self.provenance_for(currency), {}).get("ok"):
+                    _remember_failure(key)  # empty answer: serve what we hold for a while
 
         resolved = self.quote(currency, today, allow_fetch=False)
         self._current[currency] = resolved

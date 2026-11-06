@@ -12,11 +12,14 @@ isolated and failures are recorded per instrument.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from decimal import ROUND_HALF_EVEN, Decimal
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.config import Settings
@@ -32,6 +35,23 @@ from app.models import (
 from app.providers import market_hours, yf_client
 
 log = logging.getLogger(__name__)
+
+
+@contextmanager
+def savepoint(session: Session) -> Iterator[None]:
+    """`session.begin_nested()` that also nests properly on SQLite.
+
+    pysqlite defers BEGIN to the first DML, so a SAVEPOINT opened first becomes the
+    outer transaction and its RELEASE commits it, which would defeat the caller's
+    rollback. Opening the transaction explicitly first keeps the savepoint nested.
+    """
+    connection = session.connection()
+    if connection.dialect.name == "sqlite":
+        raw = connection.connection.driver_connection
+        if not raw.in_transaction:
+            raw.execute("BEGIN")
+    with session.begin_nested():
+        yield
 
 
 @dataclass
@@ -216,6 +236,7 @@ class PriceService:
                     applied_to_transactions=False,
                 )
             )
+            known.add(event.action_date)
             added += 1
         self.session.flush()
         return added
@@ -325,18 +346,23 @@ class PriceService:
             batch = {}
 
         for instrument in instruments:
-            status = PriceStatus(ticker=instrument.ticker, ok=False)
+            ticker = instrument.ticker
+            status = PriceStatus(ticker=ticker, ok=False)
             try:
-                closes = batch.get(instrument.yf_symbol) or {}
-                report.price_rows_written += self._store_closes(instrument.id, closes)
-
-                if force:
-                    report.splits_found += self.sync_splits(instrument)
+                # A SAVEPOINT per instrument: one failed flush (say a concurrent insert
+                # hitting a unique key) rolls back only this instrument's rows instead of
+                # leaving the whole Session in pending-rollback for everything after it.
+                with savepoint(self.session):
+                    closes = batch.get(instrument.yf_symbol) or {}
+                    written = self._store_closes(instrument.id, closes)
+                    splits = self.sync_splits(instrument) if force else 0
+                report.price_rows_written += written
+                report.splits_found += splits
 
                 latest = self.last_cached_close(instrument.id)
                 if latest is None:
                     status.error = "no price data available"
-                    report.errors.append(f"{instrument.ticker}: no price data")
+                    report.errors.append(f"{ticker}: no price data")
                 else:
                     close, traded = latest
                     status.ok = True
@@ -345,9 +371,12 @@ class PriceService:
                     status.session = market_hours.session_state(instrument.exchange, now_utc)
                     status.stale = status.session == "closed" or traded < date.today()
             except Exception as exc:  # noqa: BLE001 - isolate per instrument
-                log.error("shared refresh failed for %s: %s", instrument.ticker, exc)
-                status.error = str(exc)
-                report.errors.append(f"{instrument.ticker}: {exc}")
+                # Database errors quote the failing SQL and its parameters; keep that
+                # out of a report that is returned to the client.
+                detail = type(exc).__name__ if isinstance(exc, SQLAlchemyError) else str(exc)
+                log.error("shared refresh failed for %s: %s", ticker, detail)
+                status.error = detail
+                report.errors.append(f"{ticker}: {detail}")
 
             report.per_instrument[instrument.ticker] = status
 

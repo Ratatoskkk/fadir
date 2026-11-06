@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timezone
@@ -17,6 +18,8 @@ from pathlib import Path
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.types import ASGIApp, Receive, Scope, Send
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -26,12 +29,15 @@ from app.api.request_authority import RequestAuthorityConfigurationError, Reques
 from app.config import PROJECT_ROOT, get_settings
 from app.db import check_migration_heads, get_engine, get_sessionmaker, init_db, session_scope
 from app.providers import market_hours
-from app.services.portfolio import PortfolioService, load_instruments
+from app.services.guest_access import purge_expired_guests
+from app.services.portfolio import PortfolioService, load_shared_exchanges
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
 )
+# httpx logs every request URL at INFO, which would put provider query strings in the log.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 log = logging.getLogger("fadir")
 
 FRONTEND_DIST = PROJECT_ROOT / "frontend" / "dist"
@@ -56,31 +62,67 @@ async def _auto_refresh() -> None:
     price does.
     """
     settings = get_settings()
+    last_purge: float | None = None
+    backoff = min(settings.refresh.closed_market_interval_seconds, 60)
 
     while True:
-        # Sleeping first means a short-lived process (a test client, `--reload` churn)
-        # never reaches the network, and startup is not delayed by a fetch.
-        now = datetime.now(timezone.utc)
-        with session_scope() as session:
-            exchanges = {i.exchange for i in load_instruments(session)}
-        any_open = any(market_hours.is_open(e, now) for e in exchanges)
-        delay = (
-            settings.refresh.default_interval_seconds
-            if any_open
-            else settings.refresh.closed_market_interval_seconds
-        )
-        await asyncio.sleep(delay)
-
+        # The whole cycle sits inside the try: a pool timeout or OperationalError while
+        # reading exchanges is as survivable as a failed fetch, and an escape here would
+        # end the task for good (the lifespan never restarts it).
         try:
+            # Sleeping first means a short-lived process (a test client, `--reload`
+            # churn) never reaches the network, and startup is not delayed by a fetch.
+            delay = await asyncio.to_thread(_next_delay, settings)
+            await asyncio.sleep(delay)
+
             # Blocking network and DB work, so it goes to the threadpool rather than
             # stalling the event loop and every in-flight request with it.
             report = await asyncio.to_thread(_refresh_once)
             if report:
                 log.debug("auto-refresh wrote %d price rows", report)
+            last_purge = await _maybe_purge(last_purge)
         except asyncio.CancelledError:
             raise
         except Exception as exc:  # noqa: BLE001 - a refresh failure must not end the loop
             log.warning("auto-refresh failed, will retry: %s", exc)
+            await asyncio.sleep(backoff)
+
+
+#: Guest Workspaces expire after 90 days, so a daily sweep is plenty.
+PURGE_INTERVAL_SECONDS = 24 * 60 * 60
+
+
+async def _maybe_purge(last_purge: float | None) -> float | None:
+    """Run the guest purge at most once per day. Returns the new last-purge time."""
+    now = time.monotonic()
+    if last_purge is not None and now - last_purge < PURGE_INTERVAL_SECONDS:
+        return last_purge
+    try:
+        purged = await asyncio.to_thread(_purge_once)
+    except Exception as exc:  # noqa: BLE001 - housekeeping must not stop the refresh loop
+        log.warning("guest purge failed, will retry next cycle: %s", type(exc).__name__)
+        return last_purge
+    if purged:
+        log.info("purged %d expired guest workspace(s)", purged)
+    return now
+
+
+def _purge_once() -> int:
+    with session_scope() as session:
+        return purge_expired_guests(session, datetime.now(timezone.utc))
+
+
+def _next_delay(settings) -> float:
+    """Seconds until the next refresh: fast while any held instrument's exchange trades."""
+    now = datetime.now(timezone.utc)
+    with session_scope() as session:
+        exchanges = load_shared_exchanges(session)
+    any_open = any(market_hours.is_open(e, now) for e in exchanges)
+    return (
+        settings.refresh.default_interval_seconds
+        if any_open
+        else settings.refresh.closed_market_interval_seconds
+    )
 
 
 def _refresh_once() -> int:
@@ -168,6 +210,73 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+MAX_BODY_BYTES = 256 * 1024
+
+
+class _BodyTooLarge(Exception):
+    pass
+
+
+class BodyLimitMiddleware:
+    """Rejects request bodies over `max_bytes` with 413, declared or streamed."""
+
+    def __init__(self, app: ASGIApp, max_bytes: int = MAX_BODY_BYTES) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        rejected = False
+
+        async def reject() -> None:
+            nonlocal rejected
+            if not rejected:
+                rejected = True
+                await JSONResponse(status_code=413, content={"detail": "request too large"})(
+                    scope, receive, send
+                )
+
+        for name, value in scope["headers"]:
+            if name == b"content-length":
+                try:
+                    declared = int(value)
+                except ValueError:
+                    declared = 0
+                if declared > self.max_bytes:
+                    await reject()
+                    return
+                break
+
+        received = 0
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            if message["type"] == "http.request":
+                received += len(message.get("body", b""))
+                if received > self.max_bytes:
+                    await reject()
+                    raise _BodyTooLarge
+            return message
+
+        async def guarded_send(message) -> None:
+            # Once 413 is out, whatever the aborted app tries to say is dropped.
+            if not rejected:
+                await send(message)
+
+        try:
+            await self.app(scope, limited_receive, guarded_send)
+        except _BodyTooLarge:
+            pass
+
+
+app.add_middleware(BodyLimitMiddleware)
+# Added last so it is outermost: a foreign Host is refused before anything else runs.
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(get_settings().server.allowed_hosts))
 
 app.include_router(private_router)
 app.include_router(router)

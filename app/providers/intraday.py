@@ -27,6 +27,10 @@ log = logging.getLogger(__name__)
 #: Intraday bars are stale quickly; this roughly matches the 5-minute bar cadence.
 DEFAULT_TTL_SECONDS = 120
 
+#: `force` skips the TTL only for an entry at least this old, so a client hammering
+#: `?force=true` cannot turn every request into a Yahoo round trip.
+FORCE_MIN_AGE_SECONDS = 30
+
 USD_TRY = FX_SYMBOL["USD"]
 
 
@@ -64,7 +68,8 @@ class IntradayService:
         entry = self._cache.get(key)
         now = time.monotonic()
 
-        if entry is not None and not force and (now - entry.fetched_at) < self.ttl:
+        max_age = min(self.ttl, FORCE_MIN_AGE_SECONDS) if force else self.ttl
+        if entry is not None and (now - entry.fetched_at) < max_age:
             return entry.series
 
         try:

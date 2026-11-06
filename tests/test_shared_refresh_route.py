@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import date
 from decimal import Decimal
 
@@ -100,10 +101,15 @@ def _stub_providers(monkeypatch, calls: list[str] | None = None) -> None:
     )
 
 
+#: The refresh set is "instruments some Transaction references"; that id-only predicate
+#: reads no private row, so it is not counted as private SQL.
+HELD_PREDICATE = re.compile(r'in \(select "transaction"\.instrument_id\s+from "transaction"\)')
+
+
 def _private_sql(statements: list[str]) -> list[str]:
     return [
         statement
-        for statement in statements
+        for statement in (HELD_PREDICATE.sub("", s) for s in statements)
         if '"transaction"' in statement or '"portfolio"' in statement
     ]
 

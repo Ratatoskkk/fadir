@@ -82,6 +82,11 @@ refresh:
   # anything faster than this is a no-op that still costs a request.
   closed_market_interval_seconds: 3600
 
+server:
+  # Host headers the app accepts; any other Host gets 400, which stops a DNS-rebinding
+  # page from reading the API through a local port. Add your public hostname here.
+  allowed_hosts: [ratatosk.dev, localhost, 127.0.0.1, testserver]
+
 history:
   # Portfolio inception — where the daily series begins (SPEC §6). Leave it null and the
   # app starts the chart at your earliest transaction, which is what you usually want.

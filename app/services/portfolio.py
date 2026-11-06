@@ -8,11 +8,14 @@ building those inputs — all of that lives in `app.calc`.
 from __future__ import annotations
 
 import logging
+import threading
+import time
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, DecimalException
 
 from sqlalchemy import inspect as sa_inspect, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
 from app.calc import (
@@ -39,7 +42,7 @@ from app.providers import market_hours
 from app.providers.base import ProviderError
 from app.providers.fx_service import FxService
 from app.providers.intraday import IntradayService, latest_session_bounds, session_days
-from app.providers.price_service import PriceService, RefreshReport
+from app.providers.price_service import PriceService, RefreshReport, savepoint
 from app.services.portfolio_scope import (
     PortfolioScope,
     PortfolioScopeNotFound,
@@ -76,13 +79,51 @@ def load_instruments(session: Session, *, active_only: bool = True) -> list[Inst
     return list(session.execute(stmt).scalars())
 
 
-def load_shared_instruments(session: Session) -> list[Instrument]:
-    stmt = (
-        select(Instrument)
-        .where(Instrument.active.is_(True))
-        .order_by(Instrument.id)
+def _held_active_filter():
+    """Active instruments at least one Transaction references; nothing else needs refreshing."""
+    return (
+        Instrument.active.is_(True),
+        Instrument.id.in_(select(Transaction.instrument_id)),
     )
+
+
+#: A forced shared refresh goes to the providers for every held instrument, and
+#: `POST /api/refresh` is reachable by any signed-in user. At most one runs at a time,
+#: and one that follows another within the cooldown is downgraded to a normal refresh.
+FORCED_REFRESH_COOLDOWN_SECONDS = 60.0
+_FORCED_REFRESH_LOCK = threading.Lock()
+_last_forced_refresh: float | None = None
+
+
+def reset_forced_refresh_state() -> None:
+    """Test hook: forget the last forced refresh."""
+    global _last_forced_refresh
+    _last_forced_refresh = None
+
+
+def _claim_forced_refresh(force: bool) -> bool:
+    """Whether this call may run forced; if so the caller holds `_FORCED_REFRESH_LOCK`."""
+    global _last_forced_refresh
+    if not force:
+        return False
+    if not _FORCED_REFRESH_LOCK.acquire(blocking=False):
+        return False  # another forced refresh is running; do a normal one instead
+    now = time.monotonic()
+    if _last_forced_refresh is not None and now - _last_forced_refresh < FORCED_REFRESH_COOLDOWN_SECONDS:
+        _FORCED_REFRESH_LOCK.release()
+        return False
+    _last_forced_refresh = now
+    return True
+
+
+def load_shared_instruments(session: Session) -> list[Instrument]:
+    stmt = select(Instrument).where(*_held_active_filter()).order_by(Instrument.id)
     return list(session.scalars(stmt))
+
+
+def load_shared_exchanges(session: Session) -> set[str]:
+    stmt = select(Instrument.exchange).where(*_held_active_filter()).distinct()
+    return set(session.scalars(stmt))
 
 
 def to_txn_input(txn: Transaction, ticker: str, currency: str) -> TxnInput:
@@ -259,6 +300,14 @@ class PortfolioService:
         if self.session.new or self.session.dirty or self.session.deleted:
             raise ValueError("shared refresh requires a clean caller Session")
 
+        force = _claim_forced_refresh(force)
+        try:
+            return self._refresh_shared(force)
+        finally:
+            if force:
+                _FORCED_REFRESH_LOCK.release()
+
+    def _refresh_shared(self, force: bool) -> RefreshReport:
         instruments = load_shared_instruments(self.session)
         end = date.today()
         full_start = end - timedelta(days=10)
@@ -270,10 +319,16 @@ class PortfolioService:
 
         for currency in sorted({instrument.currency for instrument in instruments}):
             try:
-                self.fx.warm(currency, self.fx.shared_refresh_start(currency, end, full_start), end)
+                with savepoint(self.session):
+                    self.fx.warm(
+                        currency, self.fx.shared_refresh_start(currency, end, full_start), end
+                    )
             except ProviderError as exc:
                 log.error("shared FX refresh failed for %s: %s", currency, exc)
                 report.errors.append(f"FX {currency}: {exc}")
+            except SQLAlchemyError as exc:
+                log.error("shared FX refresh failed for %s: %s", currency, type(exc).__name__)
+                report.errors.append(f"FX {currency}: {type(exc).__name__}")
 
         return report
 

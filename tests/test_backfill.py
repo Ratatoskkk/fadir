@@ -8,7 +8,7 @@ from decimal import Decimal
 from freezegun import freeze_time
 
 from app.config import get_settings
-from app.models import FxCache, Instrument, PriceCache
+from app.models import FxCache, Instrument, Portfolio, PriceCache, Side, Transaction, Workspace
 from app.providers import backfill
 from app.providers import price_service as price_service_module
 from app.providers.fx_service import FxService
@@ -42,6 +42,23 @@ def test_shared_refresh_backfills_outage_for_prices_and_fx(session, monkeypatch)
     instrument = Instrument(ticker="GAP", exchange="NYSE", yf_symbol="GAP", currency="USD", name="Gap", active=True)
     session.add(instrument)
     session.flush()
+    workspace = Workspace(portfolios=[Portfolio(name="Gap")])
+    session.add(workspace)
+    session.flush()
+    session.add(
+        Transaction(
+            portfolio_id=workspace.portfolios[0].id,
+            instrument_id=instrument.id,
+            trade_date=date(2026, 6, 1),
+            side=Side.BUY,
+            quantity=Decimal("1"),
+            price_native=Decimal("10"),
+            fees_native=Decimal("0"),
+            fx_rate_to_try=Decimal("40"),
+            fx_rate_date=date(2026, 6, 1),
+            fx_provider="fixture",
+        )
+    )
     held = _weekdays(date(2026, 6, 1), date(2026, 9, 11)) + _weekdays(date(2026, 10, 27), date(2026, 11, 5))
     session.add_all(PriceCache(instrument_id=instrument.id, price_date=d, close_native=Decimal("10")) for d in held)
     session.add_all(FxCache(base="USD", quote="TRY", rate_date=d, rate=Decimal("40"), provider="fixture") for d in held)

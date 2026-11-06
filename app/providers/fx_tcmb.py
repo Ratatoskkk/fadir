@@ -100,17 +100,26 @@ class TcmbFxProvider(FxProvider):
             "startDate": start.strftime("%d-%m-%Y"),
             "endDate": end.strftime("%d-%m-%Y"),
             "type": "json",
-            "key": self._api_key,
         }
 
         try:
-            response = httpx.get(EVDS_BASE_URL, params=params, timeout=self._timeout)
+            # EVDS takes the key as a header, which keeps it out of URLs and access logs.
+            response = httpx.get(
+                EVDS_BASE_URL, params=params, headers={"key": self._api_key}, timeout=self._timeout
+            )
             response.raise_for_status()
             payload = response.json()
+        except httpx.HTTPStatusError as exc:
+            # Never interpolate the exception text: it carries the full request URL.
+            raise ProviderError(
+                f"TCMB request failed for {base}/TRY: HTTP {exc.response.status_code}"
+            ) from None
         except httpx.HTTPError as exc:
-            raise ProviderError(f"TCMB request failed for {base}/TRY: {exc}") from exc
-        except ValueError as exc:
-            raise ProviderError(f"TCMB returned non-JSON for {base}/TRY: {exc}") from exc
+            raise ProviderError(
+                f"TCMB request failed for {base}/TRY: {type(exc).__name__}"
+            ) from None
+        except ValueError:
+            raise ProviderError(f"TCMB returned non-JSON for {base}/TRY") from None
 
         items = payload.get("items") or []
         key = code.replace(".", "_")
