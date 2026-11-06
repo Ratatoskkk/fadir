@@ -38,7 +38,7 @@ from app.api.request_authority import (
 from app.api.request_transaction import RequestTransactionRoute, request_session
 from app.db import get_session
 from app.models import FxCache, GuestAccess, Instrument, Portfolio, Side, Transaction
-from app.providers import market_hours, yf_client
+from app.providers import market_hours
 from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
 from app.providers.price_service import PriceService
@@ -49,8 +49,10 @@ from app.schemas import (
     HealthOut,
     HistoryOut,
     HistoryPointOut,
+    HoldingOut,
     InstrumentCreate,
     InstrumentOut,
+    InstrumentSearchOut,
     IntradayOut,
     IntradayPointOut,
     LiquidationOut,
@@ -89,6 +91,8 @@ from app.calc.tax import estimate_tax
 from app.calc.tax_sources import turkey_tax_year, with_official_brackets
 import json
 from app.services import guest_access
+from app.services import holdings as holdings_service
+from app.services import instruments as instruments_service
 from app.services import login_transactions
 from app.services import google_login_transition as google_login_transition_service
 from app.services import portfolio_merge as portfolio_merge_service
@@ -1020,11 +1024,17 @@ def create_transaction(
     portfolio_id: int | None = Query(default=None),
     base_currency: str | None = Query(default=None, min_length=3, max_length=3, pattern="^[A-Za-z]{3}$"),
 ) -> TransactionOut:
-    instrument = session.execute(
-        select(Instrument).where(Instrument.ticker == payload.ticker)
-    ).scalar_one_or_none()
-    if instrument is None:
-        raise HTTPException(404, f"unknown ticker {payload.ticker!r}")
+    if payload.yf_symbol is not None:
+        try:
+            instrument = instruments_service.ensure_instrument(session, payload.yf_symbol)
+        except instruments_service.InstrumentRejected as exc:
+            raise HTTPException(422, str(exc)) from exc
+    else:
+        instrument = session.execute(
+            select(Instrument).where(Instrument.ticker == payload.ticker)
+        ).scalar_one_or_none()
+        if instrument is None:
+            raise HTTPException(404, f"unknown ticker {payload.ticker!r}")
 
     fx = FxService(session, settings)
     rate, rate_date, provider = _resolve_fx(
@@ -1063,8 +1073,16 @@ def create_transaction(
     assert scope is not None
     scope.add(txn)
     session.flush()
+    _reject_oversell(session, scope.portfolio.id, instrument.id)
     session.refresh(txn)
     return _transaction_out(txn)
+
+
+def _reject_oversell(session: Session, portfolio_id: int, instrument_id: int) -> None:
+    try:
+        holdings_service.check_no_oversell(session, portfolio_id, instrument_id)
+    except holdings_service.Oversold as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 @private_router.patch(
@@ -1127,6 +1145,7 @@ def update_transaction(
         txn.fx_provider = provider
 
     session.flush()
+    _reject_oversell(session, scope.portfolio.id, txn.instrument_id)
     session.refresh(txn)
     return _transaction_out(txn)
 
@@ -1148,8 +1167,10 @@ def delete_transaction(
     txn = scope.get(Transaction, txn_id)
     if txn is None:
         raise HTTPException(404, f"transaction {txn_id} not found")
+    instrument_id = txn.instrument_id
     session.delete(txn)
     session.flush()
+    _reject_oversell(session, scope.portfolio.id, instrument_id)
 
 
 # -- instruments -------------------------------------------------------------------
@@ -1161,44 +1182,66 @@ def list_instruments(session: SessionDep) -> list[InstrumentOut]:
     return [InstrumentOut.model_validate(i) for i in session.execute(stmt).scalars()]
 
 
-@router.post("/instruments", response_model=InstrumentOut, status_code=201)
-def create_instrument(payload: InstrumentCreate, session: SessionDep) -> InstrumentOut:
-    """Validates the symbol against yfinance before insert (SPEC §7)."""
-    existing = session.execute(
-        select(Instrument).where(
-            (Instrument.ticker == payload.ticker) | (Instrument.yf_symbol == payload.yf_symbol)
+@private_router.get("/instruments/search", response_model=list[InstrumentSearchOut])
+def search_instruments(
+    session: RequestSessionDep,
+    _authority: AuthorityDep,
+    q: str = Query(min_length=1, max_length=40),
+) -> list[InstrumentSearchOut]:
+    """Known instruments first, then Yahoo equities and ETFs that can be added by symbol."""
+    return [
+        InstrumentSearchOut(
+            yf_symbol=r.yf_symbol,
+            ticker=r.ticker,
+            name=r.name,
+            exchange=r.exchange,
+            currency=r.currency,
+            known=r.known,
         )
-    ).scalar_one_or_none()
-    if existing is not None:
-        raise HTTPException(409, f"{payload.ticker} / {payload.yf_symbol} already exists")
+        for r in instruments_service.search(session, q)
+    ]
 
-    probe = yf_client.fetch_last_close(payload.yf_symbol)
-    if probe is None:
-        raise HTTPException(
-            422,
-            f"yfinance returned no price data for {payload.yf_symbol!r}; "
-            f"refusing to add an unverifiable symbol",
-        )
 
-    reported = yf_client.fetch_currency(payload.yf_symbol)
-    if reported and reported != payload.currency.upper():
-        raise HTTPException(
-            422,
-            f"{payload.yf_symbol} trades in {reported}, not {payload.currency.upper()}",
-        )
-
-    instrument = Instrument(
-        ticker=payload.ticker,
-        exchange=payload.exchange,
-        yf_symbol=payload.yf_symbol,
-        currency=payload.currency.upper(),
-        name=payload.name,
-        active=True,
-    )
-    session.add(instrument)
-    session.commit()
-    session.refresh(instrument)
+@private_router.post(
+    "/instruments",
+    response_model=InstrumentOut,
+    status_code=201,
+    dependencies=[Depends(_write_guard)],
+)
+def create_instrument(
+    payload: InstrumentCreate,
+    session: RequestSessionDep,
+    _authority: AuthorityDep,
+) -> InstrumentOut:
+    """Add an instrument from its Yahoo symbol after checking Yahoo has prices for it."""
+    try:
+        instrument = instruments_service.ensure_instrument(session, payload.yf_symbol)
+    except instruments_service.InstrumentRejected as exc:
+        raise HTTPException(422, str(exc)) from exc
     return InstrumentOut.model_validate(instrument)
+
+
+@private_router.get("/holdings", response_model=list[HoldingOut])
+def list_holdings(
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+    portfolio_id: int | None = Query(default=None),
+    as_of: date | None = Query(default=None),
+) -> list[HoldingOut]:
+    """What can be sold: each instrument held on `as_of` (default today) and its quantity."""
+    scope = _scope(session, authority, portfolio_id)
+    if scope is None:
+        return []
+    return [
+        HoldingOut(
+            ticker=h.instrument.ticker,
+            yf_symbol=h.instrument.yf_symbol,
+            name=h.instrument.name,
+            currency=h.instrument.currency,
+            quantity=h.quantity,
+        )
+        for h in holdings_service.holdings(session, scope.portfolio.id, as_of or date.today())
+    ]
 
 
 # -- operations --------------------------------------------------------------------

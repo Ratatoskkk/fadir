@@ -20,6 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
+from app.providers import backfill
 from app.models import (
     PRICE_SCALE,
     ActionKind,
@@ -131,6 +132,22 @@ class PriceService:
             return full_start
         candidate = min(newest) - timedelta(days=self.REFETCH_OVERLAP_DAYS)
         return max(full_start, candidate)
+
+    def shared_refresh_start(self, instrument: Instrument, today: date, cold_start: date) -> date:
+        """First day a shared refresh must request for `instrument`, including any hole."""
+        cached = list(
+            self.session.execute(
+                select(PriceCache.price_date)
+                .where(
+                    PriceCache.instrument_id == instrument.id,
+                    PriceCache.price_date >= today - timedelta(days=backfill.MAX_BACKFILL_DAYS),
+                )
+                .order_by(PriceCache.price_date)
+            ).scalars()
+        )
+        return backfill.refresh_start(
+            f"price:{instrument.id}", cached, today, cold_start, self.REFETCH_OVERLAP_DAYS
+        )
 
     # -- cache writes --------------------------------------------------------------
 

@@ -262,12 +262,15 @@ class PortfolioService:
         instruments = load_shared_instruments(self.session)
         end = date.today()
         full_start = end - timedelta(days=10)
-        start = self.prices.incremental_start(instruments, full_start)
+        start = min(
+            (self.prices.shared_refresh_start(i, end, full_start) for i in instruments),
+            default=full_start,
+        )
         report = self.prices.refresh_shared(instruments, start, end, force=force)
 
         for currency in sorted({instrument.currency for instrument in instruments}):
             try:
-                self.fx.warm(currency, full_start, end)
+                self.fx.warm(currency, self.fx.shared_refresh_start(currency, end, full_start), end)
             except ProviderError as exc:
                 log.error("shared FX refresh failed for %s: %s", currency, exc)
                 report.errors.append(f"FX {currency}: {exc}")

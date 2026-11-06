@@ -23,6 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
+from app.providers import backfill
 from app.models import FxCache, utcnow
 from app.providers.base import FxProvider, FxQuote, ProviderError, RateUnavailable
 from app.providers.fx_tcmb import TcmbFxProvider
@@ -157,6 +158,23 @@ class FxService:
         return written
 
     # -- fetching ------------------------------------------------------------------
+
+    def shared_refresh_start(self, currency: str, today: date, cold_start: date) -> date:
+        """First day a shared refresh must request for `currency`, including any hole."""
+        currency = currency.upper()
+        cached = list(
+            self.session.execute(
+                select(FxCache.rate_date)
+                .where(
+                    FxCache.base == currency,
+                    FxCache.quote == BASE_CURRENCY,
+                    FxCache.rate_date >= today - timedelta(days=backfill.MAX_BACKFILL_DAYS),
+                )
+                .distinct()
+                .order_by(FxCache.rate_date)
+            ).scalars()
+        )
+        return backfill.refresh_start(f"fx:{currency}", cached, today, cold_start, 0)
 
     def warm(self, currency: str, start: date, end: date) -> int:
         """Fetch and cache the published series for a window. Returns rows written."""

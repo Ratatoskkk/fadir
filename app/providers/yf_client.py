@@ -265,3 +265,40 @@ def fetch_currency(symbol: str) -> str | None:
 
     currency = _with_backoff(_do, f"currency({symbol})")
     return currency.upper() if currency else None
+
+
+#: Yahoo quote types a Portfolio can hold.
+SEARCHABLE_TYPES = frozenset({"EQUITY", "ETF"})
+SEARCH_TTL_SECONDS = 600
+_search_cache: dict[str, tuple[float, list[dict[str, str]]]] = {}
+
+
+def search_symbols(query: str, limit: int = 8) -> list[dict[str, str]]:
+    """Yahoo symbol search: [{symbol, name, exchange}] for equities and ETFs.
+
+    One attempt, no backoff: this runs as the user types, and an empty answer is better
+    than a stalled field. Results are cached briefly per query to spare Yahoo.
+    """
+    key = query.strip().upper()
+    now = time.monotonic()
+    hit = _search_cache.get(key)
+    if hit is not None and now - hit[0] < SEARCH_TTL_SECONDS:
+        return hit[1][:limit]
+    try:
+        quotes = yf.Search(key, max_results=20, news_count=0, lists_count=0, enable_fuzzy_query=False).quotes
+    except Exception as exc:  # noqa: BLE001 - a failed search returns nothing
+        log.warning("symbol search failed: %s", exc)
+        return []
+    matches = [
+        {
+            "symbol": str(q["symbol"]),
+            "name": str(q.get("longname") or q.get("shortname") or q["symbol"]),
+            "exchange": str(q.get("exchange") or ""),
+        }
+        for q in quotes
+        if q.get("symbol") and q.get("quoteType") in SEARCHABLE_TYPES
+    ]
+    if len(_search_cache) >= 512:
+        _search_cache.clear()
+    _search_cache[key] = (now, matches)
+    return matches[:limit]

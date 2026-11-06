@@ -1365,6 +1365,36 @@ Tax auto-load (owner instruction 2026-11-06), source accepted locally but not de
   tariff: a synthetic 200,000 TL gain gives 30,500 TL. The owner's live hero shows a
   taxable gain of 0 (overall loss), so the page cannot show a visual difference.
 - The remaining G4–G9 outcomes are unchanged.
+
+Backend for the frontend overhaul (owner instruction 2026-11-06). Source is accepted
+locally and not yet deployed:
+- History drop to zero: the shared price and FX cache had no rows from about Sept 11
+  to Oct 26, the service outage. `refresh_shared` only requested the last 10 days, so
+  the hole was never filled. The new `app/providers/backfill.py` starts each shared
+  refresh at the earliest gap of more than 7 days within the last 400 days. Each gap
+  is requested once per process, for both prices and FX.
+  - Red proof: the old code requested prices from Oct 31 and FX from Oct 27.
+  - The frontend should draw points that report `missing` as gaps, not as 0.
+- Ticker search: `GET /api/instruments/search?q=` returns known instruments first, then
+  Yahoo equities and ETFs. Exchange codes are mapped to `market_hours`, and `IST`
+  trading hours were added.
+- Simple trade entry: `POST /api/transactions` accepts `yf_symbol` instead of `ticker`
+  and adds the instrument on first use. The minimum fields are date, symbol, quantity,
+  and price; side defaults to BUY, and FX is fetched automatically.
+- Sales: `GET /api/holdings?as_of=` lists what can be sold. Creating, editing, or
+  deleting a transaction now returns 422 if any sale would exceed the shares held at
+  that point. The owner's live data has 6 series and 0 oversold sales (read-only check).
+- Security: `POST /api/instruments` was public with no CSRF check. It now requires
+  request authority and CSRF, and takes only `{yf_symbol}`. Its currency, name, and
+  exchange come from Yahoo.
+- Known limit: Yahoo quotes some markets in minor units (`GBp`, `ZAc`). The shared
+  currency helper upper-cases those to `GBP`/`ZAR`, so London and Johannesburg
+  symbols would be valued 100 times too high. They should be rejected or converted
+  before those markets are supported.
+- Full offline suite: 525 passed, 109 skipped, and the same 2 pre-existing zero-FX
+  failures.
+- Page split (overview, breakdown, and chart on one page; positions and transactions
+  on their own pages) is frontend-only; both lists already have their own endpoints.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration

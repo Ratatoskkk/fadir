@@ -47,6 +47,7 @@ EXCHANGES: dict[str, ExchangeHours] = {
     "TPE": ExchangeHours("TPE", "Asia/Taipei", time(9, 0), time(13, 30)),
     "NYSE": ExchangeHours("NYSE", "America/New_York", time(9, 30), time(16, 0)),
     "NASDAQ": ExchangeHours("NASDAQ", "America/New_York", time(9, 30), time(16, 0)),
+    "IST": ExchangeHours("IST", "Europe/Istanbul", time(10, 0), time(18, 0)),
 }
 
 

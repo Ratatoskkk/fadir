@@ -808,54 +808,85 @@ def test_list_instruments(client):
     assert {r["ticker"] for r in rows} == {"AAPL", "ERIC"}
 
 
+def _stub_yahoo(monkeypatch, *, close=(Decimal("10"), TODAY), currency="USD", matches=()):
+    from app.providers import yf_client
+
+    monkeypatch.setattr(yf_client, "fetch_last_close", lambda *a, **k: close)
+    monkeypatch.setattr(yf_client, "fetch_currency", lambda *a, **k: currency)
+    monkeypatch.setattr(yf_client, "search_symbols", lambda *a, **k: list(matches))
+
+
 def test_create_instrument_validates_symbol_against_yfinance(client, monkeypatch):
     """SPEC §7: 'validates symbol against yfinance before insert'."""
-    from app.api import routes
-
-    monkeypatch.setattr(routes.yf_client, "fetch_last_close", lambda *a, **k: None)
-    r = client.post(
-        "/api/instruments",
-        json={"ticker": "FAKE", "exchange": "NYSE", "yf_symbol": "FAKE", "currency": "USD", "name": "Fake"},
-    )
+    _stub_yahoo(monkeypatch, close=None)
+    r = client.post("/api/instruments", json={"yf_symbol": "FAKE"})
     assert r.status_code == 422
-    assert "no price data" in r.json()["detail"]
+    assert "FAKE" not in {i["yf_symbol"] for i in client.get("/api/instruments").json()}
 
 
-def test_create_instrument_rejects_currency_mismatch(client, monkeypatch):
-    from app.api import routes
-
-    monkeypatch.setattr(routes.yf_client, "fetch_last_close", lambda *a, **k: (Decimal("10"), TODAY))
-    monkeypatch.setattr(routes.yf_client, "fetch_currency", lambda *a, **k: "EUR")
-    r = client.post(
-        "/api/instruments",
-        json={"ticker": "XX", "exchange": "ETR", "yf_symbol": "XX.DE", "currency": "USD", "name": "X"},
-    )
-    assert r.status_code == 422
-    assert "EUR" in r.json()["detail"]
-
-
-def test_create_instrument_succeeds_when_verified(client, monkeypatch):
-    from app.api import routes
-
-    monkeypatch.setattr(routes.yf_client, "fetch_last_close", lambda *a, **k: (Decimal("10"), TODAY))
-    monkeypatch.setattr(routes.yf_client, "fetch_currency", lambda *a, **k: "USD")
-    r = client.post(
-        "/api/instruments",
-        json={"ticker": "IBM", "exchange": "NYSE", "yf_symbol": "IBM", "currency": "USD", "name": "IBM"},
-    )
+def test_create_instrument_takes_currency_name_and_exchange_from_yahoo(client, monkeypatch):
+    _stub_yahoo(monkeypatch, currency="TRY", matches=[{"symbol": "THYAO.IS", "name": "Turk Hava Yollari", "exchange": "IST"}])
+    r = client.post("/api/instruments", json={"yf_symbol": "thyao.is"})
     assert r.status_code == 201
-    assert r.json()["ticker"] == "IBM"
-
-
-def test_create_duplicate_instrument_409(client, monkeypatch):
-    from app.api import routes
-
-    monkeypatch.setattr(routes.yf_client, "fetch_last_close", lambda *a, **k: (Decimal("10"), TODAY))
-    r = client.post(
-        "/api/instruments",
-        json={"ticker": "AAPL", "exchange": "NASDAQ", "yf_symbol": "AAPL", "currency": "USD", "name": "dup"},
+    body = r.json()
+    assert (body["ticker"], body["yf_symbol"], body["currency"], body["exchange"], body["name"]) == (
+        "THYAO", "THYAO.IS", "TRY", "IST", "Turk Hava Yollari"
     )
-    assert r.status_code == 409
+
+
+def test_create_existing_instrument_returns_it(client, monkeypatch):
+    _stub_yahoo(monkeypatch)
+    r = client.post("/api/instruments", json={"yf_symbol": "AAPL"})
+    assert r.status_code == 201
+    assert r.json()["name"] == "Apple Inc"
+
+
+def test_search_lists_known_instruments_before_yahoo_matches(client, monkeypatch):
+    _stub_yahoo(monkeypatch, matches=[
+        {"symbol": "AAPL", "name": "Apple Inc.", "exchange": "NMS"},
+        {"symbol": "AAPL.TO", "name": "Apple CDR", "exchange": "TOR"},
+    ])
+    rows = client.get("/api/instruments/search", params={"q": "aap"}).json()
+    assert [(r["yf_symbol"], r["ticker"], r["known"]) for r in rows] == [
+        ("AAPL", "AAPL", True),
+        ("AAPL.TO", "AAPL.TO", False),
+    ]
+    assert rows[1]["currency"] is None
+
+
+def test_create_transaction_by_yahoo_symbol_adds_the_instrument(client, monkeypatch):
+    _stub_yahoo(monkeypatch, matches=[{"symbol": "NVDA", "name": "NVIDIA", "exchange": "NMS"}])
+    r = client.post(
+        "/api/transactions",
+        json={"yf_symbol": "NVDA", "trade_date": "2026-11-02", "quantity": "3", "price_native": "100"},
+    )
+    assert r.status_code == 201, r.text
+    assert r.json()["ticker"] == "NVDA"
+    assert any(i["ticker"] == "NVDA" and i["exchange"] == "NASDAQ" for i in client.get("/api/instruments").json())
+
+
+def test_transaction_needs_exactly_one_of_ticker_or_symbol(client):
+    base = {"trade_date": "2026-11-02", "quantity": "1", "price_native": "1"}
+    assert client.post("/api/transactions", json=base).status_code == 422
+    assert client.post("/api/transactions", json={**base, "ticker": "AAPL", "yf_symbol": "AAPL"}).status_code == 422
+
+
+def test_holdings_and_oversell_rejection(client):
+    holdings = {h["ticker"]: Decimal(h["quantity"]) for h in client.get("/api/holdings").json()}
+    held = holdings["AAPL"]
+    assert held > 0
+
+    sale = {"ticker": "AAPL", "side": "SELL", "trade_date": TODAY.isoformat(), "price_native": "1"}
+    r = client.post("/api/transactions", json={**sale, "quantity": str(held + 1)})
+    assert r.status_code == 422
+    assert {h["ticker"]: Decimal(h["quantity"]) for h in client.get("/api/holdings").json()}["AAPL"] == held
+
+    r = client.post("/api/transactions", json={**sale, "quantity": str(held)})
+    assert r.status_code == 201
+    assert "AAPL" not in {h["ticker"] for h in client.get("/api/holdings").json()}
+
+    buys = [t for t in client.get("/api/transactions").json() if t["ticker"] == "AAPL" and t["side"] == "BUY"]
+    assert client.delete(f"/api/transactions/{buys[0]['id']}").status_code == 422
 
 
 # -- operations --------------------------------------------------------------------

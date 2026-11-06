@@ -11,7 +11,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, model_validator
 
 #: Serialise Decimal as a plain string to preserve exactness across the wire.
 Money = Annotated[Decimal, PlainSerializer(lambda v: str(v), return_type=str)]
@@ -320,7 +320,10 @@ class TransactionOut(BaseModel):
 
 
 class TransactionCreate(BaseModel):
-    ticker: str
+    #: A known instrument's ticker, or a Yahoo symbol from search, which is added on
+    #: first use. Exactly one is required.
+    ticker: str | None = None
+    yf_symbol: str | None = Field(default=None, min_length=1, max_length=32)
     trade_date: date
     side: Literal["BUY", "SELL"] = "BUY"
     quantity: Decimal = Field(gt=0)
@@ -332,6 +335,12 @@ class TransactionCreate(BaseModel):
     #: rate. Setting this forces `fx_provider = 'manual'` so the UI can flag it (SPEC §7).
     fx_rate_override: Decimal | None = Field(default=None, gt=0)
     note: str | None = None
+
+    @model_validator(mode="after")
+    def _one_instrument(self) -> "TransactionCreate":
+        if (self.ticker is None) == (self.yf_symbol is None):
+            raise ValueError("give exactly one of ticker or yf_symbol")
+        return self
 
 
 class TransactionPatch(BaseModel):
@@ -361,11 +370,25 @@ class InstrumentOut(BaseModel):
 
 
 class InstrumentCreate(BaseModel):
-    ticker: str
-    exchange: str
+    yf_symbol: str = Field(min_length=1, max_length=32)
+
+
+class InstrumentSearchOut(BaseModel):
     yf_symbol: str
-    currency: str
+    ticker: str
     name: str
+    exchange: str
+    #: Known only once the instrument has been added.
+    currency: str | None
+    known: bool
+
+
+class HoldingOut(BaseModel):
+    ticker: str
+    yf_symbol: str
+    name: str
+    currency: str
+    quantity: Money
 
 
 class ProviderHealth(BaseModel):
