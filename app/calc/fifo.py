@@ -134,6 +134,8 @@ class LotBook:
     _cost_try: Decimal = ZERO
     _purchase_quantity: Decimal = ZERO
     _purchase_cost_native: Decimal = ZERO
+    #: Every lot before this index is fully consumed, so a SELL starts its scan here.
+    _first_open: int = 0
 
     # -- open position -------------------------------------------------------------
 
@@ -222,6 +224,7 @@ class LotBook:
     def prune(self) -> None:
         """Drop fully consumed lots. Purely cosmetic — they sum to zero either way."""
         self.open_lots = [lot for lot in self.open_lots if lot.quantity_open > ZERO]
+        self._first_open = 0
 
     @property
     def realized(self) -> RealizedPnl:
@@ -290,7 +293,11 @@ def _consume(book: LotBook, sell: TxnInput) -> None:
         sell.fee_native_equivalent / sell.quantity if sell.quantity != ZERO else ZERO
     )
 
-    for lot in book.open_lots:
+    lots = book.open_lots
+    index = book._first_open
+    while index < len(lots):
+        lot = lots[index]
+        index += 1
         if remaining <= ZERO:
             break
         if lot.quantity_open <= ZERO:
@@ -321,3 +328,6 @@ def _consume(book: LotBook, sell: TxnInput) -> None:
 
         lot.quantity_open -= take
         remaining -= take
+
+    while book._first_open < len(lots) and lots[book._first_open].quantity_open <= ZERO:
+        book._first_open += 1

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import logging
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
@@ -9,7 +10,7 @@ from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.calc.attribution import DailyChange, PositionMetrics
@@ -105,6 +106,8 @@ log = logging.getLogger(__name__)
 privacy_service = PrivacyService()
 router = APIRouter(prefix="/api")
 private_router = APIRouter(prefix="/api", route_class=RequestTransactionRoute)
+HISTORY_EARLIEST = date(1970, 1, 1)
+MAX_TRANSACTIONS_PER_PORTFOLIO = 10000
 GOOGLE_STATE_COOKIE_NAME = "__Host-fadir-google-state"
 GOOGLE_STATE_COOKIE_POLICY = CookiePolicy(max_age=600)
 
@@ -135,6 +138,8 @@ def get_tax_profile(session: RequestSessionDep, authority: AuthorityDep, year: i
 def put_tax_profile(payload: TaxProfileIn, session: RequestSessionDep, authority: AuthorityDep) -> TaxProfileOut:
     if authority.user_id is None:
         raise HTTPException(403, "Tax Profile requires a signed-in User")
+    if turkey_tax_year(payload.tax_year) is None:
+        raise HTTPException(422, "no official tariff for that tax year")
     try:
         profile = TaxProfileService(session).save(authority.user_id, TaxProfileData("TR", payload.tax_year, "TRY", payload.source_url, payload.source_version, payload.assumptions, payload.disclaimer))
     except ValueError as exc:
@@ -369,6 +374,17 @@ def _guest_bootstrap_context(session: Session, row: GuestAccess) -> dict[str, ob
     }
 
 
+def _client_key(request: Request) -> str:
+    """The caller's address; behind the local tunnel, the header it forwards."""
+    host = request.client.host if request.client else "unknown"
+    try:
+        loopback = ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        loopback = False
+    forwarded = request.headers.get("cf-connecting-ip", "").strip()[:64]
+    return forwarded if loopback and forwarded else host
+
+
 @private_router.post("/guest/bootstrap", response_model=GuestBootstrapOut)
 def bootstrap_guest(
     request: Request,
@@ -380,6 +396,8 @@ def bootstrap_guest(
     token = request.cookies.get(GUEST_COOKIE_NAME)
     created = token is None
     if created:
+        if not guest_access.allow_issue(_client_key(request)):
+            raise HTTPException(429, "too many new guests")
         issued = guest_access.issue(
             session, clock=lambda: datetime.now(timezone.utc)
         )
@@ -794,6 +812,10 @@ def get_history(
     ticker: list[str] | None = Query(default=None),
     portfolio_id: int | None = Query(default=None),
 ) -> HistoryOut:
+    if (from_ is not None and from_ < HISTORY_EARLIEST) or (
+        to is not None and to > date.today() + timedelta(days=1)
+    ):
+        raise HTTPException(422, "history range is out of bounds")
     scope = _scope(session, authority, portfolio_id)
     if scope is None:
         start = from_ or date.today()
@@ -1026,7 +1048,11 @@ def create_transaction(
 ) -> TransactionOut:
     if payload.yf_symbol is not None:
         try:
-            instrument = instruments_service.ensure_instrument(session, payload.yf_symbol)
+            instrument = instruments_service.ensure_instrument(
+                session, payload.yf_symbol, authority.workspace_id
+            )
+        except instruments_service.InstrumentBudgetExceeded as exc:
+            raise HTTPException(429, str(exc)) from exc
         except instruments_service.InstrumentRejected as exc:
             raise HTTPException(422, str(exc)) from exc
     else:
@@ -1071,6 +1097,11 @@ def create_transaction(
         base_currency=(base_currency or "TRY").upper(),
     )
     assert scope is not None
+    held = session.scalar(
+        select(func.count()).select_from(Transaction).where(Transaction.portfolio_id == scope.portfolio.id)
+    )
+    if held >= MAX_TRANSACTIONS_PER_PORTFOLIO:
+        raise HTTPException(422, "portfolio transaction limit reached")
     scope.add(txn)
     session.flush()
     _reject_oversell(session, scope.portfolio.id, instrument.id)
@@ -1211,11 +1242,15 @@ def search_instruments(
 def create_instrument(
     payload: InstrumentCreate,
     session: RequestSessionDep,
-    _authority: AuthorityDep,
+    authority: AuthorityDep,
 ) -> InstrumentOut:
     """Add an instrument from its Yahoo symbol after checking Yahoo has prices for it."""
     try:
-        instrument = instruments_service.ensure_instrument(session, payload.yf_symbol)
+        instrument = instruments_service.ensure_instrument(
+            session, payload.yf_symbol, authority.workspace_id
+        )
+    except instruments_service.InstrumentBudgetExceeded as exc:
+        raise HTTPException(429, str(exc)) from exc
     except instruments_service.InstrumentRejected as exc:
         raise HTTPException(422, str(exc)) from exc
     return InstrumentOut.model_validate(instrument)
@@ -1362,6 +1397,8 @@ def health(session: SessionDep, settings: SettingsDep) -> HealthOut:
             "closed_market_refresh_seconds": settings.refresh.closed_market_interval_seconds,
             "liquidation_haircut_pct": str(settings.liquidation.haircut_pct),
             "fx_max_lookback_days": settings.fx.max_lookback_days,
-            "history_start": _service(session, settings).inception().isoformat(),
+            "history_start": (
+                settings.history.start_date.isoformat() if settings.history.start_date else None
+            ),
         },
     )

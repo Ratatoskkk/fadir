@@ -323,3 +323,24 @@ def test_oversell_raises():
                 txn(2, "ERIC", "SEK", "2026-04-01", Side.SELL, "20", "12.00", "4.00"),
             ],
         )
+
+
+def test_alternating_buy_sell_replay_stays_linear():
+    import time
+    from datetime import date, timedelta
+
+    start = date(2000, 1, 1)
+    rows = []
+    for n in range(10000):
+        day = (start + timedelta(days=n)).isoformat()
+        rows.append(txn(2 * n, "X", "USD", day, Side.BUY, "1", "10", "2"))
+        rows.append(txn(2 * n + 1, "X", "USD", day, Side.SELL, "1", "11", "3"))
+
+    begin = time.perf_counter()
+    book = build_lot_book("X", "USD", rows)
+    elapsed = time.perf_counter() - begin
+
+    assert elapsed < 0.8
+    assert book.quantity == Decimal("0")
+    assert len(book.disposals) == 10000
+    assert sum(d.pnl_native for d in book.disposals) == Decimal("10000")

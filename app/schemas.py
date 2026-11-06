@@ -7,15 +7,19 @@ frontend formats from strings anyway.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, field_validator, model_validator
 
 #: Serialise Decimal as a plain string to preserve exactness across the wire.
 Money = Annotated[Decimal, PlainSerializer(lambda v: str(v), return_type=str)]
 OptMoney = Annotated[Decimal | None, PlainSerializer(lambda v: None if v is None else str(v), return_type=str | None)]
+
+
+#: Characters a Yahoo symbol may use (1 to 32 long).
+YF_SYMBOL_PATTERN = r"^[A-Za-z0-9^][A-Za-z0-9.=^-]{0,31}$"
 
 
 class AttributionOut(BaseModel):
@@ -164,10 +168,10 @@ class TaxOut(BaseModel):
 
 class TaxProfileIn(BaseModel):
     tax_year: int = Field(ge=2000)
-    source_url: str
-    source_version: str
-    assumptions: list[str] = Field(default_factory=list)
-    disclaimer: str
+    source_url: str = Field(max_length=512)
+    source_version: str = Field(max_length=128)
+    assumptions: list[Annotated[str, Field(max_length=500)]] = Field(default_factory=list, max_length=20)
+    disclaimer: str = Field(max_length=4000)
 
 
 class TaxProfileOut(BaseModel):
@@ -319,22 +323,39 @@ class TransactionOut(BaseModel):
     note: str | None = None
 
 
+#: Column precision from app/models.py: QTY and MONEY are (24, 8), PRICE (28, 12), RATE (24, 10).
+Qty = Annotated[Decimal, Field(max_digits=24, decimal_places=8)]
+PriceIn = Annotated[Decimal, Field(max_digits=28, decimal_places=12)]
+RateIn = Annotated[Decimal, Field(max_digits=24, decimal_places=10)]
+EARLIEST_TRADE_DATE = date(1970, 1, 1)
+
+
+def _check_trade_date(value: date | None) -> date | None:
+    if value is not None and not (
+        EARLIEST_TRADE_DATE <= value <= date.today() + timedelta(days=1)
+    ):
+        raise ValueError("trade_date is out of range")
+    return value
+
+
 class TransactionCreate(BaseModel):
     #: A known instrument's ticker, or a Yahoo symbol from search, which is added on
     #: first use. Exactly one is required.
     ticker: str | None = None
-    yf_symbol: str | None = Field(default=None, min_length=1, max_length=32)
+    yf_symbol: str | None = Field(default=None, pattern=YF_SYMBOL_PATTERN)
     trade_date: date
     side: Literal["BUY", "SELL"] = "BUY"
-    quantity: Decimal = Field(gt=0)
-    price_native: Decimal = Field(ge=0)
-    fees_native: Decimal = Field(default=Decimal("0"), ge=0)
+    quantity: Qty = Field(gt=0)
+    price_native: PriceIn = Field(ge=0)
+    fees_native: Qty = Field(default=Decimal("0"), ge=0)
     fee_currency: str | None = Field(default=None, min_length=3, max_length=3, pattern="^[A-Za-z]{3}$")
-    fee_fx_rate_override: Decimal | None = Field(default=None, gt=0)
+    fee_fx_rate_override: RateIn | None = Field(default=None, gt=0)
     #: When the broker's executed rate is known and differs from the published reference
     #: rate. Setting this forces `fx_provider = 'manual'` so the UI can flag it (SPEC §7).
-    fx_rate_override: Decimal | None = Field(default=None, gt=0)
-    note: str | None = None
+    fx_rate_override: RateIn | None = Field(default=None, gt=0)
+    note: str | None = Field(default=None, max_length=500)
+
+    _trade_date_in_range = field_validator("trade_date")(_check_trade_date)
 
     @model_validator(mode="after")
     def _one_instrument(self) -> "TransactionCreate":
@@ -346,15 +367,17 @@ class TransactionCreate(BaseModel):
 class TransactionPatch(BaseModel):
     trade_date: date | None = None
     side: Literal["BUY", "SELL"] | None = None
-    quantity: Decimal | None = Field(default=None, gt=0)
-    price_native: Decimal | None = Field(default=None, ge=0)
-    fees_native: Decimal | None = Field(default=None, ge=0)
+    quantity: Qty | None = Field(default=None, gt=0)
+    price_native: PriceIn | None = Field(default=None, ge=0)
+    fees_native: Qty | None = Field(default=None, ge=0)
     fee_currency: str | None = Field(default=None, min_length=3, max_length=3, pattern="^[A-Za-z]{3}$")
-    fee_fx_rate_override: Decimal | None = Field(default=None, gt=0)
-    fx_rate_override: Decimal | None = Field(default=None, gt=0)
+    fee_fx_rate_override: RateIn | None = Field(default=None, gt=0)
+    fx_rate_override: RateIn | None = Field(default=None, gt=0)
     #: Re-fetch the published rate, discarding a previous manual override.
     refetch_fx: bool = False
-    note: str | None = None
+    note: str | None = Field(default=None, max_length=500)
+
+    _trade_date_in_range = field_validator("trade_date")(_check_trade_date)
 
 
 class InstrumentOut(BaseModel):
@@ -370,7 +393,7 @@ class InstrumentOut(BaseModel):
 
 
 class InstrumentCreate(BaseModel):
-    yf_symbol: str = Field(min_length=1, max_length=32)
+    yf_symbol: str = Field(pattern=YF_SYMBOL_PATTERN)
 
 
 class InstrumentSearchOut(BaseModel):

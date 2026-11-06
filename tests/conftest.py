@@ -110,3 +110,15 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "live: hits real network endpoints; excluded from the default run"
     )
+
+
+@pytest.fixture(autouse=True)
+def _reset_abuse_limits():
+    """In-memory abuse counters are process-wide; keep tests independent."""
+    from app.services import guest_access, instruments
+
+    guest_access.reset_issue_limits()
+    instruments.reset_creation_budget()
+    yield
+    guest_access.reset_issue_limits()
+    instruments.reset_creation_budget()

@@ -188,3 +188,30 @@ def test_account_delete_revokes_sessions_and_cascades_user_data(privacy_client) 
     assert session.get(Portfolio, portfolio_id) is None
     assert session.scalar(select(models.LoginIdentity).where(models.LoginIdentity.user_id == user_id)) is None
     assert session.scalar(select(models.TaxProfile).where(models.TaxProfile.user_id == user_id)) is None
+
+
+def test_csv_text_cells_that_look_like_formulas_are_quoted() -> None:
+    from app.services.privacy import _CSV_COLUMNS, _csv_row
+
+    cells = dict(
+        zip(
+            _CSV_COLUMNS,
+            _csv_row(
+                "transaction",
+                note="=HYPERLINK(\"http://x\")",
+                fx_provider="-2+3",
+                fee_fx_provider="\tx",
+                payload_json="@SUM(A1)",
+                quantity=Decimal("-1.5"),
+                price_native=Decimal("10"),
+                trade_date=date(2026, 1, 2),
+            ),
+        )
+    )
+    assert cells["note"] == "'=HYPERLINK(\"http://x\")"
+    assert cells["fx_provider"] == "'-2+3"
+    assert cells["fee_fx_provider"] == "'\tx"
+    assert cells["payload_json"] == "'@SUM(A1)"
+    assert cells["quantity"] == "-1.5"
+    assert cells["price_native"] == "10"
+    assert cells["trade_date"] == "2026-01-02"

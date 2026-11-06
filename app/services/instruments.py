@@ -7,6 +7,10 @@ and reads its currency, so nobody types an exchange, currency, or display name.
 
 from __future__ import annotations
 
+import re
+import threading
+import time
+from collections import defaultdict, deque
 from dataclasses import dataclass
 
 from sqlalchemy import func, or_, select
@@ -30,8 +34,42 @@ YAHOO_EXCHANGES = {
 }
 
 
+#: Characters a Yahoo symbol may use; the schemas enforce the same pattern.
+SYMBOL_PATTERN = re.compile(r"[A-Za-z0-9^][A-Za-z0-9.=^-]{0,31}")
+
+#: Shared instruments one workspace may create per rolling window.
+CREATION_LIMIT = 20
+CREATION_WINDOW_SECONDS = 24 * 3600
+
+
 class InstrumentRejected(ValueError):
     """The symbol cannot be added (no prices, no currency, or unknown to Yahoo)."""
+
+
+class InstrumentBudgetExceeded(InstrumentRejected):
+    """The workspace created too many new instruments in the last 24 hours."""
+
+
+_created: dict[int | None, deque[float]] = defaultdict(deque)
+_created_lock = threading.Lock()
+
+
+def reset_creation_budget() -> None:
+    with _created_lock:
+        _created.clear()
+
+
+def _budget_left(workspace_id: int | None, now: float) -> bool:
+    with _created_lock:
+        stamps = _created[workspace_id]
+        while stamps and stamps[0] <= now - CREATION_WINDOW_SECONDS:
+            stamps.popleft()
+        return len(stamps) < CREATION_LIMIT
+
+
+def _spend_budget(workspace_id: int | None, now: float) -> None:
+    with _created_lock:
+        _created[workspace_id].append(now)
 
 
 @dataclass(frozen=True)
@@ -47,13 +85,6 @@ class SearchResult:
 def _exchange(yahoo_code: str) -> str:
     code = yahoo_code.upper()
     return YAHOO_EXCHANGES.get(code, code)[:16]
-
-
-def _suggested_ticker(session: Session, yf_symbol: str) -> str:
-    """The symbol without its market suffix, unless another instrument already uses it."""
-    base = yf_symbol.split(".", 1)[0].upper()
-    taken = session.scalar(select(Instrument.id).where(Instrument.ticker == base))
-    return yf_symbol.upper() if taken else base
 
 
 def search(session: Session, query: str, limit: int = 8) -> list[SearchResult]:
@@ -81,13 +112,15 @@ def search(session: Session, query: str, limit: int = 8) -> list[SearchResult]:
     seen = {i.yf_symbol.upper() for i in known}
     for match in yf_client.search_symbols(text, limit):
         symbol = match["symbol"].upper()
+        if not SYMBOL_PATTERN.fullmatch(symbol):
+            continue
         if symbol in seen or len(results) >= limit:
             continue
         seen.add(symbol)
         results.append(
             SearchResult(
                 symbol,
-                _suggested_ticker(session, symbol),
+                symbol,
                 match["name"][:128],
                 _exchange(match["exchange"]),
                 None,
@@ -97,14 +130,25 @@ def search(session: Session, query: str, limit: int = 8) -> list[SearchResult]:
     return results
 
 
-def ensure_instrument(session: Session, yf_symbol: str) -> Instrument:
-    """The instrument for `yf_symbol`, adding it after checking Yahoo has prices for it."""
+def ensure_instrument(
+    session: Session, yf_symbol: str, workspace_id: int | None = None
+) -> Instrument:
+    """The instrument for `yf_symbol`, adding it after checking Yahoo has prices for it.
+
+    A new instrument takes the full symbol as its ticker, so nobody can claim a short
+    ticker in the shared table. Each workspace may add `CREATION_LIMIT` new instruments
+    per rolling day; finding an existing one is free.
+    """
     symbol = yf_symbol.strip().upper()
-    if not symbol or len(symbol) > 32:
+    if not SYMBOL_PATTERN.fullmatch(symbol):
         raise InstrumentRejected("invalid symbol")
     existing = session.scalar(select(Instrument).where(func.upper(Instrument.yf_symbol) == symbol))
     if existing is not None:
         return existing
+    if session.scalar(select(Instrument.id).where(Instrument.ticker == symbol)) is not None:
+        raise InstrumentRejected(f"ticker {symbol} is taken")
+    if not _budget_left(workspace_id, time.monotonic()):
+        raise InstrumentBudgetExceeded("too many new instruments")
 
     if yf_client.fetch_last_close(symbol) is None:
         raise InstrumentRejected(f"no price data for {symbol}")
@@ -114,7 +158,7 @@ def ensure_instrument(session: Session, yf_symbol: str) -> Instrument:
     meta = next((m for m in yf_client.search_symbols(symbol, 20) if m["symbol"].upper() == symbol), None)
 
     instrument = Instrument(
-        ticker=_suggested_ticker(session, symbol),
+        ticker=symbol,
         exchange=_exchange(meta["exchange"]) if meta else "",
         yf_symbol=symbol,
         currency=currency,
@@ -123,4 +167,5 @@ def ensure_instrument(session: Session, yf_symbol: str) -> Instrument:
     )
     session.add(instrument)
     session.flush()
+    _spend_budget(workspace_id, time.monotonic())
     return instrument

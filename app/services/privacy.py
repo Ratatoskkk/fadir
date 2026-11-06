@@ -151,10 +151,18 @@ def _export_data(session: Session, portfolio: Portfolio) -> PortfolioExportOut:
     )
 
 
+def _csv_text(value: object) -> str:
+    """Text cells that a spreadsheet would read as a formula get a leading quote."""
+    text = _text(value)
+    if isinstance(value, str) and text.startswith(("=", "+", "-", "@", "\t", "\r")):
+        return "'" + text
+    return text
+
+
 def _csv_row(record_type: str, **values: object) -> list[str]:
     row = {column: "" for column in _CSV_COLUMNS}
     row["record_type"] = record_type
-    row.update({key: _text(value) for key, value in values.items()})
+    row.update({key: _csv_text(value) for key, value in values.items()})
     return [row[column] for column in _CSV_COLUMNS]
 
 

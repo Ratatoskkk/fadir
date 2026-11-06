@@ -6,7 +6,7 @@ Yahoo is monkeypatched.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -830,7 +830,7 @@ def test_create_instrument_takes_currency_name_and_exchange_from_yahoo(client, m
     assert r.status_code == 201
     body = r.json()
     assert (body["ticker"], body["yf_symbol"], body["currency"], body["exchange"], body["name"]) == (
-        "THYAO", "THYAO.IS", "TRY", "IST", "Turk Hava Yollari"
+        "THYAO.IS", "THYAO.IS", "TRY", "IST", "Turk Hava Yollari"
     )
 
 
@@ -966,3 +966,142 @@ def test_one_failing_symbol_degrades_one_row_only(client, session):
         Decimal(p["market_value_try"]) for p in healthy
     )
     assert any("2330" in w for w in body["warnings"])
+
+
+# -- security findings -------------------------------------------------------------
+
+
+def test_health_does_not_leak_another_workspaces_first_trade(client, session):
+    other = Workspace(portfolios=[Portfolio(name="Other")])
+    session.add(other)
+    session.flush()
+    aapl = session.query(Instrument).filter_by(ticker="AAPL").one()
+    session.add(
+        Transaction(
+            instrument_id=aapl.id,
+            portfolio_id=other.portfolios[0].id,
+            trade_date=date(2019, 3, 4),
+            side=Side.BUY,
+            quantity=Decimal("1"),
+            price_native=Decimal("1"),
+            fees_native=Decimal("0"),
+            fx_rate_to_try=Decimal("5"),
+            fx_rate_date=date(2019, 3, 4),
+            fx_provider="yfinance",
+        )
+    )
+    session.commit()
+    body = client.get("/api/health").json()
+    assert "2019-03-04" not in str(body)
+    assert body["settings"]["history_start"] is None
+
+
+def test_new_instrument_ticker_is_the_full_symbol_and_never_squats(client, monkeypatch, session):
+    _stub_yahoo(monkeypatch)
+    r = client.post("/api/instruments", json={"yf_symbol": "ZZZ.MX"})
+    assert r.status_code == 201
+    assert r.json()["ticker"] == "ZZZ.MX"
+    # A different symbol whose full ticker is already another row's ticker: 422, not 500.
+    session.add(Instrument(ticker="SQUAT", exchange="X", yf_symbol="OTHER", currency="USD", name="o"))
+    session.commit()
+    assert client.post("/api/instruments", json={"yf_symbol": "SQUAT"}).status_code == 422
+
+
+def test_search_suggests_the_full_symbol_as_ticker(client, monkeypatch):
+    _stub_yahoo(monkeypatch, matches=[{"symbol": "NVDA.MX", "name": "NVIDIA", "exchange": "MEX"}])
+    rows = client.get("/api/instruments/search", params={"q": "nvda"}).json()
+    assert [(r["yf_symbol"], r["ticker"]) for r in rows if not r["known"]] == [("NVDA.MX", "NVDA.MX")]
+
+
+def test_search_drops_symbols_outside_the_allowlist(client, monkeypatch):
+    _stub_yahoo(monkeypatch, matches=[{"symbol": "BAD SYM<", "name": "x", "exchange": "NMS"}])
+    rows = client.get("/api/instruments/search", params={"q": "bad"}).json()
+    assert all(r["known"] for r in rows)
+
+
+@pytest.mark.parametrize("symbol", ["A B", "<script>", "-X", "A/B", "A" * 33, "é"])
+def test_yf_symbol_outside_the_allowlist_is_rejected(client, monkeypatch, symbol):
+    _stub_yahoo(monkeypatch)
+    assert client.post("/api/instruments", json={"yf_symbol": symbol}).status_code == 422
+    body = {"yf_symbol": symbol, "trade_date": "2026-11-02", "quantity": "1", "price_native": "1"}
+    assert client.post("/api/transactions", json=body).status_code == 422
+
+
+def test_ensure_instrument_enforces_the_allowlist(session):
+    from app.services.instruments import InstrumentRejected, ensure_instrument
+
+    with pytest.raises(InstrumentRejected):
+        ensure_instrument(session, "BAD SYM")
+
+
+def test_instrument_creation_budget_is_per_workspace(client, monkeypatch):
+    from app.services import instruments as svc
+
+    _stub_yahoo(monkeypatch)
+    svc.reset_creation_budget()
+    try:
+        for n in range(svc.CREATION_LIMIT):
+            assert client.post("/api/instruments", json={"yf_symbol": f"NEW{n}"}).status_code == 201
+        # Existing symbols are free; a 21st new one is refused.
+        assert client.post("/api/instruments", json={"yf_symbol": "NEW0"}).status_code == 201
+        assert client.post("/api/instruments", json={"yf_symbol": "NEWX"}).status_code == 429
+        body = {"yf_symbol": "NEWY", "trade_date": "2026-11-02", "quantity": "1", "price_native": "1"}
+        assert client.post("/api/transactions", json=body).status_code == 429
+    finally:
+        svc.reset_creation_budget()
+
+
+def test_history_rejects_out_of_range_dates(client):
+    assert client.get("/api/portfolio/history", params={"from": "1969-12-31"}).status_code == 422
+    far = (TODAY + timedelta(days=2)).isoformat()
+    assert client.get("/api/portfolio/history", params={"to": far}).status_code == 422
+    tomorrow = (TODAY + timedelta(days=1)).isoformat()
+    assert client.get("/api/portfolio/history", params={"from": "1970-01-01", "to": tomorrow}).status_code == 200
+
+
+def _txn_body(**extra):
+    return {"ticker": "AAPL", "trade_date": "2026-11-02", "quantity": "1", "price_native": "1", **extra}
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"note": "n" * 501},
+        {"trade_date": "1969-12-31"},
+        {"trade_date": (TODAY + timedelta(days=2)).isoformat()},
+        {"quantity": "1" + "0" * 17},  # 18 integer digits > 24 - 8
+        {"quantity": "0.123456789"},
+        {"price_native": "0.1234567890123"},
+        {"fees_native": "0.123456789"},
+        {"fx_rate_override": "1.12345678901"},
+    ],
+)
+def test_transaction_create_bounds(client, extra):
+    assert client.post("/api/transactions", json=_txn_body(**extra)).status_code == 422
+
+
+def test_transaction_patch_bounds(client):
+    txn_id = client.get("/api/transactions").json()[0]["id"]
+    for extra in ({"note": "n" * 501}, {"trade_date": "1969-12-31"}, {"quantity": "0.123456789"}):
+        assert client.patch(f"/api/transactions/{txn_id}", json=extra).status_code == 422
+
+
+def test_portfolio_transaction_cap(client, session):
+    portfolio = session.query(Portfolio).one()
+    aapl = session.query(Instrument).filter_by(ticker="AAPL").one()
+    held = session.query(Transaction).filter_by(portfolio_id=portfolio.id).count()
+    session.execute(
+        Transaction.__table__.insert(),
+        [
+            dict(
+                portfolio_id=portfolio.id, instrument_id=aapl.id, trade_date=date(2026, 1, 2),
+                side=Side.BUY, quantity=Decimal("1"), price_native=Decimal("1"),
+                fees_native=Decimal("0"), fx_rate_to_try=Decimal("40"),
+                fx_rate_date=date(2026, 1, 2), fx_provider="yfinance",
+                created_at=datetime(2026, 1, 2), updated_at=datetime(2026, 1, 2),
+            )
+            for _ in range(10000 - held)
+        ],
+    )
+    session.commit()
+    assert client.post("/api/transactions", json=_txn_body()).status_code == 422

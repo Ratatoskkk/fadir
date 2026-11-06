@@ -7,24 +7,63 @@ Returned identifiers carry no authority after the caller ends the transaction.
 from __future__ import annotations
 
 import base64
+from collections import deque
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 import hashlib
 import logging
 import re
 import secrets
+import threading
+import time
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
-from sqlalchemy import inspect, select, update
+from sqlalchemy import delete, inspect, select, update
 from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import Base, GuestAccess, Workspace
+from app.models import (
+    Base,
+    GuestAccess,
+    LoginTransaction,
+    Portfolio,
+    Snapshot,
+    Transaction,
+    Workspace,
+)
 
 
 Clock = Callable[[], datetime]
 _GUEST = GuestAccess.__table__
 _WORKSPACE = Workspace.__table__
+
+
+#: New guests one client may create per rolling hour.
+ISSUE_LIMIT = 20
+ISSUE_WINDOW_SECONDS = 3600
+_issued: dict[str, deque[float]] = {}
+_issued_lock = threading.Lock()
+
+
+def reset_issue_limits() -> None:
+    with _issued_lock:
+        _issued.clear()
+
+
+def allow_issue(client_key: str) -> bool:
+    """Count one new-guest attempt for `client_key`; False once it is over the limit."""
+    now = time.monotonic()
+    with _issued_lock:
+        if len(_issued) > 10000:
+            for key in [k for k, v in _issued.items() if not v or v[-1] <= now - ISSUE_WINDOW_SECONDS]:
+                del _issued[key]
+        stamps = _issued.setdefault(client_key, deque())
+        while stamps and stamps[0] <= now - ISSUE_WINDOW_SECONDS:
+            stamps.popleft()
+        if len(stamps) >= ISSUE_LIMIT:
+            return False
+        stamps.append(now)
+        return True
 
 
 class GuestAccessError(RuntimeError):
@@ -226,3 +265,39 @@ def revoke(session: Session, token: str, *, clock: Clock) -> bool:
                            .values(revoked_at=now))
         return True
     return _run(session, operation)
+
+
+def purge_expired_guests(session: Session, now: datetime) -> int:
+    """Delete Guest Workspaces unused for 90 days (or revoked) with all their data.
+
+    Signed-in workspaces (user_id set) are never touched. Also drops login transactions
+    that expired more than a day ago. Returns the number of workspaces deleted.
+    """
+    def aware(value: datetime) -> datetime:
+        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+
+    now = aware(now)
+    cutoff = now - timedelta(days=90)
+    guests: dict[int, bool] = {}
+    for workspace_id, last_access_at, revoked_at in session.execute(
+        select(_GUEST.c.workspace_id, _GUEST.c.last_access_at, _GUEST.c.revoked_at)
+        .join(_WORKSPACE, _WORKSPACE.c.id == _GUEST.c.workspace_id)
+        .where(_WORKSPACE.c.user_id.is_(None))
+    ):
+        dead = revoked_at is not None or aware(last_access_at) <= cutoff
+        guests[workspace_id] = guests.get(workspace_id, True) and dead
+    doomed = [workspace_id for workspace_id, dead in guests.items() if dead]
+
+    for start in range(0, len(doomed), 200):
+        chunk = doomed[start : start + 200]
+        portfolios = select(Portfolio.id).where(Portfolio.workspace_id.in_(chunk))
+        session.execute(delete(Snapshot).where(Snapshot.portfolio_id.in_(portfolios)))
+        session.execute(delete(Transaction).where(Transaction.portfolio_id.in_(portfolios)))
+        session.execute(delete(Portfolio).where(Portfolio.workspace_id.in_(chunk)))
+        session.execute(delete(GuestAccess).where(GuestAccess.workspace_id.in_(chunk)))
+        session.execute(delete(Workspace).where(Workspace.id.in_(chunk), Workspace.user_id.is_(None)))
+
+    session.execute(
+        delete(LoginTransaction).where(LoginTransaction.expires_at < now - timedelta(days=1))
+    )
+    return len(doomed)

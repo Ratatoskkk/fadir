@@ -175,3 +175,28 @@ def test_multiple_instruments_accumulate_within_one_portfolio(session):
     session.flush()
     estimate = service.estimate_for_user(user.id, None, TaxConfig(brackets=(TaxBracket(None, Decimal("1")),)), 2025)
     assert estimate.gross_gain_try == Decimal("20")
+
+
+def test_put_tax_profile_rejects_unknown_year_and_oversized_fields(session):
+    from fastapi import HTTPException
+    from pydantic import ValidationError
+    from app.api.routes import put_tax_profile
+    from app.api.request_authority import RequestAuthority
+    from app.schemas import TaxProfileIn
+
+    user = User(workspace=Workspace())
+    session.add(user); session.flush()
+    authority = RequestAuthority(mode="user", user_id=user.id, workspace_id=user.workspace.id)
+    base = dict(tax_year=2001, source_url="https://x", source_version="v", assumptions=[], disclaimer="d")
+    with pytest.raises(HTTPException) as raised:
+        put_tax_profile(TaxProfileIn(**base), session, authority)
+    assert raised.value.status_code == 422
+    for bad in (
+        {"source_url": "u" * 513},
+        {"source_version": "v" * 129},
+        {"disclaimer": "d" * 4001},
+        {"assumptions": ["a"] * 21},
+        {"assumptions": ["a" * 501]},
+    ):
+        with pytest.raises(ValidationError):
+            TaxProfileIn(**{**base, **bad})
