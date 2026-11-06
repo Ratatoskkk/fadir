@@ -93,6 +93,16 @@ def test_profile_loads_automatically_from_official_source(session):
     assert estimate.tax_try == Decimal("30500")
 
 
+def test_official_tariff_in_force_replaces_configured_brackets():
+    from app.calc.tax_sources import with_official_brackets
+    stale = TaxConfig(brackets=(TaxBracket(None, Decimal("0.99")),), other_income_try=Decimal("5"))
+    current = with_official_brackets(stale, 2026)
+    assert current.brackets == TURKEY_TAX_YEARS[2026].brackets
+    assert current.other_income_try == Decimal("5")
+    assert with_official_brackets(stale, 2031).brackets == TURKEY_TAX_YEARS[max(TURKEY_TAX_YEARS)].brackets
+    assert with_official_brackets(stale, 2001) is stale
+
+
 def test_year_without_official_tariff_is_not_found(session):
     from fastapi import HTTPException
     from app.api.routes import get_tax_profile

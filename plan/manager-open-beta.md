@@ -1352,8 +1352,12 @@ Tax auto-load (owner instruction 2026-11-06), source accepted locally but not de
   owner page, `/api/tax/profile` and `/api/tax/estimate?year=2026` returned 200, and the
   panel showed the Tebliğ 332 source with a 15% marginal rate, without any manual step.
   It showed no alerts at 375px.
-- Remaining: the hero liquidation estimate still reads the 2025 brackets in
-  `config.yaml`. The remaining G4–G9 outcomes are unchanged.
+- Hero, history, and intraday tax: in source, these figures now use
+  `with_official_brackets`, the newest official tariff in force this year. The 2025
+  bracket block is removed from `config.yaml`. The full offline suite shows 520 passed,
+  109 skipped, and the same 2 pre-existing zero-FX failures. It is not deployed yet: the
+  deploy is waiting on owner approval, and the VM still runs `10c125b`'s backend.
+- The remaining G4–G9 outcomes are unchanged.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration

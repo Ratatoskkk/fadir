@@ -86,8 +86,7 @@ from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 from app.services.tax_profile import TaxProfileData, TaxProfileService
 from app.calc.tax import estimate_tax
-from app.calc.tax_sources import turkey_tax_year
-import dataclasses
+from app.calc.tax_sources import turkey_tax_year, with_official_brackets
 import json
 from app.services import guest_access
 from app.services import login_transactions
@@ -148,7 +147,7 @@ def get_tax_estimate(session: RequestSessionDep, authority: AuthorityDep, year: 
     source = turkey_tax_year(year)
     if profile is None or source is None:
         raise HTTPException(404, "Tax Profile not found")
-    config = dataclasses.replace(get_settings().tax, brackets=source.brackets)
+    config = with_official_brackets(get_settings().tax, year)
     estimate = service.estimate_for_user(authority.user_id, None, config, year)
     return TaxOut(applicable=estimate.applicable, gross_gain_try=estimate.gross_gain_try, taxable_gain_try=estimate.taxable_gain_try, tax_try=estimate.tax_try, net_after_tax_try=estimate.net_after_tax_try, effective_rate=estimate.effective_rate, marginal_rate=estimate.marginal_rate, indexing_applied=estimate.indexing_applied, indexing_rate=estimate.indexing_rate, price_portion_try=estimate.price_portion_try, fx_portion_try=estimate.fx_portion_try, tax_on_price_try=estimate.tax_on_price_try, tax_on_fx_try=estimate.tax_on_fx_try, assumptions=estimate.assumptions, disclaimer=profile.disclaimer, tax_year=profile.tax_year, jurisdiction=profile.jurisdiction, source_url=profile.source_url, source_version=profile.source_version)
 

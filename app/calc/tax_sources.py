@@ -8,10 +8,11 @@ tariff applies to securities gains.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import date
 from decimal import Decimal
 
-from app.calc.tax import TaxBracket
+from app.calc.tax import TaxBracket, TaxConfig
 
 TURKEY_DISCLAIMER = (
     "Yaklaşık tahmindir, vergi beyanı veya danışmanlığı değildir. "
@@ -61,3 +62,15 @@ TURKEY_TAX_YEARS: dict[int, TaxYearSource] = {
 
 def turkey_tax_year(tax_year: int) -> TaxYearSource | None:
     return TURKEY_TAX_YEARS.get(tax_year)
+
+
+def with_official_brackets(config: TaxConfig, tax_year: int | None = None) -> TaxConfig:
+    """`config` with the newest official tariff in force for `tax_year` (default: this year).
+
+    Before a new year's Tebliğ is added, the previous year's tariff stays in use.
+    """
+    year = tax_year if tax_year is not None else date.today().year
+    in_force = [y for y in TURKEY_TAX_YEARS if y <= year]
+    if not in_force:
+        return config
+    return replace(config, brackets=TURKEY_TAX_YEARS[max(in_force)].brackets)

@@ -57,14 +57,8 @@ tax:
     rate: 0.0        # e.g. 0.42 for a 42% Yİ-ÜFE rise over the holding period
     threshold: 0.10  # statutory minimum; do not change without checking the law
 
-  # GVK Madde 103 tariff. These are the 2025 figures — brackets are revalued every year,
-  # so update them for the tax year you are modelling.
-  brackets:
-    - { upto: 158000,  rate: 0.15 }
-    - { upto: 330000,  rate: 0.20 }
-    - { upto: 800000,  rate: 0.27 }
-    - { upto: 4300000, rate: 0.35 }
-    - { upto: null,    rate: 0.40 }
+  # GVK Madde 103 brackets come from the official per-year tariffs in
+  # app/calc/tax_sources.py; add each new year there from its Gelir Vergisi Genel Tebliği.
 
 cache:
   intraday_quote_ttl_seconds: 60

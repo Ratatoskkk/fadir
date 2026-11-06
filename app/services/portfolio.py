@@ -30,6 +30,7 @@ from app.calc.fifo import InsufficientLots
 from app.calc.history import HistoryPoint, PositionHistoryInput
 from app.calc.intraday import IntradayPoint, build_grid, build_intraday_series
 from app.calc.tax import TaxEstimate, disabled_estimate, estimate_tax
+from app.calc.tax_sources import with_official_brackets
 from app.calc.types import Side as CalcSide
 from app.calc.types import TxnInput
 from app.config import Settings
@@ -419,7 +420,7 @@ class PortfolioService:
         totals = summarise_portfolio(positions)
         liq = liquidation(totals, self.settings.liquidation.haircut_pct)
 
-        tax_config = self.settings.tax
+        tax_config = with_official_brackets(self.settings.tax)
         tax = (
             estimate_tax(
                 liq.net_proceeds_try,
@@ -526,7 +527,7 @@ class PortfolioService:
             end,
             freq=freq,
             max_lookback_days=lookback,
-            tax_config=self.settings.tax,
+            tax_config=with_official_brackets(self.settings.tax),
         )
 
     # -- intraday ------------------------------------------------------------------
@@ -598,6 +599,6 @@ class PortfolioService:
         grid = build_grid(bounds[0], bounds[1], step)
 
         points = build_intraday_series(
-            positions, prices, fx_rates, grid, tax_config=self.settings.tax
+            positions, prices, fx_rates, grid, tax_config=with_official_brackets(self.settings.tax)
         )
         return points, errors, available
