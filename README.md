@@ -14,10 +14,8 @@ sign-in provides recovery and persistent identity. Each Portfolio has a Base Cur
 |---|---|
 | Product goal and settled beta choices | [Open Beta Brief](docs/OPEN_BETA_BRIEF.md) |
 | Domain terms | [CONTEXT.md](CONTEXT.md) |
-| Agent rules and model settings | [AGENTS.md](AGENTS.md) |
-| Current progress, authority, next lease | [Manager board](plan/manager-open-beta.md) |
-| Specialist roles and handoffs | [Coordination index](plan/README.md) |
-| Prompt for the next Senior | [Senior continuation prompt](docs/SENIOR_AGENT_SETUP_PROMPT.md) |
+| Agent instructions | [AGENTS.md](AGENTS.md) |
+| Progress and deployment history | [Manager board](plan/manager-open-beta.md) |
 | Original portfolio migration | [Private Migration Runbook](docs/PRIVATE_MIGRATION_RUNBOOK.md) |
 
 The board records remaining acceptance work. A reachable service is not a completed
@@ -120,11 +118,7 @@ SQLite snapshot: copying `fadir.db` alone does not capture active WAL state.
 to dated evidence, not this README. Tests cover calculation, ownership, request/session
 boundaries, transitions, privacy, and migration behavior.
 
-Follow the [proof policy](AGENTS.md#proof-and-handoff): focused failure before repair,
-focused and affected checks afterward, one final offline suite for a product lease,
-and only the additional proof classes the lease requires. Frontend changes require
-synthetic desktop and 375px browser evidence. A browser harness must honor the API
-contract; fixture failures alone do not establish product defects.
+Frontend changes should be checked in a browser at desktop and 375px widths with synthetic data.
 
 The current board keeps local, synthetic VM, hosted, private, and public acceptance
 separate. Off-site backups and lost-Portfolio recovery guarantees are deferred; restart,
@@ -154,8 +148,7 @@ release rollback, and service reconstruction still require appropriate proof.
   refresh it before any provider decision.
 - [Local v1 manual](docs/archive/local-v1-readme.md) preserves the old chart/design
   explanation, launcher detail, and measurements. It is not current operational guidance.
-- [Coordination history](plan/README.md#historical-reference) preserves previous leases
-  and proof records. Read it only to answer a named historical question.
+- [Board history](plan/manager-open-beta-history.md) preserves previous work records.
 
 ## Licence
 

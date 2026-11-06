@@ -98,34 +98,16 @@ Deletion revokes active sessions at once. If the beta retains encrypted backups,
 
 ## Delivery order
 
-This is the dependency order, not a restart checklist. Resume the live board checkpoint.
+This is the dependency order, not a restart checklist.
 
-1. Maintain the existing Senior and specialist coordination baseline.
-2. Preserve the accepted Average Purchase Price contract and proof.
-3. Add PostgreSQL, migrations, and the User, Workspace, and Portfolio scopes.
-4. Add Guest access, Google sign-in, Claim, Transfer, and Merge.
-5. Add multiple Portfolios, Base Currency, Fee Currency, and the Tax Profile.
-6. Prepare the market-data and cache behavior for public traffic.
-7. Add security, privacy, deletion, export, and abuse proofs.
-8. Create the Hyper-V VM and deploy the service through Cloudflare Tunnel.
-9. Run local, browser, restart, release rollback, service reconstruction, and public acceptance checks.
-
-## Work model
-
-The Senior uses Luna Max (`gpt-5.6-luna`, `max`) and coordinates, reviews, and maintains
-documentation. Specialists use Luna Medium (`gpt-5.6-luna`, `medium`) and implement
-product and operational work, one specialist at a time.
-
-The Senior checks each specialist's actual changes and required evidence. When they
-meet the acceptance criteria, the Senior commits and pushes the accepted paths under
-existing delivery authority. Incomplete candidates receive a bounded follow-up before
-publication. This responsibility is part of coordination and does not authorize the
-Senior to implement product changes.
-
-The six stable roles and exact dispatch format are in [plan/README.md](../plan/README.md).
-[AGENTS.md](../AGENTS.md) owns the shared proof and handoff policy. The live board owns
-current leases and delivery authority, including existing reviewed commit/push and
-release approval. Do not reimpose the original setup-only approval pause.
+1. Preserve the accepted Average Purchase Price contract and proof.
+2. Add PostgreSQL, migrations, and the User, Workspace, and Portfolio scopes.
+3. Add Guest access, Google sign-in, Claim, Transfer, and Merge.
+4. Add multiple Portfolios, Base Currency, Fee Currency, and the Tax Profile.
+5. Prepare the market-data and cache behavior for public traffic.
+6. Add security, privacy, deletion, export, and abuse proofs.
+7. Create the Hyper-V VM and deploy the service through Cloudflare Tunnel.
+8. Run local, browser, restart, release rollback, service reconstruction, and public acceptance checks.
 
 ## Settled decisions
 

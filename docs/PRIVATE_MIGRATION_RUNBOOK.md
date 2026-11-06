@@ -129,7 +129,6 @@ current; reverse-copy, restore, or destructive cleanup needs its own concrete au
 
 ## Evidence and completion
 
-Use the four handoff sections in [AGENTS.md](../AGENTS.md#proof-and-handoff).
 Private snapshot evidence, synthetic rehearsal, hosted owner acceptance, public probes,
 and service recovery are separate proof classes. Keep raw artifacts outside the repository.
 
