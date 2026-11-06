@@ -117,7 +117,7 @@ export default function TaxProfilePanel({ identityReady }) {
 
         {!identityReady && <p className="hint" role="status">Vergi profili, Google kimlik geçişi tamamlandıktan sonra User Workspace için yüklenir.</p>}
         {status === "loading" && <p className="hint" role="status" aria-live="polite"><span className="spinner" /> Vergi bilgileri yükleniyor…</p>}
-        {status === "missing" && <p className="hint" role="status">{loadedYear} için vergi profili yok.</p>}
+        {status === "missing" && <p className="hint" role="status">{loadedYear} için resmi vergi tarifesi yok.</p>}
         {error && <div className="form-error" role="alert">{error}</div>}
 
         {status === "ready" && profile && estimate && (

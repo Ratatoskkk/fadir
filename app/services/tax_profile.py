@@ -14,7 +14,7 @@ from app.calc.types import TxnInput, Side as CalcSide
 from decimal import Decimal
 
 
-DEFAULT_TR_DISCLAIMER = "Yaklaşık tahmindir, vergi beyanı veya danışmanlığı değildir. Kesin hesap için YMM/SMMM'ye danışın."
+from app.calc.tax_sources import TURKEY_ASSUMPTIONS, TURKEY_DISCLAIMER, turkey_tax_year
 
 
 @dataclass(frozen=True)
@@ -50,6 +50,19 @@ class TaxProfileService:
             profile.disclaimer = data.disclaimer
         self.session.flush()
         return profile
+
+    def ensure_turkey(self, user_id: int, tax_year: int) -> TaxProfile | None:
+        """The User's Turkey profile for `tax_year`, created or refreshed from the official source.
+
+        Returns None when the service has no published tariff for that year.
+        """
+        source = turkey_tax_year(tax_year)
+        if source is None:
+            return None
+        profile = self.get(user_id, "TR", tax_year)
+        if profile is not None and profile.source_version == source.source_version:
+            return profile
+        return self.save(user_id, TaxProfileData("TR", tax_year, "TRY", source.source_url, source.source_version, list(TURKEY_ASSUMPTIONS), TURKEY_DISCLAIMER))
 
     @staticmethod
     def portfolios_for_user(session: Session, user_id: int) -> list[int]:

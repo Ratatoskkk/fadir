@@ -1329,11 +1329,24 @@ with no restart; the rollback copy is `dist.previous.tax-empty-20261106`. Public
 returned 200, the site serves `index-DLzDMQv8.js`, and the signed-in page shows the empty
 state with no alerts at desktop width and at 375px.
 
-Product gap (owner decision needed): no UI can create a Tax Profile, and `PUT
-/api/tax/profile` expects the caller to supply the official source URL, version, and
-disclaimer. `config.yaml` holds only 2025 brackets and no official source. Adding a
-service-owned Turkey source per tax year must come before a create flow. The remaining
-G4–G9 outcomes are unchanged.
+Tax auto-load (owner instruction 2026-11-06), source accepted locally but not deployed:
+- `app/calc/tax_sources.py` holds the official GVK md. 103 non-wage tariffs. 2025
+  comes from Tebliğ 329 (RG 30.12.2024/32768-2. Mük.). 2026 comes from Tebliğ 332
+  (RG 31.12.2025/33124-5. Mük., https://www.resmigazete.gov.tr/eskiler/2025/12/20251231M5-30.pdf),
+  retrieved 2026-11-06.
+- `GET /api/tax/profile` and `GET /api/tax/estimate` now create or refresh the signed-in
+  User's Turkey profile from that source. The estimate uses the requested year's
+  brackets. A year with no official tariff returns 404, and the panel shows
+  "{year} için resmi vergi tarifesi yok."
+- Red proof: against the previous routes, the new auto-load test and the updated
+  estimate test failed with 404. Afterwards `tests/test_tax_profile.py` and
+  `tests/test_tax.py` pass. The full offline suite shows 519 passed, 109 skipped, and
+  2 failed. The 2 failures are `test_api.py` zero-FX fixtures that also fail on
+  unmodified `main` (`ck_transaction_fx_positive`).
+- Not deployed: the backend file swap and `fadir.service` restart were blocked pending
+  owner approval. The VM files still match the pre-change `main` hashes.
+- Remaining: the hero liquidation estimate still reads the 2025 brackets in
+  `config.yaml`. The remaining G4–G9 outcomes are unchanged.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration

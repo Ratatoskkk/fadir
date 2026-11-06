@@ -86,6 +86,8 @@ from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 from app.services.tax_profile import TaxProfileData, TaxProfileService
 from app.calc.tax import estimate_tax
+from app.calc.tax_sources import turkey_tax_year
+import dataclasses
 import json
 from app.services import guest_access
 from app.services import login_transactions
@@ -120,7 +122,7 @@ def _csrf_guard(request: Request) -> None:
 def get_tax_profile(session: RequestSessionDep, authority: AuthorityDep, year: int = Query(..., ge=2000)) -> TaxProfileOut:
     if authority.user_id is None:
         raise HTTPException(403, "Tax Profile requires a signed-in User")
-    profile = TaxProfileService(session).get(authority.user_id, "TR", year)
+    profile = TaxProfileService(session).ensure_turkey(authority.user_id, year)
     if profile is None:
         raise HTTPException(404, "Tax Profile not found")
     return TaxProfileOut(id=profile.id, jurisdiction=profile.jurisdiction, tax_year=profile.tax_year, currency=profile.currency, source_url=profile.source_url, source_version=profile.source_version, assumptions=json.loads(profile.assumptions_json), disclaimer=profile.disclaimer)
@@ -141,10 +143,13 @@ def put_tax_profile(payload: TaxProfileIn, session: RequestSessionDep, authority
 def get_tax_estimate(session: RequestSessionDep, authority: AuthorityDep, year: int = Query(..., ge=2000)) -> TaxOut:
     if authority.user_id is None:
         raise HTTPException(403, "Tax Profile requires a signed-in User")
-    profile = TaxProfileService(session).get(authority.user_id, "TR", year)
-    if profile is None:
+    service = TaxProfileService(session)
+    profile = service.ensure_turkey(authority.user_id, year)
+    source = turkey_tax_year(year)
+    if profile is None or source is None:
         raise HTTPException(404, "Tax Profile not found")
-    estimate = TaxProfileService(session).estimate_for_user(authority.user_id, None, get_settings().tax, year)
+    config = dataclasses.replace(get_settings().tax, brackets=source.brackets)
+    estimate = service.estimate_for_user(authority.user_id, None, config, year)
     return TaxOut(applicable=estimate.applicable, gross_gain_try=estimate.gross_gain_try, taxable_gain_try=estimate.taxable_gain_try, tax_try=estimate.tax_try, net_after_tax_try=estimate.net_after_tax_try, effective_rate=estimate.effective_rate, marginal_rate=estimate.marginal_rate, indexing_applied=estimate.indexing_applied, indexing_rate=estimate.indexing_rate, price_portion_try=estimate.price_portion_try, fx_portion_try=estimate.fx_portion_try, tax_on_price_try=estimate.tax_on_price_try, tax_on_fx_try=estimate.tax_on_fx_try, assumptions=estimate.assumptions, disclaimer=profile.disclaimer, tax_year=profile.tax_year, jurisdiction=profile.jurisdiction, source_url=profile.source_url, source_version=profile.source_version)
 
 

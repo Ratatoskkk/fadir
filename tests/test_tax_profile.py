@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models import TaxProfile, User, Workspace, Portfolio, Instrument, Transaction, Side
 from app.services.tax_profile import TaxProfileData, TaxProfileService
 from app.calc.tax import TaxConfig, TaxBracket
+from app.calc.tax_sources import TURKEY_TAX_YEARS
 from decimal import Decimal
 
 
@@ -63,9 +64,44 @@ def test_api_estimate_uses_requested_year_and_all_owned_portfolios(session):
     session.flush()
     response = get_tax_estimate(session, RequestAuthority(mode="user", user_id=user.id, workspace_id=user.workspace.id), 2025)
     assert response.tax_year == 2025
-    assert response.source_version == "2026-02"
-    assert response.disclaimer == "estimate"
+    assert response.source_version == TURKEY_TAX_YEARS[2025].source_version
     assert response.tax_try > Decimal("0")
+
+
+def test_profile_loads_automatically_from_official_source(session):
+    from app.api.routes import get_tax_estimate, get_tax_profile
+    from app.api.request_authority import RequestAuthority
+    user = User(workspace=Workspace(portfolios=[Portfolio(name="One")]))
+    session.add(user); session.flush()
+    instrument = Instrument(ticker="AUTO", exchange="X", yf_symbol="AUTO.X", currency="TRY", name="Auto")
+    session.add(instrument); session.flush()
+    p = user.workspace.portfolios[0]
+    session.add_all([
+        Transaction(portfolio_id=p.id, instrument_id=instrument.id, trade_date=datetime(2026, 1, 2), side=Side.BUY, quantity=1, price_native=0, fees_native=0, fx_rate_to_try=1, fx_rate_date=datetime(2026, 1, 2).date(), fx_provider="synthetic"),
+        Transaction(portfolio_id=p.id, instrument_id=instrument.id, trade_date=datetime(2026, 2, 2), side=Side.SELL, quantity=1, price_native=200000, fees_native=0, fx_rate_to_try=1, fx_rate_date=datetime(2026, 2, 2).date(), fx_provider="synthetic"),
+    ]); session.flush()
+    authority = RequestAuthority(mode="user", user_id=user.id, workspace_id=user.workspace.id)
+
+    profile = get_tax_profile(session, authority, 2026)
+    assert profile.tax_year == 2026
+    assert profile.source_url.startswith("https://www.resmigazete.gov.tr/")
+    assert profile.disclaimer
+    assert get_tax_profile(session, authority, 2026).id == profile.id
+
+    estimate = get_tax_estimate(session, authority, 2026)
+    # 2026 tariff (Tebliğ 332): 190,000 at 15%, the next 10,000 at 20%.
+    assert estimate.tax_try == Decimal("30500")
+
+
+def test_year_without_official_tariff_is_not_found(session):
+    from fastapi import HTTPException
+    from app.api.routes import get_tax_profile
+    from app.api.request_authority import RequestAuthority
+    user = User(workspace=Workspace())
+    session.add(user); session.flush()
+    with pytest.raises(HTTPException) as raised:
+        get_tax_profile(session, RequestAuthority(mode="user", user_id=user.id, workspace_id=user.workspace.id), 2001)
+    assert raised.value.status_code == 404
 
 
 def test_user_estimate_uses_stored_foreign_fee_fx_provenance(session):
