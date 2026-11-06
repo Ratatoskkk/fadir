@@ -1366,8 +1366,13 @@ Tax auto-load (owner instruction 2026-11-06), source accepted locally but not de
   taxable gain of 0 (overall loss), so the page cannot show a visual difference.
 - The remaining G4–G9 outcomes are unchanged.
 
-Backend for the frontend overhaul (owner instruction 2026-11-06). Source is accepted
-locally and not yet deployed:
+Backend for the frontend overhaul (owner instruction 2026-11-06). Commit `4c4caad` was
+deployed to the VM on 2026-11-06 at 13:08 UTC after owner approval. All 10 files matched
+`7636a47` before the deploy and `4c4caad` after it, with one restart. Rollback copies are
+in `/home/fadir-agent/fadir-tests/rollback-overhaul-backend-20261106` (the three new files
+are listed for deletion). Loopback and public health returned 200. After the restart, the
+shared cache had 20–22 rows per month in Sept and Oct for all 6 instruments and 4 FX
+pairs (counts only). The owner's chart has not been checked in the browser:
 - History drop to zero: the shared price and FX cache had no rows from about Sept 11
   to Oct 26, the service outage. `refresh_shared` only requested the last 10 days, so
   the hole was never filled. The new `app/providers/backfill.py` starts each shared
