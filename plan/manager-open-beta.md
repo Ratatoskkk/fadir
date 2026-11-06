@@ -1321,9 +1321,19 @@ On 2026-11-06 the owner approved the redacted `/api/portfolio` diagnostic
 returned 200. The page shows the signed-in User, `Ana Portföy · TRY`, and 6 positions,
 with no rejection banner.
 
-Open defect: with no Tax Profile for the selected year, `/api/tax/profile` and
-`/api/tax/estimate` return 404, and the panel shows the generic "could not load, try
-later" error instead of an empty state. The remaining G4–G9 outcomes are unchanged.
+Tax panel empty state (2026-11-06): a 404 for a missing Tax Profile now shows
+"{year} için vergi profili yok." instead of the generic load error
+(`TaxProfilePanel.jsx`). The current `main` rebuilt to the exact deployed asset hashes,
+so the new bundle differs only by this fix. It is deployed to `/opt/fadir/frontend/dist`
+with no restart; the rollback copy is `dist.previous.tax-empty-20261106`. Public health
+returned 200, the site serves `index-DLzDMQv8.js`, and the signed-in page shows the empty
+state with no alerts at desktop width and at 375px.
+
+Product gap (owner decision needed): no UI can create a Tax Profile, and `PUT
+/api/tax/profile` expects the caller to supply the official source URL, version, and
+disclaimer. `config.yaml` holds only 2025 brackets and no official source. Adding a
+service-owned Turkey source per tax year must come before a create flow. The remaining
+G4–G9 outcomes are unchanged.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration

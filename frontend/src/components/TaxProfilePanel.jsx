@@ -72,6 +72,10 @@ export default function TaxProfilePanel({ identityReady }) {
       })
       .catch((err) => {
         if (!active) return;
+        if (err?.status === 404) {
+          setStatus("missing");
+          return;
+        }
         const message = String(err?.message ?? "");
         setError(message.startsWith("403")
           ? "Vergi profili yalnızca User Workspace için kullanılabilir."
@@ -113,6 +117,7 @@ export default function TaxProfilePanel({ identityReady }) {
 
         {!identityReady && <p className="hint" role="status">Vergi profili, Google kimlik geçişi tamamlandıktan sonra User Workspace için yüklenir.</p>}
         {status === "loading" && <p className="hint" role="status" aria-live="polite"><span className="spinner" /> Vergi bilgileri yükleniyor…</p>}
+        {status === "missing" && <p className="hint" role="status">{loadedYear} için vergi profili yok.</p>}
         {error && <div className="form-error" role="alert">{error}</div>}
 
         {status === "ready" && profile && estimate && (
