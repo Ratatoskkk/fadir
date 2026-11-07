@@ -1418,6 +1418,15 @@ VM, `fadir`, `postgresql` and `cloudflared` are enabled. The drop-in
 `postgresql`. After a cold start, all three were running and public health returned
 200 with about 490 MB in use. Closing the laptop lid still sleeps the host and pauses
 the VM unless the Windows lid action is set to do nothing.
+
+PostgreSQL path and edge limit (2026-11-07). One manual run of `_purge_once` and
+`_refresh_once` under the service environment finished without error (0 guests
+purged, 0 price rows written on a closed-market Saturday). Unattended upgrades
+restarted PostgreSQL twice after boot. One health request then returned 500 on a
+stale pooled connection. The PostgreSQL engine now uses `pool_pre_ping`. After this
+was deployed, a deliberate PostgreSQL restart left health at 200. Cloudflare zone rule
+"Throttle API writes per IP" blocks non-GET `/api/*` requests above 30 per 10 s per IP
+for 10 s. A burst of 60 parallel POSTs returned 26 responses with status 429.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration

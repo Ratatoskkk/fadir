@@ -225,7 +225,9 @@ def test_postgresql_url_options_pass_unchanged_without_sqlite_options():
     with patch("app.db.create_engine") as create_engine:
         make_engine(url)
 
-    create_engine.assert_called_once_with(url, future=True, hide_parameters=True)
+    create_engine.assert_called_once_with(
+        url, future=True, hide_parameters=True, pool_pre_ping=True
+    )
     assert "connect_args" not in create_engine.call_args.kwargs
 
 

@@ -77,7 +77,11 @@ def make_engine(db_path: Path | str) -> Engine:
     is_sqlite = not is_url or make_url(engine_target).get_backend_name() == "sqlite"
 
     if not is_sqlite:
-        return create_engine(engine_target, future=True, hide_parameters=True)
+        # pre_ping drops pooled connections that died with a server restart (for example
+        # an unattended PostgreSQL upgrade) instead of failing the next request on them.
+        return create_engine(
+            engine_target, future=True, hide_parameters=True, pool_pre_ping=True
+        )
 
     _register_decimal_adapters()
     engine = create_engine(
