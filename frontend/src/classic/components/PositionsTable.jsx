@@ -2,8 +2,8 @@
 // as *separate columns* — the two are never blended into one figure.
 
 import { useMemo, useState } from "react";
-import { useFlash } from "../flash.js";
-import { arrow, fullDate, money, num, ratioPct, signedMoney, toneOf } from "../format.js";
+import { useFlash } from "../../flash.js";
+import { arrow, fullDate, money, num, ratioPct, signedMoney, toneOf } from "../../format.js";
 
 const COLUMNS = [
   { key: "ticker", label: "Enstrüman", align: "left" },

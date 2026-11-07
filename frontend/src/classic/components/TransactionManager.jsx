@@ -3,8 +3,8 @@
 // US-6.2 (delete, everything recomputes) and US-6.3 (record a SELL).
 
 import { Fragment, useMemo, useState } from "react";
-import { api } from "../api.js";
-import { fullDate, money, num } from "../format.js";
+import { api } from "../../api.js";
+import { fullDate, money, num } from "../../format.js";
 
 const BLANK = {
   ticker: "",

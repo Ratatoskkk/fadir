@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { api } from "../api.js";
-import { money, pct } from "../format.js";
+import { api } from "../../api.js";
+import { money, pct } from "../../format.js";
 
 const CURRENT_YEAR = String(new Date().getFullYear());
 

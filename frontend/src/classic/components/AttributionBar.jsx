@@ -5,7 +5,7 @@
 // magnitude so a negative contribution is still visible, and negative segments are hatched
 // so the sign survives without relying on colour (§9 accessibility).
 
-import { arrow, money, signedMoney, toneOf } from "../format.js";
+import { arrow, money, signedMoney, toneOf } from "../../format.js";
 
 export default function AttributionBar({ totals }) {
   const price = Number(totals.price_effect_try);

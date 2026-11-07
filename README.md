@@ -24,7 +24,7 @@ product promise.
 
 ## Product and stack
 
-- Python/FastAPI and SQLAlchemy on the backend; React, Vite, and Recharts on the frontend.
+- Python/FastAPI and SQLAlchemy on the backend; React, Vite and Framer Motion on the frontend, with the original Recharts interface kept as a switchable classic UI ([frontend/README.md](frontend/README.md)).
 - One PostgreSQL database for hosted data, with Workspace and Portfolio ownership
   boundaries. SQLite remains available for local development and the legacy source.
 - Google-only sign-in for beta, with explicit Claim, Portfolio Transfer, and Portfolio
@@ -118,7 +118,7 @@ SQLite snapshot: copying `fadir.db` alone does not capture active WAL state.
 to dated evidence, not this README. Tests cover calculation, ownership, request/session
 boundaries, transitions, privacy, and migration behavior.
 
-Frontend changes should be checked in a browser at desktop and 375px widths with synthetic data.
+Frontend changes should be checked in a browser at desktop and 375px widths with synthetic data. `npm --prefix frontend run dev:mock` serves the interface on a synthetic in-memory API for that.
 
 The current board keeps local, synthetic VM, hosted, private, and public acceptance
 separate. Off-site backups and lost-Portfolio recovery guarantees are deferred; restart,
@@ -133,7 +133,7 @@ release rollback, and service reconstruction still require appropriate proof.
 | `app/services/` | Ownership, sessions, transitions, finance, and data workflows |
 | `app/providers/` | Prices, FX, and provider boundaries |
 | `migrations/` | Alembic schema history |
-| `frontend/` | React interface |
+| `frontend/` | React interface (`src/next/`) and the classic UI (`src/classic/`); see [frontend/README.md](frontend/README.md) |
 | `tests/` | Offline and explicitly guarded live proof |
 | `examples/` | Synthetic import examples |
 | `docs/` | Product decisions and focused reference documents |

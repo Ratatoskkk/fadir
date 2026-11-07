@@ -4,14 +4,41 @@
     {
       "name": "fadir",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"],
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8000"
+      ],
       "port": 8000
     },
     {
       "name": "fadir-verify",
       "runtimeExecutable": ".venv/Scripts/python.exe",
-      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8001"],
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8001"
+      ],
       "port": 8001
+    },
+    {
+      "name": "fadir-mock",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "frontend",
+        "run",
+        "dev:mock"
+      ],
+      "port": 5173
     }
   ]
 }

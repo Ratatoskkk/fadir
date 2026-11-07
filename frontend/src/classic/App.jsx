@@ -12,10 +12,10 @@
 // numbers move without anything being clicked. See `_auto_refresh` in app/main.py.
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { api } from "./api.js";
-import { useFlash } from "./flash.js";
-import { arrow, clockTime, money, ratioPct, toneOf } from "./format.js";
-import { isIntradayRange, isPannable, rangeDays } from "./ranges.js";
+import { api } from "../api.js";
+import { useFlash } from "../flash.js";
+import { arrow, clockTime, money, ratioPct, toneOf } from "../format.js";
+import { isIntradayRange, isPannable, rangeDays } from "../ranges.js";
 import AttributionBar from "./components/AttributionBar.jsx";
 import Brand from "./components/Brand.jsx";
 import GoogleIdentityPanel from "./components/GoogleIdentityPanel.jsx";
@@ -24,6 +24,7 @@ import PositionsTable from "./components/PositionsTable.jsx";
 import PortfolioSelector from "./components/PortfolioSelector.jsx";
 import TransactionManager from "./components/TransactionManager.jsx";
 import TaxProfilePanel from "./components/TaxProfilePanel.jsx";
+import { switchUi } from "../ui.js";
 
 // Recharts is by far the largest dependency and the chart sits below the fold, so the
 // hero card and positions table are not made to wait on it. The data fetch starts
@@ -710,6 +711,9 @@ export default function App() {
         </div>
 
         <div className="rail-foot">
+          <button type="button" className="btn small ghost" onClick={() => switchUi("next")}>
+            yeni arayüz
+          </button>
           {order.join() === DEFAULT_ORDER.join() ? (
             <span className="rail-version">v1.0</span>
           ) : (

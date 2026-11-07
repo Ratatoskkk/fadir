@@ -2,7 +2,7 @@
 <html lang="tr" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
     <title>faðir — Portföy</title>
     <link
@@ -24,6 +24,11 @@
         }
       })();
     </script>
+    <style>
+      /* Pre-paint background, before either interface's stylesheet arrives. */
+      html { background: #07080c; }
+      html[data-theme="light"] { background: #f4f2ed; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

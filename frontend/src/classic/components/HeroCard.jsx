@@ -4,8 +4,8 @@
 // require the caveat to be visible, not buried in a tooltip.
 
 import { useState } from "react";
-import { useFlash } from "../flash.js";
-import { arrow, fullDate, money, num, pct, ratioPct, signedMoney, toneOf } from "../format.js";
+import { useFlash } from "../../flash.js";
+import { arrow, fullDate, money, num, pct, ratioPct, signedMoney, toneOf } from "../../format.js";
 
 export default function HeroCard({ portfolio }) {
   const { liquidation, totals, tax } = portfolio;

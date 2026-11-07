@@ -24,8 +24,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { arrow, fullDate, money, ratioPct, shortDate, signedMoney, toneOf } from "../format.js";
-import { RANGES, isIntradayRange, isPannable } from "../ranges.js";
+import { arrow, fullDate, money, ratioPct, shortDate, signedMoney, toneOf } from "../../format.js";
+import { RANGES, isIntradayRange, isPannable } from "../../ranges.js";
 
 function compactTry(value) {
   const n = Number(value);
