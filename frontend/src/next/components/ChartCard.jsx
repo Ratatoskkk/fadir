@@ -5,6 +5,7 @@ import { RANGES, isIntradayRange, isPannable } from "../../ranges.js";
 import ValueChart, { BAND_KEY, SERIES } from "../chart/ValueChart.jsx";
 import Icon from "../ui/Icons.jsx";
 import { collapse, spring } from "../ui/motion.js";
+import { useT } from "../i18n/index.jsx";
 
 const TZ = "Europe/Istanbul";
 const dfStamp = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: TZ });
@@ -35,31 +36,32 @@ function comparison(data, a, b) {
 const SWATCH = { value_try: "var(--up)", value_constant_fx_try: "var(--price)", value_after_tax_try: "var(--tax)", cost_basis_try: "var(--cost)", [BAND_KEY]: "var(--fx)" };
 
 function Tip({ point, intraday, anyTax }) {
+  const t = useT();
   const carried = point.price_carried_forward || point.fx_carried_forward || point.carried_forward;
   return (
     <>
       <div className="tip-date">{intraday ? dfStamp.format(new Date(point.x)) : fullDate(point.x)}</div>
-      <div className="tip-row"><i style={{ background: SWATCH.value_try }} />Değer<b className="num">{money(point.value_try)}</b></div>
-      <div className="tip-row"><i style={{ background: SWATCH.value_constant_fx_try }} />Sabit kur<b className="num">{money(point.value_constant_fx_try)}</b></div>
-      {anyTax && <div className="tip-row"><i style={{ background: SWATCH.value_after_tax_try }} />Vergi sonrası<b className="num">{money(point.value_after_tax_try)}</b></div>}
-      <div className="tip-row"><i style={{ background: SWATCH.cost_basis_try }} />Maliyet<b className="num">{money(point.cost_basis_try)}</b></div>
+      <div className="tip-row"><i style={{ background: SWATCH.value_try }} />{t("chart.valueShort")}<b className="num">{money(point.value_try)}</b></div>
+      <div className="tip-row"><i style={{ background: SWATCH.value_constant_fx_try }} />{t("chart.constantShort")}<b className="num">{money(point.value_constant_fx_try)}</b></div>
+      {anyTax && <div className="tip-row"><i style={{ background: SWATCH.value_after_tax_try }} />{t("tax.afterTax")}<b className="num">{money(point.value_after_tax_try)}</b></div>}
+      <div className="tip-row"><i style={{ background: SWATCH.cost_basis_try }} />{t("pos.cost")}<b className="num">{money(point.cost_basis_try)}</b></div>
       <div className="tip-sep" />
-      <div className="tip-row">Fiyat etkisi<b className={`num ${toneOf(point.price_effect_try)}`}>{signedMoney(point.price_effect_try)}</b></div>
-      <div className="tip-row">Kur etkisi<b className={`num ${toneOf(point.fx_effect_try)}`}>{signedMoney(point.fx_effect_try)}</b></div>
-      <div className="tip-row">Toplam K/Z<b className={`num ${toneOf(point.pnl_try)}`}>{signedMoney(point.pnl_try)}</b></div>
+      <div className="tip-row">{t("attr.price")}<b className={`num ${toneOf(point.price_effect_try)}`}>{signedMoney(point.price_effect_try)}</b></div>
+      <div className="tip-row">{t("attr.fx")}<b className={`num ${toneOf(point.fx_effect_try)}`}>{signedMoney(point.fx_effect_try)}</b></div>
+      <div className="tip-row">{t("chart.totalPnl")}<b className={`num ${toneOf(point.pnl_try)}`}>{signedMoney(point.pnl_try)}</b></div>
       {anyTax && Math.abs(point.tax_try) > 0.005 && (
         <>
-          <div className="tip-row">Tahminî vergi<b className="num">−{money(point.tax_try)}</b></div>
-          <div className="tip-row">Vergi sonrası K/Z<b className={`num ${toneOf(point.pnl_after_tax_try)}`}>{signedMoney(point.pnl_after_tax_try)}</b></div>
+          <div className="tip-row">{t("tax.estimated")}<b className="num">−{money(point.tax_try)}</b></div>
+          <div className="tip-row">{t("chart.pnlAfterTax")}<b className={`num ${toneOf(point.pnl_after_tax_try)}`}>{signedMoney(point.pnl_after_tax_try)}</b></div>
         </>
       )}
       {carried && (
         <div className="tip-note">
           {intraday
-            ? "Kapalı borsalar için son fiyat taşındı"
+            ? t("chart.carriedClosed")
             : point.price_carried_forward && point.fx_carried_forward
-              ? "Fiyat ve kur önceki günden taşındı"
-              : point.price_carried_forward ? "Fiyat önceki kapanıştan taşındı" : "Kur önceki yayından taşındı"}
+              ? t("chart.carriedBoth")
+              : t(point.price_carried_forward ? "chart.carriedPrice" : "chart.carriedFx")}
         </div>
       )}
     </>
@@ -67,6 +69,7 @@ function Tip({ point, intraday, anyTax }) {
 }
 
 export default function ChartCard({ dash }) {
+  const t = useT();
   const { history, intraday, loading, range, changeRange, focusTickers, toggleFocus, pan, panDir, panBy, canPanBack } = dash;
   const isIntraday = isIntradayRange(range);
   const source = isIntraday ? intraday : history;
@@ -111,8 +114,8 @@ export default function ChartCard({ dash }) {
   const periodDelta = first && last ? last.value_try - first.value_try : null;
 
   const legend = [
-    ...SERIES.filter((s) => !s.taxOnly || anyTax).map((s) => ({ key: s.key, label: s.label })),
-    { key: BAND_KEY, label: "Kur katkısı" },
+    ...SERIES.filter((s) => !s.taxOnly || anyTax).map((s) => ({ key: s.key, label: t(s.label) })),
+    { key: BAND_KEY, label: t("chart.fxContribution") },
   ];
 
   return (
@@ -129,7 +132,7 @@ export default function ChartCard({ dash }) {
                 transition={spring}
                 style={{ display: "inline-block" }}
               >
-                {focusTickers.length ? focusTickers.join(", ") : "Portföy değeri"}
+                {focusTickers.length ? focusTickers.join(", ") : t("chart.title")}
               </motion.span>
             </AnimatePresence>
           </h2>
@@ -148,7 +151,7 @@ export default function ChartCard({ dash }) {
                 exit={{ opacity: 0, scale: 0.8 }}
                 onClick={() => toggleFocus(null)}
               >
-                <Icon name="x" size={12} /> tüm portföy
+                <Icon name="x" size={12} /> {t("chart.wholePortfolio")}
               </motion.button>
             )}
           </AnimatePresence>
@@ -156,27 +159,27 @@ export default function ChartCard({ dash }) {
 
         <div className="chart-controls">
           {/* Always rendered (inert on "Tümü") so the header never shifts when it appears. */}
-          <div className={`pan ${isPannable(range) ? "" : "inert"}`} role="group" aria-label="Zaman penceresini kaydır" aria-disabled={!isPannable(range)}>
-            <button type="button" className="icon-btn" onClick={() => panBy(1)} disabled={!isPannable(range) || !canPanBack} aria-label="Önceki pencere">
+          <div className={`pan ${isPannable(range) ? "" : "inert"}`} role="group" aria-label={t("chart.pan")} aria-disabled={!isPannable(range)}>
+            <button type="button" className="icon-btn" onClick={() => panBy(1)} disabled={!isPannable(range) || !canPanBack} aria-label={t("chart.prev")}>
               <Icon name="left" size={16} />
             </button>
-            <span className="pan-label num" aria-live="polite">{!isPannable(range) ? "tümü" : pan === 0 ? "canlı" : windowLabel}</span>
-            <button type="button" className="icon-btn" onClick={() => panBy(-1)} disabled={!isPannable(range) || pan === 0} aria-label="Sonraki pencere">
+            <span className="pan-label num" aria-live="polite">{!isPannable(range) ? t("range.ALL") : pan === 0 ? t("pos.live") : windowLabel}</span>
+            <button type="button" className="icon-btn" onClick={() => panBy(-1)} disabled={!isPannable(range) || pan === 0} aria-label={t("chart.next")}>
               <Icon name="right" size={16} />
             </button>
           </div>
-          <div className="segmented" role="group" aria-label="Zaman aralığı">
+          <div className="segmented" role="group" aria-label={t("chart.range")}>
             {RANGES.map((r) => (
               <button key={r.key} type="button" aria-pressed={range === r.key} onClick={() => changeRange(r.key)}>
                 {range === r.key && <motion.span layoutId="range-pill" className="segmented-pill" transition={spring} />}
-                <span>{r.label}</span>
+                <span>{t(`range.${r.key}`)}</span>
               </button>
             ))}
           </div>
         </div>
       </header>
 
-      <div className="legend" role="group" aria-label="Seriler">
+      <div className="legend" role="group" aria-label={t("chart.series")}>
         {legend.map((item) => (
           <button
             key={item.key}
@@ -189,7 +192,7 @@ export default function ChartCard({ dash }) {
             {item.label}
           </button>
         ))}
-        {isIntraday && source?.session_date && <span className="legend-meta">{fullDate(source.session_date)} seansı · 5 dk</span>}
+        {isIntraday && source?.session_date && <span className="legend-meta">{t("chart.session", { date: fullDate(source.session_date) })}</span>}
       </div>
 
       <div className="chart-stage">
@@ -211,9 +214,9 @@ export default function ChartCard({ dash }) {
             {loading ? (
               <div className="skeleton-chart" />
             ) : isIntraday ? (
-              "Gün içi veri bulunamadı. Borsalar uzun süredir kapalıysa Yahoo bar döndürmeyebilir."
+              t("chart.noIntraday")
             ) : (
-              "Gösterilecek veri yok."
+              t("chart.noData")
             )}
           </div>
         )}
@@ -232,38 +235,38 @@ export default function ChartCard({ dash }) {
               </div>
               <div className="compare-grid">
                 <div className="compare-cell lead">
-                  <span className="label">Değer değişimi</span>
+                  <span className="label">{t("chart.valueChange")}</span>
                   <span className={`big num ${toneOf(compare.deltaValue)}`}>
                     {arrow(compare.deltaValue)} {compare.ratio !== null ? ratioPct(compare.ratio) : "—"}
                   </span>
                   <span className={`num ${toneOf(compare.deltaValue)}`}>{signedMoney(compare.deltaValue)}</span>
                 </div>
                 <div className="compare-cell">
-                  <span className="label">Fiyat katkısı</span>
+                  <span className="label">{t("chart.priceContribution")}</span>
                   <span className={`mid num ${toneOf(compare.deltaPrice)}`}>{signedMoney(compare.deltaPrice)}</span>
                 </div>
                 <div className="compare-cell">
-                  <span className="label">Kur katkısı</span>
+                  <span className="label">{t("chart.fxContribution")}</span>
                   <span className={`mid num ${toneOf(compare.deltaFx)}`}>{signedMoney(compare.deltaFx)}</span>
                 </div>
                 <div className="compare-cell">
-                  <span className="label">Maliyet bazı</span>
-                  <span className="mid num">{Math.abs(compare.deltaCost) < 0.005 ? "değişmedi" : signedMoney(compare.deltaCost)}</span>
+                  <span className="label">{t("chart.costBasis")}</span>
+                  <span className="mid num">{Math.abs(compare.deltaCost) < 0.005 ? t("chart.unchanged") : signedMoney(compare.deltaCost)}</span>
                 </div>
                 {anyTax && (
                   <div className="compare-cell">
-                    <span className="label">Vergi sonrası</span>
+                    <span className="label">{t("tax.afterTax")}</span>
                     <span className={`mid num ${toneOf(compare.deltaAfterTax)}`}>{signedMoney(compare.deltaAfterTax)}</span>
                   </div>
                 )}
               </div>
-              <p className="fineprint">Fiyat + kur + maliyet bazı değişimi = değer değişimi. Maliyet bazı değiştiyse fark getiri değil, yatırılan paradır.</p>
+              <p className="fineprint">{t("chart.compareNote")}</p>
             </div>
           </motion.div>
         ) : (
           data.length > 1 && (
             <motion.p key="hint" className="chart-hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              Karşılaştırmak için grafikte sürükleyin
+              {t("chart.dragHint")}
             </motion.p>
           )
         )}

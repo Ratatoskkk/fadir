@@ -6,6 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { AnimatePresence, motion } from "framer-motion";
 import Icon from "./Icons.jsx";
 import { bouncy, ease, spring } from "./motion.js";
+import { useT } from "../i18n/index.jsx";
 
 const ToastContext = createContext(() => {});
 const ConfirmContext = createContext(async () => false);
@@ -70,6 +71,7 @@ export function OverlayProvider({ children }) {
 }
 
 function ConfirmDialog({ dialog, onClose }) {
+  const t = useT();
   const confirmRef = useRef(null);
   useEffect(() => {
     confirmRef.current?.focus();
@@ -104,7 +106,7 @@ function ConfirmDialog({ dialog, onClose }) {
         {dialog.body && <div className="dialog-body">{dialog.body}</div>}
         <div className="dialog-actions">
           <button type="button" className="btn ghost" onClick={() => onClose(false)}>
-            Vazgeç
+            {t("common.cancel")}
           </button>
           <button
             ref={confirmRef}

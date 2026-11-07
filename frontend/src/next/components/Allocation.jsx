@@ -4,8 +4,10 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { arrow, money, ratioPct, toneOf } from "../../format.js";
 import { ease, spring } from "../ui/motion.js";
+import { useT } from "../i18n/index.jsx";
 
 function Allocation({ positions, focusTickers, onFocus }) {
+  const t = useT();
   const rows = positions
     .filter((p) => p.ok)
     .map((p) => ({ ...p, value: Number(p.market_value_try) }))
@@ -14,9 +16,9 @@ function Allocation({ positions, focusTickers, onFocus }) {
   const max = rows[0]?.value || 1;
 
   return (
-    <section className="card" id="dagilim" aria-label="Dağılım">
+    <section className="card" id="dagilim" aria-label={t("alloc.title")}>
       <header className="card-head">
-        <h2>Dağılım</h2>
+        <h2>{t("alloc.title")}</h2>
         <span className="muted num">{positions.length}</span>
       </header>
       <ul className="alloc">

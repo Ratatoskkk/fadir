@@ -3,12 +3,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { api } from "../../api.js";
 import { fullDate, money } from "../../format.js";
 import { collapse, ease } from "../ui/motion.js";
+import { useT } from "../i18n/index.jsx";
 
 const optionLabel = (o) => `${o.name} · ${o.base_currency}`;
-const transactionLabel = (t) =>
-  `${fullDate(t.trade_date)} · ${t.side === "BUY" ? "alış" : "satış"} · ${money(t.price_native, t.currency)}`;
+const transactionLabel = (x, t) =>
+  `${fullDate(x.trade_date)} · ${t(x.side === "BUY" ? "txn.buy" : "txn.sell")} · ${money(x.price_native, x.currency)}`;
 
 export default function Merge({ onCompleted }) {
+  const t = useT();
   const [options, setOptions] = useState(null);
   const [sourceId, setSourceId] = useState("");
   const [targetId, setTargetId] = useState("");
@@ -23,7 +25,7 @@ export default function Merge({ onCompleted }) {
     setBusy(true);
     api.mergeOptions()
       .then((value) => active && setOptions(value))
-      .catch((err) => active && setError(`Portföy seçenekleri alınamadı: ${err.message}`))
+      .catch((err) => active && setError(t("merge.optionsFailed", { error: err.message })))
       .finally(() => active && setBusy(false));
     return () => { active = false; };
   }, []);
@@ -39,7 +41,7 @@ export default function Merge({ onCompleted }) {
     setError(null);
     setResult(null);
     if (!sourceId || !targetId || sourceId === targetId) {
-      setError("Kaynak ve hedef Portföyü açıkça seçin; aynı Portföy seçilemez.");
+      setError(t("merge.pickBoth"));
       return;
     }
     setBusy(true);
@@ -48,7 +50,7 @@ export default function Merge({ onCompleted }) {
       setDecisions({});
     } catch (err) {
       setPreview(null);
-      setError(`Birleştirme önizlemesi alınamadı: ${err.message}`);
+      setError(t("merge.previewFailed", { error: err.message }));
     } finally {
       setBusy(false);
     }
@@ -69,10 +71,10 @@ export default function Merge({ onCompleted }) {
       try {
         await onCompleted?.();
       } catch (refreshError) {
-        setError(`Birleştirme tamamlandı; pano yenilenemedi: ${refreshError.message}`);
+        setError(t("merge.refreshFailed", { error: refreshError.message }));
       }
     } catch (err) {
-      setError(`Birleştirme reddedildi veya önizleme güncel değil: ${err.message}`);
+      setError(t("merge.rejected", { error: err.message }));
     } finally {
       setBusy(false);
     }
@@ -80,36 +82,36 @@ export default function Merge({ onCompleted }) {
 
   return (
     <div className="merge" aria-labelledby="merge-title">
-      <h3 id="merge-title">Portföy birleştirme</h3>
+      <h3 id="merge-title">{t("merge.title")}</h3>
       <AnimatePresence>{error && <motion.div className="form-error" role="alert" {...collapse}><div>{error}</div></motion.div>}</AnimatePresence>
       {result && (
         <div className="success" role="status">
-          Birleştirme tamamlandı: {result.moved_count} işlem taşındı, {result.skipped_count} işlem atlandı.
+          {t("merge.done", { moved: result.moved_count, skipped: result.skipped_count })}
         </div>
       )}
       <form className="merge-form" onSubmit={showPreview}>
         <div className="field">
-          <label htmlFor="merge-source">Kaynak Portföy</label>
+          <label htmlFor="merge-source">{t("merge.source")}</label>
           <select id="merge-source" value={sourceId} onChange={(e) => setSourceId(e.target.value)} disabled={busy || !options} required>
-            <option value="">Seçin…</option>
+            <option value="">{t("common.choose")}</option>
             {(options?.source ?? []).map((o) => <option key={o.id} value={o.id}>{optionLabel(o)}</option>)}
           </select>
         </div>
         <div className="field">
-          <label htmlFor="merge-target">Hedef Portföy</label>
+          <label htmlFor="merge-target">{t("merge.target")}</label>
           <select id="merge-target" value={targetId} onChange={(e) => setTargetId(e.target.value)} disabled={busy || !options} required>
-            <option value="">Seçin…</option>
+            <option value="">{t("common.choose")}</option>
             {(options?.target ?? []).map((o) => <option key={o.id} value={o.id}>{optionLabel(o)}</option>)}
           </select>
         </div>
-        <button className="btn primary" type="submit" disabled={busy || !options}>{busy ? "hazırlanıyor…" : "Önizlemeyi göster"}</button>
+        <button className="btn primary" type="submit" disabled={busy || !options}>{busy ? t("common.preparing") : t("merge.preview")}</button>
       </form>
 
       <AnimatePresence>
         {preview && (
           <motion.div className="merge-preview" {...collapse}>
             <div>
-              <p className="muted">{preview.movable_source_rows?.length ?? 0} taşınabilir işlem, {candidates.length} olası yinelenen işlem.</p>
+              <p className="muted">{t("merge.summary", { movable: preview.movable_source_rows?.length ?? 0, duplicates: candidates.length })}</p>
               {candidates.map(({ source, target, differences }, i) => (
                 <motion.fieldset
                   className="merge-candidate"
@@ -117,14 +119,14 @@ export default function Merge({ onCompleted }) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0, transition: { delay: i * 0.05, ease } }}
                 >
-                  <legend>Olası yinelenen işlem</legend>
+                  <legend>{t("merge.duplicate")}</legend>
                   <div className="merge-comparison">
-                    <span>Misafir: {transactionLabel(source)}</span>
-                    <span>Hedef: {transactionLabel(target)}</span>
+                    <span>{t("merge.guestRow", { row: transactionLabel(source, t) })}</span>
+                    <span>{t("merge.targetRow", { row: transactionLabel(target, t) })}</span>
                   </div>
-                  {differences?.length > 0 && <p className="muted">Farklı alanlar: {differences.map((d) => d.field).join(", ")}</p>}
-                  <div className="merge-decisions" role="radiogroup" aria-label={`İşlem ${source.id} kararı`}>
-                    {[["keep", "Tut"], ["skip", "Atla"]].map(([value, label]) => (
+                  {differences?.length > 0 && <p className="muted">{t("merge.differences", { fields: differences.map((d) => d.field).join(", ") })}</p>}
+                  <div className="merge-decisions" role="radiogroup" aria-label={t("merge.decision", { id: source.id })}>
+                    {[["keep", t("merge.keep")], ["skip", t("merge.skip")]].map(([value, label]) => (
                       <label key={value} className={decisions[source.id] === value ? "on" : ""}>
                         <input
                           type="radio"
@@ -140,7 +142,7 @@ export default function Merge({ onCompleted }) {
                 </motion.fieldset>
               ))}
               <button className="btn primary" type="button" onClick={confirmMerge} disabled={busy || !allDecided}>
-                {busy ? "onaylanıyor…" : "Birleştirmeyi onayla"}
+                {busy ? t("common.confirming") : t("merge.confirm")}
               </button>
             </div>
           </motion.div>

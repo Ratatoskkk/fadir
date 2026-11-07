@@ -12,12 +12,13 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { prefersReducedMotion } from "../ui/motion.js";
+import { useT } from "../i18n/index.jsx";
 
 export const SERIES = [
-  { key: "value_try", label: "Değer (TRY)", color: "value", width: 2.4, dash: [] },
-  { key: "value_constant_fx_try", label: "Sabit kurla değer", color: "price", width: 1.7, dash: [6, 4] },
-  { key: "value_after_tax_try", label: "Vergi sonrası", color: "tax", width: 1.6, dash: [2, 4], taxOnly: true },
-  { key: "cost_basis_try", label: "Maliyet bazı", color: "cost", width: 1.6, dash: [] },
+  { key: "value_try", label: "chart.value", color: "value", width: 2.4, dash: [] },
+  { key: "value_constant_fx_try", label: "chart.constantFx", color: "price", width: 1.7, dash: [6, 4] },
+  { key: "value_after_tax_try", label: "tax.afterTax", color: "tax", width: 1.6, dash: [2, 4], taxOnly: true },
+  { key: "cost_basis_try", label: "chart.costBasis", color: "cost", width: 1.6, dash: [] },
 ];
 export const BAND_KEY = "fx_band";
 
@@ -126,6 +127,7 @@ export default function ValueChart({
   tooltip = null,
   height = 340,
 }) {
+  const t = useT();
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
@@ -502,7 +504,7 @@ export default function ValueChart({
         onPointerCancel={endDrag}
         onPointerLeave={() => { if (!st.dragging) setHover(null); }}
         role="img"
-        aria-label="Portföy değeri grafiği"
+        aria-label={t("chart.aria")}
       />
       <div ref={pulseRef} className="vchart-pulse" aria-hidden="true"><span /></div>
       <div ref={tipRef} className={`vchart-tip ${tooltip ? "on" : ""}`} aria-hidden="true">

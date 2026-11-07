@@ -48,6 +48,8 @@ from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
 from app.providers.price_service import PriceService
 from app.schemas import (
+    JurisdictionTaxOut,
+    TaxJurisdictionOut,
     AccessOut,
     PortfolioCodeIn,
     PortfolioCodeOut,
@@ -96,7 +98,8 @@ from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 from app.services.tax_profile import TaxProfileData, TaxProfileService
 from app.calc.tax import estimate_tax
-from app.calc.tax_sources import turkey_tax_year, with_official_brackets
+from app.calc.tax_sources import TURKEY_TAX_YEARS, turkey_tax_year, with_official_brackets
+from app.calc.jurisdictions import JURISDICTIONS
 import json
 from app.services import guest_access
 from app.services import portfolio_codes
@@ -167,6 +170,65 @@ def get_tax_estimate(session: RequestSessionDep, authority: AuthorityDep, year: 
     config = with_official_brackets(get_settings().tax, year)
     estimate = service.estimate_for_user(authority.user_id, None, config, year)
     return TaxOut(applicable=estimate.applicable, gross_gain_try=estimate.gross_gain_try, taxable_gain_try=estimate.taxable_gain_try, tax_try=estimate.tax_try, net_after_tax_try=estimate.net_after_tax_try, effective_rate=estimate.effective_rate, marginal_rate=estimate.marginal_rate, indexing_applied=estimate.indexing_applied, indexing_rate=estimate.indexing_rate, price_portion_try=estimate.price_portion_try, fx_portion_try=estimate.fx_portion_try, tax_on_price_try=estimate.tax_on_price_try, tax_on_fx_try=estimate.tax_on_fx_try, assumptions=estimate.assumptions, disclaimer=profile.disclaimer, tax_year=profile.tax_year, jurisdiction=profile.jurisdiction, source_url=profile.source_url, source_version=profile.source_version)
+
+
+@router.get("/tax/jurisdictions", response_model=list[TaxJurisdictionOut])
+def list_tax_jurisdictions() -> list[TaxJurisdictionOut]:
+    """Every Tax Jurisdiction with published rules, and the years it covers."""
+    return [
+        TaxJurisdictionOut(
+            code=j.code,
+            currency=j.currency,
+            years=sorted(TURKEY_TAX_YEARS if j.code == "TR" else j.years),
+        )
+        for j in JURISDICTIONS.values()
+    ]
+
+
+TURKEY_ASSUMPTION_KEYS = ["tr.tariff", "tr.fifo", "tr.no_exemption"]
+
+
+@private_router.get("/tax/estimates", response_model=JurisdictionTaxOut)
+def get_jurisdiction_tax_estimate(
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+    jurisdiction: str = Query(..., min_length=2, max_length=2, pattern="^[A-Z]{2}$"),
+    year: int = Query(..., ge=2000, le=2100),
+) -> JurisdictionTaxOut:
+    """Load one Tax Profile (jurisdiction and year) and estimate the User's tax under it."""
+    if authority.user_id is None:
+        raise HTTPException(403, "Tax Profile requires a signed-in User")
+    known = JURISDICTIONS.get(jurisdiction)
+    if known is None:
+        raise HTTPException(404, "Tax Jurisdiction not found")
+    service = TaxProfileService(session)
+    profile = service.ensure_profile(authority.user_id, jurisdiction, year)
+    if profile is None:
+        raise HTTPException(404, "Tax Profile not found")
+    start, end = known.period(year)
+    if jurisdiction == "TR":
+        config = with_official_brackets(get_settings().tax, year)
+        e = service.estimate_for_user(authority.user_id, None, config, year)
+        gross, taxable, tax, marginal = e.gross_gain_try, e.taxable_gain_try, e.tax_try, e.marginal_rate
+        net, assumptions = e.net_after_tax_try, TURKEY_ASSUMPTION_KEYS
+    else:
+        fx = FxService(session, get_settings())
+        try:
+            result, proceeds = service.estimate_jurisdiction(
+                authority.user_id, jurisdiction, year, lambda ccy, on: fx.quote(ccy, on).rate
+            )
+        except (RateUnavailable, ProviderError) as exc:
+            raise HTTPException(503, "exchange rate unavailable") from exc
+        gross, taxable, tax, marginal = result.gross_gain, result.taxable_gain, result.tax, result.marginal_rate
+        net, assumptions = proceeds - result.tax, list(result.assumptions)
+    effective = tax / taxable if taxable > 0 else Decimal("0")
+    return JurisdictionTaxOut(
+        jurisdiction=jurisdiction, tax_year=year, currency=known.currency,
+        period_start=start, period_end=end,
+        gross_gain=gross, taxable_gain=taxable, tax=tax, net_after_tax=net,
+        effective_rate=effective, marginal_rate=marginal, assumptions=assumptions,
+        source_url=profile.source_url, source_version=profile.source_version,
+    )
 
 
 def _settings() -> Settings:

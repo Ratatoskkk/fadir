@@ -5,10 +5,12 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Icon from "../ui/Icons.jsx";
 import { spring } from "../ui/motion.js";
+import { useT } from "../i18n/index.jsx";
 
 const fold = (s) => s.toLocaleLowerCase("tr").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ı/g, "i");
 
 function Palette({ commands, onClose }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef(null);
@@ -49,7 +51,7 @@ function Palette({ commands, onClose }) {
         className="palette"
         role="dialog"
         aria-modal="true"
-        aria-label="Komut paleti"
+        aria-label={t("palette.title")}
         initial={{ opacity: 0, y: -20, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1, transition: spring }}
         exit={{ opacity: 0, y: -10, scale: 0.98, transition: { duration: 0.12 } }}
@@ -61,8 +63,8 @@ function Palette({ commands, onClose }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKey}
-            placeholder="Ara veya komut yaz…"
-            aria-label="Komut ara"
+            placeholder={t("palette.placeholder")}
+            aria-label={t("palette.search")}
             role="combobox"
             aria-expanded="true"
             aria-controls="palette-list"
@@ -71,7 +73,7 @@ function Palette({ commands, onClose }) {
           <kbd>Esc</kbd>
         </div>
         <div className="palette-list" id="palette-list" role="listbox" ref={listRef}>
-          {results.length === 0 && <div className="palette-empty">Sonuç yok</div>}
+          {results.length === 0 && <div className="palette-empty">{t("common.noResults")}</div>}
           {results.map((c, i) => {
             const header = c.group !== lastGroup ? c.group : null;
             lastGroup = c.group;

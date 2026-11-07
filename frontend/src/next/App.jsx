@@ -19,6 +19,8 @@ import Icon from "./ui/Icons.jsx";
 import { OverlayProvider, useToast } from "./ui/overlays.jsx";
 import { prefersReducedMotion, viewTransition } from "./ui/motion.js";
 import Account from "./views/Account.jsx";
+import TaxView from "./views/TaxView.jsx";
+import { I18nProvider, useI18n, useT } from "./i18n/index.jsx";
 import Overview from "./views/Overview.jsx";
 import Positions from "./views/Positions.jsx";
 import Transactions from "./views/Transactions.jsx";
@@ -73,8 +75,9 @@ function useTheme() {
 }
 
 function Skeleton() {
+  const t = useT();
   return (
-    <div className="stack" aria-busy="true" aria-label="Portföy yükleniyor">
+    <div className="stack" aria-busy="true" aria-label={t("common.loading")}>
       <div className="skeleton hero-skel" />
       <div className="skeleton-row">
         {Array.from({ length: 4 }, (_, i) => <div key={i} className="skeleton tile-skel" style={{ animationDelay: `${i * 0.08}s` }} />)}
@@ -92,6 +95,7 @@ function Shell({ access, onLeave, onAccessLost }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [heroOut, setHeroOut] = useState(false);
   const toast = useToast();
+  const t = useT();
   const { portfolio, loading, error } = dash;
 
   // Mini summary in the topbar once the hero has scrolled away, or on any other view.
@@ -110,11 +114,11 @@ function Shell({ access, onLeave, onAccessLost }) {
     const turningOn = !dash.focusTickers.includes(ticker);
     dash.toggleFocus(ticker);
     if (turningOn) {
-      toast({ text: `Grafik: ${ticker}` });
+      toast({ text: t("chart.focusToast", { ticker }) });
       if (view !== "genel") go("genel");
       window.setTimeout(() => document.getElementById("grafik")?.scrollIntoView({ behavior: "smooth", block: "center" }), 380);
     }
-  }, [dash, toast, view, go]);
+  }, [dash, toast, view, go, t]);
 
   const newTransaction = useCallback(() => {
     go("islemler");
@@ -130,7 +134,7 @@ function Shell({ access, onLeave, onAccessLost }) {
       }
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
       if (typing || e.ctrlKey || e.metaKey || e.altKey || paletteOpen) return;
-      const index = ["1", "2", "3", "4"].indexOf(e.key);
+      const index = ["1", "2", "3", "4", "5"].indexOf(e.key);
       if (index >= 0) go(VIEWS[index].id);
       else if (e.key === "/") { e.preventDefault(); setPaletteOpen(true); }
       else if (e.key.toLowerCase() === "r" && !dash.refreshing) dash.manualRefresh();
@@ -142,24 +146,24 @@ function Shell({ access, onLeave, onAccessLost }) {
 
   const commands = useMemo(() => {
     const list = [
-      ...VIEWS.map((v, i) => ({ id: `view-${v.id}`, group: "Git", label: v.label, icon: v.icon, hint: String(i + 1), run: () => go(v.id) })),
-      { id: "new-txn", group: "İşlem", label: "Yeni işlem", icon: "plus", hint: "N", run: newTransaction },
-      { id: "refresh", group: "İşlem", label: "Yenile", icon: "refresh", hint: "R", run: () => dash.manualRefresh() },
-      { id: "theme", group: "İşlem", label: theme === "dark" ? "Açık tema" : "Koyu tema", icon: theme === "dark" ? "sun" : "moon", run: toggleTheme },
-      ...RANGES.map((r) => ({ id: `range-${r.key}`, group: "Grafik aralığı", label: r.label, icon: "clock", keywords: "aralık range", run: () => { go("genel"); dash.changeRange(r.key); } })),
+      ...VIEWS.map((v, i) => ({ id: `view-${v.id}`, group: t("palette.go"), label: t(v.label), icon: v.icon, hint: String(i + 1), run: () => go(v.id) })),
+      { id: "new-txn", group: t("palette.actions"), label: t("txn.new"), icon: "plus", hint: "N", run: newTransaction },
+      { id: "refresh", group: t("palette.actions"), label: t("common.refresh"), icon: "refresh", hint: "R", run: () => dash.manualRefresh() },
+      { id: "theme", group: t("palette.actions"), label: t(theme === "dark" ? "theme.light" : "theme.dark"), icon: theme === "dark" ? "sun" : "moon", run: toggleTheme },
+      ...RANGES.map((r) => ({ id: `range-${r.key}`, group: t("palette.range"), label: t(`range.${r.key}`), icon: "clock", keywords: "range", run: () => { go("genel"); dash.changeRange(r.key); } })),
       ...(portfolio?.positions ?? []).map((p) => ({
-        id: `focus-${p.ticker}`, group: "Grafikte göster", label: p.ticker, hint: p.name, icon: "focus", run: () => focusTicker(p.ticker),
+        id: `focus-${p.ticker}`, group: t("palette.focus"), label: p.ticker, hint: p.name, icon: "focus", run: () => focusTicker(p.ticker),
       })),
-      ...(dash.focusTickers.length ? [{ id: "focus-clear", group: "Grafikte göster", label: "Tüm portföy", icon: "x", run: () => dash.toggleFocus(null) }] : []),
+      ...(dash.focusTickers.length ? [{ id: "focus-clear", group: t("palette.focus"), label: t("chart.wholePortfolio"), icon: "x", run: () => dash.toggleFocus(null) }] : []),
       ...dash.portfolios.map((p) => ({
-        id: `pf-${p.id}`, group: "Portföy", label: p.name, hint: p.base_currency, icon: "layers", run: () => dash.selectPortfolio(Number(p.id)),
+        id: `pf-${p.id}`, group: t("portfolio.label"), label: p.name, hint: p.base_currency, icon: "layers", run: () => dash.selectPortfolio(Number(p.id)),
       })),
-      ...INTERVALS.map((o) => ({ id: `int-${o.value}`, group: "Yenileme", label: o.label, icon: "clock", keywords: "yenileme interval", run: () => dash.setIntervalSeconds(o.value) })),
-      { id: "classic", group: "Arayüz", label: "Klasik arayüze geç", icon: "swap", run: () => switchUi("classic") },
-      ...(access === "code" ? [{ id: "leave", group: "Portföy", label: "Bu cihazda kapat", icon: "x", run: onLeave }] : []),
+      ...INTERVALS.map((o) => ({ id: `int-${o.value}`, group: t("live.interval"), label: t(o.label), icon: "clock", keywords: "interval", run: () => dash.setIntervalSeconds(o.value) })),
+      { id: "classic", group: t("ui.title"), label: t("ui.classic"), icon: "swap", run: () => switchUi("classic") },
+      ...(access === "code" ? [{ id: "leave", group: t("portfolio.label"), label: t("code.leave"), icon: "x", run: onLeave }] : []),
     ];
     return list;
-  }, [go, newTransaction, dash, theme, toggleTheme, portfolio, focusTicker, access, onLeave]);
+  }, [go, newTransaction, dash, theme, toggleTheme, portfolio, focusTicker, access, onLeave, t]);
 
   const needsPortfolio = view === "genel" || view === "pozisyonlar";
 
@@ -170,13 +174,14 @@ function Shell({ access, onLeave, onAccessLost }) {
     ) : (
       <div className="empty-state">
         <div className="empty-orb" />
-        <p>Portföy yüklenemedi.</p>
-        <button type="button" className="btn primary" onClick={() => dash.loadAll()}><Icon name="refresh" size={16} /> Tekrar dene</button>
+        <p>{t("portfolio.loadFailed")}</p>
+        <button type="button" className="btn primary" onClick={() => dash.loadAll()}><Icon name="refresh" size={16} /> {t("common.retry")}</button>
       </div>
     );
   } else if (view === "genel") body = <Overview dash={dash} />;
   else if (view === "pozisyonlar") body = <Positions dash={dash} onFocusTicker={focusTicker} />;
   else if (view === "islemler") body = <Transactions dash={dash} sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} />;
+  else if (view === "vergi") body = <TaxView dash={dash} onSignIn={access === "code" ? null : () => go("hesap")} />;
   else body = <Account dash={dash} access={access} onLeave={onLeave} />;
 
   return (
@@ -195,8 +200,8 @@ function Shell({ access, onLeave, onAccessLost }) {
         {!loading && !error && dash.portfolios.length === 0 && (
           <div className="notice notice-info first-run">
             <Icon name="sparkle" size={16} />
-            <div className="notice-body">İlk geçerli işlem kaydedildiğinde Ana Portföy oluşturulur.</div>
-            <button type="button" className="btn primary small" onClick={newTransaction}>Yeni işlem</button>
+            <div className="notice-body">{t("portfolio.firstRun")}</div>
+            <button type="button" className="btn primary small" onClick={newTransaction}>{t("txn.new")}</button>
           </div>
         )}
         <Notices dash={dash} />
@@ -271,12 +276,20 @@ function Root() {
   return <Shell key={access} access={access} onLeave={leave} onAccessLost={read} />;
 }
 
+/** A language change re-renders every number and date in the new locale. */
+function LocalizedRoot() {
+  const { lang } = useI18n();
+  return <Root key={lang} />;
+}
+
 export default function App() {
   return (
     <MotionConfig reducedMotion="user">
-      <OverlayProvider>
-        <Root />
-      </OverlayProvider>
+      <I18nProvider>
+        <OverlayProvider>
+          <LocalizedRoot />
+        </OverlayProvider>
+      </I18nProvider>
     </MotionConfig>
   );
 }

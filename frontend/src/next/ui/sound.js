@@ -78,6 +78,12 @@ export const sound = {
     const c = audio();
     if (c) burst(c, { level: 0.024 * jitter(0.2), length: 0.016, type: "bandpass", freq: 2200 * jitter(0.1), q: 1 });
   },
+  pick() {
+    const c = audio();
+    if (!c) return;
+    burst(c, { level: 0.04, length: 0.02, type: "bandpass", freq: 3200, q: 1.4 });
+    tone(c, 880, { level: 0.05, length: 0.09, slideTo: 1320 });
+  },
   wrong() {
     const c = audio();
     if (!c) return;

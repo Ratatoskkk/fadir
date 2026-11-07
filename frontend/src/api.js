@@ -155,6 +155,10 @@ export const api = {
   deletePortfolio: (portfolioId) => request(`/api/portfolios/${encodeURIComponent(portfolioId)}`, { method: "DELETE" }),
   deleteAccount: () => request("/api/account", { method: "DELETE" }),
   instruments: () => request("/api/instruments"),
+  searchInstruments: (q) => request(`/api/instruments/search?q=${encodeURIComponent(q)}`),
+  taxJurisdictions: () => request("/api/tax/jurisdictions"),
+  taxEstimateFor: (jurisdiction, year) =>
+    request(`/api/tax/estimates?jurisdiction=${encodeURIComponent(jurisdiction)}&year=${encodeURIComponent(year)}`),
   refresh: () => request("/api/refresh", { method: "POST" }),
   health: () => request("/api/health"),
   taxProfile: (year) => request(`/api/tax/profile?year=${encodeURIComponent(year)}`),

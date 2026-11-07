@@ -7,23 +7,24 @@ import { arrow, fullDate, money, num, ratioPct, signedMoney, toneOf } from "../.
 import Icon from "../ui/Icons.jsx";
 import { ease, spring } from "../ui/motion.js";
 import { useTilt } from "../ui/useTilt.js";
+import { useT } from "../i18n/index.jsx";
 
 const COLUMNS = [
-  { key: "ticker", label: "Enstrüman", align: "left" },
-  { key: "quantity", label: "Adet" },
-  { key: "price_native", label: "Fiyat" },
-  { key: "average_purchase_price_native", label: "Ort. alış" },
-  { key: "cost_native", label: "Maliyet", group: true },
-  { key: "market_value_native", label: "Değer" },
-  { key: "pnl_native", label: "K/Z yerel" },
-  { key: "local_return", label: "Yerel get." },
-  { key: "fx_rate_to_try", label: "Kur", group: true },
-  { key: "fx_return", label: "Kur get." },
-  { key: "cost_try", label: "Maliyet ₺", group: true },
-  { key: "market_value_try", label: "Değer ₺" },
-  { key: "pnl_try", label: "K/Z ₺" },
-  { key: "daily_pnl_try", label: "Günlük ₺", group: true },
-  { key: "total_return", label: "Toplam get." },
+  { key: "ticker", label: "pos.instrument", align: "left" },
+  { key: "quantity", label: "pos.quantity" },
+  { key: "price_native", label: "pos.price" },
+  { key: "average_purchase_price_native", label: "pos.avgBuy" },
+  { key: "cost_native", label: "pos.cost", group: true },
+  { key: "market_value_native", label: "pos.value" },
+  { key: "pnl_native", label: "pos.pnlLocal" },
+  { key: "local_return", label: "pos.localReturn" },
+  { key: "fx_rate_to_try", label: "pos.fx", group: true },
+  { key: "fx_return", label: "pos.fxReturn" },
+  { key: "cost_try", label: "pos.costTry", group: true },
+  { key: "market_value_try", label: "pos.valueTry" },
+  { key: "pnl_try", label: "pos.pnlTry" },
+  { key: "daily_pnl_try", label: "pos.dailyTry", group: true },
+  { key: "total_return", label: "pos.totalReturn" },
 ];
 
 const VIEW_KEY = "fadir.positions.view";
@@ -43,12 +44,13 @@ function sortValue(p, key) {
 }
 
 function Badges({ p }) {
+  const t = useT();
   return (
     <span className="badges">
-      <span className={`badge ${p.session === "open" ? "open" : ""}`}>{p.session === "open" ? "açık" : "kapalı"}</span>
-      {!p.ok && <span className="badge err">veri yok</span>}
-      {p.fx_triangulated && <span className="badge info" title={`USD üzerinden çapraz kur (${p.fx_provider})`}>çapraz kur</span>}
-      {p.fx_provider === "manual" && <span className="badge warn">manuel kur</span>}
+      <span className={`badge ${p.session === "open" ? "open" : ""}`}>{t(p.session === "open" ? "pos.open" : "pos.closed")}</span>
+      {!p.ok && <span className="badge err">{t("common.noData")}</span>}
+      {p.fx_triangulated && <span className="badge info" title={t("pos.crossTitle", { provider: p.fx_provider })}>{t("pos.cross")}</span>}
+      {p.fx_provider === "manual" && <span className="badge warn">{t("pos.manualFx")}</span>}
     </span>
   );
 }
@@ -60,12 +62,13 @@ function PriceCell({ p }) {
 }
 
 function DailyCell({ daily, currency }) {
-  if (!daily?.available) return <td className="num sep" title="Karşılaştırılacak önceki seans yok">—</td>;
+  const t = useT();
+  if (!daily?.available) return <td className="num sep" title={t("hero.noPrevSession")}>—</td>;
   const title = [
-    `Önceki seans: ${fullDate(daily.reference_date)}`,
-    `Fiyat etkisi: ${signedMoney(daily.price_effect_try)}`,
-    `Kur etkisi: ${signedMoney(daily.fx_effect_try)}`,
-    `Yerel: ${signedMoney(daily.pnl_native, currency)}`,
+    t("hero.prevSession", { date: fullDate(daily.reference_date) }),
+    `${t("attr.price")}: ${signedMoney(daily.price_effect_try)}`,
+    `${t("attr.fx")}: ${signedMoney(daily.fx_effect_try)}`,
+    `${t("pos.local")}: ${signedMoney(daily.pnl_native, currency)}`,
   ].join("\n");
   return (
     <td className={`num sep ${toneOf(daily.pnl_try)}`} title={title}>
@@ -95,6 +98,7 @@ function ReturnBar({ label, ratio }) {
 }
 
 function PositionCard({ p, on, onFocus, index }) {
+  const t = useT();
   const tilt = useTilt(5);
   return (
     <motion.article
@@ -107,7 +111,7 @@ function PositionCard({ p, on, onFocus, index }) {
     >
       <div className={`pos-card tilt ${on ? "on" : ""}`}>
       <header>
-        <button type="button" className="sym-btn" aria-pressed={on} onClick={() => onFocus(p.ticker)} title="Grafikte göster">
+        <button type="button" className="sym-btn" aria-pressed={on} onClick={() => onFocus(p.ticker)} title={t("palette.focus")}>
           {p.ticker}
           <Icon name="focus" size={14} />
         </button>
@@ -118,9 +122,9 @@ function PositionCard({ p, on, onFocus, index }) {
       <div className={`pos-pnl num ${toneOf(p.pnl_try)}`}>
         {p.ok ? <>{arrow(p.pnl_try)} {signedMoney(p.pnl_try)}</> : p.error}
       </div>
-      <ReturnBar label="Yerel" ratio={p.attribution.local_return} />
-      <ReturnBar label="Kur" ratio={p.attribution.fx_return} />
-      <ReturnBar label="Toplam" ratio={p.attribution.total_return} />
+      <ReturnBar label={t("pos.local")} ratio={p.attribution.local_return} />
+      <ReturnBar label={t("pos.fx")} ratio={p.attribution.fx_return} />
+      <ReturnBar label={t("pos.total")} ratio={p.attribution.total_return} />
       <footer className="num">
         <span>{num(p.quantity, 0)} adet</span>
         <span>{p.ok ? money(p.price_native, p.currency) : "—"}</span>
@@ -144,6 +148,7 @@ function loadView() {
 }
 
 export default function Positions({ dash, onFocusTicker }) {
+  const t = useT();
   const positions = dash.portfolio.positions;
   const focusTickers = dash.focusTickers;
   const [sort, setSort] = useState({ key: "market_value_try", dir: "desc" });
@@ -184,23 +189,23 @@ export default function Positions({ dash, onFocusTicker }) {
   return (
     <section className="card" id="pozisyonlar">
       <header className="card-head">
-        <h2>Pozisyonlar</h2>
+        <h2>{t("nav.positions")}</h2>
         <span className="muted num">{positions.length}</span>
         <div className="head-actions">
           {view === "cards" && (
             <label className="sort-select">
-              <span className="sr-only">Sırala</span>
+              <span className="sr-only">{t("pos.sort")}</span>
               <select value={`${sort.key}:${sort.dir}`} onChange={(e) => { const [key, dir] = e.target.value.split(":"); setSort({ key, dir }); }}>
-                <option value="market_value_try:desc">Değer ₺ ↓</option>
-                <option value="pnl_try:desc">K/Z ₺ ↓</option>
-                <option value="total_return:desc">Toplam getiri ↓</option>
-                <option value="daily_pnl_try:desc">Günlük ↓</option>
+                <option value="market_value_try:desc">{t("pos.valueTry")} ↓</option>
+                <option value="pnl_try:desc">{t("pos.pnlTry")} ↓</option>
+                <option value="total_return:desc">{t("hero.totalReturn")} ↓</option>
+                <option value="daily_pnl_try:desc">{t("hero.daily")} ↓</option>
                 <option value="ticker:asc">A → Z</option>
               </select>
             </label>
           )}
-          <div className="segmented small" role="group" aria-label="Görünüm">
-            {[["table", "list", "Tablo"], ["cards", "grid", "Kartlar"]].map(([key, icon, label]) => (
+          <div className="segmented small" role="group" aria-label={t("pos.view")}>
+            {[["table", "list", t("pos.table")], ["cards", "grid", t("pos.cards")]].map(([key, icon, label]) => (
               <button key={key} type="button" aria-pressed={view === key} onClick={() => changeView(key)} aria-label={label} title={label}>
                 {view === key && <motion.span layoutId="pos-view-pill" className="segmented-pill" transition={spring} />}
                 <span><Icon name={icon} size={15} /></span>
@@ -221,7 +226,7 @@ export default function Positions({ dash, onFocusTicker }) {
         ) : (
           <motion.div key="table" className="table-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <table className="grid-table">
-              <caption className="sr-only">Pozisyonlar; yerel ve TRY kâr/zarar ayrı sütunlarda.</caption>
+              <caption className="sr-only">{t("pos.caption")}</caption>
               <thead>
                 <tr>
                   {COLUMNS.map((col) => (
@@ -232,7 +237,7 @@ export default function Positions({ dash, onFocusTicker }) {
                       aria-sort={sort.key === col.key ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
                     >
                       <button type="button" className="th-btn" onClick={() => toggle(col.key)}>
-                        {col.label}
+                        {t(col.label)}
                         <motion.span
                           className="sort-mark"
                           animate={{ opacity: sort.key === col.key ? 1 : 0, rotate: sort.dir === "asc" ? 180 : 0 }}
@@ -260,12 +265,12 @@ export default function Positions({ dash, onFocusTicker }) {
                     >
                       <td className="left sticky">
                         <div className="ticker">
-                          <button type="button" className="sym-btn" aria-pressed={on} onClick={() => onFocusTicker(p.ticker)} title="Grafikte göster">
+                          <button type="button" className="sym-btn" aria-pressed={on} onClick={() => onFocusTicker(p.ticker)} title={t("palette.focus")}>
                             {p.ticker}
                           </button>
                           <Badges p={p} />
                           <span className="ticker-name">
-                            {p.name} · {p.currency} · {p.ok ? (p.session === "open" ? "canlı" : `son ${fullDate(p.price_date)}`) : p.error}
+                            {p.name} · {p.currency} · {p.ok ? (p.session === "open" ? t("pos.live") : t("pos.last", { date: fullDate(p.price_date) })) : p.error}
                           </span>
                         </div>
                       </td>
@@ -289,7 +294,7 @@ export default function Positions({ dash, onFocusTicker }) {
               </tbody>
               <tfoot>
                 <tr>
-                  <td className="left sticky">Toplam</td>
+                  <td className="left sticky">{t("pos.total")}</td>
                   <td colSpan={6} />
                   <td className="sep" colSpan={3} />
                   <td className="num sep">{money(totals.cost)}</td>
@@ -304,8 +309,7 @@ export default function Positions({ dash, onFocusTicker }) {
         )}
 
       <p className="fineprint">
-        Ort. alış: Stock Group içindeki alışların miktar ağırlıklı ömür boyu ortalaması (masraflar dahil, satışlar hariç).
-        Kapalı borsalarda fiyat son seans kapanışıdır. Çapraz kur: USD üzerinden hesaplanan kur. Günlük ₺, satırın kendi önceki seansına göredir.
+        {t("pos.footnote")}
       </p>
     </section>
   );

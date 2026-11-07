@@ -11,10 +11,12 @@ import Icon from "../ui/Icons.jsx";
 import { sound } from "../ui/sound.js";
 import Aurora from "./Aurora.jsx";
 import Brand from "./Brand.jsx";
+import { useT } from "../i18n/index.jsx";
 
 const shake = { x: [0, -14, 12, -9, 6, -3, 0], transition: { duration: 0.42 } };
 
 export default function CodeGate({ codeLengths = [4], onOpened, onGoogle, onCreate }) {
+  const t = useT();
   const lengths = codeLengths.length ? codeLengths : [4];
   const size = Math.max(...lengths);
   const [code, setCode] = useState("");
@@ -37,7 +39,7 @@ export default function CodeGate({ codeLengths = [4], onOpened, onGoogle, onCrea
     } catch (err) {
       sound.wrong();
       setState("wrong");
-      setError(err?.status === 429 ? "Çok fazla deneme. Biraz sonra tekrar dene." : err?.status === 404 ? null : "Bağlantı kurulamadı.");
+      setError(err?.status === 429 ? t("code.throttled") : err?.status === 404 ? null : t("common.offline"));
       await row.start(shake);
       setCode("");
       setState("idle");
@@ -65,7 +67,7 @@ export default function CodeGate({ codeLengths = [4], onOpened, onGoogle, onCrea
     try {
       await action();
     } catch {
-      setError("Bağlantı kurulamadı.");
+      setError(t("common.offline"));
       setState("idle");
     }
   }
@@ -84,7 +86,7 @@ export default function CodeGate({ codeLengths = [4], onOpened, onGoogle, onCrea
           <Brand size={34} />
           <span className="wordmark">faðir</span>
         </div>
-        <h1 id="gate-title" className="gate-title">Portföy kodu</h1>
+        <h1 id="gate-title" className="gate-title">{t("code.title")}</h1>
 
         <motion.label className={`code-row ${state}`} animate={row} htmlFor="gate-code">
           <input
@@ -141,11 +143,11 @@ export default function CodeGate({ codeLengths = [4], onOpened, onGoogle, onCrea
 
         <div className="gate-alt">
           <button type="button" className="btn ghost small" onClick={() => leave(onGoogle)} disabled={busy}>
-            <Icon name="user" size={14} /> Google ile giriş
+            <Icon name="user" size={14} /> {t("code.google")}
           </button>
           <span className="gate-dot" aria-hidden="true" />
           <button type="button" className="btn ghost small" onClick={() => leave(onCreate)} disabled={busy}>
-            <Icon name="plus" size={14} /> Yeni portföy
+            <Icon name="plus" size={14} /> {t("code.create")}
           </button>
         </div>
       </motion.main>

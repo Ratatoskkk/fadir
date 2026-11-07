@@ -8,14 +8,16 @@ import { loadGoogleIdentityServices } from "../../google.js";
 import Icon from "../ui/Icons.jsx";
 import { collapse, spring } from "../ui/motion.js";
 import Merge from "./Merge.jsx";
+import { useT } from "../i18n/index.jsx";
 
 const CHOICES = [
-  { key: "claim", title: "Claim", text: "Guest Workspace bu User'a bağlanır; Portföyler ve işlemler aynı yerde kalır." },
-  { key: "transfer", title: "Portfolio Transfer", text: "Guest Portföyleri User Workspace içine ayrı Portföyler olarak taşınır." },
-  { key: "merge", title: "Portfolio Merge", text: "Guest işlemleri seçtiğiniz User Portföyüne birleştirilir." },
+  { key: "claim", title: "identity.claim", text: "identity.claimText" },
+  { key: "transfer", title: "identity.transfer", text: "identity.transferText" },
+  { key: "merge", title: "identity.merge", text: "identity.mergeText" },
 ];
 
 export default function Identity({ onCompleted }) {
+  const t = useT();
   const [phase, setPhase] = useState("checking");
   const [choice, setChoice] = useState(null);
   const [rename, setRename] = useState("");
@@ -51,7 +53,7 @@ export default function Identity({ onCompleted }) {
         if (intent) startRef.current?.();
         return;
       }
-      setError("User oturumu doğrulanamadı. Tekrar deneyin.");
+      setError(t("identity.checkFailed"));
       setPhase("error");
     }
   }, []);
@@ -79,7 +81,7 @@ export default function Identity({ onCompleted }) {
     const nonce = nonceRef.current;
     nonceRef.current = null;
     if (typeof credential !== "string" || !nonce) {
-      setError("Google doğrulaması geçerli bir kimlik bilgisi döndürmedi.");
+      setError(t("identity.noCredential"));
       setPhase("idle");
       return;
     }
@@ -89,7 +91,7 @@ export default function Identity({ onCompleted }) {
       await api.googleVerify({ credential, nonce });
       setPhase("choice");
     } catch (err) {
-      setError(`Google kimliği doğrulanamadı: ${err.message}`);
+      setError(t("identity.verifyFailed", { error: err.message }));
       setPhase("idle");
     }
   }, []);
@@ -104,7 +106,7 @@ export default function Identity({ onCompleted }) {
       nonceRef.current = start.nonce;
       const google = await loadGoogleIdentityServices();
       const identity = google?.accounts?.id;
-      if (!identity?.initialize) throw new Error("Google doğrulaması hazır değil.");
+      if (!identity?.initialize) throw new Error(t("identity.notReady"));
       identity.initialize({
         client_id: start.client_id,
         nonce: start.nonce,
@@ -113,10 +115,10 @@ export default function Identity({ onCompleted }) {
       googleIdentityRef.current = identity;
       setPhase("awaiting");
       if (!identity.renderButton && identity.prompt) identity.prompt();
-      else if (!identity.renderButton) throw new Error("Google doğrulama düğmesi hazır değil.");
+      else if (!identity.renderButton) throw new Error(t("identity.buttonNotReady"));
     } catch (err) {
       nonceRef.current = null;
-      setError(`Google girişi başlatılamadı: ${err.message}`);
+      setError(t("identity.startFailed", { error: err.message }));
       setPhase("idle");
     } finally {
       setBusy(false);
@@ -136,7 +138,7 @@ export default function Identity({ onCompleted }) {
       setPhase("complete");
       await onCompleted?.();
     } catch (err) {
-      setError(`Seçim uygulanamadı: ${err.message}`);
+      setError(t("identity.choiceFailed", { error: err.message }));
     } finally {
       setBusy(false);
     }
@@ -152,7 +154,7 @@ export default function Identity({ onCompleted }) {
       await api.googleTransition({ action: "merge" });
       setMergeReady(true);
     } catch (err) {
-      setError(`Merge seçimi uygulanamadı: ${err.message}`);
+      setError(t("identity.mergeFailed", { error: err.message }));
     } finally {
       setBusy(false);
     }
@@ -170,10 +172,10 @@ export default function Identity({ onCompleted }) {
     <section className="card identity" aria-labelledby="identity-title">
       <header className="card-head">
         <div className="card-icon"><Icon name="user" /></div>
-        <h2 id="identity-title">Google ile kimlik</h2>
+        <h2 id="identity-title">{t("identity.title")}</h2>
         <AnimatePresence mode="popLayout">
           <motion.span key={phase} className={`status-chip ${phase === "signed-in" || phase === "complete" ? "ok" : ""}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-            {phase === "signed-in" || phase === "complete" ? "etkin" : phase === "checking" ? "kontrol" : "misafir"}
+            {t(phase === "signed-in" || phase === "complete" ? "identity.active" : phase === "checking" ? "identity.checking" : "identity.guest")}
           </motion.span>
         </AnimatePresence>
       </header>
@@ -185,30 +187,30 @@ export default function Identity({ onCompleted }) {
       <motion.div key={phase} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26 }}>
           {phase === "idle" && (
             <div className="identity-start">
-              <p className="muted">Kurtarma ve uzun süreli saklama için User Workspace'e geçin. Guest veriniz için açık bir seçim yaparsınız.</p>
+              <p className="muted">{t("identity.intro")}</p>
               <button className="btn primary" type="button" onClick={startSignIn} disabled={busy}>
-                {busy ? <span className="spinner" /> : "Google ile devam et"}
+                {busy ? <span className="spinner" /> : t("identity.continue")}
               </button>
             </div>
           )}
-          {phase === "checking" && <p className="muted" role="status" aria-busy="true"><span className="spinner" /> User oturumu kontrol ediliyor…</p>}
+          {phase === "checking" && <p className="muted" role="status" aria-busy="true"><span className="spinner" /> {t("identity.checkingLong")}</p>}
           {phase === "error" && (
             <div className="identity-start">
-              <p className="muted">User oturumu kontrol edilemedi.</p>
-              <button className="btn ghost" type="button" onClick={hydrateUserSession}>Tekrar dene</button>
+              <p className="muted">{t("identity.checkError")}</p>
+              <button className="btn ghost" type="button" onClick={hydrateUserSession}>{t("common.retry")}</button>
             </div>
           )}
-          {phase === "signed-in" && <p className="muted" role="status">Google User oturumu etkin. Bu tarayıcı User Workspace erişimine sahip.</p>}
+          {phase === "signed-in" && <p className="muted" role="status">{t("identity.signedIn")}</p>}
           {(phase === "awaiting" || phase === "verifying") && (
             <div role="status" aria-live="polite" className="identity-wait">
-              <p className="muted">{phase === "verifying" ? "Google kimliği doğrulanıyor…" : "Google kimlik doğrulaması bekleniyor…"}</p>
+              <p className="muted">{t(phase === "verifying" ? "identity.verifying" : "identity.waiting")}</p>
               <div ref={googleButtonRef} className="google-button" />
             </div>
           )}
           {phase === "choice" && (
             <div className="identity-choice">
-              <p role="status">Google kimliği doğrulandı. Guest veriniz için bir işlem seçin.</p>
-              <div className="choice-grid" role="group" aria-label="Guest verisi işlemi">
+              <p role="status">{t("identity.verified")}</p>
+              <div className="choice-grid" role="group" aria-label={t("identity.choiceGroup")}>
                 {CHOICES.map((c) => (
                   <motion.button
                     key={c.key}
@@ -221,31 +223,31 @@ export default function Identity({ onCompleted }) {
                     whileTap={{ scale: 0.98 }}
                     transition={spring}
                   >
-                    <strong>{c.title}</strong>
-                    <span>{c.text}</span>
+                    <strong>{t(c.title)}</strong>
+                    <span>{t(c.text)}</span>
                   </motion.button>
                 ))}
               </div>
               <AnimatePresence mode="wait">
                 {choice === "claim" && (
                   <motion.div key="claim" {...collapse} className="choice-detail">
-                    <div><button className="btn primary" type="button" onClick={() => applyChoice("claim")} disabled={busy}>Claim'i onayla</button></div>
+                    <div><button className="btn primary" type="button" onClick={() => applyChoice("claim")} disabled={busy}>{t("identity.confirmClaim")}</button></div>
                   </motion.div>
                 )}
                 {choice === "transfer" && (
                   <motion.div key="transfer" {...collapse} className="choice-detail">
                     <div>
                       <div className="field">
-                        <label htmlFor="transfer-rename">Yeni ad (isteğe bağlı)</label>
+                        <label htmlFor="transfer-rename">{t("identity.newName")}</label>
                         <input id="transfer-rename" value={rename} onChange={(e) => setRename(e.target.value)} maxLength={128} />
                       </div>
-                      <button className="btn primary" type="button" onClick={() => applyChoice("transfer")} disabled={busy}>Transfer'i onayla</button>
+                      <button className="btn primary" type="button" onClick={() => applyChoice("transfer")} disabled={busy}>{t("identity.confirmTransfer")}</button>
                     </div>
                   </motion.div>
                 )}
                 {choice === "merge" && !mergeReady && (
                   <motion.p key="merge-wait" className="muted" role="status" aria-busy={busy} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    {busy ? "Portfolio Merge hazırlanıyor…" : "Portfolio Merge geçişi tamamlanamadı; tekrar deneyin."}
+                    {t(busy ? "identity.mergePreparing" : "identity.mergeIncomplete")}
                   </motion.p>
                 )}
                 {choice === "merge" && mergeReady && (
@@ -259,7 +261,7 @@ export default function Identity({ onCompleted }) {
               <motion.span className="success-check" initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 400, damping: 14 }}>
                 <Icon name="check" size={20} />
               </motion.span>
-              {result?.action === "merge" ? "Portfolio Merge tamamlandı." : `${result?.action ?? "Seçim"} tamamlandı.`}
+              {t(result?.action === "merge" ? "identity.mergeDone" : result?.action === "transfer" ? "identity.transferDone" : "identity.claimDone")}
             </div>
           )}
       </motion.div>

@@ -10,13 +10,13 @@ import { api } from "../api.js";
 import { isIntradayRange, isPannable, rangeDays } from "../ranges.js";
 
 export const INTERVALS = [
-  { value: 5, label: "5 sn" },
-  { value: 10, label: "10 sn" },
-  { value: 15, label: "15 sn" },
-  { value: 30, label: "30 sn" },
-  { value: 60, label: "60 sn" },
-  { value: 300, label: "5 dk" },
-  { value: 0, label: "kapalı" },
+  { value: 5, label: "interval.5s" },
+  { value: 10, label: "interval.10s" },
+  { value: 15, label: "interval.15s" },
+  { value: 30, label: "interval.30s" },
+  { value: 60, label: "interval.60s" },
+  { value: 300, label: "interval.5m" },
+  { value: 0, label: "interval.off" },
 ];
 const DEFAULT_INTERVAL = 10;
 const INTERVAL_KEY = "fadir.interval";

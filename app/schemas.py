@@ -166,6 +166,32 @@ class TaxOut(BaseModel):
     source_version: str | None = None
 
 
+class TaxJurisdictionOut(BaseModel):
+    code: str
+    currency: str
+    years: list[int]
+
+
+class JurisdictionTaxOut(BaseModel):
+    """A Tax Estimate in the jurisdiction's currency. An estimate, not tax advice."""
+
+    jurisdiction: str
+    tax_year: int
+    currency: str
+    period_start: date
+    period_end: date
+    gross_gain: Money
+    taxable_gain: Money
+    tax: Money
+    net_after_tax: Money
+    effective_rate: Money
+    marginal_rate: Money
+    #: Keys the interface translates, e.g. "gb.exempt".
+    assumptions: list[str]
+    source_url: str
+    source_version: str
+
+
 class TaxProfileIn(BaseModel):
     tax_year: int = Field(ge=2000)
     source_url: str = Field(max_length=512)

@@ -20,6 +20,14 @@ const INSTRUMENTS = [
   { id: 5, ticker: "2330", exchange: "TWSE", yf_symbol: "2330.TW", currency: "TWD", name: "TSMC", active: true, price: 1045, fx: 1.29, vol: 0.017, fxVol: 0.003, triangulated: true },
 ];
 
+// Synthetic stand-ins for Yahoo search hits that are not yet known instruments.
+const YAHOO = [
+  ["MSFT", "Microsoft Corporation", "NASDAQ"], ["NVDA", "NVIDIA Corporation", "NASDAQ"],
+  ["AMZN", "Amazon.com, Inc.", "NASDAQ"], ["AAPL.MX", "Apple Inc.", "MEX"], ["SAP.DE", "SAP SE", "XETRA"],
+  ["AIR.PA", "Airbus SE", "PAR"], ["ASELS.IS", "Aselsan Elektronik", "BIST"], ["BP.L", "BP p.l.c.", "LSE"],
+  ["AMD", "Advanced Micro Devices, Inc.", "NASDAQ"], ["ADBE", "Adobe Inc.", "NASDAQ"],
+];
+
 let nextTxnId = 100;
 const seedTxns = [
   ["AAPL", "2026-04-02", "BUY", 40, 198.5, 1, 38.4],
@@ -317,6 +325,13 @@ async function handle(req, res) {
   if (path === "/api/transactions" && method === "GET") return send(res, 200, store.txns[pid] ?? []);
   if (path === "/api/transactions" && method === "POST") {
     const b = await readBody(req);
+    if (b.yf_symbol && !INSTRUMENTS.some((i) => i.yf_symbol === b.yf_symbol)) {
+      const hit = YAHOO.find(([sym]) => sym === b.yf_symbol);
+      const price = Number(b.price_native) || 100;
+      INSTRUMENTS.push({ id: INSTRUMENTS.length + 1, ticker: b.yf_symbol, exchange: hit?.[2] ?? "NASDAQ", yf_symbol: b.yf_symbol, currency: "USD", name: hit?.[1] ?? b.yf_symbol, active: true, price, fx: 41.2, vol: 0.012, fxVol: 0.003 });
+      store.live[b.yf_symbol] = { price, fx: 41.2, prevPrice: price, prevFx: 41.2 };
+    }
+    if (b.yf_symbol) b.ticker = INSTRUMENTS.find((i) => i.yf_symbol === b.yf_symbol).ticker;
     const inst = INSTRUMENTS.find((i) => i.ticker === b.ticker);
     if (!inst || !(Number(b.quantity) > 0)) return send(res, 422, { detail: "Geçersiz işlem" });
     if (!store.portfolios.length) store.portfolios.push({ id: 1, name: "Ana Portföy", base_currency: "TRY", code: "5190" });
@@ -353,6 +368,42 @@ async function handle(req, res) {
     return send(res, 204, null);
   }
   if (path === "/api/account" && method === "DELETE") { store = makeStore(); store.portfolios = []; store.txns = {}; return send(res, 204, null); }
+  if (path === "/api/instruments/search") {
+    const q = (url.searchParams.get("q") || "").toUpperCase();
+    const known = INSTRUMENTS.filter((i) => i.ticker.includes(q) || i.name.toUpperCase().includes(q))
+      .map(({ yf_symbol, ticker, name, exchange, currency }) => ({ yf_symbol, ticker, name, exchange, currency, known: true }));
+    const yahoo = YAHOO.filter(([sym, name]) => sym.includes(q) || name.toUpperCase().includes(q))
+      .map(([sym, name, exchange]) => ({ yf_symbol: sym, ticker: sym, name, exchange, currency: null, known: false }));
+    return send(res, 200, [...known, ...yahoo].slice(0, 8));
+  }
+  if (path === "/api/tax/jurisdictions") {
+    return send(res, 200, [
+      { code: "TR", currency: "TRY", years: [2025, 2026] },
+      { code: "GB", currency: "GBP", years: [2025, 2026] },
+      { code: "DE", currency: "EUR", years: [2025, 2026] },
+      { code: "US", currency: "USD", years: [2025, 2026] },
+      { code: "FR", currency: "EUR", years: [2026] },
+    ]);
+  }
+  if (path === "/api/tax/estimates") {
+    if (!store.authed) return send(res, 403, { detail: "Tax Profile requires a signed-in User" });
+    const code = url.searchParams.get("jurisdiction");
+    const year = Number(url.searchParams.get("year"));
+    const ccy = { TR: "TRY", GB: "GBP", DE: "EUR", US: "USD", FR: "EUR" }[code];
+    const gross = { TR: 86377.21, GB: 2012.4, DE: 1841.9, US: 2210.5, FR: 1841.9 }[code];
+    const rate = { TR: 0.15, GB: 0, DE: 0.26375, US: 0, FR: 0.314 }[code];
+    const taxable = code === "GB" ? 0 : code === "DE" ? gross - 1000 : code === "US" ? 0 : gross;
+    const start = code === "GB" ? `${year}-04-06` : `${year}-01-01`;
+    const end = code === "GB" ? `${year + 1}-04-05` : `${year}-12-31`;
+    const keys = { TR: ["tr.tariff", "tr.fifo", "tr.no_exemption"], GB: ["gb.rates", "gb.exempt", "gb.no_income", "gb.no_pooling"], DE: ["de.flat", "de.allowance", "de.no_church"], US: ["us.single", "us.no_income", "us.holding", "us.niit", "us.federal_only"], FR: ["fr.pfu", "fr.no_bareme", "fr.no_carryforward"] }[code];
+    const tax = taxable * rate;
+    return send(res, 200, {
+      jurisdiction: code, tax_year: year, currency: ccy, period_start: start, period_end: end,
+      gross_gain: gross.toFixed(2), taxable_gain: taxable.toFixed(2), tax: tax.toFixed(2), net_after_tax: (gross * 4 - tax).toFixed(2),
+      effective_rate: taxable ? String(rate) : "0", marginal_rate: String(rate), assumptions: keys,
+      source_url: "https://example.invalid/tax", source_version: `Synthetic ${code} ${year}`,
+    });
+  }
   if (path === "/api/tax/profile") {
     if (!store.authed) return send(res, 403, { detail: "403" });
     if (url.searchParams.get("year") === "2001") return send(res, 404, { detail: "missing" });

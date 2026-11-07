@@ -8,18 +8,20 @@ import { copyCode } from "../ui/copy.js";
 import { useToast } from "../ui/overlays.jsx";
 import { spring } from "../ui/motion.js";
 import Brand from "./Brand.jsx";
+import { useT } from "../i18n/index.jsx";
 
 export const VIEWS = [
-  { id: "genel", label: "Genel", icon: "home" },
-  { id: "pozisyonlar", label: "Pozisyonlar", icon: "layers" },
-  { id: "islemler", label: "İşlemler", icon: "receipt" },
-  { id: "hesap", label: "Hesap", icon: "user" },
+  { id: "genel", label: "nav.overview", icon: "home" },
+  { id: "pozisyonlar", label: "nav.positions", icon: "layers" },
+  { id: "islemler", label: "nav.transactions", icon: "receipt" },
+  { id: "vergi", label: "nav.tax", icon: "percent" },
+  { id: "hesap", label: "nav.account", icon: "user" },
 ];
 
 const dfHm = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" });
 const dfWeekday = new Intl.DateTimeFormat("tr-TR", { weekday: "short" });
 
-function nextOpenLabel(iso) {
+function nextOpenLabel(iso, t) {
   const when = new Date(iso);
   const time = dfHm.format(when);
   const today = new Date();
@@ -27,18 +29,19 @@ function nextOpenLabel(iso) {
     (new Date(when.getFullYear(), when.getMonth(), when.getDate()) - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000,
   );
   if (days <= 0) return time;
-  if (days === 1) return `yarın ${time}`;
+  if (days === 1) return t("live.tomorrow", { time });
   return `${dfWeekday.format(when)} ${time}`;
 }
 
 export function NavTabs({ view, onChange, className = "", layoutId = "nav-pill" }) {
+  const t = useT();
   return (
-    <nav className={`nav-tabs ${className}`} aria-label="Bölümler">
+    <nav className={`nav-tabs ${className}`} aria-label={t("nav.sections")}>
       {VIEWS.map((v) => (
         <button key={v.id} type="button" aria-current={view === v.id ? "page" : undefined} onClick={() => onChange(v.id)}>
           {view === v.id && <motion.span layoutId={layoutId} className="nav-pill" transition={spring} />}
           <Icon name={v.icon} size={17} />
-          <span className="nav-label">{v.label}</span>
+          <span className="nav-label">{t(v.label)}</span>
         </button>
       ))}
     </nav>
@@ -49,14 +52,15 @@ function PortfolioSwitcher({ dash }) {
   const { portfolios, selectedPortfolioId, selectPortfolio, loading, fetching } = dash;
   const current = portfolios.find((p) => Number(p.id) === Number(selectedPortfolioId));
   const toast = useToast();
+  const t = useT();
   if (!portfolios.length) return null;
   return (
     <Popover
-      label="Portföy seçin"
+      label={t("portfolio.choose")}
       align="left"
       trigger={({ open, toggle }) => (
         <button type="button" className="switcher" onClick={toggle} aria-expanded={open} aria-haspopup="menu" disabled={loading && !current}>
-          <span className="switcher-name">{current?.name ?? "Portföy"}</span>
+          <span className="switcher-name">{current?.name ?? t("portfolio.label")}</span>
           <span className="switcher-ccy">{current?.base_currency}</span>
           <motion.span animate={{ rotate: open ? 180 : 0 }}><Icon name="down" size={14} /></motion.span>
         </button>
@@ -64,7 +68,7 @@ function PortfolioSwitcher({ dash }) {
     >
       {({ close }) => (
         <>
-          <div className="menu-label">Portföy</div>
+          <div className="menu-label">{t("portfolio.label")}</div>
           {portfolios.map((p) => {
             const on = Number(p.id) === Number(selectedPortfolioId);
             return (
@@ -85,8 +89,8 @@ function PortfolioSwitcher({ dash }) {
           })}
           {current?.code && (
             <>
-              <div className="menu-label">Kod</div>
-              <button type="button" role="menuitem" className="menu-item" onClick={() => { close(); copyCode(current.code, toast); }}>
+              <div className="menu-label">{t("code.short")}</div>
+              <button type="button" role="menuitem" className="menu-item" onClick={() => { close(); copyCode(current.code, toast, t); }}>
                 <span className="code-chip">{current.code}</span>
                 <Icon name="copy" size={14} />
               </button>
@@ -101,13 +105,14 @@ function PortfolioSwitcher({ dash }) {
 function LiveStatus({ dash }) {
   const { anyMarketOpen, nextMarketOpen, lastUpdated, interval, setIntervalSeconds, portfolio } = dash;
   const openCount = (portfolio?.positions ?? []).filter((p) => p.session === "open").length;
+  const t = useT();
   return (
     <Popover
-      label="Canlı veri"
+      label={t("live.title")}
       trigger={({ open, toggle }) => (
         <button type="button" className={`live ${anyMarketOpen ? "open" : ""} ${interval === 0 ? "paused" : ""}`} onClick={toggle} aria-expanded={open} aria-haspopup="menu">
           <span className="live-dot"><i /></span>
-          <span className="live-text">{anyMarketOpen ? "piyasa açık" : "kapalı"}</span>
+          <span className="live-text">{t(anyMarketOpen ? "live.open" : "live.closed")}</span>
           <span className="live-time num">{lastUpdated ? clockTime(lastUpdated) : "—"}</span>
         </button>
       )}
@@ -115,20 +120,20 @@ function LiveStatus({ dash }) {
       {({ close }) => (
         <div className="live-menu">
           <div className="live-row">
-            <span className="muted">Durum</span>
-            <span>{anyMarketOpen ? `${openCount} borsa açık` : "Tüm piyasalar kapalı"}</span>
+            <span className="muted">{t("live.status")}</span>
+            <span>{anyMarketOpen ? t("live.openCount", { n: openCount }) : t("live.allClosed")}</span>
           </div>
           {!anyMarketOpen && nextMarketOpen && (
             <div className="live-row">
-              <span className="muted">Sıradaki açılış</span>
-              <span className="num">{nextOpenLabel(nextMarketOpen)}</span>
+              <span className="muted">{t("live.nextOpen")}</span>
+              <span className="num">{nextOpenLabel(nextMarketOpen, t)}</span>
             </div>
           )}
           <div className="live-row">
-            <span className="muted">Son güncelleme</span>
+            <span className="muted">{t("live.updated")}</span>
             <span className="num">{lastUpdated ? clockTime(lastUpdated) : "—"}</span>
           </div>
-          <div className="menu-label">Yenileme</div>
+          <div className="menu-label">{t("live.interval")}</div>
           <div className="chip-grid">
             {INTERVALS.map((opt) => (
               <button
@@ -139,11 +144,11 @@ function LiveStatus({ dash }) {
                 className={`chip chip-btn ${interval === opt.value ? "on" : ""}`}
                 onClick={() => { setIntervalSeconds(opt.value); close(); }}
               >
-                {opt.label}
+                {t(opt.label)}
               </button>
             ))}
           </div>
-          {!anyMarketOpen && interval !== 0 && <p className="fineprint">Borsalar kapalıyken kur için 15 dakikada bir yenilenir.</p>}
+          {!anyMarketOpen && interval !== 0 && <p className="fineprint">{t("live.closedNote")}</p>}
         </div>
       )}
     </Popover>
@@ -152,6 +157,7 @@ function LiveStatus({ dash }) {
 
 export default function TopBar({ dash, view, onView, condensed, theme, onTheme, onPalette }) {
   const { portfolio, manualRefresh, refreshing, fetching } = dash;
+  const t = useT();
   return (
     <header className="topbar">
       <div className="topbar-inner">
@@ -189,8 +195,8 @@ export default function TopBar({ dash, view, onView, condensed, theme, onTheme, 
             className="icon-btn"
             onClick={manualRefresh}
             disabled={refreshing}
-            aria-label="Yenile"
-            title="Yenile (R)"
+            aria-label={t("common.refresh")}
+            title={`${t("common.refresh")} (R)`}
             whileTap={{ scale: 0.9 }}
           >
             <motion.span
@@ -201,7 +207,7 @@ export default function TopBar({ dash, view, onView, condensed, theme, onTheme, 
               <Icon name="refresh" />
             </motion.span>
           </motion.button>
-          <motion.button type="button" className="icon-btn" onClick={onTheme} aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"} whileTap={{ scale: 0.9 }}>
+          <motion.button type="button" className="icon-btn" onClick={onTheme} aria-label={t(theme === "dark" ? "theme.toLight" : "theme.toDark")} whileTap={{ scale: 0.9 }}>
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.span
                 key={theme}
@@ -215,7 +221,7 @@ export default function TopBar({ dash, view, onView, condensed, theme, onTheme, 
               </motion.span>
             </AnimatePresence>
           </motion.button>
-          <button type="button" className="kbd-btn desktop-only" onClick={onPalette} aria-label="Komut paleti">
+          <button type="button" className="kbd-btn desktop-only" onClick={onPalette} aria-label={t("palette.title")}>
             <Icon name="search" size={15} />
             <kbd>Ctrl K</kbd>
           </button>

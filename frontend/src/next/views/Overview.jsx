@@ -9,11 +9,12 @@ import ChartCard from "../components/ChartCard.jsx";
 import Hero from "../components/Hero.jsx";
 import Icon from "../ui/Icons.jsx";
 import { spring } from "../ui/motion.js";
+import { useT } from "../i18n/index.jsx";
 
 const SECTIONS = [
   { id: "grafik", label: "Grafik" },
-  { id: "ayristirma", label: "Fiyat ve kur" },
-  { id: "dagilim", label: "Dağılım" },
+  { id: "ayristirma", label: "attr.title" },
+  { id: "dagilim", label: "alloc.title" },
 ];
 const DEFAULT_ORDER = SECTIONS.map((s) => s.id);
 const LAYOUT_KEY = "fadir.next.layout";
@@ -30,6 +31,7 @@ function loadOrder() {
 }
 
 function Section({ id, label, onNudge, children }) {
+  const t = useT();
   const controls = useDragControls();
   return (
     <Reorder.Item
@@ -48,8 +50,8 @@ function Section({ id, label, onNudge, children }) {
           if (e.key === "ArrowUp") { e.preventDefault(); onNudge(-1); }
           if (e.key === "ArrowDown") { e.preventDefault(); onNudge(1); }
         }}
-        aria-label={`${label} bölümünü taşı (ok tuşları)`}
-        title="Sürükleyerek taşıyın"
+        aria-label={t("overview.move", { section: label })}
+        title={t("overview.drag")}
       >
         <Icon name="drag" size={16} />
       </button>
@@ -59,6 +61,7 @@ function Section({ id, label, onNudge, children }) {
 }
 
 export default function Overview({ dash }) {
+  const t = useT();
   const [order, setOrder] = useState(loadOrder);
   const { portfolio } = dash;
 
@@ -83,7 +86,7 @@ export default function Overview({ dash }) {
         {order.map((id) => {
           const meta = SECTIONS.find((s) => s.id === id);
           return (
-            <Section key={id} id={id} label={meta.label} onNudge={(d) => nudge(id, d)}>
+            <Section key={id} id={id} label={t(meta.label)} onNudge={(d) => nudge(id, d)}>
               {id === "grafik" && <ChartCard dash={dash} />}
               {id === "ayristirma" && <Attribution totals={portfolio.totals} />}
               {id === "dagilim" && <Allocation positions={portfolio.positions} focusTickers={dash.focusTickers} onFocus={dash.toggleFocus} />}
@@ -93,7 +96,7 @@ export default function Overview({ dash }) {
       </Reorder.Group>
       {order.join() !== DEFAULT_ORDER.join() && (
         <button type="button" className="btn ghost small center" onClick={() => persist(DEFAULT_ORDER)}>
-          Düzeni sıfırla
+          {t("overview.reset")}
         </button>
       )}
     </div>

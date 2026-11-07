@@ -6,8 +6,10 @@ import { motion } from "framer-motion";
 import { arrow, signedMoney, toneOf } from "../../format.js";
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import { ease } from "../ui/motion.js";
+import { useT } from "../i18n/index.jsx";
 
 function Attribution({ totals }) {
+  const t = useT();
   const price = Number(totals.price_effect_try);
   const fx = Number(totals.fx_effect_try);
   const pnl = Number(totals.pnl_try);
@@ -17,9 +19,9 @@ function Attribution({ totals }) {
   const realized = Number(totals.realized_pnl_try);
 
   return (
-    <section className="card" id="ayristirma" aria-label="Getiri ayrıştırması">
+    <section className="card" id="ayristirma" aria-label={t("attr.aria")}>
       <header className="card-head">
-        <h2>Fiyat ve kur</h2>
+        <h2>{t("attr.title")}</h2>
         <span className={`head-figure num ${toneOf(pnl)}`}>
           {arrow(pnl)} <AnimatedNumber value={pnl} format={signedMoney} />
         </span>
@@ -28,7 +30,7 @@ function Attribution({ totals }) {
       <div
         className="attr-track"
         role="img"
-        aria-label={`Fiyat etkisi ${signedMoney(price)}, toplamın ${share(price)}'i. Kur etkisi ${signedMoney(fx)}, toplamın ${share(fx)}'i.`}
+        aria-label={t("attr.barAria", { price: signedMoney(price), priceShare: share(price), fx: signedMoney(fx), fxShare: share(fx) })}
       >
         <motion.div
           className={`attr-seg price ${price < 0 ? "neg" : ""}`}
@@ -53,18 +55,18 @@ function Attribution({ totals }) {
       <div className="attr-legend">
         <div className="attr-item">
           <i className="dot price" />
-          <span className="label">Fiyat etkisi</span>
+          <span className="label">{t("attr.price")}</span>
           <span className={`num ${toneOf(price)}`}>{arrow(price)} <AnimatedNumber value={price} format={signedMoney} /></span>
         </div>
         <div className="attr-item">
           <i className="dot fx" />
-          <span className="label">Kur etkisi</span>
+          <span className="label">{t("attr.fx")}</span>
           <span className={`num ${toneOf(fx)}`}>{arrow(fx)} <AnimatedNumber value={fx} format={signedMoney} /></span>
         </div>
         {realized !== 0 && (
           <div className="attr-item">
             <i className="dot cost" />
-            <span className="label">Gerçekleşen</span>
+            <span className="label">{t("attr.realized")}</span>
             <span className={`num ${toneOf(realized)}`}>{signedMoney(realized)}</span>
           </div>
         )}

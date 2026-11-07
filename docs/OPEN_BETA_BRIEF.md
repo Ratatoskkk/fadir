@@ -62,7 +62,7 @@ One Tax Profile belongs to one User, Tax Jurisdiction, and tax year. All User Po
 
 The Turkey beta proof needs an official source, a visible tax year, fixed tests, and a tax-advice disclaimer.
 
-The team will add another country only after Turkey passes public beta acceptance.
+The owner later added the United Kingdom, Germany, the United States and France; Tax has its own page with a jurisdiction and year picker. See [ADR 0012](adr/0012-tax-jurisdictions-and-languages.md).
 
 ## Market data
 
@@ -126,7 +126,8 @@ This is the dependency order, not a restart checklist.
 | Cookie-only Guests and explicit transitions | [ADR 0009](adr/0009-cookie-only-guest-workspaces.md) |
 | Direct Yahoo for beta; provider seam deferred | [ADR 0010](adr/0010-keep-yahoo-direct-for-beta.md) |
 | Portfolio Codes open one Portfolio on another device | [ADR 0011](adr/0011-portfolio-codes.md) |
+| Five Tax Jurisdictions and five interface languages | [ADR 0012](adr/0012-tax-jurisdictions-and-languages.md) |
 
-Do not add teams, shared Portfolios, email recovery, another tax jurisdiction, a stack
+Do not add teams, shared Portfolios, email recovery, a further tax jurisdiction, a stack
 rewrite, off-site backups, or a speculative provider seam to the beta without a new
 owner decision. Missing acceptance evidence does not change the product contract.

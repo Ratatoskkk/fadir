@@ -5,6 +5,7 @@ import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import Icon from "../ui/Icons.jsx";
 import { collapse, fadeUp, stagger } from "../ui/motion.js";
 import { useTilt } from "../ui/useTilt.js";
+import { useT } from "../i18n/index.jsx";
 
 function Metric({ label, children, sub, tone }) {
   const tilt = useTilt();
@@ -20,6 +21,7 @@ function Metric({ label, children, sub, tone }) {
 }
 
 function Hero({ portfolio }) {
+  const t = useT();
   const { liquidation, totals, tax } = portfolio;
   const daily = totals.daily;
   const [showTax, setShowTax] = useState(false);
@@ -28,9 +30,9 @@ function Hero({ portfolio }) {
   const tone = toneOf(liquidation.net_pnl_try);
 
   return (
-    <motion.section className="hero" id="ozet" aria-label="Portföy özeti" variants={stagger(0.07)} initial="hidden" animate="show">
+    <motion.section className="hero" id="ozet" aria-label={t("hero.summary")} variants={stagger(0.07)} initial="hidden" animate="show">
       <motion.div variants={fadeUp} className={`hero-main glow-${tone}`}>
-        <span className="label">Nakde çevirme değeri · net</span>
+        <span className="label">{t("hero.liquidation")}</span>
         <AnimatedNumber value={liquidation.net_proceeds_try} format={money} className="hero-figure" />
         <div className={`hero-pnl ${tone}`}>
           <span className="pill num">
@@ -39,16 +41,16 @@ function Hero({ portfolio }) {
           <span className="pill num">{ratioPct(liquidation.net_return)}</span>
         </div>
         <p className="hero-caveat">
-          Tahminî · <strong>vergi hariç</strong> ·{" "}
+          {t("hero.estimated")} · <strong>{t("hero.beforeTax")}</strong> ·{" "}
           {hasHaircut
-            ? `%${(Number(liquidation.haircut_pct) * 100).toFixed(2)} kur/komisyon kesintisi (${money(liquidation.haircut_try)})`
-            : "kesinti yok"}
+            ? t("hero.haircut", { pct: pct(Number(liquidation.haircut_pct) * 100).replace(/^[+]/, ""), amount: money(liquidation.haircut_try) })
+            : t("hero.noHaircut")}
         </p>
 
         {tax?.applicable && (
           <div className="after-tax">
             <button type="button" className="after-tax-row" onClick={() => setShowTax((v) => !v)} aria-expanded={showTax}>
-              <span className="label">Vergi sonrası</span>
+              <span className="label">{t("tax.afterTax")}</span>
               <AnimatedNumber value={tax.net_after_tax_try} format={money} className="after-tax-value" />
               <motion.span animate={{ rotate: showTax ? 180 : 0 }} className="after-tax-caret">
                 <Icon name="down" size={16} />
@@ -57,11 +59,11 @@ function Hero({ portfolio }) {
             <div className="after-tax-sub num">
               {taxShown ? (
                 <>
-                  vergi <strong>−{money(tax.tax_try)}</strong> · matrah {money(tax.taxable_gain_try)} · efektif{" "}
-                  {pct(Number(tax.effective_rate) * 100)} · dilim %{num(Number(tax.marginal_rate) * 100, 0)}
+                  {t("hero.tax")} <strong>−{money(tax.tax_try)}</strong> · {t("hero.base")} {money(tax.taxable_gain_try)} · {t("hero.effective")}{" "}
+                  {pct(Number(tax.effective_rate) * 100)} · {t("hero.bracket")} {pct(Number(tax.marginal_rate) * 100, 0).replace(/^[+]/, "")}
                 </>
               ) : (
-                "vergiye tabi kazanç yok"
+                t("hero.noTaxable")
               )}
             </div>
             <AnimatePresence initial={false}>
@@ -70,13 +72,13 @@ function Hero({ portfolio }) {
                   <div className="tax-detail-inner">
                     {taxShown && Number(tax.fx_portion_try) !== 0 && (
                       <div className="tax-split">
-                        <span>Yerel fiyat kazancı</span>
+                        <span>{t("hero.priceGain")}</span>
                         <span className="num">{signedMoney(tax.price_portion_try)}</span>
                         <span className="num">≈ {money(tax.tax_on_price_try)}</span>
-                        <span className="fx-text">Kur farkı kazancı</span>
+                        <span className="fx-text">{t("hero.fxGain")}</span>
                         <span className="num">{signedMoney(tax.fx_portion_try)}</span>
                         <span className="num">≈ {money(tax.tax_on_fx_try)}</span>
-                        <strong>Matrah</strong>
+                        <strong>{t("hero.baseTitle")}</strong>
                         <strong className="num">{money(tax.taxable_gain_try)}</strong>
                         <strong className="num">{money(tax.tax_try)}</strong>
                       </div>
@@ -94,23 +96,23 @@ function Hero({ portfolio }) {
       </motion.div>
 
       <div className="hero-metrics">
-        <Metric label="Yatırılan">
+        <Metric label={t("hero.invested")}>
           <AnimatedNumber value={liquidation.total_invested_try} format={money} />
         </Metric>
-        <Metric label="Piyasa değeri">
+        <Metric label={t("hero.marketValue")}>
           <AnimatedNumber value={totals.market_value_try} format={money} />
         </Metric>
-        <Metric label="Toplam getiri" tone={toneOf(totals.pnl_try)} sub={<AnimatedNumber value={totals.pnl_try} format={signedMoney} className={toneOf(totals.pnl_try)} />}>
+        <Metric label={t("hero.totalReturn")} tone={toneOf(totals.pnl_try)} sub={<AnimatedNumber value={totals.pnl_try} format={signedMoney} className={toneOf(totals.pnl_try)} />}>
           <span className={toneOf(totals.pnl_try)}>
             {arrow(totals.pnl_try)} <AnimatedNumber value={totals.total_return} format={ratioPct} />
           </span>
         </Metric>
         <Metric
-          label="Günlük"
+          label={t("hero.daily")}
           tone={daily?.available ? toneOf(daily.pnl_try) : undefined}
           sub={
             daily?.available ? (
-              <span className="num" title={`Önceki seans: ${fullDate(daily.reference_date)}`}>
+              <span className="num" title={t("hero.prevSession", { date: fullDate(daily.reference_date) })}>
                 fiyat {signedMoney(daily.price_effect_try)} · kur {signedMoney(daily.fx_effect_try)}
               </span>
             ) : null
@@ -122,7 +124,7 @@ function Hero({ portfolio }) {
               {daily.return_ratio !== null && <small className="num"> {ratioPct(daily.return_ratio)}</small>}
             </span>
           ) : (
-            <span className="muted small-text">önceki seans yok</span>
+            <span className="muted small-text">{t("hero.noPrevSession")}</span>
           )}
         </Metric>
       </div>
