@@ -1506,3 +1506,14 @@ health returned 200, and every hashed asset returned 200 publicly. A fresh brows
 the new UI. The classic UI stays available per browser through `?ui=classic` or Hesap →
 Klasik arayüz, and as the build default through `npm run build:classic`. Not yet checked:
 the signed-in owner journey on the new UI.
+
+Portfolio Code deployment (owner instruction 2026-11-08). `f98be5d` is live on
+`fadir-control-lab-01`: six backend files from its diff over `2afbbf7` (the served backend
+matched `2afbbf7` byte for byte), migration `0011_portfolio_codes` (the existing
+Portfolio got a unique 4-digit code), and the rebuilt `/opt/fadir/frontend/dist`. One
+`fadir.service` restart; active, `NRestarts=0`, loopback and public health 200, public
+`/api/access` 200. Rollback: database dump
+`/home/fadir-agent/fadir-tests/deploy-portfolio-codes-20261108/db-before-0011.dump`,
+previous backend files in that folder's `rollback/backend-previous.tgz`, previous bundle
+`/opt/fadir/frontend/dist.previous.portfolio-codes-20261108`. Not yet checked on the
+public site: entering a code from a fresh browser, and the signed-in owner journey.
