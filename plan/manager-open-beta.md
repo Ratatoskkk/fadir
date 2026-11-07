@@ -1409,6 +1409,15 @@ restart. Rollback archive: `/home/fadir-agent/fadir-tests/rollback-hardening/fil
 Loopback and public health returned 200, a foreign Host header returned 400, and public
 health now reports `history_start` as null. Not yet seen on PostgreSQL: the per-instrument
 refresh savepoints and the daily guest purge.
+
+VM boot (owner instruction 2026-11-07). `scripts/hyperv-host-setup.ps1` (run elevated)
+set `fadir-control-lab-01` to start with Windows (no delay), save state on host shutdown,
+and use dynamic memory of 1 GB at startup, 512 MB minimum and 1.5 GB maximum. On the
+VM, `fadir`, `postgresql` and `cloudflared` are enabled. The drop-in
+`/etc/systemd/system/fadir.service.d/postgresql.conf` orders `fadir` after
+`postgresql`. After a cold start, all three were running and public health returned
+200 with about 490 MB in use. Closing the laptop lid still sleeps the host and pauses
+the VM unless the Windows lid action is set to do nothing.
 No
 identity, issuer, subject, email, holdings, transaction values, cookies, or secrets
 may enter ordinary artifacts. Any backend authority change, service configuration
