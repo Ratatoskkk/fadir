@@ -202,6 +202,22 @@ class PortfolioOptionOut(BaseModel):
     id: int
     name: str
     base_currency: str
+    code: str
+
+
+class AccessOut(BaseModel):
+    """What this browser can open, so the interface knows whether to ask for a code."""
+
+    mode: Literal["user", "guest", "code", "none"]
+    code_lengths: list[int]
+
+
+class PortfolioCodeIn(BaseModel):
+    code: str = Field(min_length=4, max_length=12)
+
+
+class PortfolioCodeOut(BaseModel):
+    code: str
 
 
 class PortfolioExportTransactionOut(BaseModel):

@@ -4,6 +4,8 @@ import { INTERVALS } from "../useDashboard.js";
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import Icon from "../ui/Icons.jsx";
 import Popover from "../ui/Popover.jsx";
+import { copyCode } from "../ui/copy.js";
+import { useToast } from "../ui/overlays.jsx";
 import { spring } from "../ui/motion.js";
 import Brand from "./Brand.jsx";
 
@@ -46,6 +48,7 @@ export function NavTabs({ view, onChange, className = "", layoutId = "nav-pill" 
 function PortfolioSwitcher({ dash }) {
   const { portfolios, selectedPortfolioId, selectPortfolio, loading, fetching } = dash;
   const current = portfolios.find((p) => Number(p.id) === Number(selectedPortfolioId));
+  const toast = useToast();
   if (!portfolios.length) return null;
   return (
     <Popover
@@ -80,6 +83,15 @@ function PortfolioSwitcher({ dash }) {
               </button>
             );
           })}
+          {current?.code && (
+            <>
+              <div className="menu-label">Kod</div>
+              <button type="button" role="menuitem" className="menu-item" onClick={() => { close(); copyCode(current.code, toast); }}>
+                <span className="code-chip">{current.code}</span>
+                <Icon name="copy" size={14} />
+              </button>
+            </>
+          )}
         </>
       )}
     </Popover>

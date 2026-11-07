@@ -35,9 +35,13 @@ function makeStore() {
   return {
     authed: false,
     guestNoticeDue: true,
+    // "none" until the browser enters a code, starts a Portfolio, or signs in.
+    access: "none",
+    passPortfolio: null,
+    codeFailures: 0,
     portfolios: [
-      { id: 1, name: "Ana Portföy", base_currency: "TRY" },
-      { id: 2, name: "Uzun vade", base_currency: "TRY" },
+      { id: 1, name: "Ana Portföy", base_currency: "TRY", code: "4821" },
+      { id: 2, name: "Uzun vade", base_currency: "TRY", code: "0730" },
     ],
     txns: {
       1: seedTxns.map(([ticker, trade_date, side, quantity, price_native, fees_native, fx], i) => txn(i + 1, ticker, trade_date, side, quantity, price_native, fees_native, fx)),
@@ -250,11 +254,36 @@ async function handle(req, res) {
   const url = new URL(req.url, "http://mock");
   const path = url.pathname;
   const method = req.method;
-  const pid = Number(url.searchParams.get("portfolio_id") || store.portfolios[0]?.id || 1);
+  const visible = store.access === "code" ? store.portfolios.filter((p) => p.id === store.passPortfolio) : store.portfolios;
+  const pid = Number(url.searchParams.get("portfolio_id") || visible[0]?.id || 1);
   const tickers = url.searchParams.getAll("ticker");
   await new Promise((r) => setTimeout(r, 120 + Math.random() * 220)); // network feel
 
   if (path === "/api/health") return send(res, 200, { ok: true });
+  if (path === "/api/access") return send(res, 200, { mode: store.authed ? "user" : store.access, code_lengths: [4] });
+  if (path === "/api/access/code" && method === "POST") {
+    const { code } = await readBody(req);
+    if (store.codeFailures >= 8) return send(res, 429, { detail: "too many attempts" });
+    const hit = store.portfolios.find((p) => p.code === code);
+    if (!hit) { store.codeFailures += 1; return send(res, 404, { detail: "code not found" }); }
+    store.access = "code";
+    store.passPortfolio = hit.id;
+    return send(res, 200, { mode: "code", code_lengths: [4] });
+  }
+  if (path === "/api/access/code" && method === "DELETE") { store.access = "none"; store.passPortfolio = null; return send(res, 204, null); }
+  if (path === "/api/portfolios/start") {
+    if (!store.portfolios.length) store.portfolios.push({ id: 1, name: "Ana Portföy", base_currency: "TRY", code: "5190" });
+    return send(res, 200, store.portfolios[0]);
+  }
+  const codeMatch = path.match(/^\/api\/portfolios\/(\d+)\/code$/);
+  if (codeMatch) {
+    const p = store.portfolios.find((x) => x.id === Number(codeMatch[1]));
+    p.code = String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+    return send(res, 200, { code: p.code });
+  }
+  if (path === "/api/guest/bootstrap") {
+    if (store.access === "none") store.access = "guest";
+  }
   if (path === "/api/guest/bootstrap") return send(res, 200, { guest: { notice_due: store.guestNoticeDue, expires_at: new Date(Date.now() + 80 * 86400000).toISOString() } });
   if (path === "/api/auth/recover-user-cookie") return send(res, 403, { detail: "request rejected" });
   if (path === "/api/user/sessions") return store.authed ? send(res, 200, { sessions: [] }) : send(res, 401, { detail: "request rejected" });
@@ -279,7 +308,7 @@ async function handle(req, res) {
     store.authed = true;
     return send(res, 200, { moved_count: 1, skipped_count: 1 });
   }
-  if (path === "/api/portfolios" && method === "GET") return send(res, 200, store.portfolios);
+  if (path === "/api/portfolios" && method === "GET") return send(res, 200, visible);
   if (path === "/api/portfolio") return send(res, 200, portfolioOut(pid));
   if (path === "/api/portfolio/history") return send(res, 200, history(pid, url.searchParams.get("from"), url.searchParams.get("to"), tickers));
   if (path === "/api/portfolio/intraday") return send(res, 200, intraday(pid, Number(url.searchParams.get("offset") || 0), tickers));
@@ -290,7 +319,7 @@ async function handle(req, res) {
     const b = await readBody(req);
     const inst = INSTRUMENTS.find((i) => i.ticker === b.ticker);
     if (!inst || !(Number(b.quantity) > 0)) return send(res, 422, { detail: "Geçersiz işlem" });
-    if (!store.portfolios.length) store.portfolios.push({ id: 1, name: "Ana Portföy", base_currency: "TRY" });
+    if (!store.portfolios.length) store.portfolios.push({ id: 1, name: "Ana Portföy", base_currency: "TRY", code: "5190" });
     const fx = b.fx_rate_override ? Number(b.fx_rate_override) : store.live[inst.ticker].fx;
     const row = txn(nextTxnId++, b.ticker, b.trade_date, b.side, Number(b.quantity), Number(b.price_native), Number(b.fees_native || 0), fx, b.note, !!b.fx_rate_override);
     (store.txns[pid] ??= []).push(row);

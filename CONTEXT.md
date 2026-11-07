@@ -19,6 +19,14 @@ _Avoid_: User, Portfolio, database
 A named, private set of investment instruments, transactions, and derived values inside one Workspace. It has one Base Currency and does not support team access.
 _Avoid_: Database, account
 
+**Portfolio Code**:
+A 4 to 6 digit number, unique across the service, that opens one Portfolio on another browser. New codes use 4 digits until that space is full. Replacing a code closes the Portfolio on every browser that used the old one.
+_Avoid_: PIN, password, share link
+
+**Portfolio Pass**:
+One browser's access to one Portfolio, earned by entering its Portfolio Code. It wins over the browser's User or Guest access until the browser closes the Portfolio.
+_Avoid_: User Session, Guest Workspace
+
 **Guest Workspace**:
 A Workspace that has no User and depends on its browser session for access. It expires after 90 days without access.
 _Avoid_: Guest account, temporary database, User

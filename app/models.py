@@ -30,7 +30,8 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import event
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
 #: Wide enough for TWD prices in the hundreds and FX rates to six decimals.
 MONEY = Numeric(24, 8)
@@ -259,6 +260,11 @@ class Portfolio(Base):
             "length(base_currency) = 3",
             name="ck_portfolio_base_currency_length",
         ),
+        UniqueConstraint("code", name="uq_portfolio_code"),
+        CheckConstraint(
+            "length(code) BETWEEN 4 AND 6",
+            name="ck_portfolio_code_length",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -269,12 +275,18 @@ class Portfolio(Base):
     base_currency: Mapped[str] = mapped_column(
         String(3), nullable=False, default="TRY"
     )
+    #: Portfolio Code: digits only, unique across the service. Allocated on first flush
+    #: by `app.services.portfolio_codes`; 4 digits until that space runs out, then 5, 6.
+    code: Mapped[str] = mapped_column(String(6), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=utcnow, onupdate=utcnow
     )
 
     workspace: Mapped[Workspace] = relationship(back_populates="portfolios")
+    passes: Mapped[list["PortfolioPass"]] = relationship(
+        back_populates="portfolio", cascade="all, delete-orphan", passive_deletes=True
+    )
     transactions: Mapped[list["Transaction"]] = relationship(
         back_populates="portfolio", passive_deletes="all"
     )
@@ -282,6 +294,28 @@ class Portfolio(Base):
         back_populates="portfolio", passive_deletes="all"
     )
 
+
+
+class PortfolioPass(Base):
+    """One browser's access to one Portfolio, earned by entering its Portfolio Code."""
+
+    __tablename__ = "portfolio_pass"
+    __table_args__ = (
+        UniqueConstraint("secret_digest", name="uq_portfolio_pass_secret_digest"),
+        CheckConstraint("length(secret_digest) = 32", name="ck_portfolio_pass_digest_length"),
+        Index("ix_portfolio_pass_portfolio", "portfolio_id"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    portfolio_id: Mapped[int] = mapped_column(
+        ForeignKey("portfolio.id", ondelete="CASCADE"), nullable=False
+    )
+    secret_digest: Mapped[bytes] = mapped_column(LargeBinary(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+    last_access_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    portfolio: Mapped[Portfolio] = relationship(back_populates="passes")
 
 class Instrument(Base):
     __tablename__ = "instrument"
@@ -468,3 +502,10 @@ class Snapshot(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
 
     portfolio: Mapped[Portfolio | None] = relationship(back_populates="snapshots")
+
+
+@event.listens_for(Session, "before_flush")
+def _allocate_portfolio_codes(session, _flush_context, _instances) -> None:
+    from app.services.portfolio_codes import assign_codes
+
+    assign_codes(session)

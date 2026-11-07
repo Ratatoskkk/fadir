@@ -792,6 +792,55 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
   .tilt { transform: none; }
 }
 
+
+/* ------------------------------------------------------------------ code gate */
+.gate { position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+.gate-panel { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 28px; width: min(100%, 420px); }
+.gate-brand { display: flex; align-items: center; gap: 10px; }
+.gate .wordmark { display: inline; font-size: 24px; }
+.gate-title { font-size: clamp(24px, 6vw, 30px); letter-spacing: -0.02em; text-align: center; }
+
+.code-row { position: relative; display: flex; justify-content: center; gap: clamp(8px, 2.6vw, 14px); cursor: text; }
+.code-input {
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0;
+  font-size: 16px; /* no iOS zoom on focus */ caret-color: transparent; color: transparent; background: transparent;
+}
+.code-slot {
+  position: relative; display: grid; place-items: center;
+  width: clamp(52px, 15vw, 66px); height: clamp(64px, 18vw, 80px); border-radius: 18px;
+  background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow);
+  transition: border-color 0.2s, transform 0.2s var(--ease), background 0.2s;
+}
+.code-slot.filled { border-color: color-mix(in srgb, var(--price) 45%, var(--line-2)); }
+.code-row:focus-within .code-slot.active { border-color: var(--price); }
+.code-row:focus-within .code-slot.active::after {
+  content: ""; position: absolute; width: 2px; height: 34%; border-radius: 2px; background: var(--price);
+  animation: caret 1s steps(1) infinite;
+}
+@keyframes caret { 50% { opacity: 0; } }
+.code-digit { font: 600 clamp(28px, 8vw, 36px)/1 var(--font-display); }
+.code-row.checking .code-slot { animation: pulse-slot 0.9s var(--ease) infinite alternate; }
+.code-row.checking .code-slot:nth-child(3) { animation-delay: 0.08s; }
+.code-row.checking .code-slot:nth-child(4) { animation-delay: 0.16s; }
+.code-row.checking .code-slot:nth-child(5) { animation-delay: 0.24s; }
+.code-row.checking .code-slot:nth-child(6) { animation-delay: 0.32s; }
+.code-row.checking .code-slot:nth-child(7) { animation-delay: 0.4s; }
+@keyframes pulse-slot { to { transform: translateY(-4px); } }
+.code-row.wrong .code-slot { border-color: var(--down); color: var(--down); }
+.code-row.open .code-slot { border-color: var(--up); color: var(--up); }
+.code-glow {
+  position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--up) 22%, transparent), 0 10px 30px -8px color-mix(in srgb, var(--up) 60%, transparent);
+}
+.gate-status { min-height: 22px; display: grid; place-items: center; font-size: 13px; color: var(--text-2); margin-top: -12px; }
+.gate-alt { display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.gate-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-3); }
+
+/* Portfolio Code chip in the switcher menu and the account card. */
+.code-chip { display: inline-flex; align-items: center; gap: 8px; font: 600 15px/1 var(--font-display); letter-spacing: 0.18em; font-variant-numeric: tabular-nums; }
+.code-card-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.code-big { font: 600 34px/1 var(--font-display); letter-spacing: 0.22em; font-variant-numeric: tabular-nums; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   .blob { animation: none; }

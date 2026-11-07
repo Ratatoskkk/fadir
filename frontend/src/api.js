@@ -42,7 +42,8 @@ async function performRequest(path, options = {}) {
       method === "GET" &&
       !_recoveryAttempted &&
       path !== "/api/auth/recover-user-cookie" &&
-      path !== "/api/guest/bootstrap"
+      path !== "/api/guest/bootstrap" &&
+      path !== "/api/access"
     ) {
       try {
         await performRequest("/api/auth/recover-user-cookie", {
@@ -99,6 +100,12 @@ const withPortfolioId = (path, portfolioId) => {
 };
 
 export const api = {
+  access: () => request("/api/access"),
+  openCode: (code) => request("/api/access/code", { method: "POST", body: JSON.stringify({ code }) }),
+  leaveCode: () => request("/api/access/code", { method: "DELETE" }),
+  startPortfolio: () => request("/api/portfolios/start", { method: "POST" }),
+  renewCode: (portfolioId) =>
+    request(`/api/portfolios/${encodeURIComponent(portfolioId)}/code`, { method: "POST" }),
   portfolios: () => request("/api/portfolios"),
   bootstrapGuest: async () => {
     try {

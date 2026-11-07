@@ -18,6 +18,8 @@ One User controls one Workspace. One Workspace contains many Portfolios.
 
 Each Portfolio has a unique name inside its Workspace. The first saved transaction creates `Ana Portföy` when no Portfolio exists.
 
+Each Portfolio has a unique Portfolio Code. A browser with no access first asks for a code; Google sign-in and a new Portfolio are smaller options on that screen. See [ADR 0011](adr/0011-portfolio-codes.md).
+
 Each Portfolio has one Base Currency. A currency change revalues views and does not rewrite source transactions.
 
 The original private SQLite portfolio will move through a protected administrator migration into the owner's existing verified Google User Workspace. The owner selected `Ana Portföy`, TRY Base Currency, and mapping every legacy Transaction and Snapshot to it. See the [migration runbook](PRIVATE_MIGRATION_RUNBOOK.md).
@@ -123,6 +125,7 @@ This is the dependency order, not a restart checklist.
 | Turkey first; Tax Profiles at User level | [ADR 0008](adr/0008-turkey-first-with-tax-jurisdiction-adapters.md) |
 | Cookie-only Guests and explicit transitions | [ADR 0009](adr/0009-cookie-only-guest-workspaces.md) |
 | Direct Yahoo for beta; provider seam deferred | [ADR 0010](adr/0010-keep-yahoo-direct-for-beta.md) |
+| Portfolio Codes open one Portfolio on another device | [ADR 0011](adr/0011-portfolio-codes.md) |
 
 Do not add teams, shared Portfolios, email recovery, another tax jurisdiction, a stack
 rewrite, off-site backups, or a speculative provider seam to the beta without a new

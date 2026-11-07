@@ -6,10 +6,12 @@ import { flushSync } from "react-dom";
 import { MotionConfig, motion } from "framer-motion";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk";
+import { api } from "../api.js";
 import { switchUi } from "../ui.js";
 import { RANGES } from "../ranges.js";
 import { INTERVALS, useDashboard } from "./useDashboard.js";
 import Aurora from "./components/Aurora.jsx";
+import CodeGate from "./components/CodeGate.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
 import Notices from "./components/Notices.jsx";
 import TopBar, { NavTabs, VIEWS } from "./components/TopBar.jsx";
@@ -82,8 +84,8 @@ function Skeleton() {
   );
 }
 
-function Shell() {
-  const dash = useDashboard();
+function Shell({ access, onLeave, onAccessLost }) {
+  const dash = useDashboard(access, { onAccessLost });
   const [view, go] = useHashView();
   const [theme, toggleTheme] = useTheme();
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -154,9 +156,10 @@ function Shell() {
       })),
       ...INTERVALS.map((o) => ({ id: `int-${o.value}`, group: "Yenileme", label: o.label, icon: "clock", keywords: "yenileme interval", run: () => dash.setIntervalSeconds(o.value) })),
       { id: "classic", group: "Arayüz", label: "Klasik arayüze geç", icon: "swap", run: () => switchUi("classic") },
+      ...(access === "code" ? [{ id: "leave", group: "Portföy", label: "Bu cihazda kapat", icon: "x", run: onLeave }] : []),
     ];
     return list;
-  }, [go, newTransaction, dash, theme, toggleTheme, portfolio, focusTicker]);
+  }, [go, newTransaction, dash, theme, toggleTheme, portfolio, focusTicker, access, onLeave]);
 
   const needsPortfolio = view === "genel" || view === "pozisyonlar";
 
@@ -174,7 +177,7 @@ function Shell() {
   } else if (view === "genel") body = <Overview dash={dash} />;
   else if (view === "pozisyonlar") body = <Positions dash={dash} onFocusTicker={focusTicker} />;
   else if (view === "islemler") body = <Transactions dash={dash} sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} />;
-  else body = <Account dash={dash} />;
+  else body = <Account dash={dash} access={access} onLeave={onLeave} />;
 
   return (
     <div className="app">
@@ -209,11 +212,70 @@ function Shell() {
   );
 }
 
+const GOOGLE_INTENT_KEY = "fadir.google-intent";
+
+/** Ask what this browser can open; a browser with nothing gets the code screen first. */
+function useAccess() {
+  const [access, setAccess] = useState(null);
+  const [codeLengths, setCodeLengths] = useState([4]);
+  const read = useCallback(async () => {
+    try {
+      const value = await api.access();
+      setCodeLengths(Array.isArray(value?.code_lengths) ? value.code_lengths : [4]);
+      setAccess(value?.mode ?? "none");
+    } catch {
+      // The dashboard has its own error and retry surface.
+      setAccess("guest");
+    }
+  }, []);
+  useEffect(() => { read(); }, [read]);
+  return { access, setAccess, codeLengths, read };
+}
+
+function Root() {
+  const { access, setAccess, codeLengths, read } = useAccess();
+
+  const openGoogle = useCallback(async () => {
+    await api.bootstrapGuest();
+    try { sessionStorage.setItem(GOOGLE_INTENT_KEY, "1"); } catch { /* private mode */ }
+    window.location.hash = "/hesap";
+    setAccess("guest");
+  }, [setAccess]);
+
+  const createPortfolio = useCallback(async () => {
+    await api.bootstrapGuest();
+    await api.startPortfolio();
+    window.location.hash = "/genel";
+    setAccess("guest");
+  }, [setAccess]);
+
+  const leave = useCallback(async () => {
+    try { await api.leaveCode(); } finally {
+      window.location.hash = "/genel";
+      setAccess(null);
+      read();
+    }
+  }, [read, setAccess]);
+
+  if (access === null) return <div className="app"><Aurora /></div>;
+  if (access === "none") {
+    return (
+      <CodeGate
+        codeLengths={codeLengths}
+        onOpened={() => { window.location.hash = "/genel"; setAccess("code"); }}
+        onGoogle={openGoogle}
+        onCreate={createPortfolio}
+      />
+    );
+  }
+  return <Shell key={access} access={access} onLeave={leave} onAccessLost={read} />;
+}
+
 export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <OverlayProvider>
-        <Shell />
+        <Root />
       </OverlayProvider>
     </MotionConfig>
   );

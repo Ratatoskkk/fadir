@@ -55,7 +55,8 @@ function loadInterval() {
   }
 }
 
-export function useDashboard() {
+/** `access` is the browser's authority: "user", "guest" or "code" (one Portfolio). */
+export function useDashboard(access = "guest", { onAccessLost } = {}) {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
@@ -144,12 +145,14 @@ export function useDashboard() {
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
+      // A code whose Portfolio got a new code stops working; go back to the code screen.
+      if (access === "code" && err?.status === 401) onAccessLost?.();
       setError(err.message);
     } finally {
       setLoading(false);
       setFetching(false);
     }
-  }, []);
+  }, [access, onAccessLost]);
 
   const loadAll = useCallback(
     ({ force = false } = {}) => run(async () => {
@@ -178,12 +181,13 @@ export function useDashboard() {
 
   const reloadAfterTransaction = useCallback(async () => {
     await loadAll();
+    if (access === "code") return;
     try {
       await readGuestAccess();
     } catch {
       // A successful transaction must not fail because a best-effort notice refresh did.
     }
-  }, [loadAll, readGuestAccess]);
+  }, [loadAll, readGuestAccess, access]);
 
   const refreshAfterIdentity = useCallback(async () => {
     setIdentityReady(true);
@@ -199,12 +203,15 @@ export function useDashboard() {
 
   useEffect(() => {
     run(async () => {
-      await readGuestAccess();
-      await readUserAccess();
+      // A code-opened Portfolio has no Guest Workspace or User of its own on this browser.
+      if (access !== "code") {
+        await readGuestAccess();
+        await readUserAccess();
+      }
       const selectedId = await loadPortfolios();
       await Promise.all([loadMarket({ portfolioId: selectedId }), loadLedger(selectedId)]);
     });
-  }, [run, readGuestAccess, readUserAccess, loadPortfolios, loadMarket, loadLedger]);
+  }, [run, readGuestAccess, readUserAccess, loadPortfolios, loadMarket, loadLedger, access]);
 
   useEffect(() => {
     if (interval === 0) return undefined;
@@ -313,7 +320,14 @@ export function useDashboard() {
       ? pan + 1 < (intraday?.sessions_available ?? 0)
       : !panExhausted(range, pan + 1));
 
+  const renewCode = useCallback(async (id) => {
+    const { code } = await api.renewCode(id);
+    setPortfolios((list) => list.map((p) => (Number(p.id) === Number(id) ? { ...p, code } : p)));
+    return code;
+  }, []);
+
   return {
+    access, renewCode,
     portfolios, selectedPortfolioId, portfolio, history, intraday, transactions, instruments,
     range, focusTickers, interval, lastUpdated, loading, refreshing, fetching, error,
     guestAccess, identityReady, pan, panDir, anyMarketOpen, nextMarketOpen, canPanBack,

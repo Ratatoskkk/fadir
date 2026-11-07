@@ -14,15 +14,17 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from app.api.csrf import CookiePolicy
-from app.services import guest_access, user_sessions
+from app.services import guest_access, portfolio_codes, user_sessions
 
 
 USER_COOKIE_NAME = "__Host-fadir-user"
 GUEST_COOKIE_NAME = "__Host-fadir-guest"
+PASS_COOKIE_NAME = "__Host-fadir-pass"
 USER_COOKIE_MAX_AGE = 30 * 24 * 60 * 60
 GUEST_COOKIE_MAX_AGE = 90 * 24 * 60 * 60
 USER_COOKIE_POLICY = CookiePolicy(max_age=USER_COOKIE_MAX_AGE)
 GUEST_COOKIE_POLICY = CookiePolicy(max_age=GUEST_COOKIE_MAX_AGE)
+PASS_COOKIE_POLICY = CookiePolicy(max_age=GUEST_COOKIE_MAX_AGE)
 _PUBLIC_ID_RE = re.compile(r"[A-Za-z0-9_-]{22}\Z")
 _SECRET_RE = re.compile(r"[A-Za-z0-9_-]{43}\Z")
 
@@ -43,10 +45,12 @@ class RequestAuthorityConfigurationError(RequestAuthorityError):
 class RequestAuthority(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    mode: Literal["user", "guest"]
+    mode: Literal["user", "guest", "code"]
     user_id: int | None
     workspace_id: int
     session_public_id: str | None = None
+    #: Set only for a Portfolio Pass: the one Portfolio this browser may reach.
+    portfolio_id: int | None = None
 
     @property
     def is_user(self) -> bool:
@@ -55,6 +59,10 @@ class RequestAuthority(BaseModel):
     @property
     def is_guest(self) -> bool:
         return self.mode == "guest"
+
+    @property
+    def is_code(self) -> bool:
+        return self.mode == "code"
 
 
 def _clock() -> datetime:
@@ -105,18 +113,42 @@ def delete_guest_cookie(response: Response) -> None:
     GUEST_COOKIE_POLICY.delete(response, GUEST_COOKIE_NAME)
 
 
+def set_pass_cookie(response: Response, secret: str) -> None:
+    PASS_COOKIE_POLICY.apply(response, PASS_COOKIE_NAME, _guest_cookie(secret))
+
+
+def delete_pass_cookie(response: Response) -> None:
+    PASS_COOKIE_POLICY.delete(response, PASS_COOKIE_NAME)
+
+
 def resolve_request_authority(
     session: Session,
     cookies: Mapping[str, str],
     *,
     clock=_clock,
 ) -> RequestAuthority:
-    """Authenticate the request using User precedence, then Guest authority.
+    """Authenticate the request: Portfolio Pass, then User, then Guest authority.
+
+    A Portfolio Pass wins because entering a code is an explicit choice to open that
+    Portfolio on this browser; leaving it restores the browser's own authority.
 
     The caller owns the active root transaction. This function never commits, rolls
     back, closes the session, logs credentials, or falls back from an invalid User
     cookie to Guest access.
     """
+    pass_value = cookies.get(PASS_COOKIE_NAME)
+    if pass_value is not None:
+        try:
+            granted = portfolio_codes.authenticate(session, pass_value, now=clock())
+        except Exception:
+            raise RequestAuthorityError() from None
+        return RequestAuthority(
+            mode="code",
+            user_id=None,
+            workspace_id=granted.workspace_id,
+            portfolio_id=granted.portfolio_id,
+        )
+
     user_value = cookies.get(USER_COOKIE_NAME)
     if user_value is not None:
         public_id, secret = _user_cookie(user_value)

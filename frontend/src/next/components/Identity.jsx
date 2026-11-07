@@ -27,6 +27,7 @@ export default function Identity({ onCompleted }) {
   const googleButtonRef = useRef(null);
   const googleIdentityRef = useRef(null);
   const hydrationRequestRef = useRef(0);
+  const startRef = useRef(null);
 
   const hydrateUserSession = useCallback(async () => {
     const requestId = hydrationRequestRef.current + 1;
@@ -41,6 +42,13 @@ export default function Identity({ onCompleted }) {
       if (hydrationRequestRef.current !== requestId) return;
       if (err?.status === 401) {
         setPhase("idle");
+        // Chosen on the code screen: go straight to the Google step.
+        let intent = false;
+        try {
+          intent = sessionStorage.getItem("fadir.google-intent") === "1";
+          sessionStorage.removeItem("fadir.google-intent");
+        } catch { /* private mode */ }
+        if (intent) startRef.current?.();
         return;
       }
       setError("User oturumu doğrulanamadı. Tekrar deneyin.");
@@ -114,6 +122,8 @@ export default function Identity({ onCompleted }) {
       setBusy(false);
     }
   }
+
+  startRef.current = startSignIn;
 
   async function applyChoice(action) {
     setBusy(true);

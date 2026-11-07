@@ -26,13 +26,17 @@ from app.api.csrf import (
 from app.api.request_authority import (
     GUEST_COOKIE_MAX_AGE,
     GUEST_COOKIE_NAME,
+    PASS_COOKIE_NAME,
     RequestAuthority,
     RequestAuthorityConfigurationError,
     RequestAuthorityError,
     delete_guest_cookie,
+    delete_pass_cookie,
     delete_user_cookie,
     get_request_authority,
     recover_invalid_user_cookie,
+    resolve_request_authority,
+    set_pass_cookie,
     set_user_cookie,
     set_guest_cookie,
 )
@@ -44,6 +48,9 @@ from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
 from app.providers.price_service import PriceService
 from app.schemas import (
+    AccessOut,
+    PortfolioCodeIn,
+    PortfolioCodeOut,
     AttributionOut,
     DailyOut,
     GuestBootstrapOut,
@@ -92,6 +99,7 @@ from app.calc.tax import estimate_tax
 from app.calc.tax_sources import turkey_tax_year, with_official_brackets
 import json
 from app.services import guest_access
+from app.services import portfolio_codes
 from app.services import holdings as holdings_service
 from app.services import instruments as instruments_service
 from app.services import login_transactions
@@ -537,6 +545,8 @@ def google_login_transition(
     guest_secret = request.cookies.get(GUEST_COOKIE_NAME)
     if state is None or guest_secret is None:
         raise RequestAuthorityError()
+    if authority.mode == "code":
+        raise RequestAuthorityError()
     try:
         transition_authority = authority
         if authority.mode == "user":
@@ -578,6 +588,18 @@ def _scope(
     for_write: bool = False,
     base_currency: str = "TRY",
 ) -> PortfolioScope | None:
+    if authority.mode == "code":
+        # A Portfolio Pass reaches exactly one Portfolio and never creates another.
+        if portfolio_id is not None and portfolio_id != authority.portfolio_id:
+            raise HTTPException(404, "Portfolio not found")
+        try:
+            return PortfolioScope.require(
+                session,
+                workspace_id=authority.workspace_id,
+                portfolio_id=authority.portfolio_id,
+            )
+        except PortfolioScopeNotFound as exc:
+            raise HTTPException(404, "Portfolio not found") from exc
     try:
         if for_write:
             return PortfolioScope.select_for_write(
@@ -731,12 +753,130 @@ def list_portfolios(
     session: RequestSessionDep,
     authority: AuthorityDep,
 ) -> list[PortfolioOptionOut]:
-    rows = session.execute(
-        select(Portfolio.id, Portfolio.name, Portfolio.base_currency)
+    statement = (
+        select(Portfolio.id, Portfolio.name, Portfolio.base_currency, Portfolio.code)
         .where(Portfolio.workspace_id == authority.workspace_id)
         .order_by(Portfolio.id)
     )
+    if authority.mode == "code":
+        statement = statement.where(Portfolio.id == authority.portfolio_id)
+    rows = session.execute(statement)
     return [PortfolioOptionOut.model_validate(row._mapping) for row in rows]
+
+
+def _require_owner(authority: RequestAuthority) -> None:
+    """Workspace owners (User or Guest) only; a Portfolio Pass cannot manage codes."""
+    if authority.mode == "code":
+        raise HTTPException(403, "request rejected")
+
+
+@private_router.post(
+    "/portfolios/start",
+    response_model=PortfolioOptionOut,
+    dependencies=[Depends(_write_guard)],
+)
+def start_portfolio(
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> PortfolioOptionOut:
+    """Create the Default Portfolio now, so a new visitor has a code at once."""
+    _require_owner(authority)
+    scope = _scope(session, authority, None, for_write=True)
+    portfolio = scope.portfolio
+    return PortfolioOptionOut(
+        id=portfolio.id, name=portfolio.name, base_currency=portfolio.base_currency, code=portfolio.code
+    )
+
+
+@private_router.post(
+    "/portfolios/{portfolio_id}/code",
+    response_model=PortfolioCodeOut,
+    dependencies=[Depends(_write_guard)],
+)
+def regenerate_portfolio_code(
+    portfolio_id: int,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> PortfolioCodeOut:
+    _require_owner(authority)
+    scope = _scope(session, authority, portfolio_id)
+    try:
+        code = portfolio_codes.regenerate(
+            session, scope.portfolio, now=datetime.now(timezone.utc)
+        )
+    except portfolio_codes.PortfolioCodesExhausted as exc:
+        raise HTTPException(503, "request unavailable") from exc
+    return PortfolioCodeOut(code=code)
+
+
+# -- access ------------------------------------------------------------------------
+
+
+@private_router.get("/access", response_model=AccessOut)
+def read_access(
+    request: Request,
+    response: Response,
+    session: RequestSessionDep,
+) -> AccessOut:
+    """Name this browser's authority without creating one; clears a dead pass."""
+    cookies = dict(request.cookies)
+    now = datetime.now(timezone.utc)
+    if PASS_COOKIE_NAME in cookies:
+        try:
+            portfolio_codes.authenticate(session, cookies[PASS_COOKIE_NAME], now=now)
+        except portfolio_codes.PortfolioCodeError:
+            cookies.pop(PASS_COOKIE_NAME)
+            delete_pass_cookie(response)
+    try:
+        mode = resolve_request_authority(session, cookies, clock=lambda: now).mode
+    except RequestAuthorityError:
+        mode = "none"
+    return AccessOut(mode=mode, code_lengths=portfolio_codes.lengths_in_use(session))
+
+
+@private_router.post("/access/code", response_model=AccessOut)
+def redeem_portfolio_code(
+    payload: PortfolioCodeIn,
+    request: Request,
+    response: Response,
+    session: RequestSessionDep,
+) -> AccessOut:
+    """Open the Portfolio that owns this code on this browser."""
+    _bootstrap_origin_guard(request)
+    try:
+        issued = portfolio_codes.redeem(
+            session, payload.code, _client_key(request), now=datetime.now(timezone.utc)
+        )
+    except portfolio_codes.PortfolioCodeThrottled as exc:
+        raise HTTPException(429, "too many attempts") from exc
+    except portfolio_codes.PortfolioCodeRejected as exc:
+        raise HTTPException(404, "code not found") from exc
+    previous = request.cookies.get(PASS_COOKIE_NAME)
+    if previous is not None:
+        portfolio_codes.revoke(session, previous, now=datetime.now(timezone.utc))
+    set_pass_cookie(response, issued.secret)
+    if CSRF_COOKIE_NAME not in request.cookies:
+        set_csrf_cookie(
+            response,
+            issue_csrf_token(),
+            policy=CookiePolicy(max_age=GUEST_COOKIE_MAX_AGE),
+        )
+    return AccessOut(mode="code", code_lengths=portfolio_codes.lengths_in_use(session))
+
+
+@private_router.delete(
+    "/access/code",
+    status_code=204,
+    dependencies=[Depends(_csrf_guard)],
+)
+def leave_portfolio_code(request: Request, response: Response, session: RequestSessionDep) -> Response:
+    """Close the code-opened Portfolio on this browser."""
+    secret = request.cookies.get(PASS_COOKIE_NAME)
+    if secret is not None:
+        portfolio_codes.revoke(session, secret, now=datetime.now(timezone.utc))
+    delete_pass_cookie(response)
+    response.status_code = 204
+    return response
 
 
 @private_router.get("/portfolio", response_model=PortfolioOut)

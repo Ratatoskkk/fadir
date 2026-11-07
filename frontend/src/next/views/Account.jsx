@@ -5,6 +5,7 @@ import { switchUi } from "../../ui.js";
 import Identity from "../components/Identity.jsx";
 import Tax from "../components/Tax.jsx";
 import Icon from "../ui/Icons.jsx";
+import { copyCode } from "../ui/copy.js";
 import { fadeUp, stagger } from "../ui/motion.js";
 import { useConfirm, useToast } from "../ui/overlays.jsx";
 
@@ -103,12 +104,61 @@ function DataRights({ dash }) {
   );
 }
 
-export default function Account({ dash }) {
+function PortfolioCode({ dash, access, onLeave }) {
+  const { portfolios, selectedPortfolioId, renewCode } = dash;
+  const [busy, setBusy] = useState(false);
+  const confirm = useConfirm();
+  const toast = useToast();
+  const current = portfolios.find((p) => Number(p.id) === Number(selectedPortfolioId));
+  if (!current?.code) return null;
+
+  async function renew() {
+    const ok = await confirm({
+      title: "Yeni kod oluşturulsun mu?",
+      body: "Eski kodla açılan diğer cihazlarda Portföy kapanır.",
+      confirmLabel: "Yeni kod",
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await renewCode(current.id);
+      toast({ tone: "up", text: "Yeni kod hazır" });
+    } catch {
+      toast({ tone: "down", text: GENERIC_RIGHTS_ERROR });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card" aria-labelledby="code-title">
+      <header className="card-head">
+        <div className="card-icon"><Icon name="key" /></div>
+        <h2 id="code-title">Portföy kodu</h2>
+      </header>
+      <div className="code-card-row">
+        <span className="code-big" aria-label={`Kod ${current.code.split("").join(" ")}`}>{current.code}</span>
+        <div className="btn-row">
+          <button className="btn" type="button" onClick={() => copyCode(current.code, toast)}><Icon name="copy" size={15} /> Kopyala</button>
+          {access === "code" ? (
+            <button className="btn" type="button" onClick={onLeave}><Icon name="x" size={15} /> Bu cihazda kapat</button>
+          ) : (
+            <button className="btn" type="button" onClick={renew} disabled={busy}><Icon name="refresh" size={15} /> Yeni kod</button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function Account({ dash, access, onLeave }) {
+  const owner = access !== "code";
   return (
     <motion.div className="stack" variants={stagger(0.08)} initial="hidden" animate="show">
-      <motion.div variants={fadeUp}><Identity onCompleted={dash.refreshAfterIdentity} /></motion.div>
-      <motion.div variants={fadeUp}><Tax identityReady={dash.identityReady} /></motion.div>
-      <motion.div variants={fadeUp}><DataRights dash={dash} /></motion.div>
+      <motion.div variants={fadeUp}><PortfolioCode dash={dash} access={access} onLeave={onLeave} /></motion.div>
+      {owner && <motion.div variants={fadeUp}><Identity onCompleted={dash.refreshAfterIdentity} /></motion.div>}
+      {owner && <motion.div variants={fadeUp}><Tax identityReady={dash.identityReady} /></motion.div>}
+      {owner && <motion.div variants={fadeUp}><DataRights dash={dash} /></motion.div>}
       <motion.section variants={fadeUp} className="card">
         <header className="card-head">
           <div className="card-icon"><Icon name="swap" /></div>

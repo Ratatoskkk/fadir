@@ -10,11 +10,12 @@ from app.schemas import PortfolioOptionOut
 
 
 def test_portfolio_option_schema_is_safe() -> None:
-    option = PortfolioOptionOut(id=3, name="Ana Portföy", base_currency="TRY")
+    option = PortfolioOptionOut(id=3, name="Ana Portföy", base_currency="TRY", code="0420")
     assert option.model_dump() == {
         "id": 3,
         "name": "Ana Portföy",
         "base_currency": "TRY",
+        "code": "0420",
     }
 
 
@@ -61,8 +62,8 @@ def test_portfolio_list_is_scoped_ordered_and_non_mutating(portfolio_client) -> 
     assert response.status_code == 200
     assert response.headers["cache-control"] == "no-store"
     assert response.json() == [
-        {"id": first.portfolios[0].id, "name": "Later", "base_currency": "USD"},
-        {"id": first.portfolios[1].id, "name": "Earlier", "base_currency": "TRY"},
+        {"id": first.portfolios[0].id, "name": "Later", "base_currency": "USD", "code": first.portfolios[0].code},
+        {"id": first.portfolios[1].id, "name": "Earlier", "base_currency": "TRY", "code": first.portfolios[1].code},
     ]
     assert all("workspace_id" not in row for row in response.json())
     assert "user_id" not in response.text
@@ -74,5 +75,5 @@ def test_portfolio_list_is_scoped_ordered_and_non_mutating(portfolio_client) -> 
 
     authority["workspace_id"] = other.id
     assert client.get("/api/portfolios").json() == [
-        {"id": other.portfolios[0].id, "name": "Other", "base_currency": "EUR"}
+        {"id": other.portfolios[0].id, "name": "Other", "base_currency": "EUR", "code": other.portfolios[0].code}
     ]
