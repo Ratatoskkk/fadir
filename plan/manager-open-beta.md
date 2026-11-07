@@ -1497,3 +1497,12 @@ Older accepted evidence and its limits:
 
 Keep old failed proofs and raw artifacts intact. Record only concise accepted summaries
 here; move closed chronology into [history](README.md#historical-reference).
+
+Frontend rehaul deployment (owner instruction 2026-11-07). The rebuilt interface from
+`14fe26e` is now the default, deployed to `/opt/fadir/frontend/dist` on
+`fadir-control-lab-01` with matching archive checksums and no service restart. Rollback
+bundle: `/opt/fadir/frontend/dist.previous.ui-rehaul-20261107`. Loopback and public
+health returned 200, and every hashed asset returned 200 publicly. A fresh browser loads
+the new UI. The classic UI stays available per browser through `?ui=classic` or Hesap →
+Klasik arayüz, and as the build default through `npm run build:classic`. Not yet checked:
+the signed-in owner journey on the new UI.
