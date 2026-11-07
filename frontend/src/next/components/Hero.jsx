@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { arrow, fullDate, money, num, pct, ratioPct, signedMoney, toneOf } from "../../format.js";
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
@@ -19,7 +19,7 @@ function Metric({ label, children, sub, tone }) {
   );
 }
 
-export default function Hero({ portfolio }) {
+function Hero({ portfolio }) {
   const { liquidation, totals, tax } = portfolio;
   const daily = totals.daily;
   const [showTax, setShowTax] = useState(false);
@@ -129,3 +129,6 @@ export default function Hero({ portfolio }) {
     </motion.section>
   );
 }
+
+// Memoized: chart polls and range changes re-render the dashboard, not this card.
+export default memo(Hero);

@@ -29,6 +29,13 @@ const TZ = "Europe/Istanbul";
 const dfTime = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 const dfShort = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit" });
 
+// The first format() with an explicit timeZone loads ICU zone data synchronously, a
+// ~30ms stall that would land on the first intraday (1G) frame. Pay it while idle.
+(window.requestIdleCallback ?? ((fn) => window.setTimeout(fn, 1500)))(() => {
+  dfTime.format(Date.now());
+  dfShort.format(Date.now());
+});
+
 export function compactTry(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "";

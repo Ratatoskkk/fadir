@@ -1,7 +1,8 @@
 // The rebuilt interface. Four views behind hash routes (#/genel, #/pozisyonlar,
 // #/islemler, #/hesap) so links and the back button work; one data hook shared by all.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { MotionConfig, motion } from "framer-motion";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk";
@@ -14,7 +15,7 @@ import Notices from "./components/Notices.jsx";
 import TopBar, { NavTabs, VIEWS } from "./components/TopBar.jsx";
 import Icon from "./ui/Icons.jsx";
 import { OverlayProvider, useToast } from "./ui/overlays.jsx";
-import { viewTransition } from "./ui/motion.js";
+import { prefersReducedMotion, viewTransition } from "./ui/motion.js";
 import Account from "./views/Account.jsx";
 import Overview from "./views/Overview.jsx";
 import Positions from "./views/Positions.jsx";
@@ -27,29 +28,44 @@ const viewFromHash = () => {
 
 function useHashView() {
   const [view, setView] = useState(viewFromHash);
+  // Views mount inside a transition, so React time-slices the render of a whole view
+  // instead of blocking one long frame; the outgoing view stays until the new one is ready.
   useEffect(() => {
-    const onHash = () => setView(viewFromHash());
+    const onHash = () => startTransition(() => setView(viewFromHash()));
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
   const go = useCallback((id) => {
     if (`#/${id}` !== window.location.hash) window.location.hash = `/${id}`;
-    setView(id);
+    startTransition(() => setView(id));
   }, []);
   return [view, go];
 }
 
 function useTheme() {
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || "dark");
-  const toggle = useCallback(() => {
-    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    // A short global crossfade class so every colour changes together, then removed so
-    // ordinary hover transitions are not slowed down.
-    document.documentElement.classList.add("theme-swap");
-    document.documentElement.dataset.theme = next;
-    window.setTimeout(() => document.documentElement.classList.remove("theme-swap"), 450);
-    setTheme(next);
+  /**
+   * The new theme is revealed as a circle growing from the toggle. Uses the View
+   * Transitions API: the browser snapshots old and new pages and animates the snapshots
+   * on the compositor, so nothing on the page restyles per frame. Browsers without it,
+   * and reduced motion, switch instantly.
+   */
+  const toggle = useCallback((event) => {
+    const root = document.documentElement;
+    const next = root.dataset.theme === "dark" ? "light" : "dark";
+    const apply = () => {
+      root.dataset.theme = next;
+      setTheme(next);
+    };
     try { localStorage.setItem("fadir.theme", next); } catch { /* private mode */ }
+    if (!document.startViewTransition || prefersReducedMotion()) { apply(); return; }
+    const rect = event?.currentTarget?.getBoundingClientRect?.();
+    const x = rect ? rect.left + rect.width / 2 : window.innerWidth - 60;
+    const y = rect ? rect.top + rect.height / 2 : 32;
+    root.style.setProperty("--vt-x", `${x}px`);
+    root.style.setProperty("--vt-y", `${y}px`);
+    root.style.setProperty("--vt-r", `${Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))}px`);
+    document.startViewTransition(() => flushSync(apply));
   }, []);
   return [theme, toggle];
 }

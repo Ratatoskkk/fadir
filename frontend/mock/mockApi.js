@@ -336,16 +336,20 @@ async function handle(req, res) {
   return send(res, 404, { detail: "mock: unknown endpoint" });
 }
 
+function mount(server) {
+  server.middlewares.use((req, res, next) => {
+    if (!req.url.startsWith("/api/")) return next();
+    handle(req, res).catch((err) => send(res, 500, { detail: String(err) }));
+  });
+  server.config.logger.info("  faðir mock API active — synthetic data, no backend");
+}
+
+/** Dev server (`dev:mock`) and production-bundle preview (`preview:mock`); never a build. */
 export default function mockApi() {
   return {
     name: "fadir-mock-api",
     apply: "serve",
-    configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        if (!req.url.startsWith("/api/")) return next();
-        handle(req, res).catch((err) => send(res, 500, { detail: String(err) }));
-      });
-      server.config.logger.info("  faðir mock API active — synthetic data, no backend");
-    },
+    configureServer: mount,
+    configurePreviewServer: mount,
   };
 }

@@ -8,7 +8,8 @@
     "dev:mock": "vite --mode mock",
     "build": "vite build",
     "build:classic": "vite build --mode classic",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview:mock": "vite preview --mode mock --port 4173 --strictPort"
   },
   "dependencies": {
     "@fontsource-variable/inter": "5.2.5",

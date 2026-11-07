@@ -40,3 +40,15 @@ npm run build      # production bundle in dist/, served by the FastAPI app
 - **Fonts**: Inter and Space Grotesk are bundled through `@fontsource-variable`, because the CSP blocks external font hosts.
 
 Check frontend changes in a browser at desktop width and at 375px, in both themes.
+
+## Frame-rate check
+
+`bench/frames.mjs` drives 12 scenarios in headless Chrome against the production bundle and reports frame times: idle, scroll, chart scrub and drag, range and pan changes, refresh, view switches, theme toggle, sorting, the transaction sheet and the palette. Run it after changes that touch motion or rendering; the README header in the script has the commands.
+
+The 2026-11-07 baseline, with every frame budgeted at 60fps (16.7ms):
+
+| Profile | Frames on time | Worst frame |
+|---|---|---|
+| Desktop 1440×900 | ≥ 99.4% in every scenario, 100% in 9 of 12 | 33ms, once, on the first switch to 1G (one-time GPU warm-up) |
+| Phone 375×812 @2× | ≥ 99.4%, 100% in 11 of 12 | 42ms, once, on the first range change |
+| Desktop, CPU slowed 4× | ≥ 96.5% | 58ms on the first visit to a view |

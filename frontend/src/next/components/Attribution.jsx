@@ -1,3 +1,4 @@
+import { memo } from "react";
 // Price effect vs FX effect. Segments are sized by magnitude so a negative contribution
 // is still visible; negative segments are hatched so the sign never relies on colour.
 
@@ -6,7 +7,7 @@ import { arrow, signedMoney, toneOf } from "../../format.js";
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import { ease } from "../ui/motion.js";
 
-export default function Attribution({ totals }) {
+function Attribution({ totals }) {
   const price = Number(totals.price_effect_try);
   const fx = Number(totals.fx_effect_try);
   const pnl = Number(totals.pnl_try);
@@ -71,3 +72,6 @@ export default function Attribution({ totals }) {
     </section>
   );
 }
+
+// Memoized: chart polls and range changes re-render the dashboard, not this card.
+export default memo(Attribution);

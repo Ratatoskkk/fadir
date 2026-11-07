@@ -1,10 +1,11 @@
+import { memo } from "react";
 // Holdings by weight. A row click focuses the chart on that instrument.
 
 import { motion } from "framer-motion";
 import { arrow, money, ratioPct, toneOf } from "../../format.js";
 import { ease, spring } from "../ui/motion.js";
 
-export default function Allocation({ positions, focusTickers, onFocus }) {
+function Allocation({ positions, focusTickers, onFocus }) {
   const rows = positions
     .filter((p) => p.ok)
     .map((p) => ({ ...p, value: Number(p.market_value_try) }))
@@ -54,3 +55,6 @@ export default function Allocation({ positions, focusTickers, onFocus }) {
     </section>
   );
 }
+
+// Memoized: chart polls and range changes re-render the dashboard, not this card.
+export default memo(Allocation);

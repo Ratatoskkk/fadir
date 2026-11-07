@@ -8,6 +8,7 @@ import { collapse, spring } from "../ui/motion.js";
 
 const TZ = "Europe/Istanbul";
 const dfStamp = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: TZ });
+(window.requestIdleCallback ?? ((fn) => window.setTimeout(fn, 1500)))(() => dfStamp.format(Date.now()));
 
 /**
  * Δ between two points, decomposed exactly: value = cost + price effect + fx effect at
@@ -154,17 +155,16 @@ export default function ChartCard({ dash }) {
         </div>
 
         <div className="chart-controls">
-          {isPannable(range) && (
-            <div className="pan" role="group" aria-label="Zaman penceresini kaydır">
-              <button type="button" className="icon-btn" onClick={() => panBy(1)} disabled={!canPanBack} aria-label="Önceki pencere">
-                <Icon name="left" size={16} />
-              </button>
-              <span className="pan-label num" aria-live="polite">{pan === 0 ? "canlı" : windowLabel}</span>
-              <button type="button" className="icon-btn" onClick={() => panBy(-1)} disabled={pan === 0} aria-label="Sonraki pencere">
-                <Icon name="right" size={16} />
-              </button>
-            </div>
-          )}
+          {/* Always rendered (inert on "Tümü") so the header never shifts when it appears. */}
+          <div className={`pan ${isPannable(range) ? "" : "inert"}`} role="group" aria-label="Zaman penceresini kaydır" aria-disabled={!isPannable(range)}>
+            <button type="button" className="icon-btn" onClick={() => panBy(1)} disabled={!isPannable(range) || !canPanBack} aria-label="Önceki pencere">
+              <Icon name="left" size={16} />
+            </button>
+            <span className="pan-label num" aria-live="polite">{!isPannable(range) ? "tümü" : pan === 0 ? "canlı" : windowLabel}</span>
+            <button type="button" className="icon-btn" onClick={() => panBy(-1)} disabled={!isPannable(range) || pan === 0} aria-label="Sonraki pencere">
+              <Icon name="right" size={16} />
+            </button>
+          </div>
           <div className="segmented" role="group" aria-label="Zaman aralığı">
             {RANGES.map((r) => (
               <button key={r.key} type="button" aria-pressed={range === r.key} onClick={() => changeRange(r.key)}>
