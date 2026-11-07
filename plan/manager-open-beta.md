@@ -1517,3 +1517,15 @@ Portfolio got a unique 4-digit code), and the rebuilt `/opt/fadir/frontend/dist`
 previous backend files in that folder's `rollback/backend-previous.tgz`, previous bundle
 `/opt/fadir/frontend/dist.previous.portfolio-codes-20261108`. Not yet checked on the
 public site: entering a code from a fresh browser, and the signed-in owner journey.
+
+Tax jurisdictions and languages deployment (owner instruction 2026-11-08). `a6e501d` is
+live on `fadir-control-lab-01`: four backend files (`app/calc/jurisdictions.py` new,
+`app/services/tax_profile.py`, `app/api/routes.py`, `app/schemas.py`) and the rebuilt
+`/opt/fadir/frontend/dist`, with matching archive checksums. No migration. One
+`fadir.service` restart; active, `NRestarts=0`, loopback and public health 200, public
+`/api/tax/jurisdictions` lists TR, GB, DE, US and FR, and `/api/tax/estimates` refuses an
+anonymous request. Rollback: database dump
+`/home/fadir-agent/fadir-tests/deploy-tax-languages-20261108/db-before.dump`, previous
+backend files in that folder's `rollback/backend-previous.tgz`, previous bundle
+`/opt/fadir/frontend/dist.previous.tax-languages-20261108`. Not yet checked: a signed-in
+GB, DE, US or FR estimate, which needs live GBP, EUR and USD rates against TRY.
