@@ -376,4 +376,8 @@ def confirm(
             skipped += 1
     session.flush()
     session.expire_all()
+    # Every source row has now moved or been declined as a duplicate. The emptied Guest
+    # Portfolio would otherwise linger out of the User's sight, still opening by its code.
+    session.delete(session.get(Portfolio, source.id))
+    session.flush()
     return PortfolioMergeConfirmOut(moved_count=moved, skipped_count=skipped)

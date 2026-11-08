@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { arrow, clockTime, money, ratioPct, toneOf } from "../../format.js";
+import { arrow, clockTime, formatLocale, money, ratioPct, toneOf } from "../../format.js";
 import { INTERVALS } from "../useDashboard.js";
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import Icon from "../ui/Icons.jsx";
@@ -18,10 +18,9 @@ export const VIEWS = [
   { id: "hesap", label: "nav.account", icon: "user" },
 ];
 
-const dfHm = new Intl.DateTimeFormat("tr-TR", { hour: "2-digit", minute: "2-digit" });
-const dfWeekday = new Intl.DateTimeFormat("tr-TR", { weekday: "short" });
-
 function nextOpenLabel(iso, t) {
+  const dfHm = new Intl.DateTimeFormat(formatLocale(), { hour: "2-digit", minute: "2-digit" });
+  const dfWeekday = new Intl.DateTimeFormat(formatLocale(), { weekday: "short" });
   const when = new Date(iso);
   const time = dfHm.format(when);
   const today = new Date();
@@ -48,7 +47,7 @@ export function NavTabs({ view, onChange, className = "", layoutId = "nav-pill" 
   );
 }
 
-function PortfolioSwitcher({ dash }) {
+function PortfolioSwitcher({ dash, onNewPortfolio }) {
   const { portfolios, selectedPortfolioId, selectPortfolio, loading, fetching } = dash;
   const current = portfolios.find((p) => Number(p.id) === Number(selectedPortfolioId));
   const toast = useToast();
@@ -95,6 +94,12 @@ function PortfolioSwitcher({ dash }) {
                 <Icon name="copy" size={14} />
               </button>
             </>
+          )}
+          {onNewPortfolio && (
+            <button type="button" role="menuitem" className="menu-item" onClick={() => { close(); onNewPortfolio(); }}>
+              <span>{t("portfolio.new")}</span>
+              <Icon name="plus" size={14} />
+            </button>
           )}
         </>
       )}
@@ -155,7 +160,7 @@ function LiveStatus({ dash }) {
   );
 }
 
-export default function TopBar({ dash, view, onView, condensed, theme, onTheme, onPalette }) {
+export default function TopBar({ dash, view, onView, condensed, theme, onTheme, onPalette, onNewPortfolio }) {
   const { portfolio, manualRefresh, refreshing, fetching } = dash;
   const t = useT();
   return (
@@ -166,7 +171,7 @@ export default function TopBar({ dash, view, onView, condensed, theme, onTheme, 
           <span className="wordmark">faðir</span>
         </div>
 
-        <PortfolioSwitcher dash={dash} />
+        <PortfolioSwitcher dash={dash} onNewPortfolio={onNewPortfolio} />
 
         <AnimatePresence>
           {condensed && portfolio && (

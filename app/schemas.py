@@ -238,6 +238,12 @@ class AccessOut(BaseModel):
     code_lengths: list[int]
 
 
+class PortfolioCreateIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(min_length=1, max_length=128)
+    base_currency: Literal["TRY", "USD", "EUR", "GBP"] = "TRY"
+
+
 class PortfolioCodeIn(BaseModel):
     code: str = Field(min_length=4, max_length=12)
 
@@ -509,7 +515,16 @@ class GoogleLoginVerifyIn(BaseModel):
 
 class GoogleLoginVerifyOut(BaseModel):
     expires_at: datetime
+    #: False only when there is nothing to decide: an existing User and no Guest data,
+    #: where signing in is a Portfolio Transfer of an empty Guest Workspace.
     choice_needed: bool = True
+    #: The verified Google identity already belongs to a User (Claim is then refused;
+    #: Transfer and Merge need one).
+    account_exists: bool = False
+    #: Portfolios in this browser's Guest Workspace.
+    guest_portfolios: int = 0
+    #: Guest Portfolio names already used in the User's Workspace; a Transfer must rename.
+    name_conflicts: list[str] = Field(default_factory=list)
 
 
 class GoogleLoginTransitionIn(BaseModel):

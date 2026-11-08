@@ -180,13 +180,13 @@ function Preferences() {
   );
 }
 
-export default function Account({ dash, access, onLeave }) {
+export default function Account({ dash, access, onLeave, onSignOut }) {
   const t = useT();
   const owner = access !== "code";
   return (
     <motion.div className="stack" variants={stagger(0.08)} initial="hidden" animate="show">
       <motion.div variants={fadeUp}><PortfolioCode dash={dash} access={access} onLeave={onLeave} /></motion.div>
-      {owner && <motion.div variants={fadeUp}><Identity onCompleted={dash.refreshAfterIdentity} /></motion.div>}
+      {owner && <motion.div variants={fadeUp}><Identity onCompleted={dash.refreshAfterIdentity} onSignOut={onSignOut} /></motion.div>}
       {owner && <motion.div variants={fadeUp}><DataRights dash={dash} /></motion.div>}
       <motion.div variants={fadeUp}><Preferences /></motion.div>
       <motion.footer variants={fadeUp} className="legal" aria-label={t("legal.title")}>

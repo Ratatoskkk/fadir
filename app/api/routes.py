@@ -30,6 +30,8 @@ from app.api.request_authority import (
     RequestAuthority,
     RequestAuthorityConfigurationError,
     RequestAuthorityError,
+    USER_COOKIE_NAME,
+    _user_cookie,
     delete_guest_cookie,
     delete_pass_cookie,
     delete_user_cookie,
@@ -42,7 +44,7 @@ from app.api.request_authority import (
 )
 from app.api.request_transaction import RequestTransactionRoute, request_session
 from app.db import get_session
-from app.models import FxCache, GuestAccess, Instrument, Portfolio, Side, Transaction
+from app.models import FxCache, GuestAccess, Instrument, LoginIdentity, Portfolio, Side, Transaction, Workspace
 from app.providers import market_hours
 from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
@@ -53,6 +55,7 @@ from app.schemas import (
     AccessOut,
     PortfolioCodeIn,
     PortfolioCodeOut,
+    PortfolioCreateIn,
     AttributionOut,
     DailyOut,
     GuestBootstrapOut,
@@ -587,7 +590,69 @@ def google_login_verify(
         )
     except (GoogleIdentityError, login_transactions.LoginTransactionError):
         raise RequestAuthorityError() from None
-    return GoogleLoginVerifyOut(expires_at=verified.expires_at)
+    return _verified_context(session, request, _authority, verified)
+
+
+def _names_in(session: Session, workspace_id: int) -> set[str]:
+    return set(session.scalars(select(Portfolio.name).where(Portfolio.workspace_id == workspace_id)))
+
+
+def _verified_context(session, request, authority, verified) -> GoogleLoginVerifyOut:
+    """What the verified person may choose: the identity is found by issuer and subject."""
+    owner = session.scalar(
+        select(LoginIdentity.user_id).where(
+            LoginIdentity.issuer == verified.issuer, LoginIdentity.subject == verified.subject
+        )
+    )
+    guest_workspace_id = authority.workspace_id if authority.mode == "guest" else None
+    if guest_workspace_id is None and authority.mode == "user":
+        secret = request.cookies.get(GUEST_COOKIE_NAME)
+        if secret is not None:
+            try:
+                guest_workspace_id = guest_access.require(
+                    session, secret, clock=lambda: datetime.now(timezone.utc)
+                ).workspace_id
+            except guest_access.GuestAccessError:
+                guest_workspace_id = None
+    guest_names = _names_in(session, guest_workspace_id) if guest_workspace_id else set()
+    conflicts: set[str] = set()
+    if owner is not None:
+        user_workspace_id = session.scalar(select(Workspace.id).where(Workspace.user_id == owner))
+        if user_workspace_id is not None:
+            conflicts = guest_names & _names_in(session, user_workspace_id)
+    return GoogleLoginVerifyOut(
+        expires_at=verified.expires_at,
+        choice_needed=not (owner is not None and not guest_names),
+        account_exists=owner is not None,
+        guest_portfolios=len(guest_names),
+        name_conflicts=sorted(conflicts),
+    )
+
+
+@private_router.post(
+    "/auth/sign-out",
+    status_code=204,
+    dependencies=[Depends(_csrf_guard)],
+)
+def sign_out(request: Request, response: Response, session: RequestSessionDep) -> Response:
+    """End this browser's User session and forget every access it holds."""
+    now = datetime.now(timezone.utc)
+    raw = request.cookies.get(USER_COOKIE_NAME)
+    if raw is not None:
+        try:
+            public_id, secret = _user_cookie(raw)
+            owner = user_sessions.authenticate(session, public_id, secret, clock=lambda: now)
+            user_sessions.revoke(session, owner.user_id, public_id, clock=lambda: now)
+        except (RequestAuthorityError, user_sessions.UserSessionError):
+            pass
+    passed = request.cookies.get(PASS_COOKIE_NAME)
+    if passed is not None:
+        portfolio_codes.revoke(session, passed, now=now)
+    delete_user_cookie(response)
+    delete_guest_cookie(response)
+    delete_pass_cookie(response)
+    response.status_code = 204
+    return response
 
 
 @private_router.post(
@@ -845,6 +910,44 @@ def start_portfolio(
     _require_owner(authority)
     scope = _scope(session, authority, None, for_write=True)
     portfolio = scope.portfolio
+    return PortfolioOptionOut(
+        id=portfolio.id, name=portfolio.name, base_currency=portfolio.base_currency, code=portfolio.code
+    )
+
+
+#: Enough for any personal use; stops a script from filling the code space.
+MAX_PORTFOLIOS_PER_WORKSPACE = 20
+
+
+@private_router.post(
+    "/portfolios",
+    response_model=PortfolioOptionOut,
+    status_code=201,
+    dependencies=[Depends(_write_guard)],
+)
+def create_portfolio(
+    payload: PortfolioCreateIn,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> PortfolioOptionOut:
+    """Add a named Portfolio to the caller's Workspace; it gets its own code."""
+    _require_owner(authority)
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(422, "name required")
+    workspace = session.scalar(
+        select(Workspace).where(Workspace.id == authority.workspace_id).with_for_update()
+    )
+    if workspace is None:
+        raise RequestAuthorityError()
+    names = _names_in(session, workspace.id)
+    if name in names:
+        raise HTTPException(409, "name taken")
+    if len(names) >= MAX_PORTFOLIOS_PER_WORKSPACE:
+        raise HTTPException(422, "portfolio limit reached")
+    portfolio = Portfolio(workspace_id=workspace.id, name=name, base_currency=payload.base_currency)
+    session.add(portfolio)
+    session.flush()
     return PortfolioOptionOut(
         id=portfolio.id, name=portfolio.name, base_currency=portfolio.base_currency, code=portfolio.code
     )

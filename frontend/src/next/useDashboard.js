@@ -181,7 +181,8 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
 
   const reloadAfterTransaction = useCallback(async () => {
     await loadAll();
-    if (access === "code") return;
+    // Only a Guest has a Guest Workspace to re-read; for anyone else bootstrap would mint one.
+    if (access !== "guest") return;
     try {
       await readGuestAccess();
     } catch {
@@ -191,23 +192,19 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
 
   const refreshAfterIdentity = useCallback(async () => {
     setIdentityReady(true);
+    // This browser is a User now: the guest expiry notice no longer applies.
+    setGuestAccess(null);
     await loadAll();
-    try {
-      await readGuestAccess();
-    } catch {
-      // Identity transitions succeed independently of the dashboard refresh.
-    }
-  }, [loadAll, readGuestAccess]);
+    onAccessLost?.();
+  }, [loadAll, onAccessLost]);
 
   loadRef.current = () => run(() => loadMarket());
 
   useEffect(() => {
     run(async () => {
       // A code-opened Portfolio has no Guest Workspace or User of its own on this browser.
-      if (access !== "code") {
-        await readGuestAccess();
-        await readUserAccess();
-      }
+      if (access === "guest") await readGuestAccess();
+      if (access !== "code") await readUserAccess();
       const selectedId = await loadPortfolios();
       await Promise.all([loadMarket({ portfolioId: selectedId }), loadLedger(selectedId)]);
     });

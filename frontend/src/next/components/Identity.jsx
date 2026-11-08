@@ -16,7 +16,7 @@ const CHOICES = [
   { key: "merge", title: "identity.merge", text: "identity.mergeText" },
 ];
 
-export default function Identity({ onCompleted }) {
+export default function Identity({ onCompleted, onSignOut }) {
   const t = useT();
   const [phase, setPhase] = useState("checking");
   const [choice, setChoice] = useState(null);
@@ -25,7 +25,11 @@ export default function Identity({ onCompleted }) {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mergeReady, setMergeReady] = useState(false);
+  // What verification found: whether this Google identity has an account, and which
+  // guest portfolio names would clash with it.
+  const [context, setContext] = useState(null);
   const nonceRef = useRef(null);
+  const applyRef = useRef(null);
   const googleButtonRef = useRef(null);
   const googleIdentityRef = useRef(null);
   const hydrationRequestRef = useRef(0);
@@ -88,7 +92,17 @@ export default function Identity({ onCompleted }) {
     setPhase("verifying");
     setError(null);
     try {
-      await api.googleVerify({ credential, nonce });
+      const found = await api.googleVerify({ credential, nonce });
+      setContext(found);
+      if (found?.choice_needed === false) {
+        // A returning user with no guest data: nothing to decide, just sign in.
+        setPhase("signing");
+        await applyRef.current?.("transfer");
+        return;
+      }
+      const clash = found?.name_conflicts?.[0];
+      setRename(clash ? `${clash} 2` : "");
+      setChoice(found?.account_exists ? null : "claim");
       setPhase("choice");
     } catch (err) {
       setError(t("identity.verifyFailed", { error: err.message }));
@@ -132,14 +146,31 @@ export default function Identity({ onCompleted }) {
     setError(null);
     try {
       const payload = { action };
-      if (action === "transfer") payload.rename = rename.trim() || null;
+      if (action === "transfer" && conflicts.length) payload.rename = rename.trim();
       const value = await api.googleTransition(payload);
       setResult(value);
       setPhase("complete");
       await onCompleted?.();
     } catch (err) {
       setError(t("identity.choiceFailed", { error: err.message }));
+      if (phase !== "choice") setPhase("choice");
     } finally {
+      setBusy(false);
+    }
+  }
+
+  applyRef.current = applyChoice;
+  const conflicts = context?.name_conflicts ?? [];
+  const choices = context?.account_exists
+    ? CHOICES.filter((c) => c.key !== "claim" && !(c.key === "transfer" && conflicts.length > 1))
+    : [];
+
+  async function signOut() {
+    setBusy(true);
+    try {
+      await onSignOut?.();
+    } catch (err) {
+      setError(err.message);
       setBusy(false);
     }
   }
@@ -200,18 +231,32 @@ export default function Identity({ onCompleted }) {
               <button className="btn ghost" type="button" onClick={hydrateUserSession}>{t("common.retry")}</button>
             </div>
           )}
-          {phase === "signed-in" && <p className="muted" role="status">{t("identity.signedIn")}</p>}
+          {phase === "signed-in" && (
+            <div className="identity-start">
+              <p className="muted" role="status">{t("identity.signedIn")}</p>
+              {onSignOut && <button className="btn ghost" type="button" onClick={signOut} disabled={busy}>{t("identity.signOut")}</button>}
+            </div>
+          )}
+          {phase === "signing" && <p className="muted" role="status" aria-busy="true"><span className="spinner" /> {t("identity.signingIn")}</p>}
           {(phase === "awaiting" || phase === "verifying") && (
             <div role="status" aria-live="polite" className="identity-wait">
               <p className="muted">{t(phase === "verifying" ? "identity.verifying" : "identity.waiting")}</p>
               <div ref={googleButtonRef} className="google-button" />
             </div>
           )}
-          {phase === "choice" && (
+          {phase === "choice" && !context?.account_exists && (
+            <div className="identity-start">
+              <p role="status">{t("identity.newAccount")}</p>
+              <button className="btn primary" type="button" onClick={() => applyChoice("claim")} disabled={busy}>
+                {busy ? <span className="spinner" /> : t("identity.createAccount")}
+              </button>
+            </div>
+          )}
+          {phase === "choice" && context?.account_exists && (
             <div className="identity-choice">
               <p role="status">{t("identity.verified")}</p>
               <div className="choice-grid" role="group" aria-label={t("identity.choiceGroup")}>
-                {CHOICES.map((c) => (
+                {choices.map((c) => (
                   <motion.button
                     key={c.key}
                     type="button"
@@ -229,19 +274,16 @@ export default function Identity({ onCompleted }) {
                 ))}
               </div>
               <AnimatePresence mode="wait">
-                {choice === "claim" && (
-                  <motion.div key="claim" {...collapse} className="choice-detail">
-                    <div><button className="btn primary" type="button" onClick={() => applyChoice("claim")} disabled={busy}>{t("identity.confirmClaim")}</button></div>
-                  </motion.div>
-                )}
                 {choice === "transfer" && (
                   <motion.div key="transfer" {...collapse} className="choice-detail">
                     <div>
-                      <div className="field">
-                        <label htmlFor="transfer-rename">{t("identity.newName")}</label>
-                        <input id="transfer-rename" value={rename} onChange={(e) => setRename(e.target.value)} maxLength={128} />
-                      </div>
-                      <button className="btn primary" type="button" onClick={() => applyChoice("transfer")} disabled={busy}>{t("identity.confirmTransfer")}</button>
+                      {conflicts.length === 1 && (
+                        <div className="field">
+                          <label htmlFor="transfer-rename">{t("identity.renameFor", { name: conflicts[0] })}</label>
+                          <input id="transfer-rename" value={rename} onChange={(e) => setRename(e.target.value)} maxLength={128} required />
+                        </div>
+                      )}
+                      <button className="btn primary" type="button" onClick={() => applyChoice("transfer")} disabled={busy || (conflicts.length === 1 && (!rename.trim() || rename.trim() === conflicts[0]))}>{t("identity.confirmTransfer")}</button>
                     </div>
                   </motion.div>
                 )}
@@ -257,11 +299,14 @@ export default function Identity({ onCompleted }) {
             </div>
           )}
           {phase === "complete" && (
-            <div className="success" role="status">
-              <motion.span className="success-check" initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 400, damping: 14 }}>
-                <Icon name="check" size={20} />
-              </motion.span>
-              {t(result?.action === "merge" ? "identity.mergeDone" : result?.action === "transfer" ? "identity.transferDone" : "identity.claimDone")}
+            <div className="identity-start">
+              <div className="success" role="status">
+                <motion.span className="success-check" initial={{ scale: 0, rotate: -40 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 400, damping: 14 }}>
+                  <Icon name="check" size={20} />
+                </motion.span>
+                {t(!context?.choice_needed ? "identity.signedIn" : result?.action === "merge" ? "identity.mergeDone" : result?.action === "transfer" ? "identity.transferDone" : "identity.claimDone")}
+              </div>
+              {onSignOut && <button className="btn ghost" type="button" onClick={signOut} disabled={busy}>{t("identity.signOut")}</button>}
             </div>
           )}
       </motion.div>

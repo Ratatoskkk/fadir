@@ -113,7 +113,7 @@ function Hero({ portfolio }) {
           sub={
             daily?.available ? (
               <span className="num" title={t("hero.prevSession", { date: fullDate(daily.reference_date) })}>
-                fiyat {signedMoney(daily.price_effect_try)} · kur {signedMoney(daily.fx_effect_try)}
+                {t("hero.dailySplit", { price: signedMoney(daily.price_effect_try), fx: signedMoney(daily.fx_effect_try) })}
               </span>
             ) : null
           }

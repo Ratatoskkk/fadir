@@ -283,6 +283,15 @@ async function handle(req, res) {
     if (!store.portfolios.length) store.portfolios.push({ id: 1, name: "Ana Portföy", base_currency: "TRY", code: "5190" });
     return send(res, 200, store.portfolios[0]);
   }
+  if (path === "/api/portfolios" && method === "POST") {
+    const body = await readBody(req);
+    const name = String(body?.name ?? "").trim();
+    if (store.portfolios.some((x) => x.name === name)) return send(res, 409, { detail: "name taken" });
+    const created = { id: store.portfolios.length + 1, name, base_currency: body?.base_currency ?? "TRY", code: String(1000 + Math.floor(Math.random() * 9000)) };
+    store.portfolios.push(created);
+    return send(res, 201, created);
+  }
+  if (path === "/api/auth/sign-out") { store.access = "none"; store.passPortfolio = null; return send(res, 204, null); }
   const codeMatch = path.match(/^\/api\/portfolios\/(\d+)\/code$/);
   if (codeMatch) {
     const p = store.portfolios.find((x) => x.id === Number(codeMatch[1]));
@@ -296,7 +305,9 @@ async function handle(req, res) {
   if (path === "/api/auth/recover-user-cookie") return send(res, 403, { detail: "request rejected" });
   if (path === "/api/user/sessions") return store.authed ? send(res, 200, { sessions: [] }) : send(res, 401, { detail: "request rejected" });
   if (path === "/api/auth/google/start") return send(res, 200, { nonce: "mock-nonce", client_id: "mock-client" });
-  if (path === "/api/auth/google/verify") return send(res, 200, { verified: true });
+  if (path === "/api/auth/google/verify") {
+    return send(res, 200, { expires_at: new Date(Date.now() + 600000).toISOString(), choice_needed: true, account_exists: false, guest_portfolios: store.portfolios.length, name_conflicts: [] });
+  }
   if (path === "/api/auth/google/transition") {
     const body = await readBody(req);
     if (body.action !== "merge") { store.authed = true; store.guestNoticeDue = false; }

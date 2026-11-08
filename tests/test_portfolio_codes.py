@@ -201,3 +201,49 @@ def test_deleting_a_portfolio_removes_its_passes(session) -> None:
     session.delete(portfolio)
     session.commit()
     assert session.query(PortfolioPass).count() == 0
+
+
+def test_an_owner_creates_a_named_portfolio_with_its_own_code(client, owner_workspace) -> None:
+    created = client.post("/api/portfolios", headers=_csrf(client), json={"name": "  Emeklilik ", "base_currency": "USD"})
+    assert created.status_code == 201
+    body = created.json()
+    assert body["name"] == "Emeklilik" and body["base_currency"] == "USD"
+    assert len(body["code"]) == 4 and body["code"].isdigit()
+    listed = client.get("/api/portfolios").json()
+    assert [p["name"] for p in listed] == ["Ana Portföy", "Emeklilik"]
+    assert client.post("/api/portfolios", headers=_csrf(client), json={"name": "Emeklilik"}).status_code == 409
+    assert client.post("/api/portfolios", headers=_csrf(client), json={"name": "   "}).status_code == 422
+    # The new Portfolio opens on another device by its code.
+    with _browser() as other:
+        assert _open(other, body["code"]).status_code == 200
+        assert [p["name"] for p in other.get("/api/portfolios").json()] == ["Emeklilik"]
+
+
+def test_a_code_opened_portfolio_cannot_create_portfolios(client, owner_workspace) -> None:
+    code = owner_workspace.portfolios[0].code
+    with _browser() as other:
+        assert _open(other, code).status_code == 200
+        assert other.post("/api/portfolios", headers=_csrf(other), json={"name": "Yeni"}).status_code == 403
+
+
+def test_portfolio_creation_is_capped_per_workspace(client, session, owner_workspace) -> None:
+    from app.api.routes import MAX_PORTFOLIOS_PER_WORKSPACE
+
+    session.add_all(
+        Portfolio(workspace_id=owner_workspace.id, name=f"P{i}", base_currency="TRY")
+        for i in range(MAX_PORTFOLIOS_PER_WORKSPACE - 1)
+    )
+    session.commit()
+    assert client.post("/api/portfolios", headers=_csrf(client), json={"name": "One too many"}).status_code == 422
+
+
+def test_sign_out_closes_a_code_opened_portfolio_and_clears_every_access_cookie(owner_workspace) -> None:
+    code = owner_workspace.portfolios[0].code
+    with _browser() as other:
+        assert _open(other, code).status_code == 200
+        signed_out = other.post("/api/auth/sign-out", headers=_csrf(other))
+        assert signed_out.status_code == 204
+        cleared = " ".join(signed_out.headers.get_list("set-cookie"))
+        for name in ("__Host-fadir-user", "__Host-fadir-guest", PASS_COOKIE_NAME):
+            assert name in cleared
+        assert other.get("/api/access").json()["mode"] == "none"

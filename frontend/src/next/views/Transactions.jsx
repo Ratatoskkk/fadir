@@ -60,6 +60,9 @@ export function TransactionForm({ instruments, portfolioId, onChanged, onDone })
       const created = await api.createTransaction(payload, portfolioId);
       toast({ tone: "up", text: t(form.side === "BUY" ? "txn.addedBuy" : "txn.addedSell", { ticker: created?.ticker ?? picked.ticker }) });
       setForm({ ...blank(), trade_date: form.trade_date });
+      // A first-time instrument has no cached prices yet; fetch them now rather than
+      // showing it unpriced until the next background refresh (an hour when closed).
+      if (!picked.known) await api.refresh().catch(() => {});
       await onChanged();
       onDone?.();
     } catch (err) {

@@ -105,7 +105,9 @@ def test_postgresql_google_verify_stages_identity_and_is_idempotent(monkeypatch)
                 json={"credential": "synthetic-credential", "nonce": nonce},
             )
             assert verified.status_code == 200
-            assert set(verified.json()) == {"expires_at", "choice_needed"}
+            assert set(verified.json()) == {
+                "expires_at", "choice_needed", "account_exists", "guest_portfolios", "name_conflicts"
+            }
             repeated = client.post(
                 "/api/auth/google/verify",
                 headers=headers,

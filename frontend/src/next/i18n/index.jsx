@@ -53,8 +53,11 @@ export function browserRegion() {
   return null;
 }
 
+const lookup = (code, key) => DICTIONARIES[code]?.[key] ?? en[key] ?? tr[key];
+
+/** `{n}` of exactly 1 uses the `<key>.one` form when a language has one. */
 function translate(code, key, vars) {
-  const text = DICTIONARIES[code]?.[key] ?? en[key] ?? tr[key] ?? key;
+  const text = (vars?.n === 1 && lookup(code, `${key}.one`)) || lookup(code, key) || key;
   if (!vars) return text;
   return text.replace(/\{(\w+)\}/g, (match, name) => (vars[name] ?? match));
 }

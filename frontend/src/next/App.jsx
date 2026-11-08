@@ -13,6 +13,7 @@ import { INTERVALS, useDashboard } from "./useDashboard.js";
 import Aurora from "./components/Aurora.jsx";
 import CodeGate from "./components/CodeGate.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
+import NewPortfolio from "./components/NewPortfolio.jsx";
 import Notices from "./components/Notices.jsx";
 import TopBar, { NavTabs, VIEWS } from "./components/TopBar.jsx";
 import Icon from "./ui/Icons.jsx";
@@ -87,12 +88,15 @@ function Skeleton() {
   );
 }
 
-function Shell({ access, onLeave, onAccessLost }) {
+function Shell({ access, onLeave, onSignOut, onAccessLost }) {
   const dash = useDashboard(access, { onAccessLost });
   const [view, go] = useHashView();
   const [theme, toggleTheme] = useTheme();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [newPortfolioOpen, setNewPortfolioOpen] = useState(false);
+  // A code opens exactly one Portfolio; only the Workspace owner adds more.
+  const openNewPortfolio = access === "code" ? null : () => setNewPortfolioOpen(true);
   const [heroOut, setHeroOut] = useState(false);
   const toast = useToast();
   const t = useT();
@@ -160,7 +164,9 @@ function Shell({ access, onLeave, onAccessLost }) {
       })),
       ...INTERVALS.map((o) => ({ id: `int-${o.value}`, group: t("live.interval"), label: t(o.label), icon: "clock", keywords: "interval", run: () => dash.setIntervalSeconds(o.value) })),
       { id: "classic", group: t("ui.title"), label: t("ui.classic"), icon: "swap", run: () => switchUi("classic") },
-      ...(access === "code" ? [{ id: "leave", group: t("portfolio.label"), label: t("code.leave"), icon: "x", run: onLeave }] : []),
+      ...(access === "code"
+        ? [{ id: "leave", group: t("portfolio.label"), label: t("code.leave"), icon: "x", run: onLeave }]
+        : [{ id: "new-portfolio", group: t("portfolio.label"), label: t("portfolio.new"), icon: "plus", run: () => setNewPortfolioOpen(true) }]),
     ];
     return list;
   }, [go, newTransaction, dash, theme, toggleTheme, portfolio, focusTicker, access, onLeave, t]);
@@ -182,7 +188,7 @@ function Shell({ access, onLeave, onAccessLost }) {
   else if (view === "pozisyonlar") body = <Positions dash={dash} onFocusTicker={focusTicker} />;
   else if (view === "islemler") body = <Transactions dash={dash} sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} />;
   else if (view === "vergi") body = <TaxView dash={dash} onSignIn={access === "code" ? null : () => go("hesap")} />;
-  else body = <Account dash={dash} access={access} onLeave={onLeave} />;
+  else body = <Account dash={dash} access={access} onLeave={onLeave} onSignOut={onSignOut} />;
 
   return (
     <div className="app">
@@ -195,6 +201,7 @@ function Shell({ access, onLeave, onAccessLost }) {
         theme={theme}
         onTheme={toggleTheme}
         onPalette={() => setPaletteOpen(true)}
+        onNewPortfolio={openNewPortfolio}
       />
       <main className="content">
         {!loading && !error && dash.portfolios.length === 0 && (
@@ -213,6 +220,7 @@ function Shell({ access, onLeave, onAccessLost }) {
       </main>
       <NavTabs view={view} onChange={go} className="bottom-nav mobile-only" layoutId="bottom-pill" />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} />
+      {openNewPortfolio && <NewPortfolio open={newPortfolioOpen} onClose={() => setNewPortfolioOpen(false)} dash={dash} />}
     </div>
   );
 }
@@ -262,6 +270,13 @@ function Root() {
     }
   }, [read, setAccess]);
 
+  const signOut = useCallback(async () => {
+    await api.signOut();
+    window.location.hash = "/genel";
+    setAccess(null);
+    read();
+  }, [read, setAccess]);
+
   if (access === null) return <div className="app"><Aurora /></div>;
   if (access === "none") {
     return (
@@ -273,12 +288,15 @@ function Root() {
       />
     );
   }
-  return <Shell key={access} access={access} onLeave={leave} onAccessLost={read} />;
+  // Guest → User happens inside the Shell (sign-in), so it keeps its state; a code is its own Shell.
+  return <Shell key={access === "code" ? "code" : "owner"} access={access} onLeave={leave} onSignOut={signOut} onAccessLost={read} />;
 }
 
 /** A language change re-renders every number and date in the new locale. */
 function LocalizedRoot() {
   const { lang } = useI18n();
+  const t = useT();
+  useEffect(() => { document.title = t("app.title"); }, [t]);
   return <Root key={lang} />;
 }
 

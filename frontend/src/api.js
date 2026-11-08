@@ -104,6 +104,8 @@ export const api = {
   openCode: (code) => request("/api/access/code", { method: "POST", body: JSON.stringify({ code }) }),
   leaveCode: () => request("/api/access/code", { method: "DELETE" }),
   startPortfolio: () => request("/api/portfolios/start", { method: "POST" }),
+  createPortfolio: (payload) => request("/api/portfolios", { method: "POST", body: JSON.stringify(payload) }),
+  signOut: () => request("/api/auth/sign-out", { method: "POST" }),
   renewCode: (portfolioId) =>
     request(`/api/portfolios/${encodeURIComponent(portfolioId)}/code`, { method: "POST" }),
   portfolios: () => request("/api/portfolios"),

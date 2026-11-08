@@ -29,20 +29,22 @@ def test_portfolio_merge_synthetic_rules(session, monkeypatch):
         row = Transaction(portfolio_id=portfolio.id, instrument_id=instrument.id, trade_date=date(2026, 1, 1), side=Side.BUY, quantity=Decimal("2"), price_native=Decimal("10"), fees_native=Decimal(fees), fx_rate_to_try=Decimal(fx), fx_rate_date=date(2026,1,1), fx_provider="manual")
         session.add(row); session.flush(); return row
     source_row = add(source)
-    original_updated_at = source_row.updated_at
+    source_row_id = source_row.id
     add(target, fees="2")
     extra = Transaction(portfolio_id=source.id, instrument_id=instrument.id, trade_date=date(2026,2,1), side=Side.SELL, quantity=Decimal("1"), price_native=Decimal("11"), fees_native=Decimal("0"), fx_rate_to_try=Decimal("30"), fx_rate_date=date(2026,2,1), fx_provider="manual")
     session.add(extra); session.flush()
     original_extra_updated_at = extra.updated_at
+    source_id = source.id
     plan = portfolio_merge.preview(session, authority=_authority(target_ws.id, user.id), guest_secret="x", source_portfolio_id=source.id, target_portfolio_id=target.id)
     assert len(plan.candidates) == 1 and plan.candidates[0].differences[0].field == "fees_native"
     assert [r.id for r in plan.movable_source_rows] == [extra.id]
-    result = portfolio_merge.confirm(session, authority=_authority(target_ws.id, user.id), guest_secret="x", source_portfolio_id=source.id, target_portfolio_id=target.id, revision_token=plan.revision_token, decisions=[{"source_transaction_id": source_row.id, "action": "skip"}])
+    result = portfolio_merge.confirm(session, authority=_authority(target_ws.id, user.id), guest_secret="x", source_portfolio_id=source_id, target_portfolio_id=target.id, revision_token=plan.revision_token, decisions=[{"source_transaction_id": source_row_id, "action": "skip"}])
     assert result.skipped_count == 1 and result.moved_count == 1
-    assert session.scalar(select(Transaction.portfolio_id).where(Transaction.id == source_row.id)) == source.id
+    # The declined duplicate leaves with its emptied Guest Portfolio, code and all.
+    assert session.scalar(select(Transaction.id).where(Transaction.id == source_row_id)) is None
+    assert session.scalar(select(Portfolio.id).where(Portfolio.id == source_id)) is None
     assert session.scalar(select(Transaction.portfolio_id).where(Transaction.id == extra.id)) == target.id
     assert session.scalar(select(Transaction.updated_at).where(Transaction.id == extra.id)) == original_extra_updated_at.replace(tzinfo=None)
-    assert source_row.updated_at.replace(tzinfo=None) == original_updated_at.replace(tzinfo=None)
 
 
 def test_portfolio_merge_rejects_stale_revision(session, monkeypatch):

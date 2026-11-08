@@ -76,7 +76,7 @@ An explicit choice that moves Guest Workspace Portfolios into a current User's W
 _Avoid_: Automatic Merge, overwrite
 
 **Portfolio Merge**:
-A User-confirmed move of guest transactions into one selected User Portfolio. Possible duplicates require a keep-or-skip choice before the move.
+A User-confirmed move of guest transactions into one selected User Portfolio. Possible duplicates require a keep-or-skip choice before the move. The emptied Guest Portfolio, with any skipped duplicates and its Portfolio Code, is then deleted.
 _Avoid_: Automatic Merge, Portfolio Transfer
 
 **Stock Group**:
