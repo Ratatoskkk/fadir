@@ -1529,3 +1529,17 @@ anonymous request. Rollback: database dump
 backend files in that folder's `rollback/backend-previous.tgz`, previous bundle
 `/opt/fadir/frontend/dist.previous.tax-languages-20261108`. Not yet checked: a signed-in
 GB, DE, US or FR estimate, which needs live GBP, EUR and USD rates against TRY.
+
+Journey fixes deployment (owner instruction 2026-11-08). `8dc1d87` is live on
+`fadir-control-lab-01`: three backend files (`app/api/routes.py`, `app/schemas.py`,
+`app/services/portfolio_merge.py`) and the rebuilt `/opt/fadir/frontend/dist`, with matching
+archive checksums. No migration. Before release the sign-in, guest, code, Claim, Transfer,
+Merge and new-portfolio journeys ran against a throwaway copy on the lab VM (database
+`fadir_journeys`, synthetic Google identities, never production data). One `fadir.service`
+restart; active, `NRestarts=0`, loopback and public health 200, no errors in the journal;
+public `/api/auth/sign-out` refuses a request without CSRF and `/api/portfolios` refuses an
+anonymous create. Rollback: database dump
+`/home/fadir-agent/fadir-tests/deploy-journey-fixes-20261108/db-before.dump`, previous
+backend files in that folder's `rollback/backend-previous.tgz`, previous bundle
+`/opt/fadir/frontend/dist.previous.journey-fixes-20261108`. Not yet checked: the real Google
+popup with these changes, and the signed-in owner journey on the public site.
