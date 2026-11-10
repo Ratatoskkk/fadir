@@ -6,12 +6,18 @@
  */
 
 /* ------------------------------------------------------------------ tokens */
-/* One family (Geologica: a real ₺, tabular figures, 100–900), one cobalt accent mixed
- * in OKLCH, neutrals tinted toward it. The total and its currency effect share the
+/* Licensed from Envato and built by frontend/scripts/licensed_fonts.py into the gitignored
+ * public/fonts/: Hakimi (text and figures: ₺, tabular figures) and Mirano (headings only;
+ * it has no ₺). Without the files every slot falls back to the bundled Geologica. */
+@font-face { font-family: "Hakimi"; src: url("/fonts/hakimi.woff2") format("woff2"); font-weight: 50 950; font-display: swap; }
+@font-face { font-family: "Mirano"; src: url("/fonts/mirano.woff2") format("woff2"); font-weight: 100 700; font-display: swap; }
+
+/* One cobalt accent mixed in OKLCH, neutrals tinted toward it. The total and its currency effect share the
  * accent hue at two lightnesses; price-only figures stay neutral. Docs: docs/DESLOP.md. */
 :root {
-  --font-ui: "Geologica Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-ui: "Hakimi", "Geologica Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font-ui);
+  --font-heading: "Mirano", var(--font-ui);
   --radius: 14px;
   --radius-sm: 8px;
   --r-ctl: 9px;
@@ -92,7 +98,7 @@ button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: 0; padding: 0; }
 button:disabled { cursor: not-allowed; }
 a { color: var(--accent); }
-h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+h1, h2, h3 { margin: 0; font-family: var(--font-heading); font-weight: 600; letter-spacing: 0; text-wrap: balance; }
 h2 { font-size: 17px; }
 h3 { font-size: 15px; }
 p { margin: 0; text-wrap: pretty; }
@@ -143,7 +149,7 @@ ul { margin: 0; padding-left: 18px; }
   display: flex; align-items: center; gap: 14px;
 }
 .brand { display: flex; align-items: center; gap: 9px; flex: none; }
-.wordmark { font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -0.02em; }
+.wordmark { font-family: var(--font-heading); font-weight: 700; font-size: 19px; letter-spacing: 0; }
 
 .switcher {
   display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px;

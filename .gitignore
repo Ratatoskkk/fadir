@@ -32,3 +32,6 @@ Thumbs.db
 
 # Local Claude Code permissions — personal, not project config.
 .claude/settings.local.json
+
+# Envato-licensed web fonts: built locally by frontend/scripts/licensed_fonts.py, never committed.
+frontend/public/fonts/
