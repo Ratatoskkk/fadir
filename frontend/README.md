@@ -37,7 +37,8 @@ npm run build      # production bundle in dist/, served by the FastAPI app
 - **Chart**: `src/next/chart/ValueChart.jsx` draws on a canvas and runs `requestAnimationFrame` only while something is moving. Values, the y domain and series opacity ease toward their targets. A range change crossfades and slides in from the direction of travel. Drag across the chart to compare two points; the parts add up exactly to the change in value.
 - **Motion rules**: continuous animation uses `transform` and `opacity` only. `backdrop-filter` appears only on the top bar, the bottom nav and modal scrims. Number tweens write `textContent` from rAF with no React renders. `prefers-reduced-motion` turns off tweens and ambient motion.
 - **Keys**: `1`–`4` switch views, `N` opens a new transaction, `R` refreshes, `/` or `Ctrl K` opens the command palette.
-- **Fonts**: Inter and Space Grotesk are bundled through `@fontsource-variable`, because the CSP blocks external font hosts.
+- **Fonts**: Geologica is bundled through `@fontsource-variable` because the CSP blocks external font hosts. It draws a real ₺ and has tabular figures.
+- **Style**: one flat ground, one cobalt accent mixed in OKLCH, and no glows, gradients or tilt. [docs/DESLOP.md](../docs/DESLOP.md) holds the rules every change is checked against.
 
 Check frontend changes in a browser at desktop width and at 375px, in both themes.
 
@@ -45,10 +46,12 @@ Check frontend changes in a browser at desktop width and at 375px, in both theme
 
 `bench/frames.mjs` drives 12 scenarios in headless Chrome against the production bundle and reports frame times: idle, scroll, chart scrub and drag, range and pan changes, refresh, view switches, theme toggle, sorting, the transaction sheet and the palette. Run it after changes that touch motion or rendering; the README header in the script has the commands.
 
-The 2026-11-07 baseline, with every frame budgeted at 60fps (16.7ms):
+The 2026-11-10 baseline, with every frame budgeted at 60fps (16.7ms):
 
 | Profile | Frames on time | Worst frame |
 |---|---|---|
-| Desktop 1440×900 | ≥ 99.4% in every scenario, 100% in 9 of 12 | 33ms, once, on the first switch to 1G (one-time GPU warm-up) |
-| Phone 375×812 @2× | ≥ 99.4%, 100% in 11 of 12 | 42ms, once, on the first range change |
-| Desktop, CPU slowed 4× | ≥ 96.5% | 58ms on the first visit to a view |
+| Desktop 1440×900 | ≥ 99.7% in every scenario, 100% in 11 of 12 | 29ms, once, on the first range switch |
+| Phone 375×812 @2× | 100% in all 12 | 25ms, on the theme switch |
+| Desktop, CPU slowed 4× | ≥ 92.7% | 79ms during the theme switch |
+
+The script enters the mock API's synthetic Portfolio Code and pins Turkish, so its label selectors match.

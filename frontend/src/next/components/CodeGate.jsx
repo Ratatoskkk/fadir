@@ -9,7 +9,6 @@ import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { api } from "../../api.js";
 import Icon from "../ui/Icons.jsx";
 import { sound } from "../ui/sound.js";
-import Aurora from "./Aurora.jsx";
 import Brand from "./Brand.jsx";
 import { useT } from "../i18n/index.jsx";
 
@@ -75,7 +74,6 @@ export default function CodeGate({ codeLengths = [4], onOpened, onGoogle, onCrea
   const busy = state === "busy";
   return (
     <div className="gate">
-      <Aurora />
       <motion.main
         className="gate-panel"
         initial={{ opacity: 0, y: 16 }}

@@ -264,7 +264,6 @@ export default function Identity({ onCompleted, onSignOut }) {
                     aria-pressed={choice === c.key}
                     onClick={() => pick(c.key)}
                     disabled={busy}
-                    whileHover={{ y: -3 }}
                     whileTap={{ scale: 0.98 }}
                     transition={spring}
                   >

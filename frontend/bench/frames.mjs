@@ -21,11 +21,14 @@ const browser = await puppeteer.launch({
 });
 const page = await browser.newPage();
 await page.setViewport(MOBILE ? { width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width: 1440, height: 900, deviceScaleFactor: 1 });
-await page.evaluateOnNewDocument(() => { localStorage.setItem("fadir.ui", "next"); });
+// Turkish pins the label selectors below; 4821 is the mock API's synthetic Portfolio Code.
+await page.evaluateOnNewDocument(() => { localStorage.setItem("fadir.ui", "next"); localStorage.setItem("fadir.lang", "tr"); });
 const cdp = await page.createCDPSession();
 if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
 
 await page.goto(`${URL}/#/genel`, { waitUntil: "networkidle0" });
+await page.evaluate(() => fetch("/api/access/code", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: "4821" }) }));
+await page.reload({ waitUntil: "networkidle0" });
 await sleep(2500);
 
 await page.evaluate(() => {

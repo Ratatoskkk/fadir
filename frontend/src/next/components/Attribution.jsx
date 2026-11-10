@@ -39,7 +39,7 @@ function Attribution({ totals }) {
           transition={{ duration: 0.9, ease }}
           style={{ width: `${pricePct}%`, left: 0 }}
         >
-          {pricePct > 14 && <span>Fiyat {share(price)}</span>}
+          {pricePct > 14 && <span>{t("attr.priceShort")} {share(price)}</span>}
         </motion.div>
         <motion.div
           className={`attr-seg fx ${fx < 0 ? "neg" : ""}`}
@@ -48,7 +48,7 @@ function Attribution({ totals }) {
           transition={{ duration: 0.9, delay: 0.25, ease }}
           style={{ width: `${100 - pricePct}%`, left: `${pricePct}%` }}
         >
-          {100 - pricePct > 14 && <span>Kur {share(fx)}</span>}
+          {100 - pricePct > 14 && <span>{t("attr.fxShort")} {share(fx)}</span>}
         </motion.div>
       </div>
 

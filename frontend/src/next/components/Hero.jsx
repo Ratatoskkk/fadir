@@ -4,14 +4,12 @@ import { arrow, fullDate, money, num, pct, ratioPct, signedMoney, toneOf } from 
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import Icon from "../ui/Icons.jsx";
 import { collapse, fadeUp, stagger } from "../ui/motion.js";
-import { useTilt } from "../ui/useTilt.js";
 import { useT } from "../i18n/index.jsx";
 
 function Metric({ label, children, sub, tone }) {
-  const tilt = useTilt();
   return (
-    <motion.div variants={fadeUp} className="tilt-host" {...tilt}>
-      <div className={`metric tilt ${tone ?? ""}`}>
+    <motion.div variants={fadeUp}>
+      <div className={`metric ${tone ?? ""}`}>
         <span className="label">{label}</span>
         <div className="metric-value">{children}</div>
         {sub && <div className="metric-sub">{sub}</div>}
@@ -31,7 +29,7 @@ function Hero({ portfolio }) {
 
   return (
     <motion.section className="hero" id="ozet" aria-label={t("hero.summary")} variants={stagger(0.07)} initial="hidden" animate="show">
-      <motion.div variants={fadeUp} className={`hero-main glow-${tone}`}>
+      <motion.div variants={fadeUp} className="hero-main">
         <span className="label">{t("hero.liquidation")}</span>
         <AnimatedNumber value={liquidation.net_proceeds_try} format={money} className="hero-figure" />
         <div className={`hero-pnl ${tone}`}>
@@ -40,11 +38,13 @@ function Hero({ portfolio }) {
           </span>
           <span className="pill num">{ratioPct(liquidation.net_return)}</span>
         </div>
-        <p className="hero-caveat">
-          {t("hero.estimated")} · <strong>{t("hero.beforeTax")}</strong> ·{" "}
-          {hasHaircut
-            ? t("hero.haircut", { pct: pct(Number(liquidation.haircut_pct) * 100).replace(/^[+]/, ""), amount: money(liquidation.haircut_try) })
-            : t("hero.noHaircut")}
+        <p className="hero-caveat meta">
+          <span>{t("hero.estimated")}, <strong>{t("hero.beforeTax")}</strong></span>
+          <span>
+            {hasHaircut
+              ? t("hero.haircut", { pct: pct(Number(liquidation.haircut_pct) * 100).replace(/^[+]/, ""), amount: money(liquidation.haircut_try) })
+              : t("hero.noHaircut")}
+          </span>
         </p>
 
         {tax?.applicable && (
@@ -56,11 +56,13 @@ function Hero({ portfolio }) {
                 <Icon name="down" size={16} />
               </motion.span>
             </button>
-            <div className="after-tax-sub num">
+            <div className="after-tax-sub num meta">
               {taxShown ? (
                 <>
-                  {t("hero.tax")} <strong>−{money(tax.tax_try)}</strong> · {t("hero.base")} {money(tax.taxable_gain_try)} · {t("hero.effective")}{" "}
-                  {pct(Number(tax.effective_rate) * 100)} · {t("hero.bracket")} {pct(Number(tax.marginal_rate) * 100, 0).replace(/^[+]/, "")}
+                  <span>{t("hero.tax")} <strong>−{money(tax.tax_try)}</strong></span>
+                  <span>{t("hero.base")} {money(tax.taxable_gain_try)}</span>
+                  <span>{t("hero.effective")} {pct(Number(tax.effective_rate) * 100)}</span>
+                  <span>{t("hero.bracket")} {pct(Number(tax.marginal_rate) * 100, 0).replace(/^[+]/, "")}</span>
                 </>
               ) : (
                 t("hero.noTaxable")

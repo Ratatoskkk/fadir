@@ -2,14 +2,14 @@
 // runs on the compositor and holds 60fps; layout-affecting properties are never tweened
 // except height on rare disclosures.
 
-export const spring = { type: "spring", stiffness: 520, damping: 40, mass: 0.9 };
+export const spring = { type: "spring", stiffness: 520, damping: 46, mass: 0.9 };
 export const softSpring = { type: "spring", stiffness: 260, damping: 30 };
-export const bouncy = { type: "spring", stiffness: 420, damping: 22 };
-export const ease = [0.22, 1, 0.36, 1];
+export const bouncy = { type: "spring", stiffness: 420, damping: 38 };
+export const ease = [0.16, 1, 0.3, 1];
 
 export const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease } },
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease } },
 };
 
 export const stagger = (gap = 0.06, delay = 0) => ({
@@ -18,8 +18,8 @@ export const stagger = (gap = 0.06, delay = 0) => ({
 });
 
 export const viewTransition = {
-  initial: { opacity: 0, y: 14, scale: 0.995 },
-  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.42, ease } },
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.32, ease } },
   exit: { opacity: 0, y: -8, transition: { duration: 0.18, ease } },
 };
 

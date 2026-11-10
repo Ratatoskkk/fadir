@@ -5,9 +5,9 @@ import { fullDate, money } from "../../format.js";
 import { collapse, ease } from "../ui/motion.js";
 import { useT } from "../i18n/index.jsx";
 
-const optionLabel = (o) => `${o.name} · ${o.base_currency}`;
+const optionLabel = (o) => `${o.name} (${o.base_currency})`;
 const transactionLabel = (x, t) =>
-  `${fullDate(x.trade_date)} · ${t(x.side === "BUY" ? "txn.buy" : "txn.sell")} · ${money(x.price_native, x.currency)}`;
+  `${fullDate(x.trade_date)}, ${t(x.side === "BUY" ? "txn.buy" : "txn.sell")}, ${money(x.price_native, x.currency)}`;
 
 export default function Merge({ onCompleted }) {
   const t = useT();

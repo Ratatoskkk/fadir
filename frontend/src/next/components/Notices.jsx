@@ -53,7 +53,7 @@ export default function Notices({ dash }) {
         {failed.length > 0 && (
           <Notice key="failed" tone="warn" icon="alert">
             <strong>{t("notice.unpriced", { n: failed.length })}</strong> {t("notice.unpricedNote")}{" "}
-            <span className="muted">{failed.map((p) => `${p.ticker}: ${p.error ?? t("common.noData")}`).join(" · ")}</span>
+            <span className="muted">{failed.map((p) => `${p.ticker}: ${p.error ?? t("common.noData")}`).join(", ")}</span>
           </Notice>
         )}
         {carried.length > 0 && (

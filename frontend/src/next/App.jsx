@@ -4,13 +4,11 @@
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import { MotionConfig, motion } from "framer-motion";
-import "@fontsource-variable/inter";
-import "@fontsource-variable/space-grotesk";
+import "@fontsource-variable/geologica";
 import { api } from "../api.js";
 import { switchUi } from "../ui.js";
 import { RANGES } from "../ranges.js";
 import { INTERVALS, useDashboard } from "./useDashboard.js";
-import Aurora from "./components/Aurora.jsx";
 import CodeGate from "./components/CodeGate.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
 import NewPortfolio from "./components/NewPortfolio.jsx";
@@ -179,7 +177,6 @@ function Shell({ access, onLeave, onSignOut, onAccessLost }) {
       <Skeleton />
     ) : (
       <div className="empty-state">
-        <div className="empty-orb" />
         <p>{t("portfolio.loadFailed")}</p>
         <button type="button" className="btn primary" onClick={() => dash.loadAll()}><Icon name="refresh" size={16} /> {t("common.retry")}</button>
       </div>
@@ -192,7 +189,6 @@ function Shell({ access, onLeave, onSignOut, onAccessLost }) {
 
   return (
     <div className="app">
-      <Aurora />
       <TopBar
         dash={dash}
         view={view}
@@ -277,7 +273,7 @@ function Root() {
     read();
   }, [read, setAccess]);
 
-  if (access === null) return <div className="app"><Aurora /></div>;
+  if (access === null) return <div className="app" />;
   if (access === "none") {
     return (
       <CodeGate

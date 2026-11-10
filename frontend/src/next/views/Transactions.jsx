@@ -83,7 +83,7 @@ export function TransactionForm({ instruments, portfolioId, onChanged, onDone })
           <button type="button" className="picked" onClick={() => setPicked(null)} aria-label={t("txn.changeInstrument")}>
             <motion.span className="picked-sym" layoutId="picked-sym">{picked.ticker}</motion.span>
             <span className="picked-name">{picked.name}</span>
-            <span className="picked-meta">{picked.exchange}{picked.currency && ` · ${picked.currency}`}</span>
+            <span className="picked-meta">{picked.exchange}{picked.currency && `, ${picked.currency}`}</span>
             <Icon name="edit" size={15} />
           </button>
           <div className="side-toggle" role="radiogroup" aria-label={t("txn.side")}>
@@ -243,7 +243,7 @@ export default function Transactions({ dash, sheetOpen, setSheetOpen }) {
   async function remove(txn) {
     const ok = await confirm({
       title: t("txn.deleteTitle"),
-      body: <><strong>{txn.ticker}</strong> · {fullDate(txn.trade_date)} · {t("txn.units", { n: num(txn.quantity, 0) })}<br /><span className="muted">{t("txn.deleteBody")}</span></>,
+      body: <><strong>{txn.ticker}</strong>, {fullDate(txn.trade_date)}, {t("txn.units", { n: num(txn.quantity, 0) })}<br /><span className="muted">{t("txn.deleteBody")}</span></>,
       confirmLabel: t("common.delete"),
       danger: true,
     });
@@ -279,7 +279,6 @@ export default function Transactions({ dash, sheetOpen, setSheetOpen }) {
 
       {transactions.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-orb" />
           <p>{t("txn.none")}</p>
           <button type="button" className="btn primary" onClick={() => setSheetOpen(true)}><Icon name="plus" size={16} /> {t("txn.first")}</button>
         </div>
@@ -302,7 +301,7 @@ export default function Transactions({ dash, sheetOpen, setSheetOpen }) {
                     <motion.span animate={{ rotate: open ? 0 : -90 }} transition={spring} className="caret"><Icon name="down" size={16} /></motion.span>
                     <span className="sym">{g.ticker}</span>
                     <span className="muted">
-                      {g.currency} · {t("txn.count", { n: g.rows.length })}
+                      {g.currency}, {t("txn.count", { n: g.rows.length })}
                       {g.sells > 0 && ` (${t("txn.split", { buys: g.buys, sells: g.sells })})`}
                     </span>
                     <span className="grow" />

@@ -6,7 +6,6 @@ import { useFlash } from "../../flash.js";
 import { arrow, fullDate, money, num, ratioPct, signedMoney, toneOf } from "../../format.js";
 import Icon from "../ui/Icons.jsx";
 import { ease, spring } from "../ui/motion.js";
-import { useTilt } from "../ui/useTilt.js";
 import { useT } from "../i18n/index.jsx";
 
 const COLUMNS = [
@@ -99,17 +98,14 @@ function ReturnBar({ label, ratio }) {
 
 function PositionCard({ p, on, onFocus, index }) {
   const t = useT();
-  const tilt = useTilt(5);
   return (
     <motion.article
       layout
-      className="tilt-host"
       initial={{ opacity: 0, y: 20, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: index * 0.03, duration: 0.45, ease } }}
       transition={spring}
-      {...tilt}
     >
-      <div className={`pos-card tilt ${on ? "on" : ""}`}>
+      <div className={`pos-card ${on ? "on" : ""}`}>
       <header>
         <button type="button" className="sym-btn" aria-pressed={on} onClick={() => onFocus(p.ticker)} title={t("palette.focus")}>
           {p.ticker}
@@ -117,7 +113,7 @@ function PositionCard({ p, on, onFocus, index }) {
         </button>
         <Badges p={p} />
       </header>
-      <p className="pos-name">{p.name} · {p.currency}</p>
+      <p className="pos-name">{p.name}, {p.currency}</p>
       <div className="pos-value num">{p.ok ? money(p.market_value_try) : "—"}</div>
       <div className={`pos-pnl num ${toneOf(p.pnl_try)}`}>
         {p.ok ? <>{arrow(p.pnl_try)} {signedMoney(p.pnl_try)}</> : p.error}
@@ -270,7 +266,7 @@ export default function Positions({ dash, onFocusTicker }) {
                           </button>
                           <Badges p={p} />
                           <span className="ticker-name">
-                            {p.name} · {p.currency} · {p.ok ? (p.session === "open" ? t("pos.live") : t("pos.last", { date: fullDate(p.price_date) })) : p.error}
+                            {p.name}, {p.currency}, {p.ok ? (p.session === "open" ? t("pos.live") : t("pos.last", { date: fullDate(p.price_date) })) : p.error}
                           </span>
                         </div>
                       </td>

@@ -61,7 +61,7 @@ function readColors() {
   const s = getComputedStyle(document.documentElement);
   const v = (name, fallback) => s.getPropertyValue(name).trim() || fallback;
   return {
-    value: v("--up", "#5be49b"),
+    value: v("--accent", "#7ea6f0"),
     price: v("--price", "#7aa2ff"),
     fx: v("--fx", "#b78cff"),
     tax: v("--tax", "#e8b06a"),
@@ -69,7 +69,7 @@ function readColors() {
     grid: v("--chart-grid", "rgba(255,255,255,0.06)"),
     axis: v("--text-3", "#6b6f7a"),
     cross: v("--text-2", "#a7abb5"),
-    selection: v("--price", "#7aa2ff"),
+    selection: v("--accent", "#7ea6f0"),
     bg: v("--surface-solid", "#0d0f15"),
   };
 }
@@ -247,7 +247,7 @@ export default function ValueChart({
       // FX band: the space between TRY value and constant-FX value.
       const bandA = st.alpha[BAND_KEY] * alphaMul;
       if (bandA > 0.01 && set.n > 1) {
-        ctx.globalAlpha = bandA * 0.2;
+        ctx.globalAlpha = bandA * 0.32;
         ctx.fillStyle = c.fx;
         ctx.beginPath();
         const ya = Array.from(set.value_try, yOf);

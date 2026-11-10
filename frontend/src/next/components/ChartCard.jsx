@@ -33,7 +33,7 @@ function comparison(data, a, b) {
   };
 }
 
-const SWATCH = { value_try: "var(--up)", value_constant_fx_try: "var(--price)", value_after_tax_try: "var(--tax)", cost_basis_try: "var(--cost)", [BAND_KEY]: "var(--fx)" };
+const SWATCH = { value_try: "var(--accent)", value_constant_fx_try: "var(--price)", value_after_tax_try: "var(--tax)", cost_basis_try: "var(--cost)", [BAND_KEY]: "var(--fx)" };
 
 function Tip({ point, intraday, anyTax }) {
   const t = useT();
@@ -263,13 +263,7 @@ export default function ChartCard({ dash }) {
               <p className="fineprint">{t("chart.compareNote")}</p>
             </div>
           </motion.div>
-        ) : (
-          data.length > 1 && (
-            <motion.p key="hint" className="chart-hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              {t("chart.dragHint")}
-            </motion.p>
-          )
-        )}
+        ) : null}
       </AnimatePresence>
     </section>
   );
