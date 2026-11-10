@@ -405,7 +405,7 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .alloc { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .alloc-row {
   width: 100%; display: grid; align-items: center; gap: 14px; padding: 10px 12px; border-radius: var(--radius-sm); text-align: left;
-  grid-template-columns: 110px minmax(60px, 1fr) 60px 120px 90px;
+  grid-template-columns: 90px 110px minmax(60px, 1fr) 60px 120px 110px 90px;
   transition: background 0.15s;
 }
 .alloc-row:hover { background: var(--surface-2); }
@@ -417,6 +417,8 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .alloc-bar i { display: block; height: 100%; width: 100%; border-radius: 2px; transform-origin: left; background: var(--accent); }
 .alloc-weight { color: var(--text-2); text-align: right; font-size: 13px; }
 .alloc-value { text-align: right; font-weight: 600; }
+.alloc-price { text-align: right; font-size: 13px; }
+.alloc-avg { text-align: right; font-size: 13px; color: var(--text-2); }
 .alloc-ret { text-align: right; font-size: 13px; font-weight: 600; }
 
 /* ------------------------------------------------------------------ chart */
@@ -724,8 +726,9 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
   .hero-metrics { gap: 12px; }
   .metric { padding: 14px; }
   .skeleton-row { grid-template-columns: 1fr 1fr; }
-  .alloc-row { grid-template-columns: 82px minmax(40px, 1fr) 52px 86px; gap: 10px; }
-  .alloc-value { display: none; }
+  .alloc-row { grid-template-columns: auto 1fr 44px 76px; gap: 10px; }
+  .alloc-bar, .alloc-value, .alloc-avg { display: none; }
+  .alloc-sym { white-space: nowrap; }
   .chart-controls { margin-left: 0; width: 100%; justify-content: space-between; }
   .chart-title h2 { font-size: 17px; }
   .compare-grid { grid-template-columns: 1fr 1fr; }

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { arrow, money, ratioPct, share, toneOf } from "../../format.js";
 import { ease, spring } from "../ui/motion.js";
 import { useT } from "../i18n/index.jsx";
+import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 
 function Allocation({ positions, focusTickers, onFocus }) {
   const t = useT();
@@ -38,6 +39,9 @@ function Allocation({ positions, focusTickers, onFocus }) {
                   <span className={`session-dot ${p.session === "open" ? "open" : ""}`} />
                   {p.ticker}
                 </span>
+                <span className="alloc-price" title={t("pos.price")}>
+                  <AnimatedNumber value={p.price_native} format={(v) => money(v, p.currency)} />
+                </span>
                 <span className="alloc-bar">
                   <motion.i
                     initial={{ scaleX: 0 }}
@@ -47,6 +51,9 @@ function Allocation({ positions, focusTickers, onFocus }) {
                 </span>
                 <span className="alloc-weight num">{share((p.value / total) * 100)}</span>
                 <span className="alloc-value num">{money(p.value)}</span>
+                <span className="alloc-avg num" title={t("pos.avgBuy")}>
+                  {p.average_purchase_price_native === null ? "—" : money(p.average_purchase_price_native, p.currency)}
+                </span>
                 <span className={`alloc-ret num ${toneOf(Number(p.attribution.total_return) - 1)}`}>
                   {arrow(Number(p.attribution.total_return) - 1)} {ratioPct(p.attribution.total_return)}
                 </span>
