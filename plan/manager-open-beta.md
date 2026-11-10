@@ -1600,3 +1600,15 @@ topbar sweep rests off-screen so it no longer shows as a static bar while fading
 Deployed with matching checksums for all 16 files and no restart; rollback bundle
 `/opt/fadir/frontend/dist.previous.reviewfix-20261110`. Public health and every asset
 returned 200, and the served bundle contains the timeout and the parked sweep.
+
+Codebase cleanup deployment (owner instruction 2026-11-10). `7f0bc65` batches current
+and history close lookups into one query each, renders chart and portfolio together,
+shares the tax transaction loader, tax route guards, `utcnow` and chart range windows,
+takes Positions totals from the server and removes unused code. Tests match the
+baseline apart from the two known zero-FX failures. The 12 VM Python files matched the
+prior commit before replacement; previous copies are in
+`/home/fadir-agent/fadir-tests/rollback-7f0bc65/app.previous.tar`, installed checksums
+match the commit, and the service restarted at 16:11:56 UTC with `NRestarts=0`.
+Frontend bundle deployed with matching checksums for all 16 files; rollback bundle
+`/opt/fadir/frontend/dist.previous.cleanup-20261110`. Local and public health and every
+asset returned 200, and an unauthenticated portfolio read returned 401.
