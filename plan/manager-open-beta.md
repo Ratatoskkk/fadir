@@ -1550,3 +1550,11 @@ on `fadir-control-lab-01` with matching archive checksums and no service restart
 Rollback bundle: `/opt/fadir/frontend/dist.previous.deslop-20261110`. Loopback and
 public health returned 200, and all 14 hashed assets returned 200 publicly. A fresh
 browser loads the new UI with Geologica. Not yet checked: the signed-in owner journey.
+
+Envato fonts deployment (owner instruction 2026-11-10). `1c6f471` sets headings in Mirano
+and text in Hakimi Sans, both licensed from Envato Elements to the owner's account. The
+font files are built locally into the gitignored `frontend/public/fonts/` and shipped
+only inside the deployed bundle. Deployed to `/opt/fadir/frontend/dist` with matching
+archive checksums and no restart. Rollback bundle:
+`/opt/fadir/frontend/dist.previous.fonts-20261110`. Public health, both fonts and every
+bundle returned 200, and a fresh browser loads both fonts.
