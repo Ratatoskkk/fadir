@@ -196,6 +196,7 @@ ul { margin: 0; padding-left: 18px; }
 .sweep::after {
   content: ""; position: absolute; inset: 0; width: 40%;
   background: var(--accent);
+  transform: translateX(-100%); /* parked off-screen while the bar fades out */
 }
 /* Runs only while fetching: an idle infinite animation under the topbar's backdrop blur
    repaints that blur every frame for as long as the page stays open. */

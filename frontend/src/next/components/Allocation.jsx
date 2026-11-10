@@ -26,6 +26,17 @@ function Allocation({ positions, focusTickers, onFocus }) {
       <ul className="alloc">
         {rows.map((p, i) => {
           const on = focusTickers.includes(p.ticker);
+          const weight = share((p.value / total) * 100);
+          const ret = `${arrow(Number(p.attribution.total_return) - 1)} ${ratioPct(p.attribution.total_return)}`;
+          // The row is one button: name the price columns so its spoken name reads.
+          const label = [
+            p.ticker,
+            `${t("pos.price")} ${money(p.price_native, p.currency)}`,
+            weight,
+            money(p.value),
+            `${t("pos.avgBuy")} ${money(p.average_purchase_price_native, p.currency)}`,
+            ret,
+          ].join(", ");
           return (
             <motion.li
               key={p.ticker}
@@ -34,12 +45,12 @@ function Allocation({ positions, focusTickers, onFocus }) {
               initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0, transition: { delay: 0.04 * i, duration: 0.4, ease } }}
             >
-              <button type="button" className={`alloc-row ${on ? "on" : ""}`} aria-pressed={on} onClick={() => onFocus(p.ticker)}>
+              <button type="button" className={`alloc-row ${on ? "on" : ""}`} aria-pressed={on} onClick={() => onFocus(p.ticker)} aria-label={label}>
                 <span className="alloc-sym">
                   <span className={`session-dot ${p.session === "open" ? "open" : ""}`} />
                   {p.ticker}
                 </span>
-                <span className="alloc-price" title={t("pos.price")}>
+                <span className="alloc-price">
                   <AnimatedNumber value={p.price_native} format={(v) => money(v, p.currency)} />
                 </span>
                 <span className="alloc-bar">
@@ -49,14 +60,10 @@ function Allocation({ positions, focusTickers, onFocus }) {
                     transition={{ duration: 0.8, delay: 0.05 * i, ease }}
                   />
                 </span>
-                <span className="alloc-weight num">{share((p.value / total) * 100)}</span>
+                <span className="alloc-weight num">{weight}</span>
                 <span className="alloc-value num">{money(p.value)}</span>
-                <span className="alloc-avg num" title={t("pos.avgBuy")}>
-                  {p.average_purchase_price_native === null ? "—" : money(p.average_purchase_price_native, p.currency)}
-                </span>
-                <span className={`alloc-ret num ${toneOf(Number(p.attribution.total_return) - 1)}`}>
-                  {arrow(Number(p.attribution.total_return) - 1)} {ratioPct(p.attribution.total_return)}
-                </span>
+                <span className="alloc-avg num">{money(p.average_purchase_price_native, p.currency)}</span>
+                <span className={`alloc-ret num ${toneOf(Number(p.attribution.total_return) - 1)}`}>{ret}</span>
               </button>
             </motion.li>
           );

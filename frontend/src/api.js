@@ -12,6 +12,7 @@ function readableCsrfToken() {
 }
 
 let privateRequestTail = Promise.resolve();
+const GET_TIMEOUT_MS = 30_000;
 
 const sessionIndependentPaths = new Set([
   "/api/health",
@@ -32,6 +33,9 @@ async function performRequest(path, options = {}) {
     if (token) headers["X-CSRF-Token"] = token;
   }
   const response = await fetch(path, {
+    // Requests run one at a time, so a read that never settles would stall every later
+    // one (and all polling) for good. Writes are left alone: they may still be landing.
+    signal: fetchOptions.signal ?? (method === "GET" ? AbortSignal.timeout(GET_TIMEOUT_MS) : undefined),
     ...fetchOptions,
     credentials: "include",
     headers,
