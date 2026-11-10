@@ -1591,3 +1591,12 @@ after; after the fix an idle page runs no animations and main-thread time fell f
 to 35s. Deployed with matching checksums for all 16 files and no restart; rollback
 bundle `/opt/fadir/frontend/dist.previous.idleanim-20261110`. Public health and every
 asset returned 200.
+
+Review fixes deployment (owner instruction 2026-11-10). `a98e312` aborts a GET after
+30 seconds, so one request that never settles can no longer stall the serialized
+request queue and all polling; writes have no timeout. The Allocation row button now
+names its price and average buy for screen readers in place of hover titles, and the
+topbar sweep rests off-screen so it no longer shows as a static bar while fading.
+Deployed with matching checksums for all 16 files and no restart; rollback bundle
+`/opt/fadir/frontend/dist.previous.reviewfix-20261110`. Public health and every asset
+returned 200, and the served bundle contains the timeout and the parked sweep.
