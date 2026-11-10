@@ -1,13 +1,12 @@
-"""Build the web fonts licensed from Envato Elements into frontend/public/fonts/.
+"""Build the web font licensed from Envato Elements into frontend/public/fonts/.
 
-The font files are licensed to the owner's Envato account and must not enter this
-public repository, so public/fonts/ is gitignored. Without them the app falls back to
-Geologica. Download both items while signed in to Envato Elements, then run:
+The font is licensed to the owner's Envato account and must not enter this public
+repository, so public/fonts/ is gitignored. Without it the app falls back to Geologica.
+Download "Hakimi Sans - 22 Styles & Variable" by Zelowtypestudio while signed in to
+Envato Elements, then run:
 
-    python frontend/scripts/licensed_fonts.py <mirano.zip> <hakimi-sans.zip>
+    python frontend/scripts/licensed_fonts.py <hakimi-sans.zip>
 
-Items: "Mirano - Variable Type System" by UnioCS (headings) and
-"Hakimi Sans - 22 Styles & Variable" by Zelowtypestudio (text and figures).
 Needs fontTools and brotli.
 """
 
@@ -18,7 +17,6 @@ from pathlib import Path
 
 from fontTools import subset
 from fontTools.ttLib import TTFont
-from fontTools.varLib import instancer
 
 OUT = Path(__file__).resolve().parent.parent / "public" / "fonts"
 
@@ -49,11 +47,9 @@ def write(font: TTFont, name: str) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 2:
         sys.exit(__doc__)
-    mirano = member(sys.argv[1], "MiranoTypeSystemVF.ttf")
-    write(instancer.instantiateVariableFont(mirano, {"ital": 0, "wdth": 100}), "mirano.woff2")
-    write(member(sys.argv[2], "ZT Hakimi Variable-VF.ttf"), "hakimi.woff2")
+    write(member(sys.argv[1], "ZT Hakimi Variable-VF.ttf"), "hakimi.woff2")
 
 
 if __name__ == "__main__":
