@@ -1574,3 +1574,10 @@ matching checksums; rollback bundle `/opt/fadir/frontend/dist.previous.review-20
 Public health and every asset returned 200. In the signed-in owner tab the UK 2026/27
 estimate returned 200, the chart return now agrees in sign with the total return, a
 sold-out position no longer appears in Allocation, and no new console errors appeared.
+
+Allocation price deployment (owner instruction 2026-11-10). `305020c` shows each
+holding's live price next to its ticker and its average buy price after its value; at
+phone width the bar, value and average are hidden so the row fits. Frontend bundle
+deployed with matching checksums for all 16 files and no restart; rollback bundle
+`/opt/fadir/frontend/dist.previous.allocprice-20261110`. Public health and every asset
+returned 200, and the served bundle contains the new Allocation columns.
