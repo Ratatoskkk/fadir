@@ -1543,3 +1543,10 @@ anonymous create. Rollback: database dump
 backend files in that folder's `rollback/backend-previous.tgz`, previous bundle
 `/opt/fadir/frontend/dist.previous.journey-fixes-20261108`. Not yet checked: the real Google
 popup with these changes, and the signed-in owner journey on the public site.
+
+De-slop deployment (owner instruction 2026-11-10). The interface from `499cbfe`, which
+applies [docs/DESLOP.md](../docs/DESLOP.md), is deployed to `/opt/fadir/frontend/dist`
+on `fadir-control-lab-01` with matching archive checksums and no service restart.
+Rollback bundle: `/opt/fadir/frontend/dist.previous.deslop-20261110`. Loopback and
+public health returned 200, and all 14 hashed assets returned 200 publicly. A fresh
+browser loads the new UI with Geologica. Not yet checked: the signed-in owner journey.
