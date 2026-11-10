@@ -198,7 +198,18 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
     onAccessLost?.();
   }, [loadAll, onAccessLost]);
 
-  loadRef.current = () => run(() => loadMarket());
+  // A poll that outlasts the interval must not queue another behind it: requests run one
+  // at a time, so a backlog would delay everything else, a view change's loads included.
+  const pollingRef = useRef(false);
+  loadRef.current = async () => {
+    if (pollingRef.current) return;
+    pollingRef.current = true;
+    try {
+      await run(() => loadMarket());
+    } finally {
+      pollingRef.current = false;
+    }
+  };
 
   useEffect(() => {
     run(async () => {

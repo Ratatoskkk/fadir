@@ -54,6 +54,17 @@
         "--strictPort"
       ],
       "port": 5174
+    },
+    {
+      "name": "fadir-mock-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "frontend",
+        "run",
+        "preview:mock"
+      ],
+      "port": 4173
     }
   ]
 }
