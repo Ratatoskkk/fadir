@@ -1581,3 +1581,13 @@ phone width the bar, value and average are hidden so the row fits. Frontend bund
 deployed with matching checksums for all 16 files and no restart; rollback bundle
 `/opt/fadir/frontend/dist.previous.allocprice-20261110`. Public health and every asset
 returned 200, and the served bundle contains the new Allocation columns.
+
+Idle animation and poll backlog deployment (owner report 2026-11-10: the page froze
+after about ten minutes open). `bf9f1b3` stops the topbar loading sweep from animating
+at opacity 0, which repainted the topbar's backdrop blur every frame, and skips a poll
+while the previous one is still running so serialized requests cannot back up. A
+12-minute headless soak of the production bundle on the mock API never froze before or
+after; after the fix an idle page runs no animations and main-thread time fell from 52s
+to 35s. Deployed with matching checksums for all 16 files and no restart; rollback
+bundle `/opt/fadir/frontend/dist.previous.idleanim-20261110`. Public health and every
+asset returned 200.
