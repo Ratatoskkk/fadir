@@ -1563,3 +1563,14 @@ Mirano removed (owner instruction 2026-11-10). `0b1d1c6` sets headings in Hakimi
 well, so Hakimi is the only licensed font. Deployed with matching checksums and no
 restart; rollback bundle `/opt/fadir/frontend/dist.previous.mirano-20261110`. Public
 health, the font and every bundle returned 200, and a fresh browser loads only Hakimi.
+
+UI review fixes deployment (owner instruction 2026-11-10). `807e373` ships the 14 fixes
+from the ratatosk.dev review. Backend: `app/registry.py` routes GBP to TRY through USD,
+so the UK 2026/27 estimate no longer fails; the VM file matched the prior commit before
+replacement, the previous copy is at
+`/home/fadir-agent/fadir-tests/rollback-807e373/registry.py.previous`, and the service
+restarted once at 09:57:16 UTC with `NRestarts=0`. Frontend bundle deployed with
+matching checksums; rollback bundle `/opt/fadir/frontend/dist.previous.review-20261110`.
+Public health and every asset returned 200. In the signed-in owner tab the UK 2026/27
+estimate returned 200, the chart return now agrees in sign with the total return, a
+sold-out position no longer appears in Allocation, and no new console errors appeared.
