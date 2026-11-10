@@ -1558,3 +1558,8 @@ only inside the deployed bundle. Deployed to `/opt/fadir/frontend/dist` with mat
 archive checksums and no restart. Rollback bundle:
 `/opt/fadir/frontend/dist.previous.fonts-20261110`. Public health, both fonts and every
 bundle returned 200, and a fresh browser loads both fonts.
+
+Mirano removed (owner instruction 2026-11-10). `0b1d1c6` sets headings in Hakimi Sans as
+well, so Hakimi is the only licensed font. Deployed with matching checksums and no
+restart; rollback bundle `/opt/fadir/frontend/dist.previous.mirano-20261110`. Public
+health, the font and every bundle returned 200, and a fresh browser loads only Hakimi.
