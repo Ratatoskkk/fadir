@@ -11,6 +11,7 @@
 // new one in from the direction of travel.
 
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { compactMoney } from "../../format.js";
 import { prefersReducedMotion } from "../ui/motion.js";
 import { useT } from "../i18n/index.jsx";
 
@@ -36,15 +37,6 @@ const dfShort = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-dig
   dfTime.format(Date.now());
   dfShort.format(Date.now());
 });
-
-export function compactTry(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return "";
-  if (Math.abs(n) >= 1_000_000) return `₺${(n / 1_000_000).toFixed(2).replace(".", ",")}M`;
-  if (Math.abs(n) >= 10_000) return `₺${Math.round(n / 1000)}B`;
-  if (Math.abs(n) >= 1_000) return `₺${(n / 1000).toFixed(1).replace(".", ",")}B`;
-  return `₺${Math.round(n)}`;
-}
 
 function niceTicks(min, max, count = 5) {
   const span = max - min || Math.abs(max) || 1;
@@ -231,7 +223,7 @@ export default function ValueChart({
       ctx.lineTo(w - PAD.right, y);
       ctx.stroke();
       ctx.fillStyle = c.axis;
-      ctx.fillText(compactTry(tick), PAD.left - 10, y);
+      ctx.fillText(compactMoney(tick), PAD.left - 10, y);
     }
 
     const paintSet = (set, alphaMul, offsetX, reveal) => {

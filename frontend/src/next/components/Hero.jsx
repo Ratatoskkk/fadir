@@ -47,7 +47,13 @@ function Hero({ portfolio }) {
           </span>
         </p>
 
-        {tax?.applicable && (
+        {tax?.applicable && !taxShown && (
+          <div className="after-tax after-tax-none">
+            <span className="label">{t("tax.afterTax")}</span>
+            <span className="muted">{t("hero.noTaxable")}</span>
+          </div>
+        )}
+        {tax?.applicable && taxShown && (
           <div className="after-tax">
             <button type="button" className="after-tax-row" onClick={() => setShowTax((v) => !v)} aria-expanded={showTax}>
               <span className="label">{t("tax.afterTax")}</span>
@@ -57,16 +63,10 @@ function Hero({ portfolio }) {
               </motion.span>
             </button>
             <div className="after-tax-sub num meta">
-              {taxShown ? (
-                <>
-                  <span>{t("hero.tax")} <strong>−{money(tax.tax_try)}</strong></span>
-                  <span>{t("hero.base")} {money(tax.taxable_gain_try)}</span>
-                  <span>{t("hero.effective")} {pct(Number(tax.effective_rate) * 100)}</span>
-                  <span>{t("hero.bracket")} {pct(Number(tax.marginal_rate) * 100, 0).replace(/^[+]/, "")}</span>
-                </>
-              ) : (
-                t("hero.noTaxable")
-              )}
+              <span>{t("hero.tax")} <strong>−{money(tax.tax_try)}</strong></span>
+              <span>{t("hero.base")} {money(tax.taxable_gain_try)}</span>
+              <span>{t("hero.effective")} {pct(Number(tax.effective_rate) * 100)}</span>
+              <span>{t("hero.bracket")} {pct(Number(tax.marginal_rate) * 100, 0).replace(/^[+]/, "")}</span>
             </div>
             <AnimatePresence initial={false}>
               {showTax && (
@@ -114,8 +114,9 @@ function Hero({ portfolio }) {
           tone={daily?.available ? toneOf(daily.pnl_try) : undefined}
           sub={
             daily?.available ? (
-              <span className="num" title={t("hero.prevSession", { date: fullDate(daily.reference_date) })}>
-                {t("hero.dailySplit", { price: signedMoney(daily.price_effect_try), fx: signedMoney(daily.fx_effect_try) })}
+              <span className="num meta" title={t("hero.prevSession", { date: fullDate(daily.reference_date) })}>
+                <span className="nowrap">{t("attr.priceShort")} {signedMoney(daily.price_effect_try)}</span>
+                <span className="nowrap">{t("attr.fxShort")} {signedMoney(daily.fx_effect_try)}</span>
               </span>
             ) : null
           }

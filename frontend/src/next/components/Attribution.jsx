@@ -3,7 +3,7 @@ import { memo } from "react";
 // is still visible; negative segments are hatched so the sign never relies on colour.
 
 import { motion } from "framer-motion";
-import { arrow, signedMoney, toneOf } from "../../format.js";
+import { arrow, share as sharePct, signedMoney, toneOf } from "../../format.js";
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import { ease } from "../ui/motion.js";
 import { useT } from "../i18n/index.jsx";
@@ -15,7 +15,7 @@ function Attribution({ totals }) {
   const pnl = Number(totals.pnl_try);
   const magnitude = Math.abs(price) + Math.abs(fx);
   const pricePct = magnitude === 0 ? 50 : (Math.abs(price) / magnitude) * 100;
-  const share = (v) => (magnitude === 0 ? "—" : `${((Math.abs(v) / magnitude) * 100).toFixed(0)}%`);
+  const share = (v) => (magnitude === 0 ? "—" : sharePct((Math.abs(v) / magnitude) * 100, 0));
   const realized = Number(totals.realized_pnl_try);
 
   return (

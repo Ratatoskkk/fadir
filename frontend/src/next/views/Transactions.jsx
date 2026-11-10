@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { api } from "../../api.js";
-import { fullDate, money, num } from "../../format.js";
+import { fullDate, fxRate, money, num } from "../../format.js";
 import TickerSearch from "../components/TickerSearch.jsx";
 import { useT } from "../i18n/index.jsx";
 import Dialog from "../ui/Dialog.jsx";
@@ -160,12 +160,12 @@ function TxnRow({ t: txn, editing, setEditing, busy, onSave, onDelete, index }) 
       </td>
       <td className="num">{isEditing ? <input className="small w80" type="number" step="any" value={editing.quantity} onChange={edit("quantity")} /> : num(txn.quantity, 0)}</td>
       <td className="num">{isEditing ? <input className="small w90" type="number" step="any" value={editing.price_native} onChange={edit("price_native")} /> : money(txn.price_native, txn.currency)}</td>
-      <td className="num">{isEditing ? <input className="small w80" type="number" step="any" value={editing.fees_native} onChange={edit("fees_native")} /> : money(txn.fees_native, txn.currency)}</td>
+      <td className="num">{isEditing ? <input className="small w80" type="number" step="any" value={editing.fees_native} onChange={edit("fees_native")} /> : Number(txn.fees_native) === 0 ? "–" : money(txn.fees_native, txn.currency)}</td>
       <td className="num">{money(txn.total_native, txn.currency)}</td>
       <td className="num sep">
         {isEditing
-          ? <input className="small w90" type="number" step="any" placeholder={num(txn.fx_rate_to_try, 4)} value={editing.fx_rate_override ?? ""} onChange={edit("fx_rate_override")} />
-          : num(txn.fx_rate_to_try, 4)}
+          ? <input className="small w90" type="number" step="any" placeholder={fxRate(txn.fx_rate_to_try)} value={editing.fx_rate_override ?? ""} onChange={edit("fx_rate_override")} />
+          : fxRate(txn.fx_rate_to_try)}
       </td>
       <td className="num">
         {fullDate(txn.fx_rate_date)}{" "}

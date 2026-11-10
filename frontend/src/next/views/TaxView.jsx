@@ -29,6 +29,7 @@ export default function TaxView({ dash, onSignIn }) {
   const [choice, setChoice] = useState(remembered);
   const [estimate, setEstimate] = useState(null);
   const [status, setStatus] = useState("idle");
+  const [attempt, setAttempt] = useState(0);
 
   const regionName = useMemo(() => {
     try {
@@ -62,7 +63,7 @@ export default function TaxView({ dash, onSignIn }) {
       .then((value) => { if (live) { setEstimate(value); setStatus("ready"); } })
       .catch((err) => { if (live) { setEstimate(null); setStatus(err?.status === 503 ? "rates" : "error"); } });
     return () => { live = false; };
-  }, [current?.code, current?.year, signedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [current?.code, current?.year, signedIn, attempt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function pick(next) {
     const value = { ...choice, ...next };
@@ -123,8 +124,14 @@ export default function TaxView({ dash, onSignIn }) {
           </div>
         )}
         {signedIn && status === "loading" && <div className="skeleton-grid" role="status" aria-label={t("common.loading")}>{Array.from({ length: 6 }, (_, i) => <i key={i} />)}</div>}
-        {signedIn && status === "rates" && <p className="form-error" role="alert">{t("tax.ratesUnavailable")}</p>}
-        {signedIn && status === "error" && <p className="form-error" role="alert">{t("tax.loadFailed")}</p>}
+        {signedIn && (status === "rates" || status === "error") && (
+          <div className="tax-error" role="alert">
+            <p>{t(status === "rates" ? "tax.ratesUnavailable" : "tax.loadFailed")}</p>
+            <button type="button" className="btn small" onClick={() => setAttempt((n) => n + 1)}>
+              <Icon name="refresh" size={14} /> {t("common.retry")}
+            </button>
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {signedIn && status === "ready" && estimate && (

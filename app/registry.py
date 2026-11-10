@@ -59,5 +59,6 @@ FX_SYMBOL = {c: f"{c}TRY=X" for c in CURRENCIES}
 #: Currencies with a working direct TRY pair on Yahoo.
 FX_DIRECT: tuple[str, ...] = ("USD", "EUR")
 
-#: Currencies that must be triangulated through USD, and the leg used to do it.
-FX_VIA_USD: dict[str, str] = {"SEK": "SEKUSD=X", "TWD": "TWDUSD=X"}
+#: Currencies that must be triangulated through USD, and the leg used to do it. GBP is
+#: here for the UK tax estimate, which values gains in pounds.
+FX_VIA_USD: dict[str, str] = {"SEK": "SEKUSD=X", "TWD": "TWDUSD=X", "GBP": "GBPUSD=X"}

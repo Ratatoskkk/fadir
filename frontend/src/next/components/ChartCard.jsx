@@ -111,7 +111,11 @@ export default function ChartCard({ dash }) {
 
   const first = data[0];
   const last = data[data.length - 1];
-  const periodDelta = first && last ? last.value_try - first.value_try : null;
+  // The window's return, net of money added or withdrawn: deposits raise the value
+  // without being a gain, so the change in cost basis is taken out of the change in value.
+  const deposited = first && last ? last.cost_basis_try - first.cost_basis_try : 0;
+  const periodDelta = first && last ? last.value_try - first.value_try - deposited : null;
+  const periodBase = first ? first.value_try + Math.max(0, deposited) : 0;
 
   const legend = [
     ...SERIES.filter((s) => !s.taxOnly || anyTax).map((s) => ({ key: s.key, label: t(s.label) })),
@@ -138,7 +142,7 @@ export default function ChartCard({ dash }) {
           </h2>
           {periodDelta !== null && (
             <span className={`chip num ${toneOf(periodDelta)}`}>
-              {arrow(periodDelta)} {first.value_try ? ratioPct(last.value_try / first.value_try) : "—"}
+              {arrow(periodDelta)} {periodBase > 0 ? ratioPct(1 + periodDelta / periodBase) : "—"}
             </span>
           )}
           <AnimatePresence>

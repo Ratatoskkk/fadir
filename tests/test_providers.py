@@ -114,6 +114,8 @@ def test_yfinance_triangulated_pairs_carry_an_explicit_route_label():
     assert provider.provenance("TWD") == "yfinance:TWDUSD=X*USDTRY=X"
     assert provider.is_triangulated("SEK") is True
     assert provider.is_triangulated("TWD") is True
+    # The UK tax estimate values gains in pounds.
+    assert provider.provenance("GBP") == "yfinance:GBPUSD=X*USDTRY=X"
 
 
 def test_yfinance_rejects_unknown_currency():

@@ -12,7 +12,7 @@ import { spring } from "../ui/motion.js";
 import { useT } from "../i18n/index.jsx";
 
 const SECTIONS = [
-  { id: "grafik", label: "Grafik" },
+  { id: "grafik", label: "chart.title" },
   { id: "ayristirma", label: "attr.title" },
   { id: "dagilim", label: "alloc.title" },
 ];

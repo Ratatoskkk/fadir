@@ -46,7 +46,9 @@ function Badges({ p }) {
   const t = useT();
   return (
     <span className="badges">
-      <span className={`badge ${p.session === "open" ? "open" : ""}`}>{t(p.session === "open" ? "pos.open" : "pos.closed")}</span>
+      {Number(p.quantity) === 0
+        ? <span className="badge">{t("pos.sold")}</span>
+        : <span className={`badge ${p.session === "open" ? "open" : ""}`}>{t(p.session === "open" ? "pos.open" : "pos.closed")}</span>}
       {!p.ok && <span className="badge err">{t("common.noData")}</span>}
       {p.fx_triangulated && <span className="badge info" title={t("pos.crossTitle", { provider: p.fx_provider })}>{t("pos.cross")}</span>}
       {p.fx_provider === "manual" && <span className="badge warn">{t("pos.manualFx")}</span>}
@@ -122,7 +124,7 @@ function PositionCard({ p, on, onFocus, index }) {
       <ReturnBar label={t("pos.fx")} ratio={p.attribution.fx_return} />
       <ReturnBar label={t("pos.total")} ratio={p.attribution.total_return} />
       <footer className="num">
-        <span>{num(p.quantity, 0)} adet</span>
+        <span>{t("txn.units", { n: num(p.quantity, 0) })}</span>
         <span>{p.ok ? money(p.price_native, p.currency) : "—"}</span>
         <span className={p.daily?.available ? toneOf(p.daily.pnl_try) : "muted"}>
           {p.daily?.available ? `${arrow(p.daily.pnl_try)} ${signedMoney(p.daily.pnl_try)}` : "—"}

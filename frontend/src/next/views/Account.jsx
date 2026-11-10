@@ -106,6 +106,7 @@ function DataRights({ dash }) {
 }
 
 function PortfolioCode({ dash, access, onLeave }) {
+  const [shown, setShown] = useState(false);
   const { portfolios, selectedPortfolioId, renewCode } = dash;
   const [busy, setBusy] = useState(false);
   const confirm = useConfirm();
@@ -139,8 +140,13 @@ function PortfolioCode({ dash, access, onLeave }) {
         <h2 id="code-title">{t("code.title")}</h2>
       </header>
       <div className="code-card-row">
-        <span className="code-big" aria-label={`${t("code.short")} ${current.code.split("").join(" ")}`}>{current.code}</span>
+        {shown
+          ? <span className="code-big" aria-label={`${t("code.short")} ${current.code.split("").join(" ")}`}>{current.code}</span>
+          : <span className="code-big code-hidden" aria-label={t("code.hidden")}>{"•".repeat(current.code.length)}</span>}
         <div className="btn-row">
+          <button className="btn" type="button" aria-pressed={shown} onClick={() => setShown((v) => !v)}>
+            <Icon name={shown ? "eyeOff" : "eye"} size={15} /> {t(shown ? "code.hide" : "code.show")}
+          </button>
           <button className="btn" type="button" onClick={() => copyCode(current.code, toast, t)}><Icon name="copy" size={15} /> {t("code.copy")}</button>
           {access === "code" ? (
             <button className="btn" type="button" onClick={onLeave}><Icon name="x" size={15} /> {t("code.leave")}</button>

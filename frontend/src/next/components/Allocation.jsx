@@ -2,14 +2,15 @@ import { memo } from "react";
 // Holdings by weight. A row click focuses the chart on that instrument.
 
 import { motion } from "framer-motion";
-import { arrow, money, ratioPct, toneOf } from "../../format.js";
+import { arrow, money, ratioPct, share, toneOf } from "../../format.js";
 import { ease, spring } from "../ui/motion.js";
 import { useT } from "../i18n/index.jsx";
 
 function Allocation({ positions, focusTickers, onFocus }) {
   const t = useT();
   const rows = positions
-    .filter((p) => p.ok)
+    // A sold-out position holds nothing, so it has no place in a split of what is held.
+    .filter((p) => p.ok && Number(p.quantity) !== 0)
     .map((p) => ({ ...p, value: Number(p.market_value_try) }))
     .sort((a, b) => b.value - a.value);
   const total = rows.reduce((s, p) => s + p.value, 0) || 1;
@@ -19,7 +20,7 @@ function Allocation({ positions, focusTickers, onFocus }) {
     <section className="card" id="dagilim" aria-label={t("alloc.title")}>
       <header className="card-head">
         <h2>{t("alloc.title")}</h2>
-        <span className="muted num">{positions.length}</span>
+        <span className="muted num">{rows.length}</span>
       </header>
       <ul className="alloc">
         {rows.map((p, i) => {
@@ -44,7 +45,7 @@ function Allocation({ positions, focusTickers, onFocus }) {
                     transition={{ duration: 0.8, delay: 0.05 * i, ease }}
                   />
                 </span>
-                <span className="alloc-weight num">%{((p.value / total) * 100).toFixed(1).replace(".", ",")}</span>
+                <span className="alloc-weight num">{share((p.value / total) * 100)}</span>
                 <span className="alloc-value num">{money(p.value)}</span>
                 <span className={`alloc-ret num ${toneOf(Number(p.attribution.total_return) - 1)}`}>
                   {arrow(Number(p.attribution.total_return) - 1)} {ratioPct(p.attribution.total_return)}
