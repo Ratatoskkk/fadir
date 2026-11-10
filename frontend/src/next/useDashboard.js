@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";
-import { isIntradayRange, isPannable, rangeDays } from "../ranges.js";
+import { isIntradayRange, isPannable, panExhausted, rangeWindow } from "../ranges.js";
 
 export const INTERVALS = [
   { value: 5, label: "interval.5s" },
@@ -20,29 +20,7 @@ export const INTERVALS = [
 ];
 const DEFAULT_INTERVAL = 10;
 const INTERVAL_KEY = "fadir.interval";
-const INCEPTION = "2026-03-29";
 const CLOSED_POLL_SECONDS = 900;
-
-const isoOf = (d) => d.toISOString().slice(0, 10);
-
-function rangeWindow(range, pan = 0) {
-  const days = rangeDays(range);
-  if (days === null) return { from: INCEPTION, to: undefined };
-  const to = new Date();
-  to.setDate(to.getDate() - days * pan);
-  const from = new Date(to);
-  from.setDate(from.getDate() - days);
-  const fromIso = isoOf(from);
-  return { from: fromIso < INCEPTION ? INCEPTION : fromIso, to: pan > 0 ? isoOf(to) : undefined };
-}
-
-function panExhausted(range, pan) {
-  const days = rangeDays(range);
-  if (days === null) return true;
-  const to = new Date();
-  to.setDate(to.getDate() - days * pan);
-  return isoOf(to) <= INCEPTION;
-}
 
 function loadInterval() {
   try {
@@ -92,29 +70,37 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
   );
   const nextMarketOpen = portfolio?.next_market_open ?? null;
 
-  const loadHistory = useCallback(async (nextRange, { force = false, tickers, pan, portfolioId } = {}) => {
+  /** Fetches a chart series; the returned function stores it, so callers choose when. */
+  const fetchHistory = useCallback(async (nextRange, { force = false, tickers, pan, portfolioId } = {}) => {
     const selectedId = portfolioId ?? portfolioIdRef.current;
     const target = nextRange ?? rangeRef.current;
     const focus = tickers ?? focusRef.current;
     const at = pan ?? panRef.current;
+    const current = () => portfolioIdRef.current === selectedId;
     if (isIntradayRange(target)) {
       const value = await api.intraday({ interval: "5m", force, tickers: focus, offset: at, portfolioId: selectedId });
-      if (portfolioIdRef.current === selectedId) setIntraday(value);
-      return;
+      return () => { if (current()) setIntraday(value); };
     }
     const { from, to } = rangeWindow(target, at);
     const value = await api.history({ from, to, freq: "D", tickers: focus, portfolioId: selectedId });
-    if (portfolioIdRef.current === selectedId) setHistory(value);
+    return () => { if (current()) setHistory(value); };
   }, []);
+
+  const loadHistory = useCallback(
+    async (nextRange, options) => (await fetchHistory(nextRange, options))(),
+    [fetchHistory],
+  );
 
   const loadMarket = useCallback(async ({ force = false, portfolioId } = {}) => {
     const selectedId = portfolioId ?? portfolioIdRef.current;
-    const [p] = await Promise.all([
+    const [p, storeHistory] = await Promise.all([
       api.portfolio(selectedId),
-      loadHistory(undefined, { force, portfolioId: selectedId }),
+      fetchHistory(undefined, { force, portfolioId: selectedId }),
     ]);
+    // Both land in one render rather than two.
+    storeHistory();
     if (portfolioIdRef.current === selectedId) setPortfolio(p);
-  }, [loadHistory]);
+  }, [fetchHistory]);
 
   const loadLedger = useCallback(async (portfolioId) => {
     const selectedId = portfolioId ?? portfolioIdRef.current;

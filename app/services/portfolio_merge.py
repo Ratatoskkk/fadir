@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from decimal import Decimal
 import hashlib
 import json
@@ -14,7 +13,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.api.request_authority import RequestAuthority
-from app.models import Instrument, Portfolio, Transaction, Workspace
+from app.models import Instrument, Portfolio, Transaction, Workspace, utcnow
 from app.schemas import (
     PortfolioMergeCandidateOut,
     PortfolioMergeConfirmOut,
@@ -180,7 +179,7 @@ def options(
         raise PortfolioMergeError()
     try:
         guest = guest_access.require(
-            session, guest_secret, clock=lambda: datetime.now(timezone.utc)
+            session, guest_secret, clock=utcnow
         )
     except guest_access.GuestAccessError:
         raise PortfolioMergeError() from None
@@ -284,7 +283,7 @@ def _prepare(
     if not authority.is_user or authority.user_id is None:
         raise PortfolioMergeError()
     try:
-        guest = guest_access.require(session, guest_secret, clock=lambda: datetime.now(timezone.utc))
+        guest = guest_access.require(session, guest_secret, clock=utcnow)
     except Exception:
         raise PortfolioMergeError() from None
     source, target = _locked_portfolios(

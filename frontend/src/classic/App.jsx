@@ -15,7 +15,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import { api } from "../api.js";
 import { useFlash } from "../flash.js";
 import { arrow, clockTime, money, ratioPct, toneOf } from "../format.js";
-import { isIntradayRange, isPannable, rangeDays } from "../ranges.js";
+import { isIntradayRange, isPannable, panExhausted, rangeWindow } from "../ranges.js";
 import AttributionBar from "./components/AttributionBar.jsx";
 import Brand from "./components/Brand.jsx";
 import GoogleIdentityPanel from "./components/GoogleIdentityPanel.jsx";
@@ -45,8 +45,6 @@ const INTERVALS = [
   { value: 0, label: "kapalı" },
 ];
 const DEFAULT_INTERVAL = 10;
-
-const INCEPTION = "2026-03-29";
 
 //: Floor for the poll while every exchange is shut. Only FX can move then, so there is
 //: nothing to gain from the fast cadence — but plenty to lose from not polling at all.
@@ -110,39 +108,6 @@ function nextOpenLabel(iso) {
   return `${dfWeekday.format(when)} ${time}`;
 }
 
-const isoOf = (d) => d.toISOString().slice(0, 10);
-
-/**
- * The [from, to] window for a range, slid `pan` whole windows into the past.
- *
- * Paging by a whole window rather than a fixed number of days keeps each step the same
- * size as what is on screen, so "back" always means "the previous 1A", never a partial
- * overlap that makes two adjacent views hard to compare.
- */
-function rangeWindow(range, pan = 0) {
-  const days = rangeDays(range);
-  if (days === null) return { from: INCEPTION, to: undefined };
-
-  const to = new Date();
-  to.setDate(to.getDate() - days * pan);
-  const from = new Date(to);
-  from.setDate(from.getDate() - days);
-
-  const fromIso = isoOf(from);
-  return {
-    from: fromIso < INCEPTION ? INCEPTION : fromIso,
-    to: pan > 0 ? isoOf(to) : undefined, // live window stays open-ended at today
-  };
-}
-
-/** True once the window would sit entirely before the first trade. */
-function panExhausted(range, pan) {
-  const days = rangeDays(range);
-  if (days === null) return true;
-  const to = new Date();
-  to.setDate(to.getDate() - days * pan);
-  return isoOf(to) <= INCEPTION;
-}
 
 /**
  * One reorderable panel.

@@ -24,46 +24,59 @@ const nf = (min, max) =>
     maximumFractionDigits: max,
   });
 
-let nf2 = nf(2, 2);
-let nf0 = nf(0, 0);
-let nf1 = nf(1, 1);
-let nf4 = nf(2, 4);
-let nfRate = nf(4, 4);
-const compactNf = () => new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 2 });
-let nfCompact = compactNf();
-
 // Date formatters are built once for the same reason the number formatters are:
 // constructing an Intl formatter is far more expensive than using one, and these run per
 // table cell, per chart tick and per tooltip render.
 const df = (options) => new Intl.DateTimeFormat(locale, options);
 
-let dfShort = df({ day: "2-digit", month: "2-digit" });
-let dfFull = df({ day: "2-digit", month: "2-digit", year: "numeric" });
-let dfClock = df({ hour: "2-digit", minute: "2-digit", second: "2-digit" });
+/** Every formatter for the current locale, rebuilt only when the locale changes. */
+const buildFormatters = () => ({
+  nf2: nf(2, 2),
+  nf0: nf(0, 0),
+  nf1: nf(1, 1),
+  nf4: nf(2, 4),
+  nfRate: nf(4, 4),
+  nfCompact: new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 2 }),
+  dfShort: df({ day: "2-digit", month: "2-digit" }),
+  dfFull: df({ day: "2-digit", month: "2-digit", year: "numeric" }),
+  dfClock: df({ hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+  dfHm: df({ hour: "2-digit", minute: "2-digit" }),
+  dfWeekday: df({ weekday: "short" }),
+  dfStamp: df({ dateStyle: "medium", timeStyle: "short" }),
+});
+let F = buildFormatters();
 
 export function setFormatLocale(next) {
   if (!next || next === locale) return;
   locale = next;
   percentFirst = next.toLowerCase().startsWith("tr");
-  nf2 = nf(2, 2);
-  nf0 = nf(0, 0);
-  nf1 = nf(1, 1);
-  nf4 = nf(2, 4);
-  nfRate = nf(4, 4);
-  nfCompact = compactNf();
-  dfShort = df({ day: "2-digit", month: "2-digit" });
-  dfFull = df({ day: "2-digit", month: "2-digit", year: "numeric" });
-  dfClock = df({ hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  F = buildFormatters();
 }
 
-export const formatLocale = () => locale;
+/** Whole calendar days from today to `when`, in local time: 0 today, 1 tomorrow. */
+export function daysFromToday(when) {
+  const today = new Date();
+  return Math.round(
+    (new Date(when.getFullYear(), when.getMonth(), when.getDate()) - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000,
+  );
+}
+
+export const hourMinute = (d) => F.dfHm.format(d);
+export const weekdayShort = (d) => F.dfWeekday.format(d);
+
+/** Date and time, e.g. "10 Kas 2026 14:05"; an unparseable value is shown as given. */
+export function dateTimeStamp(iso) {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? String(iso) : F.dfStamp.format(date);
+}
+
 
 const percent = (sign, body) => (percentFirst ? `${sign}%${body}` : `${sign}${body}%`);
 
 export function num(value, digits = 2) {
   const n = Number(value);
   if (value === null || value === undefined || Number.isNaN(n)) return "—";
-  return digits === 0 ? nf0.format(n) : digits === 1 ? nf1.format(n) : digits === 4 ? nf4.format(n) : nf2.format(n);
+  return ({ 0: F.nf0, 1: F.nf1, 4: F.nf4 }[digits] ?? F.nf2).format(n);
 }
 
 export function money(value, currency = "TRY", digits = 2) {
@@ -96,14 +109,14 @@ export function ratioPct(value, digits = 2) {
 export function fxRate(value) {
   const n = Number(value);
   if (value === null || value === undefined || Number.isNaN(n)) return "—";
-  return nfRate.format(n);
+  return F.nfRate.format(n);
 }
 
 /** Lira in the viewer's short form (₺1.5M, ₺1,5 Mn), for chart axes. */
 export function compactMoney(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "";
-  return `₺${nfCompact.format(n)}`;
+  return `₺${F.nfCompact.format(n)}`;
 }
 
 /** An unsigned share of a whole, already in percent (81.5%, %81,5). */
@@ -136,14 +149,14 @@ export function toneOf(value) {
 
 export function shortDate(iso) {
   if (!iso) return "—";
-  return dfShort.format(new Date(iso));
+  return F.dfShort.format(new Date(iso));
 }
 
 export function fullDate(iso) {
   if (!iso) return "—";
-  return dfFull.format(new Date(iso));
+  return F.dfFull.format(new Date(iso));
 }
 
 export function clockTime(date) {
-  return dfClock.format(date);
+  return F.dfClock.format(date);
 }

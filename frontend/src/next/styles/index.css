@@ -651,10 +651,6 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .merge-decisions label.on { border-color: var(--accent); background: var(--surface-3); }
 .merge-decisions input { height: auto; accent-color: var(--accent); }
 
-.year-form { margin-left: auto; display: flex; gap: 8px; }
-.year-form input { width: 96px; height: 38px; }
-.tax-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--text-2); margin-bottom: 14px; }
-.tax-meta b { color: var(--text-3); font-weight: 500; margin-right: 4px; }
 .tax-grid { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
 .tax-grid > div { padding: 14px; border-radius: var(--radius-sm); background: var(--surface-2); }
 .tax-grid dt { font-size: 12px; color: var(--text-3); }
@@ -744,8 +740,6 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
   .modal-body { padding: 8px 16px 18px; }
   .search input { width: 90px; }
   .drag-handle { opacity: 0.6; }
-  .year-form { margin-left: 0; width: 100%; }
-  .year-form input { flex: 1; }
   .icon-btn, .switcher, .live { height: 44px; }
   .icon-btn { width: 44px; }
   .segmented button { height: 38px; }

@@ -14,10 +14,6 @@ function readableCsrfToken() {
 let privateRequestTail = Promise.resolve();
 const GET_TIMEOUT_MS = 30_000;
 
-const sessionIndependentPaths = new Set([
-  "/api/health",
-]);
-
 function serializePrivateRequest(work) {
   const next = privateRequestTail.then(work, work);
   privateRequestTail = next.catch(() => undefined);
@@ -87,7 +83,6 @@ async function performRequest(path, options = {}) {
 }
 
 async function request(path, options = {}) {
-  if (sessionIndependentPaths.has(path)) return performRequest(path, options);
   return serializePrivateRequest(() => performRequest(path, options));
 }
 
@@ -121,7 +116,6 @@ export const api = {
       return request("/api/guest/bootstrap", { method: "POST" });
     }
   },
-  recoverUserCookie: () => request("/api/auth/recover-user-cookie", { method: "POST" }),
   googleStart: () => request("/api/auth/google/start", { method: "POST" }),
   googleVerify: (payload) =>
     request("/api/auth/google/verify", { method: "POST", body: JSON.stringify(payload) }),
@@ -166,7 +160,6 @@ export const api = {
   taxEstimateFor: (jurisdiction, year) =>
     request(`/api/tax/estimates?jurisdiction=${encodeURIComponent(jurisdiction)}&year=${encodeURIComponent(year)}`),
   refresh: () => request("/api/refresh", { method: "POST" }),
-  health: () => request("/api/health"),
   taxProfile: (year) => request(`/api/tax/profile?year=${encodeURIComponent(year)}`),
   taxEstimate: (year) => request(`/api/tax/estimate?year=${encodeURIComponent(year)}`),
 };

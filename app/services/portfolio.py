@@ -270,29 +270,6 @@ class PortfolioService:
 
     # -- refresh -------------------------------------------------------------------
 
-    def refresh(self, *, force: bool = False) -> RefreshReport:
-        """Refetch prices and FX. Partial failure is expected and tolerated (SPEC §8)."""
-        if self._scope is not None:
-            raise PortfolioScopeViolation("Refresh is not available for a scoped service")
-        instruments = load_instruments(self.session)
-        full_start = self.inception() - timedelta(days=10)
-        end = date.today()
-
-        # Only ask for what is actually missing. Settled closes never change, so the
-        # rows already held would be discarded on arrival anyway.
-        start = self.prices.incremental_start(instruments, full_start)
-
-        report = self.prices.refresh(instruments, start, end, force=force)
-
-        for currency in sorted({i.currency for i in instruments}):
-            try:
-                self.fx.current(currency, force=force)
-            except ProviderError as exc:
-                log.error("FX refresh failed for %s: %s", currency, exc)
-                report.errors.append(f"FX {currency}: {exc}")
-
-        return report
-
     def refresh_shared(self, *, force: bool = False) -> RefreshReport:
         """Refresh shared market rows without reading or changing private rows."""
         if self._scope is not None:
@@ -335,27 +312,34 @@ class PortfolioService:
     # -- current view --------------------------------------------------------------
 
     def _current_quote(
-        self, instrument: Instrument, now_utc: datetime, warnings: list[str]
+        self,
+        instrument: Instrument,
+        now_utc: datetime,
+        warnings: list[str],
+        closes: tuple[tuple[Decimal, date] | None, tuple[Decimal, date] | None],
     ) -> MarketQuote:
         """Build a MarketQuote, degrading this one position rather than the page."""
         session_state = market_hours.session_state(instrument.exchange, now_utc)
 
-        price_row, prev_row = self.prices.last_two_cached_closes(instrument.id)
-        if price_row is None:
-            warnings.append(f"{instrument.ticker}: no price available")
+        def failed(price: Decimal, on: date, error: str) -> MarketQuote:
             return MarketQuote(
                 ticker=instrument.ticker,
                 currency=instrument.currency,
-                price_native=Decimal("0"),
-                price_date=date.today(),
+                price_native=price,
+                price_date=on,
                 fx_rate_to_try=Decimal("0"),
-                fx_rate_date=date.today(),
+                fx_rate_date=on,
                 fx_provider="none",
                 ok=False,
                 session=session_state,
                 stale=True,
-                error="no price data",
+                error=error,
             )
+
+        price_row, prev_row = closes
+        if price_row is None:
+            warnings.append(f"{instrument.ticker}: no price available")
+            return failed(Decimal("0"), date.today(), "no price data")
 
         close, price_date = price_row
 
@@ -363,19 +347,7 @@ class PortfolioService:
             fx_quote = self.fx.current(instrument.currency)
         except ProviderError as exc:
             warnings.append(f"{instrument.ticker}: no FX rate ({exc})")
-            return MarketQuote(
-                ticker=instrument.ticker,
-                currency=instrument.currency,
-                price_native=close,
-                price_date=price_date,
-                fx_rate_to_try=Decimal("0"),
-                fx_rate_date=price_date,
-                fx_provider="none",
-                ok=False,
-                session=session_state,
-                stale=True,
-                error=f"no FX rate: {exc}",
-            )
+            return failed(close, price_date, f"no FX rate: {exc}")
 
         # The previous session, valued at the FX rate published on *that* day, so the
         # day's move separates into a price part and a currency part. A missing rate
@@ -421,6 +393,7 @@ class PortfolioService:
         warnings: list[str] = []
         positions: list[PositionMetrics] = []
         instruments, transactions_by_instrument = self._calculation_inputs()
+        latest_closes = self.prices.last_two_cached_closes([i.id for i in instruments])
 
         for instrument in instruments:
             transactions = transactions_by_instrument.get(instrument.id, [])
@@ -439,7 +412,7 @@ class PortfolioService:
                 log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
                 warnings.append(f"{instrument.ticker}: {exc}")
                 book = build_lot_book(instrument.ticker, instrument.currency, [])
-                quote = self._current_quote(instrument, now_utc, warnings)
+                quote = self._current_quote(instrument, now_utc, warnings, latest_closes[instrument.id])
                 error = (
                     f"lot uyuşmazlığı: {exc}"
                     if isinstance(exc, InsufficientLots)
@@ -453,7 +426,7 @@ class PortfolioService:
                 )
                 continue
 
-            quote = self._current_quote(instrument, now_utc, warnings)
+            quote = self._current_quote(instrument, now_utc, warnings, latest_closes[instrument.id])
             try:
                 positions.append(position_metrics(book, quote))
             except DecimalException as exc:
@@ -539,6 +512,9 @@ class PortfolioService:
         currencies: set[str] = set()
 
         lookback = self.settings.fx.max_lookback_days
+        stored_closes = self.prices.cached_closes(
+            [i.id for i in instruments], start - timedelta(days=lookback), end
+        )
 
         for instrument in instruments:
             transactions = transactions_by_instrument.get(instrument.id, [])
@@ -560,9 +536,7 @@ class PortfolioService:
                     transactions=txns,
                 )
             )
-            closes[instrument.ticker] = self.prices.cached_closes(
-                instrument.id, start - timedelta(days=lookback), end
-            )
+            closes[instrument.ticker] = stored_closes[instrument.id]
             currencies.add(instrument.currency)
 
         fx_rates: dict[str, dict[date, Decimal]] = {}
@@ -589,10 +563,6 @@ class PortfolioService:
         )
 
     # -- intraday ------------------------------------------------------------------
-
-    def _filtered_instruments(self, tickers: list[str] | None) -> list[Instrument]:
-        instruments, _ = self._calculation_inputs()
-        return self._select_instruments(instruments, tickers)
 
     def build_intraday(
         self,

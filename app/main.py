@@ -13,7 +13,6 @@ import time
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timezone
-from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware

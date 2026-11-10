@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from decimal import ROUND_HALF_EVEN, Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -84,14 +84,20 @@ class PriceService:
     # -- cache reads ---------------------------------------------------------------
 
     def cached_closes(
-        self, instrument_id: int, start: date, end: date
-    ) -> dict[date, Decimal]:
-        stmt = select(PriceCache.price_date, PriceCache.close_native).where(
-            PriceCache.instrument_id == instrument_id,
+        self, instrument_ids: list[int], start: date, end: date
+    ) -> dict[int, dict[date, Decimal]]:
+        """Stored closes in [start, end] for every instrument, in one query."""
+        out: dict[int, dict[date, Decimal]] = {i: {} for i in instrument_ids}
+        if not instrument_ids:
+            return out
+        stmt = select(PriceCache.instrument_id, PriceCache.price_date, PriceCache.close_native).where(
+            PriceCache.instrument_id.in_(instrument_ids),
             PriceCache.price_date >= start,
             PriceCache.price_date <= end,
         )
-        return {d: r for d, r in self.session.execute(stmt)}
+        for instrument_id, d, close in self.session.execute(stmt):
+            out[instrument_id][d] = close
+        return out
 
     def last_cached_close(self, instrument_id: int) -> tuple[Decimal, date] | None:
         stmt = (
@@ -104,54 +110,44 @@ class PriceService:
         return (row[0], row[1]) if row else None
 
     def last_two_cached_closes(
-        self, instrument_id: int
-    ) -> tuple[tuple[Decimal, date] | None, tuple[Decimal, date] | None]:
-        """The newest close and the one before it, for the daily change.
+        self, instrument_ids: list[int]
+    ) -> dict[int, tuple[tuple[Decimal, date] | None, tuple[Decimal, date] | None]]:
+        """The newest close and the one before it per instrument, for the daily change.
 
-        Returns (latest, previous). `previous` is None when only one session is on file,
-        which is the signal not to report a daily figure at all. "The one before it" is
-        the previous *stored* session, not literally yesterday: for a market that has
-        been shut for days that is the last day which actually traded, and the caller
-        surfaces the date so the comparison is never mislabelled.
+        Maps each id to (latest, previous). `previous` is None when only one session is
+        on file, which is the signal not to report a daily figure at all. "The one before
+        it" is the previous *stored* session, not literally yesterday: for a market that
+        has been shut for days that is the last day which actually traded, and the
+        caller surfaces the date so the comparison is never mislabelled.
         """
-        stmt = (
-            select(PriceCache.close_native, PriceCache.price_date)
-            .where(PriceCache.instrument_id == instrument_id)
-            .order_by(PriceCache.price_date.desc())
-            .limit(2)
+        out: dict[int, tuple[tuple[Decimal, date] | None, tuple[Decimal, date] | None]] = {
+            i: (None, None) for i in instrument_ids
+        }
+        if not instrument_ids:
+            return out
+        rank = (
+            func.row_number()
+            .over(partition_by=PriceCache.instrument_id, order_by=PriceCache.price_date.desc())
+            .label("rank")
         )
-        rows = self.session.execute(stmt).all()
-        if not rows:
-            return None, None
-        latest = (rows[0][0], rows[0][1])
-        previous = (rows[1][0], rows[1][1]) if len(rows) > 1 else None
-        return latest, previous
+        ranked = (
+            select(PriceCache.instrument_id, PriceCache.close_native, PriceCache.price_date, rank)
+            .where(PriceCache.instrument_id.in_(instrument_ids))
+            .subquery()
+        )
+        stmt = select(ranked.c.instrument_id, ranked.c.close_native, ranked.c.price_date, ranked.c.rank).where(ranked.c.rank <= 2)
+        for instrument_id, close, d, n in self.session.execute(stmt):
+            latest, previous = out[instrument_id]
+            if n == 1:
+                out[instrument_id] = ((close, d), previous)
+            else:
+                out[instrument_id] = (latest, (close, d))
+        return out
 
     #: Days of overlap re-requested either side of the newest cached close. Covers a
     #: session that was still open when it was last stored, and any short gap Yahoo
     #: backfills after the fact.
     REFETCH_OVERLAP_DAYS = 5
-
-    def incremental_start(self, instruments: list[Instrument], full_start: date) -> date:
-        """Earliest date the next refresh actually needs to ask for.
-
-        Settled closes are immutable, so `_store_closes` discards every row it already
-        holds — re-downloading the whole history on each refresh costs a growing
-        download to write, at most, one row per symbol. This narrows the window to what
-        is genuinely missing: back to just before the *oldest* newest-close across the
-        instruments, or the full window if any instrument has no data at all.
-        """
-        newest: list[date] = []
-        for instrument in instruments:
-            latest = self.last_cached_close(instrument.id)
-            if latest is None:
-                return full_start  # a cold instrument needs its whole history
-            newest.append(latest[1])
-
-        if not newest:
-            return full_start
-        candidate = min(newest) - timedelta(days=self.REFETCH_OVERLAP_DAYS)
-        return max(full_start, candidate)
 
     def shared_refresh_start(self, instrument: Instrument, today: date, cold_start: date) -> date:
         """First day a shared refresh must request for `instrument`, including any hole."""
@@ -383,62 +379,3 @@ class PriceService:
         return report
 
     # -- refresh -------------------------------------------------------------------
-
-    def refresh(
-        self,
-        instruments: list[Instrument],
-        start: date,
-        end: date,
-        *,
-        force: bool = False,
-        now_utc: datetime | None = None,
-    ) -> RefreshReport:
-        """Batch-refresh prices for all instruments (SPEC §8).
-
-        All symbols go out in a single `yf.download` call. A symbol that fails is
-        recorded against its own instrument and the rest proceed.
-        """
-        report = RefreshReport()
-        if not instruments:
-            return report
-
-        now_utc = now_utc or datetime.now(timezone.utc)
-        symbols = [i.yf_symbol for i in instruments]
-
-        try:
-            batch = yf_client.fetch_close_series_batch(symbols, start, end)
-        except Exception as exc:  # noqa: BLE001 - never fail the whole dashboard
-            log.error("batch price fetch failed entirely: %s", exc)
-            report.errors.append(f"batch fetch failed: {exc}")
-            batch = {}
-
-        for instrument in instruments:
-            status = PriceStatus(ticker=instrument.ticker, ok=False)
-            try:
-                closes = batch.get(instrument.yf_symbol) or {}
-                report.price_rows_written += self._store_closes(instrument.id, closes)
-
-                if force:
-                    report.splits_found += self.sync_splits(instrument)
-                    report.splits_applied += self.apply_pending_splits(instrument)
-
-                latest = self.last_cached_close(instrument.id)
-                if latest is None:
-                    status.error = "no price data available"
-                    report.errors.append(f"{instrument.ticker}: no price data")
-                else:
-                    close, traded = latest
-                    status.ok = True
-                    status.last_close = close
-                    status.last_traded = traded
-                    status.session = market_hours.session_state(instrument.exchange, now_utc)
-                    # Stale = the market is shut, or open but we have nothing from today.
-                    status.stale = status.session == "closed" or traded < date.today()
-            except Exception as exc:  # noqa: BLE001 - isolate per instrument
-                log.error("refresh failed for %s: %s", instrument.ticker, exc)
-                status.error = str(exc)
-                report.errors.append(f"{instrument.ticker}: {exc}")
-
-            report.per_instrument[instrument.ticker] = status
-
-        return report

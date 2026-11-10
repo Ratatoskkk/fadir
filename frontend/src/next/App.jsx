@@ -112,15 +112,18 @@ function Shell({ access, onLeave, onSignOut, onAccessLost }) {
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [view]);
 
+  // `dash` is a new object every render; depend on its stable members instead.
+  const { focusTickers, toggleFocus, manualRefresh, refreshing, changeRange, portfolios, selectPortfolio, setIntervalSeconds } = dash;
+
   const focusTicker = useCallback((ticker) => {
-    const turningOn = !dash.focusTickers.includes(ticker);
-    dash.toggleFocus(ticker);
+    const turningOn = !focusTickers.includes(ticker);
+    toggleFocus(ticker);
     if (turningOn) {
       toast({ text: t("chart.focusToast", { ticker }) });
       if (view !== "genel") go("genel");
       window.setTimeout(() => document.getElementById("grafik")?.scrollIntoView({ behavior: "smooth", block: "center" }), 380);
     }
-  }, [dash, toast, view, go, t]);
+  }, [focusTickers, toggleFocus, toast, view, go, t]);
 
   const newTransaction = useCallback(() => {
     go("islemler");
@@ -139,35 +142,32 @@ function Shell({ access, onLeave, onSignOut, onAccessLost }) {
       const index = ["1", "2", "3", "4", "5"].indexOf(e.key);
       if (index >= 0) go(VIEWS[index].id);
       else if (e.key === "/") { e.preventDefault(); setPaletteOpen(true); }
-      else if (e.key.toLowerCase() === "r" && !dash.refreshing) dash.manualRefresh();
+      else if (e.key.toLowerCase() === "r" && !refreshing) manualRefresh();
       else if (e.key.toLowerCase() === "n") newTransaction();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, dash, paletteOpen, newTransaction]);
+  }, [go, refreshing, manualRefresh, paletteOpen, newTransaction]);
 
-  const commands = useMemo(() => {
-    const list = [
-      ...VIEWS.map((v, i) => ({ id: `view-${v.id}`, group: t("palette.go"), label: t(v.label), icon: v.icon, hint: String(i + 1), run: () => go(v.id) })),
-      { id: "new-txn", group: t("palette.actions"), label: t("txn.new"), icon: "plus", hint: "N", run: newTransaction },
-      { id: "refresh", group: t("palette.actions"), label: t("common.refresh"), icon: "refresh", hint: "R", run: () => dash.manualRefresh() },
-      { id: "theme", group: t("palette.actions"), label: t(theme === "dark" ? "theme.light" : "theme.dark"), icon: theme === "dark" ? "sun" : "moon", run: toggleTheme },
-      ...RANGES.map((r) => ({ id: `range-${r.key}`, group: t("palette.range"), label: t(`range.${r.key}`), icon: "clock", keywords: "range", run: () => { go("genel"); dash.changeRange(r.key); } })),
-      ...(portfolio?.positions ?? []).map((p) => ({
-        id: `focus-${p.ticker}`, group: t("palette.focus"), label: p.ticker, hint: p.name, icon: "focus", run: () => focusTicker(p.ticker),
-      })),
-      ...(dash.focusTickers.length ? [{ id: "focus-clear", group: t("palette.focus"), label: t("chart.wholePortfolio"), icon: "x", run: () => dash.toggleFocus(null) }] : []),
-      ...dash.portfolios.map((p) => ({
-        id: `pf-${p.id}`, group: t("portfolio.label"), label: p.name, hint: p.base_currency, icon: "layers", run: () => dash.selectPortfolio(Number(p.id)),
-      })),
-      ...INTERVALS.map((o) => ({ id: `int-${o.value}`, group: t("live.interval"), label: t(o.label), icon: "clock", keywords: "interval", run: () => dash.setIntervalSeconds(o.value) })),
-      { id: "classic", group: t("ui.title"), label: t("ui.classic"), icon: "swap", run: () => switchUi("classic") },
-      ...(access === "code"
-        ? [{ id: "leave", group: t("portfolio.label"), label: t("code.leave"), icon: "x", run: onLeave }]
-        : [{ id: "new-portfolio", group: t("portfolio.label"), label: t("portfolio.new"), icon: "plus", run: () => setNewPortfolioOpen(true) }]),
-    ];
-    return list;
-  }, [go, newTransaction, dash, theme, toggleTheme, portfolio, focusTicker, access, onLeave, t]);
+  const commands = useMemo(() => [
+    ...VIEWS.map((v, i) => ({ id: `view-${v.id}`, group: t("palette.go"), label: t(v.label), icon: v.icon, hint: String(i + 1), run: () => go(v.id) })),
+    { id: "new-txn", group: t("palette.actions"), label: t("txn.new"), icon: "plus", hint: "N", run: newTransaction },
+    { id: "refresh", group: t("palette.actions"), label: t("common.refresh"), icon: "refresh", hint: "R", run: manualRefresh },
+    { id: "theme", group: t("palette.actions"), label: t(theme === "dark" ? "theme.light" : "theme.dark"), icon: theme === "dark" ? "sun" : "moon", run: toggleTheme },
+    ...RANGES.map((r) => ({ id: `range-${r.key}`, group: t("palette.range"), label: t(`range.${r.key}`), icon: "clock", keywords: "range", run: () => { go("genel"); changeRange(r.key); } })),
+    ...(portfolio?.positions ?? []).map((p) => ({
+      id: `focus-${p.ticker}`, group: t("palette.focus"), label: p.ticker, hint: p.name, icon: "focus", run: () => focusTicker(p.ticker),
+    })),
+    ...(focusTickers.length ? [{ id: "focus-clear", group: t("palette.focus"), label: t("chart.wholePortfolio"), icon: "x", run: () => toggleFocus(null) }] : []),
+    ...portfolios.map((p) => ({
+      id: `pf-${p.id}`, group: t("portfolio.label"), label: p.name, hint: p.base_currency, icon: "layers", run: () => selectPortfolio(Number(p.id)),
+    })),
+    ...INTERVALS.map((o) => ({ id: `int-${o.value}`, group: t("live.interval"), label: t(o.label), icon: "clock", keywords: "interval", run: () => setIntervalSeconds(o.value) })),
+    { id: "classic", group: t("ui.title"), label: t("ui.classic"), icon: "swap", run: () => switchUi("classic") },
+    ...(access === "code"
+      ? [{ id: "leave", group: t("portfolio.label"), label: t("code.leave"), icon: "x", run: onLeave }]
+      : [{ id: "new-portfolio", group: t("portfolio.label"), label: t("portfolio.new"), icon: "plus", run: () => setNewPortfolioOpen(true) }]),
+  ], [go, newTransaction, manualRefresh, changeRange, focusTickers, toggleFocus, portfolios, selectPortfolio, setIntervalSeconds, theme, toggleTheme, portfolio, focusTicker, access, onLeave, t]);
 
   const needsPortfolio = view === "genel" || view === "pozisyonlar";
 

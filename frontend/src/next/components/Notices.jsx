@@ -2,15 +2,8 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Icon from "../ui/Icons.jsx";
 import { collapse } from "../ui/motion.js";
-import { formatLocale } from "../../format.js";
+import { dateTimeStamp } from "../../format.js";
 import { useT } from "../i18n/index.jsx";
-
-function guestExpiryLabel(iso) {
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime())
-    ? String(iso)
-    : new Intl.DateTimeFormat(formatLocale(), { dateStyle: "medium", timeStyle: "short" }).format(date);
-}
 
 function Notice({ tone, icon, children, onClose }) {
   const t = useT();
@@ -47,7 +40,7 @@ export default function Notices({ dash }) {
         )}
         {guestAccess?.noticeDue && !guestDismissed && (
           <Notice key="guest" tone="warn" icon="clock" onClose={() => setGuestDismissed(true)}>
-            <strong>{t("notice.guestTitle")}</strong> {t("notice.guestExpires", { date: guestExpiryLabel(guestAccess.expiresAt) })}
+            <strong>{t("notice.guestTitle")}</strong> {t("notice.guestExpires", { date: dateTimeStamp(guestAccess.expiresAt) })}
           </Notice>
         )}
         {failed.length > 0 && (

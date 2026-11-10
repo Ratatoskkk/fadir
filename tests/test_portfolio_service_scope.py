@@ -22,16 +22,16 @@ from app.services.portfolio_scope import (
 
 
 class StubPrices:
-    def last_two_cached_closes(self, instrument_id: int):
-        return (
-            (Decimal("12"), date(2026, 1, 2)),
-            (Decimal("11"), date(2026, 1, 1)),
-        )
-
-    def cached_closes(self, instrument_id: int, start: date, end: date):
+    def last_two_cached_closes(self, instrument_ids: list[int]):
         return {
-            date(2026, 1, 2): Decimal("12"),
-            date(2026, 1, 3): Decimal("13"),
+            i: ((Decimal("12"), date(2026, 1, 2)), (Decimal("11"), date(2026, 1, 1)))
+            for i in instrument_ids
+        }
+
+    def cached_closes(self, instrument_ids: list[int], start: date, end: date):
+        return {
+            i: {date(2026, 1, 2): Decimal("12"), date(2026, 1, 3): Decimal("13")}
+            for i in instrument_ids
         }
 
 
@@ -227,8 +227,6 @@ def test_scoped_facade_is_present_and_filters_private_rows(scoped_fixture):
 
     scoped = data.service.scoped(scope)
     assert scoped.inception() == date(2026, 1, 2)
-    with pytest.raises(PortfolioScopeViolation):
-        scoped.refresh()
 
     view = scoped.build_view(now_utc=datetime(2026, 1, 2, tzinfo=timezone.utc))
 

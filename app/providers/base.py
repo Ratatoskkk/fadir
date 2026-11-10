@@ -37,10 +37,6 @@ class RateUnavailable(ProviderError):
     """The pair is supported but no rate could be found in the permitted window."""
 
 
-class PriceUnavailable(ProviderError):
-    """No usable price for this instrument."""
-
-
 @dataclass(frozen=True)
 class FxQuote:
     """A resolved FX rate together with its full provenance."""
@@ -62,14 +58,6 @@ class FxQuote:
     @property
     def days_carried(self) -> int:
         return (self.requested_date - self.rate_date).days
-
-
-@dataclass(frozen=True)
-class PricePoint:
-    """A daily close in native currency."""
-
-    price_date: date
-    close_native: Decimal
 
 
 @dataclass(frozen=True)

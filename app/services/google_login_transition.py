@@ -34,10 +34,6 @@ class GoogleLoginTransitionUnsupported(GoogleLoginTransitionError):
     message = "Google login transition requires a supported PostgreSQL caller transaction"
 
 
-class GoogleLoginTransitionBusy(GoogleLoginTransitionError):
-    message = "Google login transition is busy"
-
-
 class GoogleLoginTransitionResult(BaseModel):
     model_config = ConfigDict(frozen=True)
     action: Literal["claim", "transfer", "merge"]

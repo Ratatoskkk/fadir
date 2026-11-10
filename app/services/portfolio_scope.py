@@ -116,12 +116,14 @@ class PortfolioScope:
             return Snapshot.snapshot_date, (Snapshot.snapshot_date.desc(),)
         raise PortfolioScopeViolation("Unsupported Portfolio model")
 
-    def all(self, model: type[Any]) -> list[Any]:
+    def all(self, model: type[Any], *options: Any) -> list[Any]:
+        """Every row of `model` in this Portfolio; `options` are loader options."""
         _, ordering = self._model_spec(model)
         statement = (
             select(model)
             .where(model.portfolio_id == self.portfolio.id)
             .order_by(*ordering)
+            .options(*options)
         )
         return list(self._session.scalars(statement))
 

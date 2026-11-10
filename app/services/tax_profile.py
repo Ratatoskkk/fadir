@@ -5,12 +5,13 @@ from datetime import date
 from dataclasses import dataclass
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
-from app.models import TaxProfile, User, Workspace, Portfolio, Transaction, Side
+from app.models import TaxProfile, Workspace, Portfolio, Transaction
 from app.calc.tax import TaxConfig, TaxEstimate, estimate_tax
 from app.calc.fifo import build_lot_book
-from app.calc.types import TxnInput, Side as CalcSide
+from app.calc.types import TxnInput
+from app.services.portfolio import to_txn_input
 from decimal import Decimal
 
 
@@ -89,16 +90,20 @@ class TaxProfileService:
             return profile
         return self.save(user_id, TaxProfileData(code, tax_year, jurisdiction.currency, rules.source_url, rules.source_version, [], ESTIMATE_DISCLAIMER))
 
-    def _user_transactions(self, user_id: int, until: date) -> dict[tuple[int, str], list[TxnInput]]:
+    def _user_transactions(self, user_id: int, until: date | None = None) -> dict[tuple[int, str], list[TxnInput]]:
         stmt = (
             select(Transaction)
             .join(Portfolio)
             .join(Workspace)
-            .where(Workspace.user_id == user_id, Transaction.trade_date <= until)
+            .where(Workspace.user_id == user_id)
+            .options(selectinload(Transaction.instrument))
         )
+        if until is not None:
+            stmt = stmt.where(Transaction.trade_date <= until)
         grouped: dict[tuple[int, str], list[TxnInput]] = {}
         for txn in self.session.scalars(stmt):
-            grouped.setdefault((txn.portfolio_id, txn.instrument.ticker), []).append(TxnInput(id=txn.id, ticker=txn.instrument.ticker, currency=txn.instrument.currency, trade_date=txn.trade_date, side=CalcSide(txn.side.value), quantity=txn.quantity, price_native=txn.price_native, fees_native=txn.fees_native or Decimal("0"), fx_rate_to_try=txn.fx_rate_to_try, fx_rate_date=txn.fx_rate_date, fx_provider=txn.fx_provider, fee_currency=txn.fee_currency, fee_fx_rate_to_try=txn.fee_fx_rate_to_try, fee_fx_rate_date=txn.fee_fx_rate_date, fee_fx_provider=txn.fee_fx_provider))
+            ticker = txn.instrument.ticker
+            grouped.setdefault((txn.portfolio_id, ticker), []).append(to_txn_input(txn, ticker, txn.instrument.currency))
         return grouped
 
     def jurisdiction_gains(self, user_id: int, code: str, tax_year: int, rate: RateLookup) -> list[Gain]:
@@ -146,13 +151,8 @@ class TaxProfileService:
         owned = set(self.portfolios_for_user(self.session, user_id))
         if portfolio_totals is None:
             portfolio_totals = {}
-            stmt = select(Transaction).join(Portfolio).join(Workspace).where(Workspace.user_id == user_id)
-            if tax_year is not None:
-                stmt = stmt.where(Transaction.trade_date <= date(tax_year, 12, 31))
-            grouped: dict[tuple[int, str], list[TxnInput]] = {}
-            for txn in self.session.scalars(stmt):
-                grouped.setdefault((txn.portfolio_id, txn.instrument.ticker), []).append(TxnInput(id=txn.id, ticker=txn.instrument.ticker, currency=txn.instrument.currency, trade_date=txn.trade_date, side=CalcSide(txn.side.value), quantity=txn.quantity, price_native=txn.price_native, fees_native=txn.fees_native or Decimal("0"), fx_rate_to_try=txn.fx_rate_to_try, fx_rate_date=txn.fx_rate_date, fx_provider=txn.fx_provider, fee_currency=txn.fee_currency, fee_fx_rate_to_try=txn.fee_fx_rate_to_try, fee_fx_rate_date=txn.fee_fx_rate_date, fee_fx_provider=txn.fee_fx_provider))
-            for (portfolio_id, ticker), transactions in grouped.items():
+            until = date(tax_year, 12, 31) if tax_year is not None else None
+            for (portfolio_id, ticker), transactions in self._user_transactions(user_id, until).items():
                 book = build_lot_book(ticker, transactions[0].currency, transactions)
                 year_disposals = [d for d in book.disposals if tax_year is None or d.sell_date.year == tax_year]
                 proceeds = sum((d.proceeds_try for d in year_disposals), Decimal("0"))

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ipaddress
 import logging
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta, timezone
 from decimal import Decimal
 from typing import Annotated, Literal
 from urllib.parse import urlsplit
@@ -44,7 +44,7 @@ from app.api.request_authority import (
 )
 from app.api.request_transaction import RequestTransactionRoute, request_session
 from app.db import get_session
-from app.models import FxCache, GuestAccess, Instrument, LoginIdentity, Portfolio, Side, Transaction, Workspace
+from app.models import FxCache, GuestAccess, Instrument, LoginIdentity, Portfolio, Side, Transaction, Workspace, utcnow
 from app.providers import market_hours
 from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
@@ -100,7 +100,6 @@ from app.schemas import (
 from app.services.portfolio import PortfolioService
 from app.services.portfolio_scope import PortfolioScope, PortfolioScopeNotFound
 from app.services.tax_profile import TaxProfileData, TaxProfileService
-from app.calc.tax import estimate_tax
 from app.calc.tax_sources import TURKEY_TAX_YEARS, turkey_tax_year, with_official_brackets
 from app.calc.jurisdictions import JURISDICTIONS
 import json
@@ -138,40 +137,47 @@ def _csrf_guard(request: Request) -> None:
     validate_request_csrf(request)
 
 
-@private_router.get("/tax/profile", response_model=TaxProfileOut)
-def get_tax_profile(session: RequestSessionDep, authority: AuthorityDep, year: int = Query(..., ge=2000)) -> TaxProfileOut:
+def _tax_user(authority: RequestAuthority) -> int:
     if authority.user_id is None:
         raise HTTPException(403, "Tax Profile requires a signed-in User")
-    profile = TaxProfileService(session).ensure_turkey(authority.user_id, year)
+    return authority.user_id
+
+
+def _tax_profile_out(profile) -> TaxProfileOut:
+    return TaxProfileOut(id=profile.id, jurisdiction=profile.jurisdiction, tax_year=profile.tax_year, currency=profile.currency, source_url=profile.source_url, source_version=profile.source_version, assumptions=json.loads(profile.assumptions_json), disclaimer=profile.disclaimer)
+
+
+@private_router.get("/tax/profile", response_model=TaxProfileOut)
+def get_tax_profile(session: RequestSessionDep, authority: AuthorityDep, year: int = Query(..., ge=2000)) -> TaxProfileOut:
+    user_id = _tax_user(authority)
+    profile = TaxProfileService(session).ensure_turkey(user_id, year)
     if profile is None:
         raise HTTPException(404, "Tax Profile not found")
-    return TaxProfileOut(id=profile.id, jurisdiction=profile.jurisdiction, tax_year=profile.tax_year, currency=profile.currency, source_url=profile.source_url, source_version=profile.source_version, assumptions=json.loads(profile.assumptions_json), disclaimer=profile.disclaimer)
+    return _tax_profile_out(profile)
 
 
 @private_router.put("/tax/profile", response_model=TaxProfileOut, dependencies=[Depends(_write_guard)])
 def put_tax_profile(payload: TaxProfileIn, session: RequestSessionDep, authority: AuthorityDep) -> TaxProfileOut:
-    if authority.user_id is None:
-        raise HTTPException(403, "Tax Profile requires a signed-in User")
+    user_id = _tax_user(authority)
     if turkey_tax_year(payload.tax_year) is None:
         raise HTTPException(422, "no official tariff for that tax year")
     try:
-        profile = TaxProfileService(session).save(authority.user_id, TaxProfileData("TR", payload.tax_year, "TRY", payload.source_url, payload.source_version, payload.assumptions, payload.disclaimer))
+        profile = TaxProfileService(session).save(user_id, TaxProfileData("TR", payload.tax_year, "TRY", payload.source_url, payload.source_version, payload.assumptions, payload.disclaimer))
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
-    return TaxProfileOut(id=profile.id, jurisdiction=profile.jurisdiction, tax_year=profile.tax_year, currency=profile.currency, source_url=profile.source_url, source_version=profile.source_version, assumptions=json.loads(profile.assumptions_json), disclaimer=profile.disclaimer)
+    return _tax_profile_out(profile)
 
 
 @private_router.get("/tax/estimate", response_model=TaxOut)
 def get_tax_estimate(session: RequestSessionDep, authority: AuthorityDep, year: int = Query(..., ge=2000)) -> TaxOut:
-    if authority.user_id is None:
-        raise HTTPException(403, "Tax Profile requires a signed-in User")
+    user_id = _tax_user(authority)
     service = TaxProfileService(session)
-    profile = service.ensure_turkey(authority.user_id, year)
+    profile = service.ensure_turkey(user_id, year)
     source = turkey_tax_year(year)
     if profile is None or source is None:
         raise HTTPException(404, "Tax Profile not found")
     config = with_official_brackets(get_settings().tax, year)
-    estimate = service.estimate_for_user(authority.user_id, None, config, year)
+    estimate = service.estimate_for_user(user_id, None, config, year)
     return TaxOut(applicable=estimate.applicable, gross_gain_try=estimate.gross_gain_try, taxable_gain_try=estimate.taxable_gain_try, tax_try=estimate.tax_try, net_after_tax_try=estimate.net_after_tax_try, effective_rate=estimate.effective_rate, marginal_rate=estimate.marginal_rate, indexing_applied=estimate.indexing_applied, indexing_rate=estimate.indexing_rate, price_portion_try=estimate.price_portion_try, fx_portion_try=estimate.fx_portion_try, tax_on_price_try=estimate.tax_on_price_try, tax_on_fx_try=estimate.tax_on_fx_try, assumptions=estimate.assumptions, disclaimer=profile.disclaimer, tax_year=profile.tax_year, jurisdiction=profile.jurisdiction, source_url=profile.source_url, source_version=profile.source_version)
 
 
@@ -199,26 +205,25 @@ def get_jurisdiction_tax_estimate(
     year: int = Query(..., ge=2000, le=2100),
 ) -> JurisdictionTaxOut:
     """Load one Tax Profile (jurisdiction and year) and estimate the User's tax under it."""
-    if authority.user_id is None:
-        raise HTTPException(403, "Tax Profile requires a signed-in User")
+    user_id = _tax_user(authority)
     known = JURISDICTIONS.get(jurisdiction)
     if known is None:
         raise HTTPException(404, "Tax Jurisdiction not found")
     service = TaxProfileService(session)
-    profile = service.ensure_profile(authority.user_id, jurisdiction, year)
+    profile = service.ensure_profile(user_id, jurisdiction, year)
     if profile is None:
         raise HTTPException(404, "Tax Profile not found")
     start, end = known.period(year)
     if jurisdiction == "TR":
         config = with_official_brackets(get_settings().tax, year)
-        e = service.estimate_for_user(authority.user_id, None, config, year)
+        e = service.estimate_for_user(user_id, None, config, year)
         gross, taxable, tax, marginal = e.gross_gain_try, e.taxable_gain_try, e.tax_try, e.marginal_rate
         net, assumptions = e.net_after_tax_try, TURKEY_ASSUMPTION_KEYS
     else:
         fx = FxService(session, get_settings())
         try:
             result, proceeds = service.estimate_jurisdiction(
-                authority.user_id, jurisdiction, year, lambda ccy, on: fx.quote(ccy, on).rate
+                user_id, jurisdiction, year, lambda ccy, on: fx.quote(ccy, on).rate
             )
         except (RateUnavailable, ProviderError) as exc:
             raise HTTPException(503, "exchange rate unavailable") from exc
@@ -367,7 +372,7 @@ def _empty_portfolio_out() -> PortfolioOut:
         return_ratio=None,
     )
     return PortfolioOut(
-        as_of=datetime.now(timezone.utc),
+        as_of=utcnow(),
         positions=[],
         totals=TotalsOut(
             cost_try=zero,
@@ -431,7 +436,7 @@ def _bootstrap_origin_guard(request: Request) -> None:
 
 
 def _guest_bootstrap_context(session: Session, row: GuestAccess) -> dict[str, object]:
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     last_access = row.last_access_at
     if last_access.tzinfo is None:
         last_access = last_access.replace(tzinfo=timezone.utc)
@@ -472,13 +477,13 @@ def bootstrap_guest(
         if not guest_access.allow_issue(_client_key(request)):
             raise HTTPException(429, "too many new guests")
         issued = guest_access.issue(
-            session, clock=lambda: datetime.now(timezone.utc)
+            session, clock=utcnow
         )
         workspace_id = issued.workspace_id
     else:
         try:
             authority = guest_access.require(
-                session, token, clock=lambda: datetime.now(timezone.utc)
+                session, token, clock=utcnow
             )
         except Exception:
             delete_guest_cookie(response)
@@ -540,7 +545,7 @@ def google_login_start(
     if not client_id:
         raise RequestAuthorityConfigurationError()
     issued = login_transactions.issue(
-        session, clock=lambda: datetime.now(timezone.utc)
+        session, clock=utcnow
     )
     response.set_cookie(
         GOOGLE_STATE_COOKIE_NAME,
@@ -586,7 +591,7 @@ def google_login_verify(
             state,
             payload.nonce,
             identity,
-            clock=lambda: datetime.now(timezone.utc),
+            clock=utcnow,
         )
     except (GoogleIdentityError, login_transactions.LoginTransactionError):
         raise RequestAuthorityError() from None
@@ -610,7 +615,7 @@ def _verified_context(session, request, authority, verified) -> GoogleLoginVerif
         if secret is not None:
             try:
                 guest_workspace_id = guest_access.require(
-                    session, secret, clock=lambda: datetime.now(timezone.utc)
+                    session, secret, clock=utcnow
                 ).workspace_id
             except guest_access.GuestAccessError:
                 guest_workspace_id = None
@@ -636,7 +641,7 @@ def _verified_context(session, request, authority, verified) -> GoogleLoginVerif
 )
 def sign_out(request: Request, response: Response, session: RequestSessionDep) -> Response:
     """End this browser's User session and forget every access it holds."""
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     raw = request.cookies.get(USER_COOKIE_NAME)
     if raw is not None:
         try:
@@ -681,7 +686,7 @@ def google_login_transition(
                 guest = guest_access.require(
                     session,
                     guest_secret,
-                    clock=lambda: datetime.now(timezone.utc),
+                    clock=utcnow,
                 )
             except guest_access.GuestAccessError:
                 raise RequestAuthorityError() from None
@@ -697,7 +702,7 @@ def google_login_transition(
             guest_secret,
             payload.action,
             rename=payload.rename,
-            clock=lambda: datetime.now(timezone.utc),
+            clock=utcnow,
         )
     except google_login_transition_service.GoogleLoginTransitionError:
         raise RequestAuthorityError() from None
@@ -760,7 +765,7 @@ def list_user_sessions(
 ) -> UserSessionsOut:
     user_id = _require_user(authority)
     rows = user_sessions.list_active(
-        session, user_id, clock=lambda: datetime.now(timezone.utc)
+        session, user_id, clock=utcnow
     )
     return UserSessionsOut(
         sessions=[UserSessionOut(**row.model_dump()) for row in rows]
@@ -778,7 +783,7 @@ def revoke_all_user_sessions(
 ) -> UserSessionRevokeAllOut:
     user_id = _require_user(authority)
     revoked_count = user_sessions.revoke_all(
-        session, user_id, clock=lambda: datetime.now(timezone.utc)
+        session, user_id, clock=utcnow
     )
     return UserSessionRevokeAllOut(revoked_count=revoked_count)
 
@@ -796,7 +801,7 @@ def revoke_user_session(
     user_id = _require_user(authority)
     try:
         revoked = user_sessions.revoke(
-            session, user_id, public_id, clock=lambda: datetime.now(timezone.utc)
+            session, user_id, public_id, clock=utcnow
         )
     except user_sessions.UserSessionDenied:
         return UserSessionRevokeOut(revoked=False)
@@ -967,7 +972,7 @@ def regenerate_portfolio_code(
     scope = _scope(session, authority, portfolio_id)
     try:
         code = portfolio_codes.regenerate(
-            session, scope.portfolio, now=datetime.now(timezone.utc)
+            session, scope.portfolio, now=utcnow()
         )
     except portfolio_codes.PortfolioCodesExhausted as exc:
         raise HTTPException(503, "request unavailable") from exc
@@ -985,7 +990,7 @@ def read_access(
 ) -> AccessOut:
     """Name this browser's authority without creating one; clears a dead pass."""
     cookies = dict(request.cookies)
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     if PASS_COOKIE_NAME in cookies:
         try:
             portfolio_codes.authenticate(session, cookies[PASS_COOKIE_NAME], now=now)
@@ -1010,7 +1015,7 @@ def redeem_portfolio_code(
     _bootstrap_origin_guard(request)
     try:
         issued = portfolio_codes.redeem(
-            session, payload.code, _client_key(request), now=datetime.now(timezone.utc)
+            session, payload.code, _client_key(request), now=utcnow()
         )
     except portfolio_codes.PortfolioCodeThrottled as exc:
         raise HTTPException(429, "too many attempts") from exc
@@ -1018,7 +1023,7 @@ def redeem_portfolio_code(
         raise HTTPException(404, "code not found") from exc
     previous = request.cookies.get(PASS_COOKIE_NAME)
     if previous is not None:
-        portfolio_codes.revoke(session, previous, now=datetime.now(timezone.utc))
+        portfolio_codes.revoke(session, previous, now=utcnow())
     set_pass_cookie(response, issued.secret)
     if CSRF_COOKIE_NAME not in request.cookies:
         set_csrf_cookie(
@@ -1038,7 +1043,7 @@ def leave_portfolio_code(request: Request, response: Response, session: RequestS
     """Close the code-opened Portfolio on this browser."""
     secret = request.cookies.get(PASS_COOKIE_NAME)
     if secret is not None:
-        portfolio_codes.revoke(session, secret, now=datetime.now(timezone.utc))
+        portfolio_codes.revoke(session, secret, now=utcnow())
     delete_pass_cookie(response)
     response.status_code = 204
     return response
@@ -1220,16 +1225,6 @@ def get_intraday(
 # -- transactions ------------------------------------------------------------------
 
 
-def _load_transactions(session: Session, scope: PortfolioScope) -> list[Transaction]:
-    stmt = (
-        select(Transaction)
-        .options(selectinload(Transaction.instrument))
-        .where(Transaction.portfolio_id == scope.portfolio.id)
-        .order_by(Transaction.trade_date.desc(), Transaction.id.desc())
-    )
-    return list(session.execute(stmt).scalars())
-
-
 def _merge_guest_secret(request: Request) -> str:
     token = request.cookies.get(GUEST_COOKIE_NAME)
     if not token:
@@ -1313,7 +1308,7 @@ def list_transactions(
     scope = _scope(session, authority, portfolio_id)
     if scope is None:
         return []
-    return [_transaction_out(t) for t in _load_transactions(session, scope)]
+    return [_transaction_out(t) for t in scope.all(Transaction, selectinload(Transaction.instrument))]
 
 
 def _resolve_fx(
@@ -1623,7 +1618,7 @@ def refresh(
 @router.get("/health", response_model=HealthOut)
 def health(session: SessionDep, settings: SettingsDep) -> HealthOut:
     """Per-provider status, last successful fetch, and cache age (SPEC §7)."""
-    now = datetime.now(timezone.utc)
+    now = utcnow()
     prices = PriceService(session, settings)
     fx = FxService(session, settings)
 

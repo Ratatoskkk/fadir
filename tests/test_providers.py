@@ -339,16 +339,6 @@ def test_current_rate_ttl_survives_a_market_that_published_nothing_today(session
     )
 
 
-def test_series_fills_every_calendar_day_via_carry_forward(session):
-    service = FxService(session, _settings_with({}), providers={"yfinance": StubProvider()})
-    series = service.series("USD", date(2026, 4, 13), date(2026, 4, 19))  # Mon..Sun
-
-    assert len(series) == 7
-    assert series[date(2026, 4, 18)].carried_forward is True  # Saturday
-    assert series[date(2026, 4, 18)].rate_date == date(2026, 4, 17)  # Friday
-    assert series[date(2026, 4, 13)].carried_forward is False
-
-
 # -- market hours --------------------------------------------------------------------
 
 

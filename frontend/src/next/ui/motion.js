@@ -3,7 +3,6 @@
 // except height on rare disclosures.
 
 export const spring = { type: "spring", stiffness: 520, damping: 46, mass: 0.9 };
-export const softSpring = { type: "spring", stiffness: 260, damping: 30 };
 export const bouncy = { type: "spring", stiffness: 420, damping: 38 };
 export const ease = [0.16, 1, 0.3, 1];
 

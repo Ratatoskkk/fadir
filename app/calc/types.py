@@ -18,7 +18,6 @@ class Side(str, Enum):
 
 
 ZERO = Decimal("0")
-ONE = Decimal("1")
 
 #: Working precision for every money calculation. Wide enough that Decimal division
 #: never loses a figure that matters at TRY scale. Pinned here rather than inherited

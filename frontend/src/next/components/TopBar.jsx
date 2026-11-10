@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { arrow, clockTime, formatLocale, money, ratioPct, toneOf } from "../../format.js";
+import { arrow, clockTime, daysFromToday, hourMinute, money, ratioPct, toneOf, weekdayShort } from "../../format.js";
 import { INTERVALS } from "../useDashboard.js";
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import Icon from "../ui/Icons.jsx";
@@ -19,17 +19,12 @@ export const VIEWS = [
 ];
 
 function nextOpenLabel(iso, t) {
-  const dfHm = new Intl.DateTimeFormat(formatLocale(), { hour: "2-digit", minute: "2-digit" });
-  const dfWeekday = new Intl.DateTimeFormat(formatLocale(), { weekday: "short" });
   const when = new Date(iso);
-  const time = dfHm.format(when);
-  const today = new Date();
-  const days = Math.round(
-    (new Date(when.getFullYear(), when.getMonth(), when.getDate()) - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000,
-  );
+  const time = hourMinute(when);
+  const days = daysFromToday(when);
   if (days <= 0) return time;
   if (days === 1) return t("live.tomorrow", { time });
-  return `${dfWeekday.format(when)} ${time}`;
+  return `${weekdayShort(when)} ${time}`;
 }
 
 export function NavTabs({ view, onChange, className = "", layoutId = "nav-pill" }) {

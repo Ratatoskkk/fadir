@@ -175,14 +175,14 @@ export default function Positions({ dash, onFocusTicker }) {
       ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
       : { key, dir: key === "ticker" ? "asc" : "desc" }));
 
-  const totals = useMemo(() => positions.reduce((acc, p) => {
-    if (!p.ok) return acc;
-    acc.cost += Number(p.cost_try);
-    acc.value += Number(p.market_value_try);
-    acc.pnl += Number(p.pnl_try);
-    if (p.daily?.available) acc.daily += Number(p.daily.pnl_try);
-    return acc;
-  }, { cost: 0, value: 0, pnl: 0, daily: 0 }), [positions]);
+  // The server's exact sums over priced positions, so the footer agrees with the Hero.
+  const { totals: sums } = dash.portfolio;
+  const totals = {
+    cost: Number(sums.cost_try),
+    value: Number(sums.market_value_try),
+    pnl: Number(sums.pnl_try),
+    daily: sums.daily.available ? Number(sums.daily.pnl_try) : 0,
+  };
 
   return (
     <section className="card" id="pozisyonlar">
