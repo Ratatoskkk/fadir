@@ -36,6 +36,7 @@ function readColors() {
     panes: [v("--pane-1"), v("--pane-2"), v("--pane-3")],
     level: v("--text-3"),
     mark: v("--cost"),
+    compare: v("--compare"),
     grid: v("--chart-grid"),
     axis: v("--text-3"),
     cross: v("--text-2"),
@@ -69,19 +70,23 @@ function extent(values, extra = []) {
  * range is pinned to the edge it lies beyond, with an arrow.
  */
 /** `breaks` are bar indices where a skipped stretch of time ends (unselected weeks). */
-export default function PriceChart({ times, close, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
+/**
+ * `compare` is a second line over the same bars (a compared ticker), drawn in its own
+ * colour; when given, `close` and `compare` share one axis labelled by `formatY`.
+ */
+export default function PriceChart({ times, close, compare = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
-  st.props = { times, close, panes, marks, breaks, formatX, live };
+  st.props = { times, close, compare, formatY, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
   const draw = () => {
     st.frame = 0;
     const canvas = canvasRef.current;
     if (!canvas || !st.colors) return;
-    const { times: xsT, close: ys, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
+    const { times: xsT, close: ys, compare: cs, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
     const { w, h, dpr, colors: c } = st;
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -130,8 +135,8 @@ export default function PriceChart({ times, close, panes, marks = [], breaks = [
     };
 
     // Price.
-    const [pLo, pHi] = extent(ys);
-    const yPrice = area(PAD.top, mainH, pLo, pHi, quote, Math.max(3, Math.round(mainH / 64)));
+    const [pLo, pHi] = cs ? extent([...ys, ...cs]) : extent(ys);
+    const yPrice = area(PAD.top, mainH, pLo, pHi, fy, Math.max(3, Math.round(mainH / 64)));
     if (n > 1) {
       const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + mainH);
       grad.addColorStop(0, c.price);
@@ -170,8 +175,10 @@ export default function PriceChart({ times, close, panes, marks = [], breaks = [
       ctx.textBaseline = "bottom";
       ctx.fillText(mark.label, right - 4, y - 4);
     }
+    if (cs) stroke(cs, yPrice, c.compare, 1.8);
     stroke(ys, yPrice, c.price, 2);
     const dots = [[yPrice(ys[st.hover ?? 0]), c.price]];
+    if (cs && st.hover !== null && cs[st.hover] != null) dots.push([yPrice(cs[st.hover]), c.compare]);
 
     // Indicator panes: the formula's left side against its level.
     const paneY = [];

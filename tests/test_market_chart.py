@@ -129,7 +129,7 @@ def test_weeks_are_parsed_sorted_and_deduplicated():
     assert market_chart.parse_weeks(["2026-w05", "2026-W03", "2026-W05"], TODAY) == [(2026, 3), (2026, 5)]
 
 
-@pytest.mark.parametrize("values", [[], ["2026-3"], ["2025-W53"], ["2026-W47"], [f"2025-W{w:02d}" for w in range(1, 22)]])
+@pytest.mark.parametrize("values", [[], ["2026-3"], ["2025-W53"], ["2026-W47"], [f"{y}-W{w:02d}" for y in (2024, 2025) for w in range(1, 28)]])
 def test_bad_week_selections_are_rejected(values):
     """Malformed, a week 53 the year lacks, not started yet, or more than MAX_WEEKS."""
     with pytest.raises(market_chart.InvalidWeeks):

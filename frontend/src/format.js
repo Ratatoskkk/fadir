@@ -45,7 +45,6 @@ const buildFormatters = () => ({
   dfStamp: df({ dateStyle: "medium", timeStyle: "short" }),
   dfMonth: df({ month: "short", year: "2-digit" }),
   dfDayMonth: df({ day: "numeric", month: "short", timeZone: "UTC" }),
-  dfMonthName: df({ month: "short", timeZone: "UTC" }),
   nfSig: new Intl.NumberFormat(locale, { maximumSignificantDigits: 4 }),
 });
 let F = buildFormatters();
@@ -118,7 +117,6 @@ export function figure(value) {
 export const monthYear = (d) => F.dfMonth.format(d);
 /** "12 Jan" for a UTC calendar day (the week picker's dates). */
 export const dayMonth = (ms) => F.dfDayMonth.format(ms);
-export const monthName = (ms) => F.dfMonthName.format(ms);
 
 /** A return *ratio* (1.09) rendered as a signed percentage (+9,00%). */
 export function ratioPct(value, digits = 2) {

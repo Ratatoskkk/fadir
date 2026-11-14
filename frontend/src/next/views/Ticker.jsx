@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { api } from "../../api.js";
-import { arrow, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, quote, ratioPct, shortDate, signedMoney, toneOf } from "../../format.js";
+import { arrow, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, pct, quote, ratioPct, shortDate, signedMoney, toneOf } from "../../format.js";
 import PriceChart from "../chart/PriceChart.jsx";
 import { FILTERS, filterState } from "../chart/indicators.js";
 import TickerSearch from "../components/TickerSearch.jsx";
@@ -119,6 +119,7 @@ export default function Ticker({ dash }) {
   const [range, setRange] = useState(() => (RANGES.includes(saved.range) || (saved.range === "W" && weeks.length) ? saved.range : "1D"));
   const [filters, setFilters] = useState(() => initialFilters(saved.filters));
   const [avgOn, setAvgOn] = useState(() => saved.avgOn ?? true);
+  const [compareSymbol, setCompareSymbol] = useState(() => saved.compare ?? null);
   const [hover, setHover] = useState(null);
 
   // First visit: open on the largest holding, if there is one.
@@ -130,8 +131,8 @@ export default function Ticker({ dash }) {
   }, [symbol, portfolio, instruments]);
 
   useEffect(() => {
-    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, weeks, filters, avgOn })); } catch { /* private mode */ }
-  }, [symbol, range, weeks, filters, avgOn]);
+    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, weeks, filters, avgOn, compare: compareSymbol })); } catch { /* private mode */ }
+  }, [symbol, range, weeks, filters, avgOn, compareSymbol]);
 
   const { data, error, loading, reload } = useChart(symbol, range, weeks, interval);
   const weekKey = weeks.join(",");
@@ -165,6 +166,48 @@ export default function Ticker({ dash }) {
       all, idx, breaks, ratio,
     };
   }, [data]);
+
+  const { data: cmpData, error: cmpError } = useChart(compareSymbol, range, weeks, interval);
+
+  // With a comparison on, both lines show the change since the window starts, so two
+  // tickers at different prices or in different currencies share one axis (no dual axes).
+  // Each segment restarts from the close before it and compounds onto the ones before,
+  // so a line ends at the same change its chip reports. The compared ticker is read at
+  // the main ticker's bar times: its last close at or before each one.
+  const comparison = useMemo(() => {
+    if (!series || !cmpData?.bars?.length) return null;
+    const bars = data.bars;
+    const segments = data.segments?.length ? data.segments : [[data.warmup, bars.length]];
+    const cTimes = cmpData.bars.map((b) => Date.parse(b.at));
+    const cClose = (ms) => {
+      let lo = 0, hi = cTimes.length - 1, found = -1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (cTimes[mid] <= ms) { found = mid; lo = mid + 1; } else hi = mid - 1;
+      }
+      return found < 0 ? null : cmpData.bars[found].close;
+    };
+    const main = [], other = [];
+    let mainSoFar = 1, otherSoFar = 1;
+    for (const [s, e] of segments) {
+      const baseTime = Date.parse(bars[s > 0 ? s - 1 : s].at);
+      const base = s > 0 ? bars[s - 1].close : bars[s].open;
+      const cBase = cClose(baseTime) ?? cClose(Date.parse(bars[s].at));
+      let mainLast = 1, otherLast = 1;
+      for (let i = s; i < e; i++) {
+        mainLast = bars[i].close / base;
+        main.push((mainSoFar * mainLast - 1) * 100);
+        const c = cClose(Date.parse(bars[i].at));
+        if (c === null || !cBase) { other.push(null); continue; }
+        otherLast = c / cBase;
+        other.push((otherSoFar * otherLast - 1) * 100);
+      }
+      mainSoFar *= mainLast;
+      otherSoFar *= otherLast;
+    }
+    const lastOther = [...other].reverse().find((v) => v !== null);
+    return { main, other, change: lastOther === undefined ? null : 1 + lastOther / 100 };
+  }, [series, data, cmpData]);
 
   const panes = useMemo(() => {
     if (!series) return [];
@@ -205,10 +248,11 @@ export default function Ticker({ dash }) {
   const avgBuy = holding?.average_purchase_price_native != null && data?.currency === holding.currency
     ? Number(holding.average_purchase_price_native)
     : null;
-  const marks = avgBuy !== null && avgOn ? [{ value: avgBuy, label: `${t("pos.avgBuy")} ${quote(avgBuy)}` }] : [];
+  // A price-level line has no place on a chart of % changes.
+  const marks = avgBuy !== null && avgOn && !comparison ? [{ value: avgBuy, label: `${t("pos.avgBuy")} ${quote(avgBuy)}` }] : [];
   // Explain only what is on the chart now.
   const notes = [
-    ["ticker.priceLine", "ticker.note.price"],
+    comparison ? ["ticker.compareLine", "ticker.note.compare"] : ["ticker.priceLine", "ticker.note.price"],
     ...(panes.length ? [["ticker.levelLine", "ticker.note.level"]] : []),
     ...panes.map((p) => FILTER_NOTES[p.key]).filter(Boolean),
     ...(marks.length ? [["pos.avgBuy", "ticker.note.avgBuy"]] : []),
@@ -248,9 +292,16 @@ export default function Ticker({ dash }) {
   const tooltip = hover !== null && series?.bars[hover] ? (
     <>
       <div className="tip-date">{stamp(series.times[hover])}</div>
-      {[["ticker.open", "open"], ["ticker.high", "high"], ["ticker.low", "low"], ["ticker.close", "close"]].map(([label, key]) => (
-        <div key={key} className="tip-row">{t(label)}<b className="num">{quote(series.bars[hover][key])}</b></div>
-      ))}
+      {comparison ? (
+        <>
+          <div className="tip-row"><i style={{ background: "var(--accent)" }} />{symbol}<b className="num">{pct(comparison.main[hover])}</b></div>
+          <div className="tip-row"><i style={{ background: "var(--compare)" }} />{compareSymbol}<b className="num">{pct(comparison.other[hover])}</b></div>
+        </>
+      ) : (
+        [["ticker.open", "open"], ["ticker.high", "high"], ["ticker.low", "low"], ["ticker.close", "close"]].map(([label, key]) => (
+          <div key={key} className="tip-row">{t(label)}<b className="num">{quote(series.bars[hover][key])}</b></div>
+        ))
+      )}
       {panes.length > 0 && <div className="tip-sep" />}
       {panes.map((p) => (
         <div key={p.key} className="tip-row"><i style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}<b className="num">{figure(p.values[hover])}</b></div>
@@ -262,6 +313,7 @@ export default function Ticker({ dash }) {
     ? [
       stamp(series.times[hover]),
       `${t("ticker.close")} ${quote(series.bars[hover].close)}`,
+      ...(comparison ? [`${symbol} ${pct(comparison.main[hover])}`, `${compareSymbol} ${pct(comparison.other[hover])}`] : []),
       ...panes.map((p) => {
         const s = filterState(p.values[hover], p.level);
         return `${p.name} ${figure(p.values[hover])}${s ? ` ${t(`ticker.${s}`)}` : ""}`;
@@ -333,7 +385,7 @@ export default function Ticker({ dash }) {
       )}
 
       <div className="legend" role="group" aria-label={t("ticker.filters")}>
-        {avgBuy !== null && (
+        {avgBuy !== null && !comparison && (
           <button type="button" className={`legend-chip ${avgOn ? "" : "off"}`} aria-pressed={avgOn} onClick={() => setAvgOn((v) => !v)}>
             <i className="dashed" style={{ color: "var(--cost)" }} />
             {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
@@ -351,13 +403,48 @@ export default function Ticker({ dash }) {
             {t(f.label)}
           </button>
         ))}
+        {compareSymbol ? (
+          <span className="legend-chip compare-chip">
+            <i style={{ background: "var(--compare)" }} />
+            {t("ticker.vs", { symbol: compareSymbol })}
+            {comparison?.change != null ? (
+              <span className={`num ${toneOf(comparison.change - 1)}`}>{ratioPct(comparison.change)}</span>
+            ) : cmpError ? (
+              <span className="muted">{t("ticker.compareNoData")}</span>
+            ) : null}
+            <button type="button" className="chip-x" onClick={() => setCompareSymbol(null)} aria-label={t("ticker.compareRemove", { symbol: compareSymbol })}>
+              <Icon name="x" size={12} />
+            </button>
+          </span>
+        ) : (
+          <Popover
+            label={t("ticker.compare")}
+            align="left"
+            className="ticker-pop"
+            trigger={({ open, toggle }) => (
+              <button type="button" className="legend-chip" onClick={toggle} aria-expanded={open} aria-haspopup="dialog">
+                <Icon name="plus" size={13} />{t("ticker.compare")}
+              </button>
+            )}
+          >
+            {({ close }) => (
+              <TickerSearch
+                instruments={instruments}
+                search={api.searchMarket}
+                onPick={(item) => { close(); if (item.yf_symbol !== symbol) setCompareSymbol(item.yf_symbol); }}
+              />
+            )}
+          </Popover>
+        )}
       </div>
 
       <div className="chart-stage">
         {series ? (
           <PriceChart
             times={series.times}
-            close={series.close}
+            close={comparison ? comparison.main : series.close}
+            compare={comparison?.other}
+            formatY={comparison ? (v) => pct(v, 1) : quote}
             panes={panes}
             marks={marks}
             breaks={series.breaks}

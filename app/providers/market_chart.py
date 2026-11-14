@@ -47,7 +47,8 @@ MAX_ENTRIES = 128
 #: 25-bar ADX. A 24-hour market would otherwise ship months of hourly bars nobody sees.
 MAX_WARMUP = 300
 
-MAX_WEEKS = 20
+#: A typed From–To range can span a whole year; consecutive weeks are one segment.
+MAX_WEEKS = 53
 WEEK_PATTERN = re.compile(r"(\d{4})-W(\d{2})")
 #: Week bars by how far back the earliest selected week starts. Yahoo serves 15-minute
 #: bars for about 60 days and hourly bars for about 730; older weeks fall back to days.
