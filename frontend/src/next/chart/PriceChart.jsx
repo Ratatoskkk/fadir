@@ -12,8 +12,8 @@ const PANE_PLOT = 78;
 const NARROW = 560;
 
 const mainHeight = (width) => (width < NARROW ? 240 : 320);
-/** A narrow pane header wraps its N1/N2 inputs onto a second row. */
-const paneHead = (width) => (width < NARROW ? 62 : 34);
+/** A narrow pane header wraps its N1/N2 inputs (44px touch targets) onto a second row. */
+const paneHead = (width) => (width < NARROW ? 80 : 40);
 const paneHeight = (width) => paneHead(width) + PANE_PLOT;
 
 function niceTicks(min, max, count) {
@@ -33,7 +33,7 @@ function readColors() {
   const v = (name) => s.getPropertyValue(name).trim();
   return {
     price: v("--accent"),
-    line: v("--fx"),
+    panes: [v("--pane-1"), v("--pane-2"), v("--pane-3")],
     level: v("--text-3"),
     mark: v("--cost"),
     grid: v("--chart-grid"),
@@ -42,6 +42,7 @@ function readColors() {
     bg: v("--surface"),
     up: v("--up"),
     down: v("--down"),
+    font: getComputedStyle(document.body).fontFamily,
   };
 }
 
@@ -62,7 +63,11 @@ function extent(values, extra = []) {
  * `times` and `close` are the shown window; each pane is { key, values, level } over the
  * same window. `formatX` labels the x axis; `onHover` receives a bar index or null.
  */
-/** `marks` are flat reference prices (the average buy) drawn across the price pane. */
+/**
+ * `marks` are flat reference prices ({ value, label }, the average buy). The price axis
+ * fits the price alone, so a far-off mark never flattens the line; a mark outside the
+ * range is pinned to the edge it lies beyond, with an arrow.
+ */
 export default function PriceChart({ times, close, panes, marks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
@@ -86,7 +91,7 @@ export default function PriceChart({ times, close, panes, marks = [], heads, for
     const plotW = Math.max(10, w - PAD.left - PAD.right);
     const mainH = mainHeight(w);
     const xOf = (i) => PAD.left + (n > 1 ? (i * plotW) / (n - 1) : plotW / 2);
-    ctx.font = '11.5px "Inter Variable", system-ui, sans-serif';
+    ctx.font = `11.5px ${c.font}`;
     ctx.lineWidth = 1;
 
     const area = (top, height, lo, hi, format, tickCount) => {
@@ -124,7 +129,7 @@ export default function PriceChart({ times, close, panes, marks = [], heads, for
     };
 
     // Price.
-    const [pLo, pHi] = extent(ys, ms);
+    const [pLo, pHi] = extent(ys);
     const yPrice = area(PAD.top, mainH, pLo, pHi, quote, Math.max(3, Math.round(mainH / 64)));
     if (n > 1) {
       const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + mainH);
@@ -142,15 +147,27 @@ export default function PriceChart({ times, close, panes, marks = [], heads, for
       ctx.globalAlpha = 1;
     }
     for (const mark of ms) {
-      const y = Math.round(yPrice(mark)) + 0.5;
+      const above = mark.value > pHi, below = mark.value < pLo;
+      const right = w - PAD.right;
+      // The label is text, so it takes the readable secondary ink; the line keeps the mark colour.
+      ctx.fillStyle = c.cross;
+      ctx.textAlign = "right";
+      if (above || below) {
+        ctx.textBaseline = above ? "top" : "bottom";
+        ctx.fillText(`${mark.label} ${above ? "↑" : "↓"}`, right - 4, above ? PAD.top + 4 : PAD.top + mainH - 4);
+        continue;
+      }
+      const y = Math.round(yPrice(mark.value)) + 0.5;
       ctx.strokeStyle = c.mark;
       ctx.lineWidth = 1.4;
       ctx.setLineDash([6, 4]);
       ctx.beginPath();
       ctx.moveTo(PAD.left, y);
-      ctx.lineTo(w - PAD.right, y);
+      ctx.lineTo(right, y);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.textBaseline = "bottom";
+      ctx.fillText(mark.label, right - 4, y - 4);
     }
     stroke(ys, yPrice, c.price, 2);
     const dots = [[yPrice(ys[st.hover ?? 0]), c.price]];
@@ -171,7 +188,7 @@ export default function PriceChart({ times, close, panes, marks = [], heads, for
       ctx.lineTo(w - PAD.right, ly);
       ctx.stroke();
       ctx.setLineDash([]);
-      stroke(pane.values, yOf, c.line, 1.6);
+      stroke(pane.values, yOf, c.panes[pane.tone] ?? c.price, 1.6);
     });
 
     // X labels under the last pane.
@@ -198,7 +215,7 @@ export default function PriceChart({ times, close, panes, marks = [], heads, for
       ctx.setLineDash([]);
       ctx.globalAlpha = 1;
       dots[0][0] = yPrice(ys[i]);
-      ps.forEach((pane, k) => { if (pane.values[i] !== null) dots.push([paneY[k](pane.values[i]), c.line]); });
+      ps.forEach((pane, k) => { if (pane.values[i] !== null) dots.push([paneY[k](pane.values[i]), c.panes[pane.tone] ?? c.price]); });
       for (const [y, color] of dots) {
         ctx.fillStyle = c.bg;
         ctx.beginPath();
@@ -283,6 +300,19 @@ export default function PriceChart({ times, close, panes, marks = [], heads, for
     st.schedule();
   };
 
+  // Arrow keys step through the bars (Shift for ten), Home and End jump, Escape leaves.
+  const onKeyDown = (e) => {
+    const n = st.props.close.length;
+    if (!n) return;
+    const now = st.hover ?? n - 1;
+    const step = e.shiftKey ? 10 : 1;
+    const next = { ArrowLeft: now - step, ArrowRight: now + step, Home: 0, End: n - 1 }[e.key];
+    if (e.key === "Escape") { setHover(null); return; }
+    if (next === undefined) return;
+    e.preventDefault();
+    setHover(Math.max(0, Math.min(n - 1, next)));
+  };
+
   const onPointerMove = (e) => {
     const n = st.props.close.length;
     if (!n) return;
@@ -298,6 +328,10 @@ export default function PriceChart({ times, close, panes, marks = [], heads, for
         onPointerMove={onPointerMove}
         onPointerDown={onPointerMove}
         onPointerLeave={() => setHover(null)}
+        onKeyDown={onKeyDown}
+        onFocus={() => { if (st.hover === null) setHover(st.props.close.length - 1); }}
+        onBlur={() => setHover(null)}
+        tabIndex={0}
         role="img"
         aria-label={ariaLabel}
       />

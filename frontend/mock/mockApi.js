@@ -421,7 +421,7 @@ async function handle(req, res) {
     const q = (url.searchParams.get("q") || "").toUpperCase();
     const rows = [...INSTRUMENTS.map((i) => [i.yf_symbol, i.name, i.exchange]), ...YAHOO, ...MARKET_EXTRA]
       .filter(([sym, name]) => sym.includes(q) || name.toUpperCase().includes(q))
-      .map(([sym, name, exchange]) => ({ yf_symbol: sym, ticker: sym, name, exchange, currency: null, known: false }));
+      .map(([sym, name, exchange]) => ({ yf_symbol: sym, ticker: sym, name, exchange, currency: null, known: false, kind: mockKind(sym) }));
     return send(res, 200, rows.slice(0, 8));
   }
   if (path === "/api/instruments/search") {
@@ -488,4 +488,13 @@ export default function mockApi() {
     configureServer: mount,
     configurePreviewServer: mount,
   };
+}
+
+/** Yahoo's quote type, guessed from the synthetic symbol's shape. */
+function mockKind(sym) {
+  if (sym.endsWith("-USD")) return "CRYPTOCURRENCY";
+  if (sym.startsWith("^")) return "INDEX";
+  if (sym.endsWith("=X")) return "CURRENCY";
+  if (sym.endsWith("=F")) return "FUTURE";
+  return "EQUITY";
 }

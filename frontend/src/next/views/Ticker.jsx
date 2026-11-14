@@ -17,19 +17,12 @@ const RANGES = ["1D", "5D", "1M", "6M", "1Y", "5Y"];
 const INTRADAY = new Set(["1D", "5D", "1M"]);
 const CLOSED_POLL_SECONDS = 300;
 const STORE = "fadir.ticker";
-/** What each line on the chart is: [term, explanation]. */
-const NOTES = [
-  ["ticker.priceLine", "ticker.note.price"],
-  ["ticker.levelLine", "ticker.note.level"],
-  ["ticker.maSlope", "ticker.note.maSlope"],
-  ["ticker.vhf", "ticker.note.vhf"],
-  ["ticker.adx", "ticker.note.adx"],
-];
-/** Added when the ticker is held in the open Portfolio. */
-const HOLDING_NOTES = [
-  ["pos.avgBuy", "ticker.note.avgBuy"],
-  ["attr.fx", "ticker.note.fx"],
-];
+/** What a filter's line is: [term, explanation], keyed by filter. */
+const FILTER_NOTES = {
+  maSlope: ["ticker.maSlope", "ticker.note.maSlope"],
+  vhf: ["ticker.vhf", "ticker.note.vhf"],
+  adx: ["ticker.adx", "ticker.note.adx"],
+};
 
 const X_FORMAT = {
   "1D": (ms) => hourMinute(new Date(ms)),
@@ -55,7 +48,7 @@ function parseParam(text, integer) {
   return integer ? (n >= 1 ? Math.round(n) : null) : n;
 }
 
-function ParamInput({ label, value, integer, onChange }) {
+function ParamInput({ label, ariaLabel, value, integer, onChange }) {
   const [text, setText] = useState(String(value));
   useEffect(() => { setText(String(value)); }, [value]);
   return (
@@ -64,6 +57,7 @@ function ParamInput({ label, value, integer, onChange }) {
       <input
         className="small num"
         inputMode="decimal"
+        aria-label={ariaLabel}
         value={text}
         onChange={(e) => {
           setText(e.target.value);
@@ -153,11 +147,12 @@ export default function Ticker({ dash }) {
 
   const panes = useMemo(() => {
     if (!series) return [];
-    return FILTERS.filter((f) => filters[f.key].on).map((f) => {
+    // Each filter keeps its own shade wherever it appears: chip, pane line, pane name.
+    return FILTERS.map((f, tone) => ({ f, tone })).filter(({ f }) => filters[f.key].on).map(({ f, tone }) => {
       const { n1, n2 } = filters[f.key];
       const values = f.compute(series.all, n1).slice(series.from);
       const level = n2 * 5;
-      return { key: f.key, filter: f, name: `${t(f.label)} ${f.period(n1)}`, values, level, n1, n2 };
+      return { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), tone, values, level, n1, n2 };
     });
   }, [series, filters, t]);
 
@@ -177,8 +172,15 @@ export default function Ticker({ dash }) {
   const avgBuy = holding?.average_purchase_price_native != null && data?.currency === holding.currency
     ? Number(holding.average_purchase_price_native)
     : null;
-  const marks = avgBuy !== null && avgOn ? [avgBuy] : [];
-  const notes = holding ? [...NOTES, ...HOLDING_NOTES] : NOTES;
+  const marks = avgBuy !== null && avgOn ? [{ value: avgBuy, label: `${t("pos.avgBuy")} ${quote(avgBuy)}` }] : [];
+  // Explain only what is on the chart now.
+  const notes = [
+    ["ticker.priceLine", "ticker.note.price"],
+    ...(panes.length ? [["ticker.levelLine", "ticker.note.level"]] : []),
+    ...panes.map((p) => FILTER_NOTES[p.key]).filter(Boolean),
+    ...(marks.length ? [["pos.avgBuy", "ticker.note.avgBuy"]] : []),
+    ...(holding ? [["attr.fx", "ticker.note.fx"]] : []),
+  ];
 
   const picker = (
     <Popover
@@ -186,11 +188,13 @@ export default function Ticker({ dash }) {
       align="left"
       className="ticker-pop"
       trigger={({ open, toggle }) => (
-        <button type="button" className="ticker-pick" onClick={toggle} aria-expanded={open} aria-haspopup="dialog">
-          <h2>{symbol}</h2>
-          <span className="ticker-pick-name">{data?.name ?? current?.name ?? ""}</span>
-          <motion.span animate={{ rotate: open ? 180 : 0 }}><Icon name="down" size={14} /></motion.span>
-        </button>
+        <h2 className="ticker-heading">
+          <button type="button" className="ticker-pick" onClick={toggle} aria-expanded={open} aria-haspopup="dialog">
+            <span className="ticker-symbol">{symbol}</span>
+            <span className="ticker-pick-name">{data?.name ?? current?.name ?? ""}</span>
+            <motion.span animate={{ rotate: open ? 180 : 0 }}><Icon name="down" size={14} /></motion.span>
+          </button>
+        </h2>
       )}
     >
       {({ close }) => (
@@ -216,24 +220,36 @@ export default function Ticker({ dash }) {
       ))}
       {panes.length > 0 && <div className="tip-sep" />}
       {panes.map((p) => (
-        <div key={p.key} className="tip-row">{p.name}<b className="num">{figure(p.values[hover])}</b></div>
+        <div key={p.key} className="tip-row"><i style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}<b className="num">{figure(p.values[hover])}</b></div>
       ))}
     </>
   ) : null;
+
+  const spoken = hover !== null && series?.bars[hover]
+    ? [
+      stamp(series.times[hover]),
+      `${t("ticker.close")} ${quote(series.bars[hover].close)}`,
+      ...panes.map((p) => {
+        const s = filterState(p.values[hover], p.level);
+        return `${p.name} ${figure(p.values[hover])}${s ? ` ${t(`ticker.${s}`)}` : ""}`;
+      }),
+    ].join(", ")
+    : "";
 
   const heads = panes.map((p) => {
     const value = at !== null ? p.values[at] : null;
     const state = filterState(value, p.level);
     return (
       <>
-        <span className="pane-name">{p.name}</span>
+        <span className="pane-name"><i aria-hidden="true" style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}</span>
+        <span className="pane-bars num">{t("ticker.bars", { n: p.bars })}</span>
         <span className="pane-value num">{figure(value)}</span>
         <span className={`pane-state ${state === "long" ? "up" : state === "short" ? "down" : "muted"}`}>
           {state ? t(`ticker.${state}`) : "—"}
         </span>
         <span className="pane-params">
-          {p.filter.usesN1 && <ParamInput label="N1" integer value={p.n1} onChange={(n1) => setFilter(p.key, { n1 })} />}
-          <ParamInput label="N2" value={p.n2} onChange={(n2) => setFilter(p.key, { n2 })} />
+          {p.filter.usesN1 && <ParamInput label="N1" ariaLabel={`${p.name} N1`} integer value={p.n1} onChange={(n1) => setFilter(p.key, { n1 })} />}
+          <ParamInput label="N2" ariaLabel={`${p.name} N2`} value={p.n2} onChange={(n2) => setFilter(p.key, { n2 })} />
           <span className="pane-level num" title={t("ticker.level")}><i aria-hidden="true" />{figure(p.level)}</span>
         </span>
       </>
@@ -251,7 +267,7 @@ export default function Ticker({ dash }) {
           )}
           {data && (
             <span className={`ticker-session ${data.market_open ? "open" : ""}`}>
-              <i aria-hidden="true" />{t(data.market_open ? "live.open" : "live.closed")}
+              <i aria-hidden="true" />{t(data.market_open ? "ticker.trading" : "ticker.notTrading")}
             </span>
           )}
         </div>
@@ -289,7 +305,7 @@ export default function Ticker({ dash }) {
             {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
           </button>
         )}
-        {FILTERS.map((f) => (
+        {FILTERS.map((f, tone) => (
           <button
             key={f.key}
             type="button"
@@ -297,7 +313,7 @@ export default function Ticker({ dash }) {
             aria-pressed={filters[f.key].on}
             onClick={() => setFilter(f.key, { on: !filters[f.key].on })}
           >
-            <i style={{ background: "var(--fx)" }} />
+            <i style={{ background: `var(--pane-${tone + 1})` }} />
             {t(f.label)}
           </button>
         ))}
@@ -334,14 +350,21 @@ export default function Ticker({ dash }) {
       </div>
 
       {series && (
-        <dl className="footnotes">
-          {notes.map(([term, text]) => (
-            <div key={text}>
-              <dt>{t(term)}</dt>
-              <dd>{t(text)}</dd>
-            </div>
-          ))}
-        </dl>
+        <p className="sr-only" aria-live="polite">{spoken}</p>
+      )}
+
+      {series && (
+        <details className="footnotes-wrap">
+          <summary>{t("ticker.explain")}</summary>
+          <dl className="footnotes">
+            {notes.map(([term, text]) => (
+              <div key={text}>
+                <dt>{t(term)}</dt>
+                <dd>{t(text)}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
       )}
     </section>
   );

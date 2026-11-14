@@ -6,6 +6,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { api } from "../../api.js";
 import { useT } from "../i18n/index.jsx";
+
+/** Yahoo quote types worth naming, so a stock and a currency pair with similar names differ. */
+const KINDS = new Set(["EQUITY", "ETF", "INDEX", "FUTURE", "CRYPTOCURRENCY", "CURRENCY", "MUTUALFUND"]);
 import Icon from "../ui/Icons.jsx";
 import { sound } from "../ui/sound.js";
 
@@ -161,7 +164,10 @@ export default function TickerSearch({ instruments, onPick, search = api.searchI
                   onMouseDown={(e) => { e.preventDefault(); pick(item); }}
                 >
                   {on && <motion.span layoutId="ticker-highlight" className="ticker-highlight" transition={{ type: "spring", stiffness: 600, damping: 42 }} />}
-                  <span className="ticker-sym"><Highlight text={item.ticker} query={q} /></span>
+                  <span className="ticker-sym">
+                    <Highlight text={item.ticker} query={q} />
+                    {KINDS.has(item.kind) && <span className="ticker-kind">{t(`kind.${item.kind}`)}</span>}
+                  </span>
                   <span className="ticker-name"><Highlight text={item.name} query={q} /></span>
                   <span className="ticker-meta">
                     {item.exchange}

@@ -45,6 +45,10 @@
   --cost: oklch(0.56 0.012 258);
   --warn: oklch(0.83 0.12 85);
   --on-solid: oklch(0.17 0.01 258);
+  /* The Ticker filters: one accent hue at three lightnesses (DESLOP 50). */
+  --pane-1: oklch(0.88 0.07 258);
+  --pane-2: oklch(0.74 0.13 258);
+  --pane-3: oklch(0.6 0.15 258);
   --chart-grid: oklch(0.26 0.009 258);
   --shadow: none;
   --shadow-pop: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 10px 28px -10px oklch(0 0 0 / 0.55);
@@ -71,6 +75,9 @@
   --cost: oklch(0.66 0.01 258);
   --warn: oklch(0.52 0.11 75);
   --on-solid: oklch(0.985 0.004 258);
+  --pane-1: oklch(0.36 0.12 258);
+  --pane-2: oklch(0.52 0.16 258);
+  --pane-3: oklch(0.68 0.11 258);
   --chart-grid: oklch(0.92 0.006 258);
   --shadow: 0 1px 2px oklch(0.3 0.02 258 / 0.06);
   --shadow-pop: 0 1px 2px oklch(0.3 0.02 258 / 0.08), 0 10px 24px -10px oklch(0.3 0.02 258 / 0.22);
@@ -470,14 +477,15 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .skeleton-chart { width: 100%; height: 300px; border-radius: var(--radius-sm); }
 
 /* ------------------------------------------------------------------ ticker view */
+.ticker-heading { min-width: 0; max-width: 100%; font-size: inherit; }
 .ticker-pick {
-  display: flex; align-items: baseline; gap: 10px; min-width: 0; max-width: 100%;
+  display: flex; align-items: baseline; gap: 10px; min-width: 0; max-width: 100%; min-height: 44px;
   padding: 4px 10px; margin: -4px -10px; border-radius: var(--r-ctl); text-align: left; transition: background 0.15s;
 }
 .ticker-pick:hover { background: var(--surface-2); }
-.ticker-pick h2 { font-size: 19px; flex: none; overflow: visible; }
+.ticker-symbol { font: 600 19px/1.2 var(--font-display); flex: none; color: var(--text); }
 .ticker-pick .icon { align-self: center; color: var(--text-3); }
-.ticker-pick-name { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.ticker-pick-name { flex: none; max-width: 32ch; color: var(--text-2); font: 400 14px/1.2 var(--font-ui); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chart-title .popover-root { min-width: 0; max-width: 100%; }
 .ticker-pop .popover { width: min(440px, calc(100vw - 32px)); padding: 10px; }
 .ticker-price { font: 600 19px/1 var(--font-display); }
@@ -496,11 +504,22 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .holding dd small { font-weight: 500; font-size: 12px; }
 @media (max-width: 560px) {
   .holding { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+  .ticker-pick-name { flex: 0 1 auto; max-width: 14ch; min-width: 0; }
+  /* On a phone the chart comes first; the position's figures follow it. */
+  .ticker-card { display: flex; flex-direction: column; }
+  .ticker-card > .holding { order: 1; margin: 14px 0 0; padding: 14px 0 0; border-bottom: 0; border-top: 1px solid var(--line); }
+  .ticker-card > .footnotes-wrap { order: 2; }
 }
 .legend-chip i.dashed { height: 0; border-top: 2px dashed currentColor; border-radius: 0; }
+.footnotes-wrap { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+.footnotes-wrap summary { width: fit-content; min-height: 32px; display: flex; align-items: center; cursor: pointer; font-size: 12.5px; color: var(--text-2); list-style: none; }
+.footnotes-wrap summary::-webkit-details-marker { display: none; }
+.footnotes-wrap summary::after { content: "+"; margin-left: 8px; color: var(--text-3); }
+.footnotes-wrap[open] summary::after { content: "−"; }
+.footnotes-wrap summary:hover { color: var(--text); }
 .footnotes {
   display: grid; grid-template-columns: max-content minmax(0, 72ch); gap: 6px 16px;
-  margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line);
+  margin: 8px 0 0;
   font-size: 12px; line-height: 1.55; color: var(--text-3);
 }
 .footnotes > div { display: contents; }
@@ -512,7 +531,7 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 }
 
 .pchart { position: relative; touch-action: pan-y; user-select: none; }
-.pchart canvas { display: block; cursor: crosshair; }
+.pchart canvas { display: block; cursor: crosshair; border-radius: 4px; }
 .pchart-heads { position: absolute; left: 64px; right: 14px; pointer-events: none; }
 .pchart-head {
   display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 4px 12px;
@@ -520,12 +539,17 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
   font-size: 12.5px; white-space: nowrap; overflow: hidden;
 }
 .pchart-head > * { pointer-events: auto; }
-.pane-name { font-weight: 600; }
+.pane-name { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.pane-name i { width: 12px; height: 3px; border-radius: 2px; }
+.pane-bars { color: var(--text-3); }
 .pane-value { color: var(--text); }
 .pane-state { font-weight: 600; }
 .pane-params { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .param { display: inline-flex; align-items: center; gap: 6px; color: var(--text-3); }
-.param input { width: 56px; height: 26px; padding: 0 6px; text-align: right; }
+.param input { width: 56px; height: 30px; padding: 0 6px; text-align: right; }
+@media (max-width: 560px) {
+  .param input { height: 44px; width: 64px; }
+}
 .pane-level { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
 .pane-level i { width: 14px; border-top: 1px dashed var(--text-3); }
 
@@ -749,10 +773,23 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .skeleton-grid i { display: block; height: 72px; border-radius: var(--radius-sm); }
 
 /* ------------------------------------------------------------------ responsive */
+/* Six tabs, the summary and the actions overrun 1320px: tighten before anything hides. */
+@media (max-width: 1500px) {
+  .topbar-inner { gap: 10px; }
+  .nav-tabs button { padding: 0 9px; gap: 6px; }
+  .kbd-btn { padding: 0 11px; }
+  .kbd-btn kbd { display: none; }
+  .live-time { display: none; }
+}
+
+/* Below this the six labelled tabs no longer fit beside the summary: icons only. */
+@media (max-width: 1300px) {
+  .topbar-inner .nav-label { display: none; }
+  .topbar-inner .nav-tabs button { padding: 0 12px; }
+}
+
 @media (max-width: 1100px) {
   .hero { grid-template-columns: 1fr; }
-  .nav-label { display: none; }
-  .nav-tabs button { padding: 0 12px; }
   .kbd-btn { display: none; }
 }
 
@@ -897,6 +934,7 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 }
 .ticker-sym { font: 600 15px/1.2 var(--font-display); }
 .ticker-row .ticker-name { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ticker-kind { margin-left: 8px; padding: 1px 6px; border-radius: 5px; background: var(--surface-3); color: var(--text-2); font-size: 11px; white-space: nowrap; }
 .ticker-meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--text-3); }
 .ticker-meta b { font-weight: 600; color: var(--text-2); }
 .ticker-row mark { background: none; color: var(--accent); }

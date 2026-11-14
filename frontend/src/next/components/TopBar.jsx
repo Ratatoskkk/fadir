@@ -33,7 +33,7 @@ export function NavTabs({ view, onChange, className = "", layoutId = "nav-pill" 
   return (
     <nav className={`nav-tabs ${className}`} aria-label={t("nav.sections")}>
       {VIEWS.map((v) => (
-        <button key={v.id} type="button" aria-current={view === v.id ? "page" : undefined} onClick={() => onChange(v.id)}>
+        <button key={v.id} type="button" aria-current={view === v.id ? "page" : undefined} aria-label={t(v.label)} title={t(v.label)} onClick={() => onChange(v.id)}>
           {view === v.id && <motion.span layoutId={layoutId} className="nav-pill" transition={spring} />}
           <Icon name={v.icon} size={17} />
           <span className="nav-label">{t(v.label)}</span>
@@ -222,7 +222,7 @@ export default function TopBar({ dash, view, onView, condensed, theme, onTheme, 
               </motion.span>
             </AnimatePresence>
           </motion.button>
-          <button type="button" className="kbd-btn desktop-only" onClick={onPalette} aria-label={t("palette.title")}>
+          <button type="button" className="kbd-btn desktop-only" onClick={onPalette} aria-label={t("palette.title")} title="Ctrl K">
             <Icon name="search" size={15} />
             <kbd>Ctrl K</kbd>
           </button>

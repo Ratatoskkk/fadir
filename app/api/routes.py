@@ -1551,6 +1551,7 @@ def search_market(
             exchange=r.exchange,
             currency=r.currency,
             known=r.known,
+            kind=r.kind,
         )
         for r in instruments_service.search(session, q, types=yf_client.CHARTABLE_TYPES)
     ]

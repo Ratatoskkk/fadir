@@ -475,6 +475,8 @@ class InstrumentSearchOut(BaseModel):
     #: Known only once the instrument has been added.
     currency: str | None
     known: bool
+    #: Yahoo's quote type for a symbol found on Yahoo; None for a held instrument.
+    kind: str | None = None
 
 
 class HoldingOut(BaseModel):

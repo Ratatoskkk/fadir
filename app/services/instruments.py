@@ -80,6 +80,8 @@ class SearchResult:
     exchange: str
     currency: str | None
     known: bool
+    #: Yahoo's quote type (EQUITY, ETF, INDEX, CRYPTOCURRENCY, ...); None for a held instrument.
+    kind: str | None = None
 
 
 def exchange_code(yahoo_code: str) -> str:
@@ -130,6 +132,7 @@ def search(
                 exchange_code(match["exchange"]),
                 None,
                 False,
+                match.get("type") or None,
             )
         )
     return results

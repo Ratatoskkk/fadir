@@ -279,7 +279,7 @@ _search_cache: dict[str, tuple[float, list[dict[str, str]]]] = {}
 def search_symbols(
     query: str, limit: int = 8, types: frozenset[str] = SEARCHABLE_TYPES
 ) -> list[dict[str, str]]:
-    """Yahoo symbol search: [{symbol, name, exchange}] for the given quote types.
+    """Yahoo symbol search: [{symbol, name, exchange, type}] for the given quote types.
 
     One attempt, no backoff: this runs as the user types, and an empty answer is better
     than a stalled field. Results are cached briefly per query to spare Yahoo.
@@ -309,7 +309,7 @@ def search_symbols(
             _search_cache.clear()
         _search_cache[key] = (now, quotes)
     matches = [
-        {"symbol": q["symbol"], "name": q["name"], "exchange": q["exchange"]}
+        {"symbol": q["symbol"], "name": q["name"], "exchange": q["exchange"], "type": q["type"]}
         for q in quotes
         if q["type"] in types
     ]
