@@ -1672,3 +1672,14 @@ Frontend only, no restart. Installed checksums match the build for all 16 files;
 rollback bundle `/opt/fadir/frontend/dist.previous.compare-axis-20261114`. Public health
 and all 15 assets returned 200, and in the signed-in owner tab SIVE.ST against NVDA on 5D
 moves each line in its own trading hours.
+
+Compare own-trades deployment (owner report 2026-11-14: SIVEF against AAOI drew SIVEF as
+steps and called it not trading mid-session). `b47b6c6` draws each compared line through
+its own bars, connecting across bars it lacks; only a gap over three hours intraday (a
+day and a half on daily bars) while the other ticker traded is dashed as closed. Each
+indicator pane also draws the compared ticker's line for the same formula, with its
+reading and state in the header and tooltip. Frontend only, no restart. Installed
+checksums match the build for all 16 files; rollback bundle
+`/opt/fadir/frontend/dist.previous.compare-own-20261114`. Public health and all 15 assets
+returned 200, and the signed-in owner tab shows SIVEF against AAOI on 1D as connected
+lines with AAOI lines in each pane.
