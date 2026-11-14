@@ -1612,3 +1612,18 @@ match the commit, and the service restarted at 16:11:56 UTC with `NRestarts=0`.
 Frontend bundle deployed with matching checksums for all 16 files; rollback bundle
 `/opt/fadir/frontend/dist.previous.cleanup-20261110`. Local and public health and every
 asset returned 200, and an unauthenticated portfolio read returned 401.
+
+Ticker tab deployment (owner instruction 2026-11-14). `b4cd039` adds the Ticker view
+(`#/sembol`): any Yahoo symbol over 1D to 5Y, polled while its market is open, with
+toggleable moving average slope, VHF and ADX(25) panes against their N2 × 5 levels and a
+footnote explaining each line. New routes `GET /api/market/chart` and
+`GET /api/market/search` require an authority. The four changed VM Python files matched
+`fd6ceab` before replacement; previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-b4cd039/rollback/app.previous.tar`, and
+`app/providers/market_chart.py` is new. A smoke run on the VM's yfinance 1.7.0 fetched
+bars and searched before the swap. Installed checksums match the commit for all 21
+files, and the service restarted at 14:58:25 UTC with `NRestarts=0`. Rollback bundle:
+`/opt/fadir/frontend/dist.previous.ticker-20261114`. Local and public health and all 15
+assets returned 200, an unauthenticated chart read returned 401, and the signed-in owner
+tab shows the Ticker view for the largest holding. Tests match the baseline apart from
+the two known zero-FX failures.
