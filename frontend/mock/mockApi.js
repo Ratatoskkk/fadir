@@ -257,13 +257,25 @@ function marketChart(symbol, range) {
   const known = INSTRUMENTS.find((i) => i.yf_symbol === symbol);
   let price = known?.price ?? 50 + rand() * 400;
   const step = Math.sqrt(minutes / 390) * 0.012;
-  const now = Date.now();
+  // Intraday bars only inside the symbol's own session (UTC), so a comparison across
+  // exchanges sees the same interleaved hours the real API returns. Crypto never closes.
+  const hours = /-USD$/.test(symbol) ? null : /\.(ST|IS|AS|DE|PA|L)$/.test(symbol) ? [8, 16.5] : [14.5, 21];
+  const trades = (ms) => {
+    if (!hours || minutes >= 1440) return true;
+    const d = new Date(ms);
+    const h = d.getUTCHours() + d.getUTCMinutes() / 60;
+    return d.getUTCDay() % 6 !== 0 && h >= hours[0] && h < hours[1];
+  };
+  const stamps = [];
+  for (let at = Math.floor(Date.now() / (minutes * 60000)) * minutes * 60000; stamps.length < total; at -= minutes * 60000) {
+    if (trades(at)) stamps.unshift(at);
+  }
   const bars = [];
-  for (let i = 0; i < total; i++) {
+  for (const at of stamps) {
     const open = price;
     price *= 1 + (rand() - 0.49) * step * 2;
     const swing = Math.abs(price - open) + open * step * rand();
-    bars.push({ at: new Date(now - (total - 1 - i) * minutes * 60000).toISOString(), open, high: Math.max(open, price) + swing * 0.4, low: Math.min(open, price) - swing * 0.4, close: price });
+    bars.push({ at: new Date(at).toISOString(), open, high: Math.max(open, price) + swing * 0.4, low: Math.min(open, price) - swing * 0.4, close: price });
   }
   const last = bars[bars.length - 1];
   last.close *= 1 + (Math.random() - 0.5) * 0.004;

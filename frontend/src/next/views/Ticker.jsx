@@ -17,6 +17,7 @@ import { spring } from "../ui/motion.js";
 const RANGES = ["1D", "5D", "1M", "6M", "1Y", "5Y"];
 const INTRADAY = new Set(["1D", "5D", "1M"]);
 const CLOSED_POLL_SECONDS = 300;
+const INTERVAL_MS = { "5m": 300000, "15m": 900000, "1h": 3600000, "1d": 86400000, "1wk": 604800000 };
 const STORE = "fadir.ticker";
 /** What a filter's line is: [term, explanation], keyed by filter. */
 const FILTER_NOTES = {
@@ -169,45 +170,68 @@ export default function Ticker({ dash }) {
 
   const { data: cmpData, error: cmpError } = useChart(compareSymbol, range, weeks, interval);
 
-  // With a comparison on, both lines show the change since the window starts, so two
-  // tickers at different prices or in different currencies share one axis (no dual axes).
-  // Each segment restarts from the close before it and compounds onto the ones before,
-  // so a line ends at the same change its chip reports. The compared ticker is read at
-  // the main ticker's bar times: its last close at or before each one.
-  const comparison = useMemo(() => {
-    if (!series || !cmpData?.bars?.length) return null;
+  // What the chart draws. Alone, the ticker's own bars. With a comparison, both lines
+  // show the change since the window starts, so tickers at different prices or in
+  // different currencies share one axis (no dual axes), and the x axis takes both
+  // tickers' bar times: each line moves when its own market trades, instead of the
+  // compared ticker being squeezed onto this ticker's hours. A line whose market has
+  // no bar at a time holds its last value, drawn dashed as "not trading". Each segment
+  // restarts from the close before it and compounds onto the ones before, so a line
+  // ends at the change its chip reports.
+  const view = useMemo(() => {
+    if (!series) return null;
+    const plain = { times: series.times, close: series.close, breaks: series.breaks, mainAt: series.times.map((_, i) => i), compare: null };
+    if (!cmpData?.bars?.length) return plain;
     const bars = data.bars;
-    const segments = data.segments?.length ? data.segments : [[data.warmup, bars.length]];
-    const cTimes = cmpData.bars.map((b) => Date.parse(b.at));
-    const cClose = (ms) => {
+    const mTimes = bars.map((b) => Date.parse(b.at));
+    const cBars = cmpData.bars;
+    const cTimes = cBars.map((b) => Date.parse(b.at));
+    const cAt = (ms) => {
       let lo = 0, hi = cTimes.length - 1, found = -1;
       while (lo <= hi) {
         const mid = (lo + hi) >> 1;
         if (cTimes[mid] <= ms) { found = mid; lo = mid + 1; } else hi = mid - 1;
       }
-      return found < 0 ? null : cmpData.bars[found].close;
+      return found;
     };
-    const main = [], other = [];
-    let mainSoFar = 1, otherSoFar = 1;
-    for (const [s, e] of segments) {
-      const baseTime = Date.parse(bars[s > 0 ? s - 1 : s].at);
+    // A bar that opened a full interval ago has closed: its market is idle at that time.
+    const step = INTERVAL_MS[data.interval] ?? INTERVAL_MS["1h"];
+    const segments = data.segments?.length ? data.segments : [[data.warmup, bars.length]];
+    const out = { times: [], close: [], compare: [], closeHeld: [], compareHeld: [], mainAt: [], breaks: [] };
+    let mainSoFar = 1, otherSoFar = 1, shown = 0;
+    segments.forEach(([s, e], k) => {
+      const first = mTimes[s];
+      // The last segment runs on to the compared ticker's latest bar; an earlier one
+      // stops at its own last bar, so gap weeks stay out.
+      const until = k === segments.length - 1 ? Infinity : mTimes[e - 1];
+      const merged = [...new Set([...mTimes.slice(s, e), ...cTimes.filter((c) => c >= first && c <= until)])].sort((a, b) => a - b);
       const base = s > 0 ? bars[s - 1].close : bars[s].open;
-      const cBase = cClose(baseTime) ?? cClose(Date.parse(bars[s].at));
-      let mainLast = 1, otherLast = 1;
-      for (let i = s; i < e; i++) {
-        mainLast = bars[i].close / base;
-        main.push((mainSoFar * mainLast - 1) * 100);
-        const c = cClose(Date.parse(bars[i].at));
-        if (c === null || !cBase) { other.push(null); continue; }
-        otherLast = c / cBase;
-        other.push((otherSoFar * otherLast - 1) * 100);
+      const baseAt = cAt(mTimes[s > 0 ? s - 1 : s]);
+      const cBase = (baseAt >= 0 ? cBars[baseAt] : cBars.find((_, i) => cTimes[i] >= first))?.close;
+      if (k > 0) out.breaks.push(out.times.length);
+      let mi = s, mainLast = 1, otherLast = 1;
+      for (const time of merged) {
+        while (mi + 1 < e && mTimes[mi + 1] <= time) mi++;
+        mainLast = bars[mi].close / base;
+        out.times.push(time);
+        out.close.push((mainSoFar * mainLast - 1) * 100);
+        out.closeHeld.push(time - mTimes[mi] >= step);
+        out.mainAt.push(shown + mi - s);
+        const ci = cAt(time);
+        if (ci < 0 || !cBase) { out.compare.push(null); out.compareHeld.push(false); continue; }
+        otherLast = cBars[ci].close / cBase;
+        out.compare.push((otherSoFar * otherLast - 1) * 100);
+        out.compareHeld.push(time - cTimes[ci] >= step);
       }
       mainSoFar *= mainLast;
       otherSoFar *= otherLast;
-    }
-    const lastOther = [...other].reverse().find((v) => v !== null);
-    return { main, other, change: lastOther === undefined ? null : 1 + lastOther / 100 };
+      shown += e - s;
+    });
+    const lastOther = [...out.compare].reverse().find((v) => v !== null);
+    out.change = lastOther === undefined ? null : 1 + lastOther / 100;
+    return out;
   }, [series, data, cmpData]);
+  const comparing = Boolean(view?.compare);
 
   const panes = useMemo(() => {
     if (!series) return [];
@@ -215,11 +239,13 @@ export default function Ticker({ dash }) {
     return FILTERS.map((f, tone) => ({ f, tone })).filter(({ f }) => filters[f.key].on).map(({ f, tone }) => {
       const { n1, n2 } = filters[f.key];
       const full = f.compute(series.all, n1);
-      const values = series.idx.map((i) => full[i]);
+      // Read at each point on screen; with a comparison a point can fall between this
+      // ticker's bars, where it shows the value of the bar before.
+      const values = view.mainAt.map((at) => full[series.idx[at]]);
       const level = n2 * 5;
       return { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), tone, values, level, n1, n2 };
     });
-  }, [series, filters, t]);
+  }, [series, view, filters, t]);
 
   const setFilter = (key, patch) => setFilters((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
 
@@ -234,7 +260,8 @@ export default function Ticker({ dash }) {
         const base = data.warmup > 0 ? data.bars[data.warmup - 1].close : series.bars[0].open;
         return base ? price / base : null;
       })();
-  const at = hover ?? (series ? series.close.length - 1 : null);
+  const at = hover ?? (view ? view.times.length - 1 : null);
+  const hoverBar = hover !== null && view ? series.bars[view.mainAt[hover]] : null;
   const formatX = X_FORMAT[range] ?? ((ms) => shortDate(ms));
   const intraday = byWeek ? /[mh]$/.test(data?.interval ?? "") : INTRADAY.has(range);
   const stamp = intraday ? (ms) => dateTimeStamp(ms) : (ms) => fullDate(ms);
@@ -249,10 +276,10 @@ export default function Ticker({ dash }) {
     ? Number(holding.average_purchase_price_native)
     : null;
   // A price-level line has no place on a chart of % changes.
-  const marks = avgBuy !== null && avgOn && !comparison ? [{ value: avgBuy, label: `${t("pos.avgBuy")} ${quote(avgBuy)}` }] : [];
+  const marks = avgBuy !== null && avgOn && !comparing ? [{ value: avgBuy, label: `${t("pos.avgBuy")} ${quote(avgBuy)}` }] : [];
   // Explain only what is on the chart now.
   const notes = [
-    comparison ? ["ticker.compareLine", "ticker.note.compare"] : ["ticker.priceLine", "ticker.note.price"],
+    comparing ? ["ticker.compareLine", "ticker.note.compare"] : ["ticker.priceLine", "ticker.note.price"],
     ...(panes.length ? [["ticker.levelLine", "ticker.note.level"]] : []),
     ...panes.map((p) => FILTER_NOTES[p.key]).filter(Boolean),
     ...(marks.length ? [["pos.avgBuy", "ticker.note.avgBuy"]] : []),
@@ -289,17 +316,19 @@ export default function Ticker({ dash }) {
     );
   }
 
-  const tooltip = hover !== null && series?.bars[hover] ? (
+  // A held point is "not trading": the line there is that market's last value.
+  const closedNote = (held) => (held ? <span className="muted">{t("ticker.notTrading")}</span> : null);
+  const tooltip = hoverBar ? (
     <>
-      <div className="tip-date">{stamp(series.times[hover])}</div>
-      {comparison ? (
+      <div className="tip-date">{stamp(view.times[hover])}</div>
+      {comparing ? (
         <>
-          <div className="tip-row"><i style={{ background: "var(--accent)" }} />{symbol}<b className="num">{pct(comparison.main[hover])}</b></div>
-          <div className="tip-row"><i style={{ background: "var(--compare)" }} />{compareSymbol}<b className="num">{pct(comparison.other[hover])}</b></div>
+          <div className="tip-row"><i style={{ background: "var(--accent)" }} />{symbol} {closedNote(view.closeHeld[hover])}<b className="num">{pct(view.close[hover])}</b></div>
+          <div className="tip-row"><i style={{ background: "var(--compare)" }} />{compareSymbol} {closedNote(view.compareHeld[hover])}<b className="num">{pct(view.compare[hover])}</b></div>
         </>
       ) : (
         [["ticker.open", "open"], ["ticker.high", "high"], ["ticker.low", "low"], ["ticker.close", "close"]].map(([label, key]) => (
-          <div key={key} className="tip-row">{t(label)}<b className="num">{quote(series.bars[hover][key])}</b></div>
+          <div key={key} className="tip-row">{t(label)}<b className="num">{quote(hoverBar[key])}</b></div>
         ))
       )}
       {panes.length > 0 && <div className="tip-sep" />}
@@ -309,11 +338,11 @@ export default function Ticker({ dash }) {
     </>
   ) : null;
 
-  const spoken = hover !== null && series?.bars[hover]
+  const spoken = hoverBar
     ? [
-      stamp(series.times[hover]),
-      `${t("ticker.close")} ${quote(series.bars[hover].close)}`,
-      ...(comparison ? [`${symbol} ${pct(comparison.main[hover])}`, `${compareSymbol} ${pct(comparison.other[hover])}`] : []),
+      stamp(view.times[hover]),
+      `${t("ticker.close")} ${quote(hoverBar.close)}`,
+      ...(comparing ? [`${symbol} ${pct(view.close[hover])}`, `${compareSymbol} ${pct(view.compare[hover])}`] : []),
       ...panes.map((p) => {
         const s = filterState(p.values[hover], p.level);
         return `${p.name} ${figure(p.values[hover])}${s ? ` ${t(`ticker.${s}`)}` : ""}`;
@@ -385,7 +414,7 @@ export default function Ticker({ dash }) {
       )}
 
       <div className="legend" role="group" aria-label={t("ticker.filters")}>
-        {avgBuy !== null && !comparison && (
+        {avgBuy !== null && !comparing && (
           <button type="button" className={`legend-chip ${avgOn ? "" : "off"}`} aria-pressed={avgOn} onClick={() => setAvgOn((v) => !v)}>
             <i className="dashed" style={{ color: "var(--cost)" }} />
             {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
@@ -407,8 +436,8 @@ export default function Ticker({ dash }) {
           <span className="legend-chip compare-chip">
             <i style={{ background: "var(--compare)" }} />
             {t("ticker.vs", { symbol: compareSymbol })}
-            {comparison?.change != null ? (
-              <span className={`num ${toneOf(comparison.change - 1)}`}>{ratioPct(comparison.change)}</span>
+            {view?.change != null ? (
+              <span className={`num ${toneOf(view.change - 1)}`}>{ratioPct(view.change)}</span>
             ) : cmpError ? (
               <span className="muted">{t("ticker.compareNoData")}</span>
             ) : null}
@@ -441,13 +470,15 @@ export default function Ticker({ dash }) {
       <div className="chart-stage">
         {series ? (
           <PriceChart
-            times={series.times}
-            close={comparison ? comparison.main : series.close}
-            compare={comparison?.other}
-            formatY={comparison ? (v) => pct(v, 1) : quote}
+            times={view.times}
+            close={view.close}
+            compare={view.compare}
+            closeHeld={view.closeHeld}
+            compareHeld={view.compareHeld}
+            formatY={comparing ? (v) => pct(v, 1) : quote}
             panes={panes}
             marks={marks}
-            breaks={series.breaks}
+            breaks={view.breaks}
             heads={heads}
             formatX={formatX}
             live={data.market_open}

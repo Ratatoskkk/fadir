@@ -72,7 +72,7 @@ export default {
   "ticker.compareNoData": "aucune donnée",
   "ticker.compareRemove": "Arrêter la comparaison avec {symbol}",
   "ticker.compareLine": "Lignes comparées",
-  "ticker.note.compare": "Les deux lignes montrent la variation en % depuis le début de la période, pour comparer directement des tickers de prix ou de devises différents. Le ticker comparé est lu aux heures des barres de ce ticker, avec son dernier cours à ce moment.",
+  "ticker.note.compare": "Les deux lignes montrent la variation en % depuis le début de la période, pour comparer directement des tickers de prix ou de devises différents. L'axe du temps couvre les heures de cotation des deux tickers ; un tronçon pointillé est un marché fermé qui garde son dernier cours.",
   "ticker.fromWeek": "De la semaine",
   "ticker.toWeek": "À la semaine",
   "ticker.showWeeks": "Afficher",

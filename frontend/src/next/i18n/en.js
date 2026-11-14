@@ -72,7 +72,7 @@ export default {
   "ticker.compareNoData": "no data",
   "ticker.compareRemove": "Stop comparing with {symbol}",
   "ticker.compareLine": "Compared lines",
-  "ticker.note.compare": "Both lines show the % change since the start of the window, so tickers at different prices or in different currencies compare directly. The compared ticker is read at this ticker's bar times, using its last price at or before each one.",
+  "ticker.note.compare": "Both lines show the % change since the start of the window, so tickers at different prices or in different currencies compare directly. The time axis holds both tickers' trading hours; a dashed stretch is a market that isn't trading, holding its last price.",
   "ticker.fromWeek": "From week",
   "ticker.toWeek": "To week",
   "ticker.showWeeks": "Show",

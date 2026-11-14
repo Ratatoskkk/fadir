@@ -74,19 +74,23 @@ function extent(values, extra = []) {
  * `compare` is a second line over the same bars (a compared ticker), drawn in its own
  * colour; when given, `close` and `compare` share one axis labelled by `formatY`.
  */
-export default function PriceChart({ times, close, compare = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
+/**
+ * `closeHeld` and `compareHeld` flag points where that line's market has no bar (its
+ * last value is held); the stretch into such a point is drawn faint and dashed.
+ */
+export default function PriceChart({ times, close, compare = null, closeHeld = null, compareHeld = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
-  st.props = { times, close, compare, formatY, panes, marks, breaks, formatX, live };
+  st.props = { times, close, compare, closeHeld, compareHeld, formatY, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
   const draw = () => {
     st.frame = 0;
     const canvas = canvasRef.current;
     if (!canvas || !st.colors) return;
-    const { times: xsT, close: ys, compare: cs, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
+    const { times: xsT, close: ys, compare: cs, closeHeld: yHeld, compareHeld: cHeld, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
     const { w, h, dpr, colors: c } = st;
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -118,20 +122,26 @@ export default function PriceChart({ times, close, compare = null, formatY = quo
       return yOf;
     };
 
-    const stroke = (values, yOf, color, width) => {
+    // Two passes: solid where the market traded, then faint dashes into each held point.
+    const stroke = (values, yOf, color, width, held = null) => {
       ctx.strokeStyle = color;
-      ctx.lineWidth = width;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
-      ctx.beginPath();
-      let open = false;
-      for (let i = 0; i < n; i++) {
-        const v = values[i];
-        if (v === null || v === undefined) { open = false; continue; }
-        if (open) ctx.lineTo(xOf(i), yOf(v));
-        else { ctx.moveTo(xOf(i), yOf(v)); open = true; }
+      for (const dashed of held ? [false, true] : [false]) {
+        ctx.lineWidth = dashed ? Math.max(1, width - 0.6) : width;
+        ctx.globalAlpha = dashed ? 0.45 : 1;
+        ctx.setLineDash(dashed ? [2, 4] : []);
+        ctx.beginPath();
+        for (let i = 1; i < n; i++) {
+          const a = values[i - 1], b = values[i];
+          if (a == null || b == null || Boolean(held?.[i]) !== dashed) continue;
+          ctx.moveTo(xOf(i - 1), yOf(a));
+          ctx.lineTo(xOf(i), yOf(b));
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
     };
 
     // Price.
@@ -175,8 +185,8 @@ export default function PriceChart({ times, close, compare = null, formatY = quo
       ctx.textBaseline = "bottom";
       ctx.fillText(mark.label, right - 4, y - 4);
     }
-    if (cs) stroke(cs, yPrice, c.compare, 1.8);
-    stroke(ys, yPrice, c.price, 2);
+    if (cs) stroke(cs, yPrice, c.compare, 1.8, cHeld);
+    stroke(ys, yPrice, c.price, 2, yHeld);
     const dots = [[yPrice(ys[st.hover ?? 0]), c.price]];
     if (cs && st.hover !== null && cs[st.hover] != null) dots.push([yPrice(cs[st.hover]), c.compare]);
 

@@ -72,7 +72,7 @@ export default {
   "ticker.compareNoData": "keine Daten",
   "ticker.compareRemove": "Vergleich mit {symbol} beenden",
   "ticker.compareLine": "Verglichene Linien",
-  "ticker.note.compare": "Beide Linien zeigen die prozentuale Veränderung seit Beginn des Zeitraums, damit Ticker mit unterschiedlichen Kursen oder Währungen direkt vergleichbar sind. Der verglichene Ticker wird zu den Kerzenzeiten dieses Tickers gelesen, mit seinem letzten Kurs davor.",
+  "ticker.note.compare": "Beide Linien zeigen die prozentuale Veränderung seit Beginn des Zeitraums, damit Ticker mit unterschiedlichen Kursen oder Währungen direkt vergleichbar sind. Die Zeitachse enthält die Handelszeiten beider Ticker; ein gestrichelter Abschnitt ist ein Markt ohne Handel, der seinen letzten Kurs hält.",
   "ticker.fromWeek": "Von KW",
   "ticker.toWeek": "Bis KW",
   "ticker.showWeeks": "Anzeigen",

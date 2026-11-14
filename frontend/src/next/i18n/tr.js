@@ -72,7 +72,7 @@ export default {
   "ticker.compareNoData": "veri yok",
   "ticker.compareRemove": "{symbol} karşılaştırmasını kaldır",
   "ticker.compareLine": "Karşılaştırılan çizgiler",
-  "ticker.note.compare": "İki çizgi de pencerenin başından bu yana yüzde değişimi gösterir; böylece farklı fiyat veya para birimindeki semboller doğrudan karşılaştırılır. Karşılaştırılan sembol bu sembolün çubuk zamanlarında, her birinden önceki son fiyatıyla okunur.",
+  "ticker.note.compare": "İki çizgi de pencerenin başından bu yana yüzde değişimi gösterir; böylece farklı fiyat veya para birimindeki semboller doğrudan karşılaştırılır. Zaman ekseni iki sembolün de işlem saatlerini içerir; kesikli bölüm, işlem görmeyen ve son fiyatını koruyan bir piyasadır.",
   "ticker.fromWeek": "Başlangıç haftası",
   "ticker.toWeek": "Bitiş haftası",
   "ticker.showWeeks": "Göster",

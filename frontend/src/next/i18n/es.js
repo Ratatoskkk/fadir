@@ -72,7 +72,7 @@ export default {
   "ticker.compareNoData": "sin datos",
   "ticker.compareRemove": "Dejar de comparar con {symbol}",
   "ticker.compareLine": "Líneas comparadas",
-  "ticker.note.compare": "Ambas líneas muestran el cambio en % desde el inicio del periodo, para comparar directamente tickers con precios o monedas distintos. El ticker comparado se lee en las horas de las barras de este ticker, con su último precio hasta ese momento.",
+  "ticker.note.compare": "Ambas líneas muestran el cambio en % desde el inicio del periodo, para comparar directamente tickers con precios o monedas distintos. El eje de tiempo incluye el horario de ambos tickers; un tramo discontinuo es un mercado cerrado que mantiene su último precio.",
   "ticker.fromWeek": "Desde la semana",
   "ticker.toWeek": "Hasta la semana",
   "ticker.showWeeks": "Mostrar",
