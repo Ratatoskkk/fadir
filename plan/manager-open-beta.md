@@ -1635,3 +1635,14 @@ chart. Frontend only, no restart. Installed checksums match the build for all 16
 rollback bundle `/opt/fadir/frontend/dist.previous.holding-20261114`. Local and public
 health and all 15 assets returned 200, and the signed-in owner tab shows the position row
 and average-buy line for the largest holding.
+
+Ticker review fixes deployment (owner instruction 2026-11-14). `966ce43` ships the 12
+Ticker tab fixes. Backend: `app/api/routes.py`, `app/providers/yf_client.py`,
+`app/schemas.py` and `app/services/instruments.py` pass Yahoo's quote type through market
+search; all four VM files matched the prior commit before replacement, the previous
+copies are in `/home/fadir-agent/fadir-tests/rollback-966ce43/app-previous.tar`, and the
+service restarted once at 15:49:28 UTC with `NRestarts=0`. Frontend bundle deployed with
+matching checksums; rollback bundle `/opt/fadir/frontend/dist.previous.ticker-review-20261114`.
+Public health and every asset returned 200. In the signed-in owner tab, market search
+returned quote types, the Ticker tab rendered its chart, heading and explanation toggle,
+the top bar fit its width, and no new console errors appeared.
