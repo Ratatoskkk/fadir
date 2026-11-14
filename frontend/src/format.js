@@ -43,6 +43,8 @@ const buildFormatters = () => ({
   dfHm: df({ hour: "2-digit", minute: "2-digit" }),
   dfWeekday: df({ weekday: "short" }),
   dfStamp: df({ dateStyle: "medium", timeStyle: "short" }),
+  dfMonth: df({ month: "short", year: "2-digit" }),
+  nfSig: new Intl.NumberFormat(locale, { maximumSignificantDigits: 4 }),
 });
 let F = buildFormatters();
 
@@ -96,6 +98,22 @@ export function signedMoney(value, currency = "TRY", digits = 2) {
   const symbol = CURRENCY_SYMBOL[currency] ?? currency;
   return `${sign}${symbol}${num(Math.abs(n), digits)}`;
 }
+
+/** A quote: two decimals, or four significant digits below 1 so a $0.0012 coin still reads. */
+export function quote(value) {
+  const n = Number(value);
+  if (value === null || value === undefined || !Number.isFinite(n)) return "—";
+  return Math.abs(n) >= 1 || n === 0 ? F.nf2.format(n) : F.nfSig.format(n);
+}
+
+/** An indicator reading (ADX 23.45, VHF 0.3412) to four significant digits. */
+export function figure(value) {
+  const n = Number(value);
+  if (value === null || value === undefined || !Number.isFinite(n)) return "—";
+  return F.nfSig.format(n);
+}
+
+export const monthYear = (d) => F.dfMonth.format(d);
 
 /** A return *ratio* (1.09) rendered as a signed percentage (+9,00%). */
 export function ratioPct(value, digits = 2) {

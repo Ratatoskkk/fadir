@@ -29,6 +29,7 @@ const paths = {
   layers: <><path d="m12 2 10 6-10 6L2 8Z" /><path d="m2 16 10 6 10-6" /></>,
   receipt: <><path d="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2Z" /><path d="M9 7h6M9 11h6M9 15h4" /></>,
   user: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
+  trend: <path d="m3 17 6-6 4 4 8-8M15 7h6v6" />,
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   swap: <path d="M7 16V4M3 8l4-4 4 4M17 8v12M21 16l-4 4-4-4" />,
   command: <path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3Z" />,

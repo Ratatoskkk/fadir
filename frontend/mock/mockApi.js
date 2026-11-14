@@ -243,6 +243,38 @@ function intraday(portfolioId, offset, tickers) {
   return { interval: "5m", session_date: day.toISOString().slice(0, 10), points, warnings: [], tickers: tickers ?? [], offset, sessions_available: 5 };
 }
 
+// The Ticker view: a seeded random walk per symbol and range, so a symbol always draws
+// the same history, with the newest bar re-rolled on each read so polling is visible.
+const MARKET_RANGES = { "1D": [5, 78, "5m"], "5D": [15, 130, "15m"], "1M": [60, 160, "1h"], "6M": [1440, 128, "1d"], "1Y": [1440, 252, "1d"], "5Y": [10080, 260, "1wk"] };
+const MARKET_EXTRA = [["^GSPC", "S&P 500", "SNP"], ["ES=F", "E-Mini S&P 500", "CME"], ["BTC-USD", "Bitcoin USD", "CCC"]];
+
+function marketChart(symbol, range) {
+  const [minutes, shown, interval] = MARKET_RANGES[range];
+  const warmup = 120;
+  const total = shown + warmup;
+  let seed = [...symbol + range].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 2147483647, 7);
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const known = INSTRUMENTS.find((i) => i.yf_symbol === symbol);
+  let price = known?.price ?? 50 + rand() * 400;
+  const step = Math.sqrt(minutes / 390) * 0.012;
+  const now = Date.now();
+  const bars = [];
+  for (let i = 0; i < total; i++) {
+    const open = price;
+    price *= 1 + (rand() - 0.49) * step * 2;
+    const swing = Math.abs(price - open) + open * step * rand();
+    bars.push({ at: new Date(now - (total - 1 - i) * minutes * 60000).toISOString(), open, high: Math.max(open, price) + swing * 0.4, low: Math.min(open, price) - swing * 0.4, close: price });
+  }
+  const last = bars[bars.length - 1];
+  last.close *= 1 + (Math.random() - 0.5) * 0.004;
+  last.high = Math.max(last.high, last.close);
+  last.low = Math.min(last.low, last.close);
+  return {
+    symbol, name: known?.name ?? MARKET_EXTRA.find(([s]) => s === symbol)?.[1] ?? symbol, currency: known?.currency ?? "USD",
+    exchange: known?.exchange ?? "NASDAQ", range, interval, market_open: symbol !== "AAPL", price: last.close, warmup, bars,
+  };
+}
+
 function send(res, status, body, headers = {}) {
   res.statusCode = status;
   for (const [k, v] of Object.entries(headers)) res.setHeader(k, v);
@@ -379,6 +411,19 @@ async function handle(req, res) {
     return send(res, 204, null);
   }
   if (path === "/api/account" && method === "DELETE") { store = makeStore(); store.portfolios = []; store.txns = {}; return send(res, 204, null); }
+  if (path === "/api/market/chart") {
+    const symbol = (url.searchParams.get("symbol") || "").toUpperCase();
+    const range = url.searchParams.get("range") || "1D";
+    if (symbol === "NOPE") return send(res, 404, { detail: "no price data for NOPE" });
+    return send(res, 200, marketChart(symbol, range));
+  }
+  if (path === "/api/market/search") {
+    const q = (url.searchParams.get("q") || "").toUpperCase();
+    const rows = [...INSTRUMENTS.map((i) => [i.yf_symbol, i.name, i.exchange]), ...YAHOO, ...MARKET_EXTRA]
+      .filter(([sym, name]) => sym.includes(q) || name.toUpperCase().includes(q))
+      .map(([sym, name, exchange]) => ({ yf_symbol: sym, ticker: sym, name, exchange, currency: null, known: false }));
+    return send(res, 200, rows.slice(0, 8));
+  }
   if (path === "/api/instruments/search") {
     const q = (url.searchParams.get("q") || "").toUpperCase();
     const known = INSTRUMENTS.filter((i) => i.ticker.includes(q) || i.name.toUpperCase().includes(q))

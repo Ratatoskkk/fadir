@@ -345,6 +345,29 @@ class IntradayOut(BaseModel):
     sessions_available: int = 0
 
 
+class MarketBarOut(BaseModel):
+    at: datetime
+    open: float
+    high: float
+    low: float
+    close: float
+
+
+class MarketChartOut(BaseModel):
+    symbol: str
+    name: str | None
+    currency: str | None
+    exchange: str
+    range: str
+    interval: str
+    market_open: bool
+    #: Latest regular-session quote; the last bar's close when Yahoo gives none.
+    price: float
+    #: Bars before this index are indicator lead-in, not part of the shown window.
+    warmup: int
+    bars: list[MarketBarOut]
+
+
 class TransactionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

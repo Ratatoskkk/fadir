@@ -21,6 +21,7 @@ import logging
 import math
 import random
 import time
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import ROUND_HALF_EVEN, Decimal
 
@@ -269,12 +270,16 @@ def fetch_currency(symbol: str) -> str | None:
 
 #: Yahoo quote types a Portfolio can hold.
 SEARCHABLE_TYPES = frozenset({"EQUITY", "ETF"})
+#: Quote types the Ticker view can chart: anything Yahoo serves bars for.
+CHARTABLE_TYPES = SEARCHABLE_TYPES | {"INDEX", "FUTURE", "CRYPTOCURRENCY", "CURRENCY", "MUTUALFUND"}
 SEARCH_TTL_SECONDS = 600
 _search_cache: dict[str, tuple[float, list[dict[str, str]]]] = {}
 
 
-def search_symbols(query: str, limit: int = 8) -> list[dict[str, str]]:
-    """Yahoo symbol search: [{symbol, name, exchange}] for equities and ETFs.
+def search_symbols(
+    query: str, limit: int = 8, types: frozenset[str] = SEARCHABLE_TYPES
+) -> list[dict[str, str]]:
+    """Yahoo symbol search: [{symbol, name, exchange}] for the given quote types.
 
     One attempt, no backoff: this runs as the user types, and an empty answer is better
     than a stalled field. Results are cached briefly per query to spare Yahoo.
@@ -283,22 +288,123 @@ def search_symbols(query: str, limit: int = 8) -> list[dict[str, str]]:
     now = time.monotonic()
     hit = _search_cache.get(key)
     if hit is not None and now - hit[0] < SEARCH_TTL_SECONDS:
-        return hit[1][:limit]
-    try:
-        quotes = yf.Search(key, max_results=20, news_count=0, lists_count=0, enable_fuzzy_query=False).quotes
-    except Exception as exc:  # noqa: BLE001 - a failed search returns nothing
-        log.warning("symbol search failed: %s", exc)
-        return []
+        quotes = hit[1]
+    else:
+        try:
+            raw = yf.Search(key, max_results=20, news_count=0, lists_count=0, enable_fuzzy_query=False).quotes
+        except Exception as exc:  # noqa: BLE001 - a failed search returns nothing
+            log.warning("symbol search failed: %s", exc)
+            return []
+        quotes = [
+            {
+                "symbol": str(q["symbol"]),
+                "name": str(q.get("longname") or q.get("shortname") or q["symbol"]),
+                "exchange": str(q.get("exchange") or ""),
+                "type": str(q.get("quoteType") or ""),
+            }
+            for q in raw
+            if q.get("symbol")
+        ]
+        if len(_search_cache) >= 512:
+            _search_cache.clear()
+        _search_cache[key] = (now, quotes)
     matches = [
-        {
-            "symbol": str(q["symbol"]),
-            "name": str(q.get("longname") or q.get("shortname") or q["symbol"]),
-            "exchange": str(q.get("exchange") or ""),
-        }
+        {"symbol": q["symbol"], "name": q["name"], "exchange": q["exchange"]}
         for q in quotes
-        if q.get("symbol") and q.get("quoteType") in SEARCHABLE_TYPES
+        if q["type"] in types
     ]
-    if len(_search_cache) >= 512:
-        _search_cache.clear()
-    _search_cache[key] = (now, matches)
     return matches[:limit]
+
+
+@dataclass(frozen=True)
+class Bar:
+    """One price bar. Display-only: bars never reach the calc engine, so they stay floats."""
+
+    at: datetime  # bar open, timezone-aware in the exchange's zone
+    open: float
+    high: float
+    low: float
+    close: float
+
+
+@dataclass(frozen=True)
+class BarSeries:
+    bars: list[Bar]
+    name: str | None
+    currency: str | None
+    exchange: str
+    #: The exchange's current regular session, when Yahoo reports one.
+    session_start: datetime | None
+    session_end: datetime | None
+    #: Yahoo's latest regular-session quote; it can differ from the last bar's close,
+    #: which misses the closing auction.
+    price: float | None
+
+
+def _display_float(value: object) -> float | None:
+    """Seven significant digits: drops Yahoo's float32 noise at any price magnitude."""
+    try:
+        f = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    if math.isnan(f) or math.isinf(f):
+        return None
+    return float(f"{f:.7g}")
+
+
+def _stamp(value: object) -> datetime | None:
+    return value.to_pydatetime() if isinstance(value, pd.Timestamp) else None
+
+
+def fetch_bars(symbol: str, interval: str, period: str) -> BarSeries | None:
+    """OHLC bars plus the quote metadata Yahoo returns alongside them. None on failure."""
+    ticker = yf.Ticker(symbol)
+
+    def _do() -> pd.DataFrame:
+        return ticker.history(
+            period=period,
+            interval=interval,
+            auto_adjust=False,
+            actions=False,
+            raise_errors=True,
+        )
+
+    frame = _with_backoff(_do, f"bars({symbol},{interval},{period})")
+    if frame is None or frame.empty or "Close" not in frame:
+        return None
+
+    bars: list[Bar] = []
+    for idx, row in frame.iterrows():
+        close = _display_float(row["Close"])
+        if close is None:
+            continue  # docs/FINDINGS.md F-4
+        stamp = idx.to_pydatetime() if hasattr(idx, "to_pydatetime") else idx
+        if stamp.tzinfo is None:
+            stamp = stamp.replace(tzinfo=timezone.utc)
+        # A bar with a close but no range (Yahoo's partial newest bar) is a flat bar.
+        high = _display_float(row.get("High")) or close
+        low = _display_float(row.get("Low")) or close
+        bars.append(
+            Bar(
+                at=stamp,
+                open=_display_float(row.get("Open")) or close,
+                high=max(high, close),
+                low=min(low, close),
+                close=close,
+            )
+        )
+    if not bars:
+        return None
+
+    meta = ticker.history_metadata or {}
+    regular = (meta.get("currentTradingPeriod") or {}).get("regular") or {}
+    currency = meta.get("currency")
+    return BarSeries(
+        bars=bars,
+        name=meta.get("longName") or meta.get("shortName"),
+        currency=str(currency).upper() if currency else None,
+        exchange=str(meta.get("exchangeName") or ""),
+        session_start=_stamp(regular.get("start")),
+        session_end=_stamp(regular.get("end")),
+        price=_display_float(meta.get("regularMarketPrice")),
+    )

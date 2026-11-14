@@ -1,5 +1,5 @@
-// The rebuilt interface. Four views behind hash routes (#/genel, #/pozisyonlar,
-// #/islemler, #/hesap) so links and the back button work; one data hook shared by all.
+// The rebuilt interface. Views behind hash routes (#/genel, #/pozisyonlar, #/sembol,
+// #/islemler, #/vergi, #/hesap) so links and the back button work; one data hook shared by all.
 
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
@@ -22,6 +22,7 @@ import TaxView from "./views/TaxView.jsx";
 import { I18nProvider, useI18n, useT } from "./i18n/index.jsx";
 import Overview from "./views/Overview.jsx";
 import Positions from "./views/Positions.jsx";
+import Ticker from "./views/Ticker.jsx";
 import Transactions from "./views/Transactions.jsx";
 
 const viewFromHash = () => {
@@ -139,7 +140,7 @@ function Shell({ access, onLeave, onSignOut, onAccessLost }) {
       }
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
       if (typing || e.ctrlKey || e.metaKey || e.altKey || paletteOpen) return;
-      const index = ["1", "2", "3", "4", "5"].indexOf(e.key);
+      const index = VIEWS.findIndex((_, i) => String(i + 1) === e.key);
       if (index >= 0) go(VIEWS[index].id);
       else if (e.key === "/") { e.preventDefault(); setPaletteOpen(true); }
       else if (e.key.toLowerCase() === "r" && !refreshing) manualRefresh();
@@ -183,6 +184,7 @@ function Shell({ access, onLeave, onSignOut, onAccessLost }) {
     );
   } else if (view === "genel") body = <Overview dash={dash} />;
   else if (view === "pozisyonlar") body = <Positions dash={dash} onFocusTicker={focusTicker} />;
+  else if (view === "sembol") body = <Ticker dash={dash} />;
   else if (view === "islemler") body = <Transactions dash={dash} sheetOpen={sheetOpen} setSheetOpen={setSheetOpen} />;
   else if (view === "vergi") body = <TaxView dash={dash} onSignIn={access === "code" ? null : () => go("hesap")} />;
   else body = <Account dash={dash} access={access} onLeave={onLeave} onSignOut={onSignOut} />;

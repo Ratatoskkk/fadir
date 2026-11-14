@@ -39,7 +39,8 @@ function Highlight({ text, query }) {
   return <>{text.slice(0, at)}<mark>{text.slice(at, at + query.length)}</mark>{text.slice(at + query.length)}</>;
 }
 
-export default function TickerSearch({ instruments, onPick }) {
+/** `search` defaults to instruments a Portfolio can hold; the Ticker view widens it. */
+export default function TickerSearch({ instruments, onPick, search = api.searchInstruments }) {
   const t = useT();
   const [text, setText] = useState("");
   const [remote, setRemote] = useState({ q: "", rows: [] });
@@ -57,7 +58,7 @@ export default function TickerSearch({ instruments, onPick }) {
     let live = true;
     const id = window.setTimeout(async () => {
       try {
-        const rows = await api.searchInstruments(text.trim());
+        const rows = await search(text.trim());
         if (live) setRemote({ q, rows: Array.isArray(rows) ? rows : [] });
       } catch {
         if (live) setRemote({ q, rows: [] });
@@ -66,7 +67,7 @@ export default function TickerSearch({ instruments, onPick }) {
       }
     }, 180);
     return () => { live = false; window.clearTimeout(id); };
-  }, [q, text]);
+  }, [q, text, search]);
 
   const known = useMemo(
     () => instruments.map((i) => ({ yf_symbol: i.yf_symbol, ticker: i.ticker, name: i.name, exchange: i.exchange, currency: i.currency, known: true })),

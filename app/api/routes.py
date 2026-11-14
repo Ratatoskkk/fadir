@@ -45,7 +45,7 @@ from app.api.request_authority import (
 from app.api.request_transaction import RequestTransactionRoute, request_session
 from app.db import get_session
 from app.models import FxCache, GuestAccess, Instrument, LoginIdentity, Portfolio, Side, Transaction, Workspace, utcnow
-from app.providers import market_hours
+from app.providers import market_chart, market_hours, yf_client
 from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
 from app.providers.price_service import PriceService
@@ -69,6 +69,8 @@ from app.schemas import (
     IntradayOut,
     IntradayPointOut,
     LiquidationOut,
+    MarketBarOut,
+    MarketChartOut,
     PortfolioOut,
     PortfolioOptionOut,
     PositionOut,
@@ -1531,6 +1533,58 @@ def search_instruments(
         )
         for r in instruments_service.search(session, q)
     ]
+
+
+@private_router.get("/market/search", response_model=list[InstrumentSearchOut])
+def search_market(
+    session: RequestSessionDep,
+    _authority: AuthorityDep,
+    q: str = Query(min_length=1, max_length=40),
+) -> list[InstrumentSearchOut]:
+    """Like instrument search, but also indices, futures, currencies and crypto: the
+    Ticker view charts anything Yahoo has bars for, not only what a Portfolio can hold."""
+    return [
+        InstrumentSearchOut(
+            yf_symbol=r.yf_symbol,
+            ticker=r.ticker,
+            name=r.name,
+            exchange=r.exchange,
+            currency=r.currency,
+            known=r.known,
+        )
+        for r in instruments_service.search(session, q, types=yf_client.CHARTABLE_TYPES)
+    ]
+
+
+@private_router.get("/market/chart", response_model=MarketChartOut)
+def get_market_chart(
+    _authority: AuthorityDep,
+    symbol: str = Query(min_length=1, max_length=32),
+    range_: Literal["1D", "5D", "1M", "6M", "1Y", "5Y"] = Query(default="1D", alias="range"),
+) -> MarketChartOut:
+    symbol = symbol.strip().upper()
+    if not instruments_service.SYMBOL_PATTERN.fullmatch(symbol):
+        raise HTTPException(422, "invalid symbol")
+    try:
+        result = market_chart.chart(symbol, range_)
+    except market_chart.ChartUnavailable as exc:
+        raise HTTPException(404, str(exc)) from exc
+    series = result.series
+    return MarketChartOut(
+        symbol=symbol,
+        name=series.name,
+        currency=series.currency,
+        exchange=instruments_service.exchange_code(series.exchange),
+        range=range_,
+        interval=result.interval,
+        market_open=result.market_open(utcnow()),
+        price=series.price if series.price is not None else series.bars[-1].close,
+        warmup=result.warmup,
+        bars=[
+            MarketBarOut(at=b.at.astimezone(timezone.utc), open=b.open, high=b.high, low=b.low, close=b.close)
+            for b in series.bars
+        ],
+    )
 
 
 @private_router.post(

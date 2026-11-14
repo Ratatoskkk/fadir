@@ -13,6 +13,7 @@ import { useT } from "../i18n/index.jsx";
 export const VIEWS = [
   { id: "genel", label: "nav.overview", icon: "home" },
   { id: "pozisyonlar", label: "nav.positions", icon: "layers" },
+  { id: "sembol", label: "nav.ticker", icon: "trend" },
   { id: "islemler", label: "nav.transactions", icon: "receipt" },
   { id: "vergi", label: "nav.tax", icon: "percent" },
   { id: "hesap", label: "nav.account", icon: "user" },

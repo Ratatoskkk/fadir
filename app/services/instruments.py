@@ -82,12 +82,17 @@ class SearchResult:
     known: bool
 
 
-def _exchange(yahoo_code: str) -> str:
+def exchange_code(yahoo_code: str) -> str:
     code = yahoo_code.upper()
     return YAHOO_EXCHANGES.get(code, code)[:16]
 
 
-def search(session: Session, query: str, limit: int = 8) -> list[SearchResult]:
+def search(
+    session: Session,
+    query: str,
+    limit: int = 8,
+    types: frozenset[str] = yf_client.SEARCHABLE_TYPES,
+) -> list[SearchResult]:
     text = query.strip()
     if not text:
         return []
@@ -110,7 +115,7 @@ def search(session: Session, query: str, limit: int = 8) -> list[SearchResult]:
         SearchResult(i.yf_symbol, i.ticker, i.name, i.exchange, i.currency, True) for i in known
     ]
     seen = {i.yf_symbol.upper() for i in known}
-    for match in yf_client.search_symbols(text, limit):
+    for match in yf_client.search_symbols(text, limit, types):
         symbol = match["symbol"].upper()
         if not SYMBOL_PATTERN.fullmatch(symbol):
             continue
@@ -122,7 +127,7 @@ def search(session: Session, query: str, limit: int = 8) -> list[SearchResult]:
                 symbol,
                 symbol,
                 match["name"][:128],
-                _exchange(match["exchange"]),
+                exchange_code(match["exchange"]),
                 None,
                 False,
             )
@@ -159,7 +164,7 @@ def ensure_instrument(
 
     instrument = Instrument(
         ticker=symbol,
-        exchange=_exchange(meta["exchange"]) if meta else "",
+        exchange=exchange_code(meta["exchange"]) if meta else "",
         yf_symbol=symbol,
         currency=currency,
         name=(meta["name"] if meta else symbol)[:128],

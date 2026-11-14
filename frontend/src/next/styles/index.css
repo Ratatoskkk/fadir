@@ -469,6 +469,55 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .chart-empty { min-height: 300px; display: grid; place-items: center; text-align: center; color: var(--text-2); padding: 20px; }
 .skeleton-chart { width: 100%; height: 300px; border-radius: var(--radius-sm); }
 
+/* ------------------------------------------------------------------ ticker view */
+.ticker-pick {
+  display: flex; align-items: baseline; gap: 10px; min-width: 0; max-width: 100%;
+  padding: 4px 10px; margin: -4px -10px; border-radius: var(--r-ctl); text-align: left; transition: background 0.15s;
+}
+.ticker-pick:hover { background: var(--surface-2); }
+.ticker-pick h2 { font-size: 19px; flex: none; overflow: visible; }
+.ticker-pick .icon { align-self: center; color: var(--text-3); }
+.ticker-pick-name { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.chart-title .popover-root { min-width: 0; max-width: 100%; }
+.ticker-pop .popover { width: min(440px, calc(100vw - 32px)); padding: 10px; }
+.ticker-price { font: 600 19px/1 var(--font-display); }
+.ticker-price small { font: 500 12px var(--font-ui); color: var(--text-3); }
+.ticker-session { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); }
+.ticker-session i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+.ticker-session.open i { background: var(--up); }
+.ticker-empty-card { display: flex; flex-direction: column; gap: 16px; }
+.chart-error { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.footnotes {
+  display: grid; grid-template-columns: max-content minmax(0, 72ch); gap: 6px 16px;
+  margin: 18px 0 0; padding-top: 14px; border-top: 1px solid var(--line);
+  font-size: 12px; line-height: 1.55; color: var(--text-3);
+}
+.footnotes > div { display: contents; }
+.footnotes dt { font-weight: 600; color: var(--text-2); }
+.footnotes dd { margin: 0; text-wrap: pretty; }
+@media (max-width: 560px) {
+  .footnotes { grid-template-columns: 1fr; gap: 2px; }
+  .footnotes dd { margin-bottom: 8px; }
+}
+
+.pchart { position: relative; touch-action: pan-y; user-select: none; }
+.pchart canvas { display: block; cursor: crosshair; }
+.pchart-heads { position: absolute; left: 64px; right: 14px; pointer-events: none; }
+.pchart-head {
+  display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 4px 12px;
+  height: var(--pane-head, 34px); border-top: 1px solid var(--line);
+  font-size: 12.5px; white-space: nowrap; overflow: hidden;
+}
+.pchart-head > * { pointer-events: auto; }
+.pane-name { font-weight: 600; }
+.pane-value { color: var(--text); }
+.pane-state { font-weight: 600; }
+.pane-params { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.param { display: inline-flex; align-items: center; gap: 6px; color: var(--text-3); }
+.param input { width: 56px; height: 26px; padding: 0 6px; text-align: right; }
+.pane-level { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+.pane-level i { width: 14px; border-top: 1px dashed var(--text-3); }
+
 .compare { overflow: hidden; }
 .compare-inner { margin-top: 14px; padding-top: 16px; border-top: 1px solid var(--line); }
 .compare-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-weight: 600; }

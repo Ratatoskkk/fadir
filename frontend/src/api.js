@@ -156,6 +156,9 @@ export const api = {
   deleteAccount: () => request("/api/account", { method: "DELETE" }),
   instruments: () => request("/api/instruments"),
   searchInstruments: (q) => request(`/api/instruments/search?q=${encodeURIComponent(q)}`),
+  searchMarket: (q) => request(`/api/market/search?q=${encodeURIComponent(q)}`),
+  marketChart: (symbol, range) =>
+    request(`/api/market/chart?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`),
   taxJurisdictions: () => request("/api/tax/jurisdictions"),
   taxEstimateFor: (jurisdiction, year) =>
     request(`/api/tax/estimates?jurisdiction=${encodeURIComponent(jurisdiction)}&year=${encodeURIComponent(year)}`),
