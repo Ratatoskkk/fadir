@@ -1627,3 +1627,11 @@ files, and the service restarted at 14:58:25 UTC with `NRestarts=0`. Rollback bu
 assets returned 200, an unauthenticated chart read returned 401, and the signed-in owner
 tab shows the Ticker view for the largest holding. Tests match the baseline apart from
 the two known zero-FX failures.
+
+Ticker holding deployment (owner goal 2026-11-14). `b7cdbfa` shows the held position on
+the Ticker tab when the open Portfolio holds the charted ticker: value, cost, P/L, price
+and currency effects, and the average buy price as a toggleable dashed line on the price
+chart. Frontend only, no restart. Installed checksums match the build for all 16 files;
+rollback bundle `/opt/fadir/frontend/dist.previous.holding-20261114`. Local and public
+health and all 15 assets returned 200, and the signed-in owner tab shows the position row
+and average-buy line for the largest holding.
