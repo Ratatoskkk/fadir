@@ -1646,3 +1646,19 @@ matching checksums; rollback bundle `/opt/fadir/frontend/dist.previous.ticker-re
 Public health and every asset returned 200. In the signed-in owner tab, market search
 returned quote types, the Ticker tab rendered its chart, heading and explanation toggle,
 the top bar fit its width, and no new console errors appeared.
+
+Ticker weeks and compare deployment (owner instruction 2026-11-14). `d87b970` adds the
+Weeks range (any set of ISO weeks, with `GET /api/market/chart?range=W&week=YYYY-Www`
+returning one segment per run of weeks with its own lead-in) and `19076d9` trims the
+picker to the last four weeks plus typed From and To week numbers, raises the week limit
+to 53, and adds Compare: a second ticker drawn in its own colour with both lines as %
+change since the window starts. The four changed VM Python files matched `21c6f4a`
+before replacement; previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-19076d9/rollback/app.previous.tar`. A smoke run on
+the VM fetched 15-minute, hourly and live week charts before the swap. Installed
+checksums match the commit for all 20 files, and the service restarted at 16:24:48 UTC
+with `NRestarts=0`. Rollback bundle: `/opt/fadir/frontend/dist.previous.weeks-compare-20261114`.
+Local and public health and all 15 assets returned 200, an unauthenticated week chart
+returned 401, and in the signed-in owner tab a two-week request returned two segments
+and a future week returned 422. Tests match the baseline apart from the two known
+zero-FX failures.
