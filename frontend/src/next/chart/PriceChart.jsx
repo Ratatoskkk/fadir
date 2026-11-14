@@ -35,6 +35,7 @@ function readColors() {
     price: v("--accent"),
     line: v("--fx"),
     level: v("--text-3"),
+    mark: v("--cost"),
     grid: v("--chart-grid"),
     axis: v("--text-3"),
     cross: v("--text-2"),
@@ -61,19 +62,20 @@ function extent(values, extra = []) {
  * `times` and `close` are the shown window; each pane is { key, values, level } over the
  * same window. `formatX` labels the x axis; `onHover` receives a bar index or null.
  */
-export default function PriceChart({ times, close, panes, heads, formatX, live, onHover, tooltip, ariaLabel }) {
+/** `marks` are flat reference prices (the average buy) drawn across the price pane. */
+export default function PriceChart({ times, close, panes, marks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
-  st.props = { times, close, panes, formatX, live };
+  st.props = { times, close, panes, marks, formatX, live };
   st.onHover = onHover;
 
   const draw = () => {
     st.frame = 0;
     const canvas = canvasRef.current;
     if (!canvas || !st.colors) return;
-    const { times: xsT, close: ys, panes: ps, formatX: fx, live: isLive } = st.props;
+    const { times: xsT, close: ys, panes: ps, marks: ms, formatX: fx, live: isLive } = st.props;
     const { w, h, dpr, colors: c } = st;
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -122,7 +124,7 @@ export default function PriceChart({ times, close, panes, heads, formatX, live, 
     };
 
     // Price.
-    const [pLo, pHi] = extent(ys);
+    const [pLo, pHi] = extent(ys, ms);
     const yPrice = area(PAD.top, mainH, pLo, pHi, quote, Math.max(3, Math.round(mainH / 64)));
     if (n > 1) {
       const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + mainH);
@@ -138,6 +140,17 @@ export default function PriceChart({ times, close, panes, heads, formatX, live, 
       ctx.closePath();
       ctx.fill();
       ctx.globalAlpha = 1;
+    }
+    for (const mark of ms) {
+      const y = Math.round(yPrice(mark)) + 0.5;
+      ctx.strokeStyle = c.mark;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(PAD.left, y);
+      ctx.lineTo(w - PAD.right, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
     stroke(ys, yPrice, c.price, 2);
     const dots = [[yPrice(ys[st.hover ?? 0]), c.price]];

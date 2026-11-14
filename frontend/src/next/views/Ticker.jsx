@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { api } from "../../api.js";
-import { arrow, dateTimeStamp, figure, fullDate, hourMinute, monthYear, quote, ratioPct, shortDate, toneOf } from "../../format.js";
+import { arrow, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, quote, ratioPct, shortDate, signedMoney, toneOf } from "../../format.js";
 import PriceChart from "../chart/PriceChart.jsx";
 import { FILTERS, filterState } from "../chart/indicators.js";
 import TickerSearch from "../components/TickerSearch.jsx";
@@ -24,6 +24,11 @@ const NOTES = [
   ["ticker.maSlope", "ticker.note.maSlope"],
   ["ticker.vhf", "ticker.note.vhf"],
   ["ticker.adx", "ticker.note.adx"],
+];
+/** Added when the ticker is held in the open Portfolio. */
+const HOLDING_NOTES = [
+  ["pos.avgBuy", "ticker.note.avgBuy"],
+  ["attr.fx", "ticker.note.fx"],
 ];
 
 const X_FORMAT = {
@@ -116,6 +121,7 @@ export default function Ticker({ dash }) {
   const [symbol, setSymbol] = useState(() => saved.symbol ?? null);
   const [range, setRange] = useState(() => (RANGES.includes(saved.range) ? saved.range : "1D"));
   const [filters, setFilters] = useState(() => initialFilters(saved.filters));
+  const [avgOn, setAvgOn] = useState(() => saved.avgOn ?? true);
   const [hover, setHover] = useState(null);
 
   // First visit: open on the largest holding, if there is one.
@@ -127,8 +133,8 @@ export default function Ticker({ dash }) {
   }, [symbol, portfolio, instruments]);
 
   useEffect(() => {
-    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, filters })); } catch { /* private mode */ }
-  }, [symbol, range, filters]);
+    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, filters, avgOn })); } catch { /* private mode */ }
+  }, [symbol, range, filters, avgOn]);
 
   const { data, error, loading, reload } = useChart(symbol, range, interval);
   useEffect(() => { setHover(null); }, [symbol, range]);
@@ -164,6 +170,15 @@ export default function Ticker({ dash }) {
   const formatX = X_FORMAT[range] ?? ((ms) => shortDate(ms));
   const stamp = INTRADAY.has(range) ? (ms) => dateTimeStamp(ms) : (ms) => fullDate(ms);
   const current = instruments.find((i) => i.yf_symbol === symbol);
+  // The open position in this ticker, when the Portfolio holds it.
+  const holding = current ? portfolio?.positions?.find((p) => p.ticker === current.ticker && Number(p.quantity) > 0) ?? null : null;
+  // The average buy is in the instrument's own currency, so it only belongs on a chart
+  // quoted in that same currency.
+  const avgBuy = holding?.average_purchase_price_native != null && data?.currency === holding.currency
+    ? Number(holding.average_purchase_price_native)
+    : null;
+  const marks = avgBuy !== null && avgOn ? [avgBuy] : [];
+  const notes = holding ? [...NOTES, ...HOLDING_NOTES] : NOTES;
 
   const picker = (
     <Popover
@@ -252,7 +267,28 @@ export default function Ticker({ dash }) {
         </div>
       </header>
 
+      {holding && (
+        <dl className="holding">
+          <div><dt>{t("pos.value")}</dt><dd className="num">{holding.ok ? money(holding.market_value_try) : "—"}</dd></div>
+          <div><dt>{t("pos.cost")}</dt><dd className="num">{money(holding.cost_try)}</dd></div>
+          <div>
+            <dt>{t("chart.totalPnl")}</dt>
+            <dd className={`num ${holding.ok ? toneOf(holding.pnl_try) : "muted"}`}>
+              {holding.ok ? <>{arrow(holding.pnl_try)} {signedMoney(holding.pnl_try)} <small>{ratioPct(holding.attribution.total_return)}</small></> : "—"}
+            </dd>
+          </div>
+          <div><dt>{t("attr.price")}</dt><dd className={`num ${toneOf(holding.attribution.price_effect_try)}`}>{signedMoney(holding.attribution.price_effect_try)}</dd></div>
+          <div><dt>{t("attr.fx")}</dt><dd className={`num ${toneOf(holding.attribution.fx_effect_try)}`}>{signedMoney(holding.attribution.fx_effect_try)}</dd></div>
+        </dl>
+      )}
+
       <div className="legend" role="group" aria-label={t("ticker.filters")}>
+        {avgBuy !== null && (
+          <button type="button" className={`legend-chip ${avgOn ? "" : "off"}`} aria-pressed={avgOn} onClick={() => setAvgOn((v) => !v)}>
+            <i className="dashed" style={{ color: "var(--cost)" }} />
+            {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
+          </button>
+        )}
         {FILTERS.map((f) => (
           <button
             key={f.key}
@@ -273,6 +309,7 @@ export default function Ticker({ dash }) {
             times={series.times}
             close={series.close}
             panes={panes}
+            marks={marks}
             heads={heads}
             formatX={formatX}
             live={data.market_open}
@@ -298,7 +335,7 @@ export default function Ticker({ dash }) {
 
       {series && (
         <dl className="footnotes">
-          {NOTES.map(([term, text]) => (
+          {notes.map(([term, text]) => (
             <div key={text}>
               <dt>{t(term)}</dt>
               <dd>{t(text)}</dd>

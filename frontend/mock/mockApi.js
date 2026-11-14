@@ -134,7 +134,7 @@ function positionsFor(portfolioId, tickers) {
       quantity: f(qty, 4), average_purchase_price_native: avg === null ? null : f(avg, 4),
       cost_native: f(costNative), cost_try: f(costTry), market_value_native: f(mvNative), market_value_try: f(mvTry),
       pnl_native: f(mvNative - costNative), pnl_try: f(mvTry - costTry),
-      attribution: { local_return: f(localReturn, 6), fx_return: f(fxReturn, 6), total_return: f(totalReturn, 6) },
+      attribution: { local_return: f(localReturn, 6), fx_return: f(fxReturn, 6), total_return: f(totalReturn, 6), price_effect_try: f(priceEffect), fx_effect_try: f(fxEffect), current_fx_rate: f(s.fx, 6) },
       realized: { quantity: "0", pnl_native: "0", pnl_try: f(realizedTry), price_effect_try: "0", fx_effect_try: "0" },
       daily: {
         available: true, reference_date: new Date(Date.now() - 86400000).toISOString().slice(0, 10),
