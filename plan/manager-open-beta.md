@@ -1662,3 +1662,13 @@ Local and public health and all 15 assets returned 200, an unauthenticated week 
 returned 401, and in the signed-in owner tab a two-week request returned two segments
 and a future week returned 422. Tests match the baseline apart from the two known
 zero-FX failures.
+
+Compare time axis deployment (owner report 2026-11-14: a compared ticker looked wrong).
+Across exchanges the compared line was read only at the main ticker's bar times, so it
+sat flat for most of the chart and jumped at shared hours (SIVE.ST against NVDA held the
+NVDA line flat on 73% of 5D bars). `9e315a3` puts both tickers' bar times on the x axis
+while comparing; a line whose market has no bar holds its value, drawn faint and dashed.
+Frontend only, no restart. Installed checksums match the build for all 16 files;
+rollback bundle `/opt/fadir/frontend/dist.previous.compare-axis-20261114`. Public health
+and all 15 assets returned 200, and in the signed-in owner tab SIVE.ST against NVDA on 5D
+moves each line in its own trading hours.
