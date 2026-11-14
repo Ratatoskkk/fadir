@@ -1561,13 +1561,21 @@ def search_market(
 def get_market_chart(
     _authority: AuthorityDep,
     symbol: str = Query(min_length=1, max_length=32),
-    range_: Literal["1D", "5D", "1M", "6M", "1Y", "5Y"] = Query(default="1D", alias="range"),
+    range_: Literal["1D", "5D", "1M", "6M", "1Y", "5Y", "W"] = Query(default="1D", alias="range"),
+    week: list[str] | None = Query(default=None),
 ) -> MarketChartOut:
+    """`range=W` charts the ISO weeks given as repeated `week=2026-W03` parameters."""
     symbol = symbol.strip().upper()
     if not instruments_service.SYMBOL_PATTERN.fullmatch(symbol):
         raise HTTPException(422, "invalid symbol")
     try:
-        result = market_chart.chart(symbol, range_)
+        if range_ == "W":
+            weeks = market_chart.parse_weeks(week or [], date.today())
+            result = market_chart.week_chart(symbol, weeks, date.today())
+        else:
+            result = market_chart.chart(symbol, range_)
+    except market_chart.InvalidWeeks as exc:
+        raise HTTPException(422, str(exc)) from exc
     except market_chart.ChartUnavailable as exc:
         raise HTTPException(404, str(exc)) from exc
     series = result.series
@@ -1581,6 +1589,7 @@ def get_market_chart(
         market_open=result.market_open(utcnow()),
         price=series.price if series.price is not None else series.bars[-1].close,
         warmup=result.warmup,
+        segments=[list(s) for s in result.segments],
         bars=[
             MarketBarOut(at=b.at.astimezone(timezone.utc), open=b.open, high=b.high, low=b.low, close=b.close)
             for b in series.bars

@@ -356,20 +356,35 @@ def _stamp(value: object) -> datetime | None:
     return value.to_pydatetime() if isinstance(value, pd.Timestamp) else None
 
 
-def fetch_bars(symbol: str, interval: str, period: str) -> BarSeries | None:
-    """OHLC bars plus the quote metadata Yahoo returns alongside them. None on failure."""
+def fetch_bars(
+    symbol: str,
+    interval: str,
+    period: str | None = None,
+    *,
+    start: date | None = None,
+    end: date | None = None,
+) -> BarSeries | None:
+    """OHLC bars plus the quote metadata Yahoo returns alongside them. None on failure.
+
+    Pass either `period` or `start` and an exclusive `end`.
+    """
     ticker = yf.Ticker(symbol)
+    window = (
+        {"period": period}
+        if period is not None
+        else {"start": start.isoformat(), "end": end.isoformat()}
+    )
 
     def _do() -> pd.DataFrame:
         return ticker.history(
-            period=period,
+            **window,
             interval=interval,
             auto_adjust=False,
             actions=False,
             raise_errors=True,
         )
 
-    frame = _with_backoff(_do, f"bars({symbol},{interval},{period})")
+    frame = _with_backoff(_do, f"bars({symbol},{interval},{period or f'{start}..{end}'})")
     if frame is None or frame.empty or "Close" not in frame:
         return None
 

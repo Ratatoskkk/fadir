@@ -8,6 +8,7 @@ import { arrow, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, q
 import PriceChart from "../chart/PriceChart.jsx";
 import { FILTERS, filterState } from "../chart/indicators.js";
 import TickerSearch from "../components/TickerSearch.jsx";
+import { WeekPicker } from "../components/WeekPicker.jsx";
 import { useT } from "../i18n/index.jsx";
 import Icon from "../ui/Icons.jsx";
 import Popover from "../ui/Popover.jsx";
@@ -70,24 +71,25 @@ function ParamInput({ label, ariaLabel, value, integer, onChange }) {
   );
 }
 
-/** Bars for (symbol, range), polled while the market is open. A stale answer is dropped. */
-function useChart(symbol, range, pollSeconds) {
-  const key = `${symbol}|${range}`;
+/** Bars for (symbol, range[, weeks]), polled while the market is open. A stale answer is dropped. */
+function useChart(symbol, range, weeks, pollSeconds) {
+  const weekList = range === "W" ? weeks.join(",") : "";
+  const key = `${symbol}|${range}|${weekList}`;
   const keyRef = useRef(key);
   keyRef.current = key;
   const [state, setState] = useState({ key: null, data: null, error: null });
 
   const load = useCallback(async () => {
     if (!symbol) return;
-    const asked = `${symbol}|${range}`;
+    const asked = `${symbol}|${range}|${weekList}`;
     try {
-      const data = await api.marketChart(symbol, range);
+      const data = await api.marketChart(symbol, range, weekList ? weekList.split(",") : []);
       if (keyRef.current === asked) setState({ key: asked, data, error: null });
     } catch (error) {
       // A failed poll keeps the chart on screen; only a first load shows the error.
       if (keyRef.current === asked) setState((s) => (s.key === asked && s.data ? s : { key: asked, data: null, error }));
     }
-  }, [symbol, range]);
+  }, [symbol, range, weekList]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -113,7 +115,8 @@ export default function Ticker({ dash }) {
   const { instruments, portfolio, interval } = dash;
   const [saved] = useState(loadSaved);
   const [symbol, setSymbol] = useState(() => saved.symbol ?? null);
-  const [range, setRange] = useState(() => (RANGES.includes(saved.range) ? saved.range : "1D"));
+  const [weeks, setWeeks] = useState(() => (Array.isArray(saved.weeks) ? saved.weeks.filter((w) => /^\d{4}-W\d{2}$/.test(w)) : []));
+  const [range, setRange] = useState(() => (RANGES.includes(saved.range) || (saved.range === "W" && weeks.length) ? saved.range : "1D"));
   const [filters, setFilters] = useState(() => initialFilters(saved.filters));
   const [avgOn, setAvgOn] = useState(() => saved.avgOn ?? true);
   const [hover, setHover] = useState(null);
@@ -127,12 +130,15 @@ export default function Ticker({ dash }) {
   }, [symbol, portfolio, instruments]);
 
   useEffect(() => {
-    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, filters, avgOn })); } catch { /* private mode */ }
-  }, [symbol, range, filters, avgOn]);
+    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, weeks, filters, avgOn })); } catch { /* private mode */ }
+  }, [symbol, range, weeks, filters, avgOn]);
 
-  const { data, error, loading, reload } = useChart(symbol, range, interval);
-  useEffect(() => { setHover(null); }, [symbol, range]);
+  const { data, error, loading, reload } = useChart(symbol, range, weeks, interval);
+  const weekKey = weeks.join(",");
+  useEffect(() => { setHover(null); }, [symbol, range, weekKey]);
 
+  // Indicators run over every bar, lead-in included, so their values are true where each
+  // shown segment starts; only the bars inside the segments are drawn.
   const series = useMemo(() => {
     if (!data?.bars?.length) return null;
     const bars = data.bars;
@@ -141,8 +147,23 @@ export default function Ticker({ dash }) {
       high: bars.map((b) => b.high),
       low: bars.map((b) => b.low),
     };
-    const from = data.warmup;
-    return { bars: bars.slice(from), times: bars.slice(from).map((b) => Date.parse(b.at)), close: all.close.slice(from), all, from };
+    const segments = data.segments?.length ? data.segments : [[data.warmup, bars.length]];
+    const idx = segments.flatMap(([s, e]) => Array.from({ length: e - s }, (_, k) => s + k));
+    // Where a later segment starts on screen: a gap of unselected weeks lies behind it.
+    const breaks = [];
+    segments.slice(0, -1).reduce((at, [s, e]) => { breaks.push(at + e - s); return at + e - s; }, 0);
+    // The change over what is shown: each segment from the close before it to its last
+    // close, compounded, so the weeks in a gap never count.
+    const ratio = segments.reduce((r, [s, e]) => {
+      const before = s > 0 ? bars[s - 1].close : bars[s].open;
+      return before ? r * (bars[e - 1].close / before) : r;
+    }, 1);
+    return {
+      bars: idx.map((i) => bars[i]),
+      times: idx.map((i) => Date.parse(bars[i].at)),
+      close: idx.map((i) => all.close[i]),
+      all, idx, breaks, ratio,
+    };
   }, [data]);
 
   const panes = useMemo(() => {
@@ -150,7 +171,8 @@ export default function Ticker({ dash }) {
     // Each filter keeps its own shade wherever it appears: chip, pane line, pane name.
     return FILTERS.map((f, tone) => ({ f, tone })).filter(({ f }) => filters[f.key].on).map(({ f, tone }) => {
       const { n1, n2 } = filters[f.key];
-      const values = f.compute(series.all, n1).slice(series.from);
+      const full = f.compute(series.all, n1);
+      const values = series.idx.map((i) => full[i]);
       const level = n2 * 5;
       return { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), tone, values, level, n1, n2 };
     });
@@ -158,12 +180,23 @@ export default function Ticker({ dash }) {
 
   const setFilter = (key, patch) => setFilters((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
 
-  const price = data?.price ?? null;
-  const base = data && series ? (data.warmup > 0 ? data.bars[data.warmup - 1].close : series.bars[0].open) : null;
-  const delta = price !== null && base ? price - base : null;
+  const byWeek = range === "W";
+  // Selected weeks show their own last close; a live range shows the latest quote.
+  const price = !series ? null : byWeek ? series.close[series.close.length - 1] : data.price;
+  const change = !series
+    ? null
+    : byWeek
+      ? series.ratio
+      : (() => {
+        const base = data.warmup > 0 ? data.bars[data.warmup - 1].close : series.bars[0].open;
+        return base ? price / base : null;
+      })();
   const at = hover ?? (series ? series.close.length - 1 : null);
   const formatX = X_FORMAT[range] ?? ((ms) => shortDate(ms));
-  const stamp = INTRADAY.has(range) ? (ms) => dateTimeStamp(ms) : (ms) => fullDate(ms);
+  const intraday = byWeek ? /[mh]$/.test(data?.interval ?? "") : INTRADAY.has(range);
+  const stamp = intraday ? (ms) => dateTimeStamp(ms) : (ms) => fullDate(ms);
+  const pickRange = (r) => setRange(r);
+  const pickWeeks = (next) => { setWeeks(next); setRange("W"); };
   const current = instruments.find((i) => i.yf_symbol === symbol);
   // The open position in this ticker, when the Portfolio holds it.
   const holding = current ? portfolio?.positions?.find((p) => p.ticker === current.ticker && Number(p.quantity) > 0) ?? null : null;
@@ -262,8 +295,8 @@ export default function Ticker({ dash }) {
         <div className="chart-title">
           {picker}
           {price !== null && <span className="ticker-price num">{quote(price)} <small>{data.currency}</small></span>}
-          {delta !== null && (
-            <span className={`chip num ${toneOf(delta)}`}>{arrow(delta)} {ratioPct(price / base)}</span>
+          {change !== null && (
+            <span className={`chip num ${toneOf(change - 1)}`}>{arrow(change - 1)} {ratioPct(change)}</span>
           )}
           {data && (
             <span className={`ticker-session ${data.market_open ? "open" : ""}`}>
@@ -274,11 +307,12 @@ export default function Ticker({ dash }) {
         <div className="chart-controls">
           <div className="segmented" role="group" aria-label={t("chart.range")}>
             {RANGES.map((r) => (
-              <button key={r} type="button" aria-pressed={range === r} onClick={() => setRange(r)}>
+              <button key={r} type="button" aria-pressed={range === r} onClick={() => pickRange(r)}>
                 {range === r && <motion.span layoutId="ticker-range-pill" className="segmented-pill" transition={spring} />}
                 <span>{t(`ticker.range.${r}`)}</span>
               </button>
             ))}
+            <WeekPicker weeks={weeks} active={byWeek} onChange={pickWeeks} />
           </div>
         </div>
       </header>
@@ -326,6 +360,7 @@ export default function Ticker({ dash }) {
             close={series.close}
             panes={panes}
             marks={marks}
+            breaks={series.breaks}
             heads={heads}
             formatX={formatX}
             live={data.market_open}

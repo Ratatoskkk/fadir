@@ -68,19 +68,20 @@ function extent(values, extra = []) {
  * fits the price alone, so a far-off mark never flattens the line; a mark outside the
  * range is pinned to the edge it lies beyond, with an arrow.
  */
-export default function PriceChart({ times, close, panes, marks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
+/** `breaks` are bar indices where a skipped stretch of time ends (unselected weeks). */
+export default function PriceChart({ times, close, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
-  st.props = { times, close, panes, marks, formatX, live };
+  st.props = { times, close, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
   const draw = () => {
     st.frame = 0;
     const canvas = canvasRef.current;
     if (!canvas || !st.colors) return;
-    const { times: xsT, close: ys, panes: ps, marks: ms, formatX: fx, live: isLive } = st.props;
+    const { times: xsT, close: ys, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
     const { w, h, dpr, colors: c } = st;
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -191,12 +192,31 @@ export default function PriceChart({ times, close, panes, marks = [], heads, for
       stroke(pane.values, yOf, c.panes[pane.tone] ?? c.price, 1.6);
     });
 
-    // X labels under the last pane.
+    // A skipped stretch: a solid rule between the last bar before it and the first after,
+    // through every pane, so a jump in the line reads as a gap in time.
+    ctx.strokeStyle = c.level;
+    ctx.lineWidth = 1;
+    for (const b of bs) {
+      if (b <= 0 || b >= n) continue;
+      const x = Math.round((xOf(b - 1) + xOf(b)) / 2) + 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x, PAD.top);
+      ctx.lineTo(x, h - PAD.bottom);
+      ctx.stroke();
+    }
+
+    // X labels under the last pane: each break's first bar is labelled, so every
+    // segment names where it starts; other labels keep clear of those.
     ctx.fillStyle = c.axis;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
     const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(plotW / 90))));
-    for (let i = 0; i < n; i += every) {
+    const starts = bs.filter((b) => b > 0 && b < n);
+    const labelled = [0, ...starts];
+    for (let i = every; i < n; i += every) {
+      if (starts.every((b) => Math.abs(b - i) >= every * 0.6)) labelled.push(i);
+    }
+    for (const i of labelled) {
       ctx.fillText(fx(xsT[i]), Math.min(w - PAD.right - 18, Math.max(PAD.left + 18, xOf(i))), h - 8);
     }
 

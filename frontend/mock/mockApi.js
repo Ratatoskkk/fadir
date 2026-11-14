@@ -271,7 +271,51 @@ function marketChart(symbol, range) {
   last.low = Math.min(last.low, last.close);
   return {
     symbol, name: known?.name ?? MARKET_EXTRA.find(([s]) => s === symbol)?.[1] ?? symbol, currency: known?.currency ?? "USD",
-    exchange: known?.exchange ?? "NASDAQ", range, interval, market_open: symbol !== "AAPL", price: last.close, warmup, bars,
+    exchange: known?.exchange ?? "NASDAQ", range, interval, market_open: symbol !== "AAPL", price: last.close, warmup,
+    segments: [[warmup, bars.length]], bars,
+  };
+}
+
+// Selected ISO weeks: hourly bars on weekdays 09:30–16:00 (UTC), a lead-in of 120 bars
+// before each run of weeks, and one segment per run, like the real endpoint.
+function marketWeeks(symbol, weeks) {
+  const DAY = 86400000;
+  const mondayOf = (key) => {
+    const [y, w] = key.split("-W").map(Number);
+    const jan4 = Date.UTC(y, 0, 4);
+    return jan4 - ((new Date(jan4).getUTCDay() || 7) - 1) * DAY + (w - 1) * 7 * DAY;
+  };
+  const wanted = new Set(weeks.map(mondayOf));
+  let seed = [...symbol].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 2147483647, 11);
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const known = INSTRUMENTS.find((i) => i.yf_symbol === symbol);
+  let price = known?.price ?? 120;
+  const first = Math.min(...wanted) - 28 * DAY;
+  const last = Math.min(Math.max(...wanted) + 7 * DAY, Date.now());
+  const bars = [];
+  const segments = [];
+  for (let day = first; day < last; day += DAY) {
+    const weekday = new Date(day).getUTCDay();
+    if (weekday === 0 || weekday === 6) continue;
+    const monday = day - (weekday - 1) * DAY;
+    for (let h = 0; h < 7; h++) {
+      const at = day + (9.5 + h) * 3600000;
+      if (at > Date.now()) break;
+      const open = price;
+      price *= 1 + (rand() - 0.49) * 0.008;
+      const i = bars.length;
+      bars.push({ at: new Date(at).toISOString(), open, high: Math.max(open, price) * 1.002, low: Math.min(open, price) * 0.998, close: price });
+      if (!wanted.has(monday)) continue;
+      const seg = segments[segments.length - 1];
+      if (seg && seg[1] === i) seg[1] = i + 1;
+      else segments.push([i, i + 1]);
+    }
+  }
+  if (!segments.length) return null;
+  return {
+    symbol, name: known?.name ?? symbol, currency: known?.currency ?? "USD", exchange: known?.exchange ?? "NASDAQ",
+    range: "W", interval: "1h", market_open: false, price: bars[bars.length - 1].close,
+    warmup: segments[0][0], segments, bars,
   };
 }
 
@@ -415,6 +459,10 @@ async function handle(req, res) {
     const symbol = (url.searchParams.get("symbol") || "").toUpperCase();
     const range = url.searchParams.get("range") || "1D";
     if (symbol === "NOPE") return send(res, 404, { detail: "no price data for NOPE" });
+    if (range === "W") {
+      const body = marketWeeks(symbol, url.searchParams.getAll("week"));
+      return body ? send(res, 200, body) : send(res, 404, { detail: `no ${symbol} trading in the selected weeks` });
+    }
     return send(res, 200, marketChart(symbol, range));
   }
   if (path === "/api/market/search") {

@@ -157,8 +157,12 @@ export const api = {
   instruments: () => request("/api/instruments"),
   searchInstruments: (q) => request(`/api/instruments/search?q=${encodeURIComponent(q)}`),
   searchMarket: (q) => request(`/api/market/search?q=${encodeURIComponent(q)}`),
-  marketChart: (symbol, range) =>
-    request(`/api/market/chart?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`),
+  /** `weeks` ("2026-W03", ...) apply when `range` is "W". */
+  marketChart: (symbol, range, weeks = []) => {
+    const params = new URLSearchParams({ symbol, range });
+    if (range === "W") for (const week of weeks) params.append("week", week);
+    return request(`/api/market/chart?${params}`);
+  },
   taxJurisdictions: () => request("/api/tax/jurisdictions"),
   taxEstimateFor: (jurisdiction, year) =>
     request(`/api/tax/estimates?jurisdiction=${encodeURIComponent(jurisdiction)}&year=${encodeURIComponent(year)}`),

@@ -365,6 +365,8 @@ class MarketChartOut(BaseModel):
     price: float
     #: Bars before this index are indicator lead-in, not part of the shown window.
     warmup: int
+    #: Shown bars as [start, end) index pairs; one pair unless weeks were selected.
+    segments: list[tuple[int, int]]
     bars: list[MarketBarOut]
 
 
