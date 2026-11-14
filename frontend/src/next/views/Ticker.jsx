@@ -18,6 +18,8 @@ const RANGES = ["1D", "5D", "1M", "6M", "1Y", "5Y"];
 const INTRADAY = new Set(["1D", "5D", "1M"]);
 const CLOSED_POLL_SECONDS = 300;
 const INTERVAL_MS = { "5m": 300000, "15m": 900000, "1h": 3600000, "1d": 86400000, "1wk": 604800000 };
+/** An intraday gap longer than this is a closed market, not a quiet one. */
+const CLOSED_GAP = 3 * 3600000;
 const STORE = "fadir.ticker";
 /** What a filter's line is: [term, explanation], keyed by filter. */
 const FILTER_NOTES = {
@@ -173,65 +175,98 @@ export default function Ticker({ dash }) {
   // What the chart draws. Alone, the ticker's own bars. With a comparison, both lines
   // show the change since the window starts, so tickers at different prices or in
   // different currencies share one axis (no dual axes), and the x axis takes both
-  // tickers' bar times: each line moves when its own market trades, instead of the
-  // compared ticker being squeezed onto this ticker's hours. A line whose market has
-  // no bar at a time holds its last value, drawn dashed as "not trading". Each segment
-  // restarts from the close before it and compounds onto the ones before, so a line
-  // ends at the change its chip reports.
+  // tickers' bar times. Each line is drawn through its own bars only and connects
+  // straight across times it has none, so a thinly traded ticker reads as a line, not
+  // as steps. A connection is dashed only when its market was closed: a gap longer than
+  // CLOSED_GAP while the other ticker kept trading. Each segment restarts from the close
+  // before it and compounds onto the ones before, so a line ends at its chip's change.
+  // `*Read` arrays hold each line's last value at every point, for the tooltip and the
+  // pane headers; `mainAt` and `cmpAt` are the bar each point reads.
   const view = useMemo(() => {
     if (!series) return null;
-    const plain = { times: series.times, close: series.close, breaks: series.breaks, mainAt: series.times.map((_, i) => i), compare: null };
-    if (!cmpData?.bars?.length) return plain;
+    if (!cmpData?.bars?.length) {
+      const all = series.times.map(() => true);
+      return { times: series.times, close: series.close, closeRead: series.close, mainOwn: all, mainAt: series.times.map((_, i) => i), breaks: series.breaks, compare: null };
+    }
     const bars = data.bars;
     const mTimes = bars.map((b) => Date.parse(b.at));
     const cBars = cmpData.bars;
     const cTimes = cBars.map((b) => Date.parse(b.at));
-    const cAt = (ms) => {
-      let lo = 0, hi = cTimes.length - 1, found = -1;
-      while (lo <= hi) {
-        const mid = (lo + hi) >> 1;
-        if (cTimes[mid] <= ms) { found = mid; lo = mid + 1; } else hi = mid - 1;
-      }
-      return found;
-    };
-    // A bar that opened a full interval ago has closed: its market is idle at that time.
+    const cOwnTimes = new Set(cTimes);
     const step = INTERVAL_MS[data.interval] ?? INTERVAL_MS["1h"];
+    const closedGap = step >= INTERVAL_MS["1d"] ? step * 1.5 : Math.max(CLOSED_GAP, 4 * step);
     const segments = data.segments?.length ? data.segments : [[data.warmup, bars.length]];
-    const out = { times: [], close: [], compare: [], closeHeld: [], compareHeld: [], mainAt: [], breaks: [] };
+    const out = { times: [], close: [], closeRead: [], compare: [], compareRead: [], mainOwn: [], cmpOwn: [], mainAt: [], cmpAt: [], breaks: [] };
     let mainSoFar = 1, otherSoFar = 1, shown = 0;
+    let cj = -1;
     segments.forEach(([s, e], k) => {
       const first = mTimes[s];
       // The last segment runs on to the compared ticker's latest bar; an earlier one
       // stops at its own last bar, so gap weeks stay out.
       const until = k === segments.length - 1 ? Infinity : mTimes[e - 1];
-      const merged = [...new Set([...mTimes.slice(s, e), ...cTimes.filter((c) => c >= first && c <= until)])].sort((a, b) => a - b);
+      const mOwnTimes = new Set(mTimes.slice(s, e));
+      const merged = [...new Set([...mOwnTimes, ...cTimes.filter((c) => c >= first && c <= until)])].sort((a, b) => a - b);
       const base = s > 0 ? bars[s - 1].close : bars[s].open;
-      const baseAt = cAt(mTimes[s > 0 ? s - 1 : s]);
-      const cBase = (baseAt >= 0 ? cBars[baseAt] : cBars.find((_, i) => cTimes[i] >= first))?.close;
+      const baseTime = mTimes[s > 0 ? s - 1 : s];
+      while (cj + 1 < cTimes.length && cTimes[cj + 1] <= baseTime) cj++;
+      const cBase = (cj >= 0 ? cBars[cj] : cBars.find((_, i) => cTimes[i] >= first))?.close;
       if (k > 0) out.breaks.push(out.times.length);
       let mi = s, mainLast = 1, otherLast = 1;
       for (const time of merged) {
         while (mi + 1 < e && mTimes[mi + 1] <= time) mi++;
+        while (cj + 1 < cTimes.length && cTimes[cj + 1] <= time) cj++;
         mainLast = bars[mi].close / base;
+        const mainPct = (mainSoFar * mainLast - 1) * 100;
+        const mainOwn = mOwnTimes.has(time);
         out.times.push(time);
-        out.close.push((mainSoFar * mainLast - 1) * 100);
-        out.closeHeld.push(time - mTimes[mi] >= step);
+        out.mainOwn.push(mainOwn);
+        out.close.push(mainOwn ? mainPct : null);
+        out.closeRead.push(mainPct);
         out.mainAt.push(shown + mi - s);
-        const ci = cAt(time);
-        if (ci < 0 || !cBase) { out.compare.push(null); out.compareHeld.push(false); continue; }
-        otherLast = cBars[ci].close / cBase;
-        out.compare.push((otherSoFar * otherLast - 1) * 100);
-        out.compareHeld.push(time - cTimes[ci] >= step);
+        out.cmpAt.push(cj);
+        const cmpOwn = cOwnTimes.has(time);
+        out.cmpOwn.push(cmpOwn);
+        if (cj < 0 || !cBase) { out.compare.push(null); out.compareRead.push(null); continue; }
+        otherLast = cBars[cj].close / cBase;
+        const otherPct = (otherSoFar * otherLast - 1) * 100;
+        out.compare.push(cmpOwn ? otherPct : null);
+        out.compareRead.push(otherPct);
       }
       mainSoFar *= mainLast;
       otherSoFar *= otherLast;
       shown += e - s;
     });
-    const lastOther = [...out.compare].reverse().find((v) => v !== null);
+    // For each line: which connections into its own points are dashed (its market was
+    // closed while the other traded), and at which points it is not trading.
+    const lineMarks = (own) => {
+      const dash = own.map(() => false);
+      const idle = own.map(() => true);
+      let prev = -1;
+      own.forEach((isOwn, i) => {
+        if (!isOwn) return;
+        idle[i] = false;
+        if (prev >= 0) {
+          const closed = i - prev > 1 && out.times[i] - out.times[prev] > closedGap;
+          dash[i] = closed;
+          for (let j = prev + 1; j < i; j++) idle[j] = closed;
+        }
+        prev = i;
+      });
+      for (let j = prev + 1; j < own.length; j++) idle[j] = prev < 0 || out.times[j] - out.times[prev] > closedGap;
+      return { dash, idle };
+    };
+    ({ dash: out.closeDash, idle: out.closeIdle } = lineMarks(out.mainOwn));
+    ({ dash: out.compareDash, idle: out.compareIdle } = lineMarks(out.cmpOwn));
+    const lastOther = [...out.compareRead].reverse().find((v) => v !== null);
     out.change = lastOther === undefined ? null : 1 + lastOther / 100;
     return out;
   }, [series, data, cmpData]);
   const comparing = Boolean(view?.compare);
+
+  // The compared ticker's own bars, lead-in included, for its indicator lines.
+  const cmpAll = useMemo(() => (cmpData?.bars?.length
+    ? { close: cmpData.bars.map((b) => b.close), high: cmpData.bars.map((b) => b.high), low: cmpData.bars.map((b) => b.low) }
+    : null), [cmpData]);
 
   const panes = useMemo(() => {
     if (!series) return [];
@@ -239,13 +274,19 @@ export default function Ticker({ dash }) {
     return FILTERS.map((f, tone) => ({ f, tone })).filter(({ f }) => filters[f.key].on).map(({ f, tone }) => {
       const { n1, n2 } = filters[f.key];
       const full = f.compute(series.all, n1);
-      // Read at each point on screen; with a comparison a point can fall between this
-      // ticker's bars, where it shows the value of the bar before.
-      const values = view.mainAt.map((at) => full[series.idx[at]]);
+      const read = view.mainAt.map((at) => full[series.idx[at]]);
+      const values = read.map((v, i) => (view.mainOwn[i] ? v : null));
       const level = n2 * 5;
-      return { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), tone, values, level, n1, n2 };
+      const pane = { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), tone, values, read, dash: view.closeDash ?? null, level, n1, n2 };
+      if (comparing && cmpAll) {
+        // The same formula over the compared ticker's own bars, in its colour.
+        const cFull = f.compute(cmpAll, n1);
+        const cRead = view.cmpAt.map((at) => (at >= 0 ? cFull[at] : null));
+        pane.cmp = { values: cRead.map((v, i) => (view.cmpOwn[i] ? v : null)), read: cRead, dash: view.compareDash };
+      }
+      return pane;
     });
-  }, [series, view, filters, t]);
+  }, [series, view, comparing, cmpAll, filters, t]);
 
   const setFilter = (key, patch) => setFilters((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
 
@@ -323,8 +364,8 @@ export default function Ticker({ dash }) {
       <div className="tip-date">{stamp(view.times[hover])}</div>
       {comparing ? (
         <>
-          <div className="tip-row"><i style={{ background: "var(--accent)" }} />{symbol} {closedNote(view.closeHeld[hover])}<b className="num">{pct(view.close[hover])}</b></div>
-          <div className="tip-row"><i style={{ background: "var(--compare)" }} />{compareSymbol} {closedNote(view.compareHeld[hover])}<b className="num">{pct(view.compare[hover])}</b></div>
+          <div className="tip-row"><i style={{ background: "var(--accent)" }} />{symbol} {closedNote(view.closeIdle[hover])}<b className="num">{pct(view.closeRead[hover])}</b></div>
+          <div className="tip-row"><i style={{ background: "var(--compare)" }} />{compareSymbol} {closedNote(view.compareIdle[hover])}<b className="num">{pct(view.compareRead[hover])}</b></div>
         </>
       ) : (
         [["ticker.open", "open"], ["ticker.high", "high"], ["ticker.low", "low"], ["ticker.close", "close"]].map(([label, key]) => (
@@ -333,7 +374,11 @@ export default function Ticker({ dash }) {
       )}
       {panes.length > 0 && <div className="tip-sep" />}
       {panes.map((p) => (
-        <div key={p.key} className="tip-row"><i style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}<b className="num">{figure(p.values[hover])}</b></div>
+        <div key={p.key} className="tip-row">
+          <i style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}
+          <b className="num">{figure(p.read[hover])}</b>
+          {p.cmp && <span className="tip-cmp num"><i style={{ background: "var(--compare)" }} />{figure(p.cmp.read[hover])}</span>}
+        </div>
       ))}
     </>
   ) : null;
@@ -342,17 +387,20 @@ export default function Ticker({ dash }) {
     ? [
       stamp(view.times[hover]),
       `${t("ticker.close")} ${quote(hoverBar.close)}`,
-      ...(comparing ? [`${symbol} ${pct(view.close[hover])}`, `${compareSymbol} ${pct(view.compare[hover])}`] : []),
+      ...(comparing ? [`${symbol} ${pct(view.closeRead[hover])}`, `${compareSymbol} ${pct(view.compareRead[hover])}`] : []),
       ...panes.map((p) => {
-        const s = filterState(p.values[hover], p.level);
-        return `${p.name} ${figure(p.values[hover])}${s ? ` ${t(`ticker.${s}`)}` : ""}`;
+        const s = filterState(p.read[hover], p.level);
+        const own = `${p.name} ${figure(p.read[hover])}${s ? ` ${t(`ticker.${s}`)}` : ""}`;
+        return p.cmp ? `${own}, ${compareSymbol} ${figure(p.cmp.read[hover])}` : own;
       }),
     ].join(", ")
     : "";
 
   const heads = panes.map((p) => {
-    const value = at !== null ? p.values[at] : null;
+    const value = at !== null ? p.read[at] : null;
     const state = filterState(value, p.level);
+    const cValue = p.cmp && at !== null ? p.cmp.read[at] : null;
+    const cState = filterState(cValue, p.level);
     return (
       <>
         <span className="pane-name"><i aria-hidden="true" style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}</span>
@@ -361,6 +409,13 @@ export default function Ticker({ dash }) {
         <span className={`pane-state ${state === "long" ? "up" : state === "short" ? "down" : "muted"}`}>
           {state ? t(`ticker.${state}`) : "—"}
         </span>
+        {p.cmp && (
+          <span className="pane-cmp">
+            <i aria-hidden="true" />{compareSymbol}
+            <span className="num">{figure(cValue)}</span>
+            <span className={cState === "long" ? "up" : cState === "short" ? "down" : "muted"}>{cState ? t(`ticker.${cState}`) : "—"}</span>
+          </span>
+        )}
         <span className="pane-params">
           {p.filter.usesN1 && <ParamInput label="N1" ariaLabel={`${p.name} N1`} integer value={p.n1} onChange={(n1) => setFilter(p.key, { n1 })} />}
           <ParamInput label="N2" ariaLabel={`${p.name} N2`} value={p.n2} onChange={(n2) => setFilter(p.key, { n2 })} />
@@ -473,8 +528,8 @@ export default function Ticker({ dash }) {
             times={view.times}
             close={view.close}
             compare={view.compare}
-            closeHeld={view.closeHeld}
-            compareHeld={view.compareHeld}
+            closeDash={view.closeDash}
+            compareDash={view.compareDash}
             formatY={comparing ? (v) => pct(v, 1) : quote}
             panes={panes}
             marks={marks}

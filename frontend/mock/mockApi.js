@@ -268,7 +268,9 @@ function marketChart(symbol, range) {
   };
   const stamps = [];
   for (let at = Math.floor(Date.now() / (minutes * 60000)) * minutes * 60000; stamps.length < total; at -= minutes * 60000) {
-    if (trades(at)) stamps.unshift(at);
+    // A five-letter symbol ending in F (a US OTC listing such as SIVEF) trades thinly:
+    // most bars are missing, as Yahoo omits intervals with no trades.
+    if (trades(at) && !(/^[A-Z]{4}F$/.test(symbol) && minutes < 1440 && rand() < 0.6)) stamps.unshift(at);
   }
   const bars = [];
   for (const at of stamps) {

@@ -543,6 +543,10 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
   .ticker-card > .footnotes-wrap { order: 2; }
 }
 .compare-chip { color: var(--text); padding-right: 4px; }
+.pane-cmp { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+.pane-cmp i { width: 10px; height: 2px; border-radius: 2px; background: var(--compare); }
+.pane-cmp .num { color: var(--text); }
+.tip-cmp { display: inline-flex; align-items: center; gap: 5px; padding-left: 12px; color: var(--text-2); }
 .compare-chip .chip-x { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: var(--text-3); }
 .compare-chip .chip-x:hover { background: var(--surface-3); color: var(--text); }
 .legend-chip i.dashed { height: 0; border-top: 2px dashed currentColor; border-radius: 0; }

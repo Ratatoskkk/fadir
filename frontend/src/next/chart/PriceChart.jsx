@@ -13,8 +13,9 @@ const NARROW = 560;
 
 const mainHeight = (width) => (width < NARROW ? 240 : 320);
 /** A narrow pane header wraps its N1/N2 inputs (44px touch targets) onto a second row. */
-const paneHead = (width) => (width < NARROW ? 80 : 40);
-const paneHeight = (width) => paneHead(width) + PANE_PLOT;
+/** With a compared ticker its reading takes one more row there. */
+const paneHead = (width, compared = false) => (width < NARROW ? (compared ? 112 : 80) : 40);
+const paneHeight = (width, compared = false) => paneHead(width, compared) + PANE_PLOT;
 
 function niceTicks(min, max, count) {
   const span = max - min || Math.abs(max) || 1;
@@ -75,22 +76,25 @@ function extent(values, extra = []) {
  * colour; when given, `close` and `compare` share one axis labelled by `formatY`.
  */
 /**
- * `closeHeld` and `compareHeld` flag points where that line's market has no bar (its
- * last value is held); the stretch into such a point is drawn faint and dashed.
+ * A line may hold null at points where it has no bar of its own (a compared ticker's
+ * axis mixes two tickers' bar times); it is drawn straight across them. `closeDash` and
+ * `compareDash` flag the points whose incoming connection crosses a closed market,
+ * drawn faint and dashed. A pane may carry `cmp` ({ values, dash }), the compared
+ * ticker's line for the same formula.
  */
-export default function PriceChart({ times, close, compare = null, closeHeld = null, compareHeld = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
+export default function PriceChart({ times, close, compare = null, closeDash = null, compareDash = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
-  st.props = { times, close, compare, closeHeld, compareHeld, formatY, panes, marks, breaks, formatX, live };
+  st.props = { times, close, compare, closeDash, compareDash, formatY, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
   const draw = () => {
     st.frame = 0;
     const canvas = canvasRef.current;
     if (!canvas || !st.colors) return;
-    const { times: xsT, close: ys, compare: cs, closeHeld: yHeld, compareHeld: cHeld, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
+    const { times: xsT, close: ys, compare: cs, closeDash: yDash, compareDash: cDash, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
     const { w, h, dpr, colors: c } = st;
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -122,42 +126,56 @@ export default function PriceChart({ times, close, compare = null, closeHeld = n
       return yOf;
     };
 
-    // Two passes: solid where the market traded, then faint dashes into each held point.
-    const stroke = (values, yOf, color, width, held = null) => {
+    // Each line runs through its non-null points, straight across the nulls between them.
+    // Two passes: solid connections, then faint dashes across closed markets.
+    const stroke = (values, yOf, color, width, dash = null) => {
       ctx.strokeStyle = color;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
-      for (const dashed of held ? [false, true] : [false]) {
+      for (const dashed of dash ? [false, true] : [false]) {
         ctx.lineWidth = dashed ? Math.max(1, width - 0.6) : width;
         ctx.globalAlpha = dashed ? 0.45 : 1;
         ctx.setLineDash(dashed ? [2, 4] : []);
         ctx.beginPath();
-        for (let i = 1; i < n; i++) {
-          const a = values[i - 1], b = values[i];
-          if (a == null || b == null || Boolean(held?.[i]) !== dashed) continue;
-          ctx.moveTo(xOf(i - 1), yOf(a));
-          ctx.lineTo(xOf(i), yOf(b));
+        let prev = -1;
+        for (let i = 0; i < n; i++) {
+          if (values[i] == null) continue;
+          if (prev >= 0 && Boolean(dash?.[i]) === dashed) {
+            ctx.moveTo(xOf(prev), yOf(values[prev]));
+            ctx.lineTo(xOf(i), yOf(values[i]));
+          }
+          prev = i;
         }
         ctx.stroke();
       }
       ctx.setLineDash([]);
       ctx.globalAlpha = 1;
     };
+    // Where a line crosses point i: its own value, or between its neighbours.
+    const valueAt = (values, i) => {
+      if (values[i] != null) return values[i];
+      let a = i - 1, b = i + 1;
+      while (a >= 0 && values[a] == null) a--;
+      while (b < n && values[b] == null) b++;
+      if (a < 0 || b >= n) return a >= 0 ? values[a] : b < n ? values[b] : null;
+      return values[a] + ((values[b] - values[a]) * (i - a)) / (b - a);
+    };
 
     // Price.
     const [pLo, pHi] = cs ? extent([...ys, ...cs]) : extent(ys);
     const yPrice = area(PAD.top, mainH, pLo, pHi, fy, Math.max(3, Math.round(mainH / 64)));
-    if (n > 1) {
+    if (n > 1 && ys.some((v) => v != null)) {
       const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + mainH);
       grad.addColorStop(0, c.price);
       grad.addColorStop(1, "transparent");
       ctx.globalAlpha = 0.14;
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(xOf(0), yPrice(ys[0]));
-      for (let i = 1; i < n; i++) ctx.lineTo(xOf(i), yPrice(ys[i]));
-      ctx.lineTo(xOf(n - 1), PAD.top + mainH);
-      ctx.lineTo(xOf(0), PAD.top + mainH);
+      const own = [];
+      for (let i = 0; i < n; i++) if (ys[i] != null) own.push(i);
+      own.forEach((i, k) => (k ? ctx.lineTo(xOf(i), yPrice(ys[i])) : ctx.moveTo(xOf(i), yPrice(ys[i]))));
+      ctx.lineTo(xOf(own[own.length - 1]), PAD.top + mainH);
+      ctx.lineTo(xOf(own[0]), PAD.top + mainH);
       ctx.closePath();
       ctx.fill();
       ctx.globalAlpha = 1;
@@ -185,16 +203,15 @@ export default function PriceChart({ times, close, compare = null, closeHeld = n
       ctx.textBaseline = "bottom";
       ctx.fillText(mark.label, right - 4, y - 4);
     }
-    if (cs) stroke(cs, yPrice, c.compare, 1.8, cHeld);
-    stroke(ys, yPrice, c.price, 2, yHeld);
-    const dots = [[yPrice(ys[st.hover ?? 0]), c.price]];
-    if (cs && st.hover !== null && cs[st.hover] != null) dots.push([yPrice(cs[st.hover]), c.compare]);
+    if (cs) stroke(cs, yPrice, c.compare, 1.8, cDash);
+    stroke(ys, yPrice, c.price, 2, yDash);
+    const dots = [];
 
     // Indicator panes: the formula's left side against its level.
     const paneY = [];
     ps.forEach((pane, k) => {
-      const top = PAD.top + mainH + k * paneHeight(w) + paneHead(w);
-      const [lo, hi] = extent(pane.values, [pane.level]);
+      const top = PAD.top + mainH + k * paneHeight(w, Boolean(cs)) + paneHead(w, Boolean(cs));
+      const [lo, hi] = extent(pane.cmp ? [...pane.values, ...pane.cmp.values] : pane.values, [pane.level]);
       const yOf = area(top, PANE_PLOT, lo, hi, figure, 2);
       paneY.push(yOf);
       const ly = Math.round(yOf(pane.level)) + 0.5;
@@ -206,7 +223,8 @@ export default function PriceChart({ times, close, compare = null, closeHeld = n
       ctx.lineTo(w - PAD.right, ly);
       ctx.stroke();
       ctx.setLineDash([]);
-      stroke(pane.values, yOf, c.panes[pane.tone] ?? c.price, 1.6);
+      if (pane.cmp) stroke(pane.cmp.values, yOf, c.compare, 1.4, pane.cmp.dash);
+      stroke(pane.values, yOf, c.panes[pane.tone] ?? c.price, 1.6, pane.dash);
     });
 
     // A skipped stretch: a solid rule between the last bar before it and the first after,
@@ -251,8 +269,16 @@ export default function PriceChart({ times, close, compare = null, closeHeld = n
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.globalAlpha = 1;
-      dots[0][0] = yPrice(ys[i]);
-      ps.forEach((pane, k) => { if (pane.values[i] !== null) dots.push([paneY[k](pane.values[i]), c.panes[pane.tone] ?? c.price]); });
+      const dot = (values, yOf, color) => {
+        const v = values && valueAt(values, i);
+        if (v != null) dots.push([yOf(v), color]);
+      };
+      dot(ys, yPrice, c.price);
+      dot(cs, yPrice, c.compare);
+      ps.forEach((pane, k) => {
+        dot(pane.values, paneY[k], c.panes[pane.tone] ?? c.price);
+        dot(pane.cmp?.values, paneY[k], c.compare);
+      });
       for (const [y, color] of dots) {
         ctx.fillStyle = c.bg;
         ctx.beginPath();
@@ -270,7 +296,9 @@ export default function PriceChart({ times, close, compare = null, closeHeld = n
       }
     } else if (isLive) {
       // The newest bar is still forming: mark where the line ends.
-      const x = xOf(n - 1), y = yPrice(ys[n - 1]);
+      let last = n - 1;
+      while (last > 0 && ys[last] == null) last--;
+      const x = xOf(last), y = yPrice(ys[last]);
       ctx.fillStyle = c.bg;
       ctx.beginPath();
       ctx.arc(x, y, 5.5, 0, Math.PI * 2);
@@ -287,12 +315,13 @@ export default function PriceChart({ times, close, compare = null, closeHeld = n
 
   // Reads the latest props through `st`: the ResizeObserver callback outlives the render
   // that created it, and must not size the canvas for a stale pane count.
-  const height = (w) => PAD.top + mainHeight(w) + st.props.panes.length * paneHeight(w) + PAD.bottom;
+  const height = (w) => PAD.top + mainHeight(w) + st.props.panes.length * paneHeight(w, Boolean(st.props.compare)) + PAD.bottom;
 
   useEffect(() => {
     if (st.hover !== null && st.hover >= close.length) st.hover = null;
     const canvas = canvasRef.current;
     if (canvas && st.w) {
+      wrapRef.current.style.setProperty("--pane-head", `${paneHead(st.w, Boolean(compare))}px`);
       st.h = height(st.w);
       canvas.height = Math.round(st.h * st.dpr);
       canvas.style.height = `${st.h}px`;
@@ -308,7 +337,7 @@ export default function PriceChart({ times, close, compare = null, closeHeld = n
       st.w = wrap.getBoundingClientRect().width;
       st.h = height(st.w);
       wrap.style.setProperty("--main-h", `${mainHeight(st.w)}px`);
-      wrap.style.setProperty("--pane-head", `${paneHead(st.w)}px`);
+      wrap.style.setProperty("--pane-head", `${paneHead(st.w, Boolean(st.props.compare))}px`);
       st.dpr = Math.min(2, window.devicePixelRatio || 1);
       canvas.width = Math.round(st.w * st.dpr);
       canvas.height = Math.round(st.h * st.dpr);
