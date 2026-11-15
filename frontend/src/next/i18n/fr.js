@@ -85,6 +85,7 @@ export default {
   "ticker.note.price": "La clôture de chaque barre sur la période choisie.",
   "ticker.note.level": "Le seuil du filtre, N2 × 5. Le filtre indique Long quand sa ligne est au-dessus du seuil et Short quand elle est en dessous. N1 fixe la longueur en barres (N1 × 5).",
   "ticker.note.maSlope": "Pente de la moyenne mobile : variation de la moyenne simple des N1 × 5 dernières clôtures depuis la barre précédente. Au-dessus de zéro, la moyenne monte.",
+  "ticker.note.maSlopePct": "En comparaison, la pente MM de chaque ticker est affichée moins son seuil (N2 × 5), en % de sa propre moyenne mobile, pour que des tickers de prix différents partagent le panneau. Le seuil est à 0 : au-dessus Long, en dessous Short, comme dans la formule.",
   "ticker.note.vhf": "Vertical Horizontal Filter sur N1 × 5 barres : l'écart entre plus haut et plus bas divisé par la somme des variations de clôture. Une valeur élevée signale une tendance, une valeur basse un marché sans direction.",
   "ticker.note.adx": "Average Directional Index sur 25 barres (Wilder). Il mesure la force d'une tendance, pas son sens ; au-dessus d'environ 25, on parle généralement de tendance.",
   "ticker.note.avgBuy": "Prix d'achat moyen de ta position ouverte dans ce portefeuille, dans la devise du ticker. Les chiffres au-dessus du graphique sont ceux de cette position, dans la devise du portefeuille.",

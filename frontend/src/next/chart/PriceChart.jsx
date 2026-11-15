@@ -212,7 +212,7 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
     ps.forEach((pane, k) => {
       const top = PAD.top + mainH + k * paneHeight(w, Boolean(cs)) + paneHead(w, Boolean(cs));
       const [lo, hi] = extent(pane.cmp ? [...pane.values, ...pane.cmp.values] : pane.values, [pane.level]);
-      const yOf = area(top, PANE_PLOT, lo, hi, figure, 2);
+      const yOf = area(top, PANE_PLOT, lo, hi, pane.format ?? figure, 2);
       paneY.push(yOf);
       const ly = Math.round(yOf(pane.level)) + 0.5;
       ctx.strokeStyle = c.level;

@@ -85,6 +85,7 @@ export default {
   "ticker.note.price": "The close of each bar in the selected range.",
   "ticker.note.level": "The filter's level, N2 × 5. The filter reads Long while its line is above the level and Short while it is below. N1 sets the lookback in bars (N1 × 5).",
   "ticker.note.maSlope": "Moving average slope: how much the simple average of the last N1 × 5 closes changed since the previous bar. Above zero, the average is rising.",
+  "ticker.note.maSlopePct": "While comparing, each ticker's MA slope is shown less its level (N2 × 5) as a % of its own moving average, so tickers at different prices share the pane. The level sits at 0: above it is Long, below it Short, as in the formula.",
   "ticker.note.vhf": "Vertical Horizontal Filter over N1 × 5 bars: the high-to-low range divided by the sum of bar-to-bar close moves. Higher values mean price is trending, lower values mean it is moving sideways.",
   "ticker.note.adx": "Average Directional Index over 25 bars (Wilder). It measures how strong a trend is, not which way it runs; readings above about 25 are usually taken as a trend.",
   "ticker.note.avgBuy": "Average buy price of your open position in this portfolio, in the ticker's own currency. The figures above the chart are this position's, in the portfolio's currency.",

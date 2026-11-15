@@ -85,6 +85,7 @@ export default {
   "ticker.note.price": "El cierre de cada barra en el rango elegido.",
   "ticker.note.level": "El umbral del filtro, N2 × 5. El filtro marca Long cuando su línea está por encima y Short cuando está por debajo. N1 fija la longitud en barras (N1 × 5).",
   "ticker.note.maSlope": "Pendiente de la media móvil: cuánto cambió la media simple de los últimos N1 × 5 cierres desde la barra anterior. Por encima de cero, la media sube.",
+  "ticker.note.maSlopePct": "Al comparar, la pendiente MM de cada ticker se muestra menos su umbral (N2 × 5), como % de su propia media móvil, para que tickers con precios distintos compartan el panel. El umbral queda en 0: por encima Long, por debajo Short, como en la fórmula.",
   "ticker.note.vhf": "Vertical Horizontal Filter sobre N1 × 5 barras: el rango entre máximo y mínimo dividido por la suma de los movimientos de cierre. Valores altos indican tendencia; bajos, un mercado lateral.",
   "ticker.note.adx": "Average Directional Index sobre 25 barras (Wilder). Mide la fuerza de una tendencia, no su dirección; por encima de 25 aproximadamente se suele considerar tendencia.",
   "ticker.note.avgBuy": "Precio medio de compra de tu posición abierta en esta cartera, en la moneda del ticker. Las cifras sobre el gráfico son de esta posición, en la moneda de la cartera.",

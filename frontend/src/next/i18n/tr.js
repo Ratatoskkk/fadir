@@ -85,6 +85,7 @@ export default {
   "ticker.note.price": "Seçili aralıktaki her çubuğun kapanışı.",
   "ticker.note.level": "Filtrenin seviyesi, N2 × 5. Çizgi seviyenin üstündeyken filtre Long, altındayken Short okunur. N1 geriye bakılan çubuk sayısını belirler (N1 × 5).",
   "ticker.note.maSlope": "Hareketli ortalama eğimi: son N1 × 5 kapanışın basit ortalamasının bir önceki çubuktan bu yana değişimi. Sıfırın üstünde ortalama yükseliyordur.",
+  "ticker.note.maSlopePct": "Karşılaştırırken her sembolün HO eğimi, seviyesi (N2 × 5) çıkarılıp kendi hareketli ortalamasının yüzdesi olarak gösterilir; böylece farklı fiyattaki semboller aynı paneli paylaşır. Seviye 0'dadır: üstü Long, altı Short, formüldeki gibi.",
   "ticker.note.vhf": "N1 × 5 çubukluk Vertical Horizontal Filter: en yüksek ile en düşük arasındaki aralığın, çubuktan çubuğa kapanış hareketlerinin toplamına oranı. Yüksek değer trend, düşük değer yatay seyir demektir.",
   "ticker.note.adx": "25 çubukluk Ortalama Yön Endeksi (Wilder). Trendin yönünü değil gücünü ölçer; yaklaşık 25'in üstü genellikle trend olarak okunur.",
   "ticker.note.avgBuy": "Bu portföydeki açık pozisyonunun ortalama alış fiyatı, sembolün kendi para biriminde. Grafiğin üstündeki rakamlar bu pozisyona ait ve portföyün para birimindedir.",

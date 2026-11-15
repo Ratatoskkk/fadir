@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { api } from "../../api.js";
 import { arrow, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, pct, quote, ratioPct, shortDate, signedMoney, toneOf } from "../../format.js";
 import PriceChart from "../chart/PriceChart.jsx";
-import { FILTERS, filterState } from "../chart/indicators.js";
+import { FILTERS, filterState, sma } from "../chart/indicators.js";
 import TickerSearch from "../components/TickerSearch.jsx";
 import { WeekPicker } from "../components/WeekPicker.jsx";
 import { useT } from "../i18n/index.jsx";
@@ -273,14 +273,23 @@ export default function Ticker({ dash }) {
     // Each filter keeps its own shade wherever it appears: chip, pane line, pane name.
     return FILTERS.map((f, tone) => ({ f, tone })).filter(({ f }) => filters[f.key].on).map(({ f, tone }) => {
       const { n1, n2 } = filters[f.key];
-      const full = f.compute(series.all, n1);
+      // MA slope is in price units, so two tickers at different prices cannot share its
+      // axis. While comparing, each line is its slope less the level, as a % of its own
+      // average: the level sits at 0 and the sign, so Long or Short, is unchanged.
+      const asPct = comparing && f.key === "maSlope";
+      const toPct = (raw, bars) => {
+        const avg = sma(bars.close, f.period(n1));
+        return raw.map((v, i) => (v === null || !avg[i] ? null : ((v - n2 * 5) / avg[i]) * 100));
+      };
+      const full = asPct ? toPct(f.compute(series.all, n1), series.all) : f.compute(series.all, n1);
       const read = view.mainAt.map((at) => full[series.idx[at]]);
       const values = read.map((v, i) => (view.mainOwn[i] ? v : null));
-      const level = n2 * 5;
-      const pane = { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), tone, values, read, dash: view.closeDash ?? null, level, n1, n2 };
+      const level = asPct ? 0 : n2 * 5;
+      const format = asPct ? (v) => pct(v, 4) : figure;
+      const pane = { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), tone, values, read, dash: view.closeDash ?? null, level, format, asPct, n1, n2 };
       if (comparing && cmpAll) {
         // The same formula over the compared ticker's own bars, in its colour.
-        const cFull = f.compute(cmpAll, n1);
+        const cFull = asPct ? toPct(f.compute(cmpAll, n1), cmpAll) : f.compute(cmpAll, n1);
         const cRead = view.cmpAt.map((at) => (at >= 0 ? cFull[at] : null));
         pane.cmp = { values: cRead.map((v, i) => (view.cmpOwn[i] ? v : null)), read: cRead, dash: view.compareDash };
       }
@@ -322,7 +331,7 @@ export default function Ticker({ dash }) {
   const notes = [
     comparing ? ["ticker.compareLine", "ticker.note.compare"] : ["ticker.priceLine", "ticker.note.price"],
     ...(panes.length ? [["ticker.levelLine", "ticker.note.level"]] : []),
-    ...panes.map((p) => FILTER_NOTES[p.key]).filter(Boolean),
+    ...panes.map((p) => (p.asPct ? ["ticker.maSlope", "ticker.note.maSlopePct"] : FILTER_NOTES[p.key])).filter(Boolean),
     ...(marks.length ? [["pos.avgBuy", "ticker.note.avgBuy"]] : []),
     ...(holding ? [["attr.fx", "ticker.note.fx"]] : []),
   ];
@@ -376,8 +385,8 @@ export default function Ticker({ dash }) {
       {panes.map((p) => (
         <div key={p.key} className="tip-row">
           <i style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}
-          <b className="num">{figure(p.read[hover])}</b>
-          {p.cmp && <span className="tip-cmp num"><i style={{ background: "var(--compare)" }} />{figure(p.cmp.read[hover])}</span>}
+          <b className="num">{p.format(p.read[hover])}</b>
+          {p.cmp && <span className="tip-cmp num"><i style={{ background: "var(--compare)" }} />{p.format(p.cmp.read[hover])}</span>}
         </div>
       ))}
     </>
@@ -390,8 +399,8 @@ export default function Ticker({ dash }) {
       ...(comparing ? [`${symbol} ${pct(view.closeRead[hover])}`, `${compareSymbol} ${pct(view.compareRead[hover])}`] : []),
       ...panes.map((p) => {
         const s = filterState(p.read[hover], p.level);
-        const own = `${p.name} ${figure(p.read[hover])}${s ? ` ${t(`ticker.${s}`)}` : ""}`;
-        return p.cmp ? `${own}, ${compareSymbol} ${figure(p.cmp.read[hover])}` : own;
+        const own = `${p.name} ${p.format(p.read[hover])}${s ? ` ${t(`ticker.${s}`)}` : ""}`;
+        return p.cmp ? `${own}, ${compareSymbol} ${p.format(p.cmp.read[hover])}` : own;
       }),
     ].join(", ")
     : "";
@@ -405,21 +414,21 @@ export default function Ticker({ dash }) {
       <>
         <span className="pane-name"><i aria-hidden="true" style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}</span>
         <span className="pane-bars num">{t("ticker.bars", { n: p.bars })}</span>
-        <span className="pane-value num">{figure(value)}</span>
+        <span className="pane-value num">{p.format(value)}</span>
         <span className={`pane-state ${state === "long" ? "up" : state === "short" ? "down" : "muted"}`}>
           {state ? t(`ticker.${state}`) : "—"}
         </span>
         {p.cmp && (
           <span className="pane-cmp">
             <i aria-hidden="true" />{compareSymbol}
-            <span className="num">{figure(cValue)}</span>
+            <span className="num">{p.format(cValue)}</span>
             <span className={cState === "long" ? "up" : cState === "short" ? "down" : "muted"}>{cState ? t(`ticker.${cState}`) : "—"}</span>
           </span>
         )}
         <span className="pane-params">
           {p.filter.usesN1 && <ParamInput label="N1" ariaLabel={`${p.name} N1`} integer value={p.n1} onChange={(n1) => setFilter(p.key, { n1 })} />}
           <ParamInput label="N2" ariaLabel={`${p.name} N2`} value={p.n2} onChange={(n2) => setFilter(p.key, { n2 })} />
-          <span className="pane-level num" title={t("ticker.level")}><i aria-hidden="true" />{figure(p.level)}</span>
+          <span className="pane-level num" title={t("ticker.level")}><i aria-hidden="true" />{p.asPct ? pct(0, 0) : figure(p.level)}</span>
         </span>
       </>
     );
