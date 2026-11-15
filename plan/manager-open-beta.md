@@ -1692,3 +1692,14 @@ restart. Installed checksums match the build for all 16 files; rollback bundle
 `/opt/fadir/frontend/dist.previous.maslope-pct-20261115`. Public health and all 15 assets
 returned 200, and the signed-in owner tab shows SIVEF and AAOI MA slope lines on one %
 axis.
+
+Modern web guidance deployment (owner request 2026-11-15). `025ed5b` moves the four
+modals onto native `<dialog>` with `showModal()` (inert page, focus kept inside and
+returned to the opener, Esc as cancel, `::backdrop` scrim, no body overflow lock); keeps
+`<meta name="color-scheme">` in sync with the theme toggle, stores an override only while
+it differs from the system and follows the system otherwise; makes Enter on the code gate,
+ticker search and palette ignore IME composition; drops unimplemented menu roles from
+popovers; and moves stagger delays to `sibling-index()` with an nth-child fallback.
+Frontend only, no restart. Installed checksums match the build for all 16 files; rollback
+bundle `/opt/fadir/frontend/dist.previous.modern-web-20261115`. Public health and all 14
+assets returned 200. Checked in the mock app, not yet in the signed-in owner tab.
