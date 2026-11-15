@@ -4,18 +4,31 @@
 // Panes are separate rather than overlaid because price and indicators never share a
 // unit (DESLOP 51: no dual y axes).
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { quote, figure } from "../../format.js";
 
 const PAD = { left: 64, right: 14, top: 14, bottom: 28 };
 const PANE_PLOT = 78;
 const NARROW = 560;
 
-const mainHeight = (width) => (width < NARROW ? 240 : 320);
-/** A narrow pane header wraps its N1/N2 inputs (44px touch targets) onto a second row. */
-/** With a compared ticker its reading takes one more row there. */
-const paneHead = (width, compared = false) => (width < NARROW ? (compared ? 112 : 80) : 40);
-const paneHeight = (width, compared = false) => paneHead(width, compared) + PANE_PLOT;
+const mainHeight = (width) => (width < NARROW ? 280 : 320);
+/**
+ * One row on a wide chart. On a narrow one the reading takes a row, a compared ticker's
+ * reading one more, and the N1/N2 inputs (44px touch targets) a third, shown only while
+ * that pane is being edited.
+ */
+const headHeight = (narrow, pane, compared) => (narrow ? 36 + (compared ? 32 : 0) + (pane.editing ? 52 : 0) : 40);
+/** Where each pane's plot starts, below the price and the panes and headers above it. */
+const paneTops = (w, panes, compared) => {
+  const narrow = w < NARROW;
+  let at = PAD.top + mainHeight(w);
+  return panes.map((pane) => {
+    at += headHeight(narrow, pane, compared);
+    const top = at;
+    at += PANE_PLOT;
+    return top;
+  });
+};
 
 function niceTicks(min, max, count) {
   const span = max - min || Math.abs(max) || 1;
@@ -34,7 +47,6 @@ function readColors() {
   const v = (name) => s.getPropertyValue(name).trim();
   return {
     price: v("--accent"),
-    panes: [v("--pane-1"), v("--pane-2"), v("--pane-3")],
     level: v("--text-3"),
     mark: v("--cost"),
     compare: v("--compare"),
@@ -82,11 +94,12 @@ function extent(values, extra = []) {
  * drawn faint and dashed. A pane may carry `cmp` ({ values, dash }), the compared
  * ticker's line for the same formula.
  */
-export default function PriceChart({ times, close, compare = null, closeDash = null, compareDash = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel }) {
+export default function PriceChart({ times, close, compare = null, closeDash = null, compareDash = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel, roleLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
+  const [narrow, setNarrow] = useState(false);
   st.props = { times, close, compare, closeDash, compareDash, formatY, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
@@ -209,8 +222,9 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
 
     // Indicator panes: the formula's left side against its level.
     const paneY = [];
+    const tops = paneTops(w, ps, Boolean(cs));
     ps.forEach((pane, k) => {
-      const top = PAD.top + mainH + k * paneHeight(w, Boolean(cs)) + paneHead(w, Boolean(cs));
+      const top = tops[k];
       const [lo, hi] = extent(pane.cmp ? [...pane.values, ...pane.cmp.values] : pane.values, [pane.level]);
       const yOf = area(top, PANE_PLOT, lo, hi, pane.format ?? figure, 2);
       paneY.push(yOf);
@@ -224,7 +238,7 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
       ctx.stroke();
       ctx.setLineDash([]);
       if (pane.cmp) stroke(pane.cmp.values, yOf, c.compare, 1.4, pane.cmp.dash);
-      stroke(pane.values, yOf, c.panes[pane.tone] ?? c.price, 1.6, pane.dash);
+      stroke(pane.values, yOf, c.price, 1.6, pane.dash);
     });
 
     // A skipped stretch: a solid rule between the last bar before it and the first after,
@@ -248,9 +262,13 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
     const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(plotW / 90))));
     const starts = bs.filter((b) => b > 0 && b < n);
     const labelled = [0, ...starts];
+    // The last bar is always labelled, so the axis says where the window ends; a regular
+    // label too close to it gives way.
+    const last = n - 1;
     for (let i = every; i < n; i += every) {
-      if (starts.every((b) => Math.abs(b - i) >= every * 0.6)) labelled.push(i);
+      if ([...starts, last].every((b) => Math.abs(b - i) >= every * 0.6)) labelled.push(i);
     }
+    if (last > 0 && !labelled.includes(last)) labelled.push(last);
     for (const i of labelled) {
       ctx.fillText(fx(xsT[i]), Math.min(w - PAD.right - 18, Math.max(PAD.left + 18, xOf(i))), h - 8);
     }
@@ -276,7 +294,7 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
       dot(ys, yPrice, c.price);
       dot(cs, yPrice, c.compare);
       ps.forEach((pane, k) => {
-        dot(pane.values, paneY[k], c.panes[pane.tone] ?? c.price);
+        dot(pane.values, paneY[k], c.price);
         dot(pane.cmp?.values, paneY[k], c.compare);
       });
       for (const [y, color] of dots) {
@@ -315,13 +333,16 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
 
   // Reads the latest props through `st`: the ResizeObserver callback outlives the render
   // that created it, and must not size the canvas for a stale pane count.
-  const height = (w) => PAD.top + mainHeight(w) + st.props.panes.length * paneHeight(w, Boolean(st.props.compare)) + PAD.bottom;
+  const height = (w) => {
+    const { panes: ps, compare: cs } = st.props;
+    const tops = paneTops(w, ps, Boolean(cs));
+    return (ps.length ? tops[tops.length - 1] + PANE_PLOT : PAD.top + mainHeight(w)) + PAD.bottom;
+  };
 
   useEffect(() => {
     if (st.hover !== null && st.hover >= close.length) st.hover = null;
     const canvas = canvasRef.current;
     if (canvas && st.w) {
-      wrapRef.current.style.setProperty("--pane-head", `${paneHead(st.w, Boolean(compare))}px`);
       st.h = height(st.w);
       canvas.height = Math.round(st.h * st.dpr);
       canvas.style.height = `${st.h}px`;
@@ -337,7 +358,7 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
       st.w = wrap.getBoundingClientRect().width;
       st.h = height(st.w);
       wrap.style.setProperty("--main-h", `${mainHeight(st.w)}px`);
-      wrap.style.setProperty("--pane-head", `${paneHead(st.w, Boolean(st.props.compare))}px`);
+      setNarrow(st.w < NARROW);
       st.dpr = Math.min(2, window.devicePixelRatio || 1);
       canvas.width = Math.round(st.w * st.dpr);
       canvas.height = Math.round(st.h * st.dpr);
@@ -359,10 +380,11 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const setHover = (i) => {
+  // `keyed` is true when the keyboard moved the reading, the only time it is announced.
+  const setHover = (i, keyed = false) => {
     if (i === st.hover) return;
     st.hover = i;
-    st.onHover?.(i);
+    st.onHover?.(i, keyed);
     st.schedule();
   };
 
@@ -376,7 +398,7 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
     if (e.key === "Escape") { setHover(null); return; }
     if (next === undefined) return;
     e.preventDefault();
-    setHover(Math.max(0, Math.min(n - 1, next)));
+    setHover(Math.max(0, Math.min(n - 1, next)), true);
   };
 
   const onPointerMove = (e) => {
@@ -398,13 +420,15 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
         onFocus={() => { if (st.hover === null) setHover(st.props.close.length - 1); }}
         onBlur={() => setHover(null)}
         tabIndex={0}
-        role="img"
+        role="group"
+        aria-roledescription={roleLabel}
         aria-label={ariaLabel}
+        aria-keyshortcuts="ArrowLeft ArrowRight Home End"
       />
       {/* Pane headers are DOM, laid over the canvas, so their inputs are real inputs. */}
-      <div className="pchart-heads" style={{ top: `calc(${PAD.top}px + var(--main-h, 320px))` }}>
-        {heads.map((head, k) => (
-          <div key={panes[k]?.key ?? k} className="pchart-head" style={{ marginBottom: PANE_PLOT }}>{head}</div>
+      <div className={`pchart-heads ${narrow ? "narrow" : ""}`} style={{ top: `calc(${PAD.top}px + var(--main-h, 320px))` }}>
+        {heads(narrow).map((head, k) => (
+          <div key={panes[k].key} className="pchart-head" style={{ height: headHeight(narrow, panes[k], Boolean(compare)), marginBottom: PANE_PLOT }}>{head}</div>
         ))}
       </div>
       <div ref={tipRef} className={`vchart-tip ${tooltip ? "on" : ""}`} aria-hidden="true">{tooltip}</div>

@@ -48,9 +48,6 @@
   /* The Ticker filters: one accent hue at three lightnesses (DESLOP 50). */
   /* A compared ticker: the one warm hue on the Ticker tab, so it never reads as a shade of the main line. */
   --compare: oklch(0.8 0.13 65);
-  --pane-1: oklch(0.88 0.07 258);
-  --pane-2: oklch(0.74 0.13 258);
-  --pane-3: oklch(0.6 0.15 258);
   --chart-grid: oklch(0.26 0.009 258);
   --shadow: none;
   --shadow-pop: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 10px 28px -10px oklch(0 0 0 / 0.55);
@@ -78,9 +75,6 @@
   --warn: oklch(0.52 0.11 75);
   --on-solid: oklch(0.985 0.004 258);
   --compare: oklch(0.56 0.14 55);
-  --pane-1: oklch(0.36 0.12 258);
-  --pane-2: oklch(0.52 0.16 258);
-  --pane-3: oklch(0.68 0.11 258);
   --chart-grid: oklch(0.92 0.006 258);
   --shadow: 0 1px 2px oklch(0.3 0.02 258 / 0.06);
   --shadow-pop: 0 1px 2px oklch(0.3 0.02 258 / 0.08), 0 10px 24px -10px oklch(0.3 0.02 258 / 0.22);
@@ -487,6 +481,8 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 }
 .ticker-pick:hover { background: var(--surface-2); }
 .ticker-symbol { font: 600 19px/1.2 var(--font-display); flex: none; color: var(--text); }
+/* While comparing, the key for this ticker's line, as the compare chip keys the other. */
+.ticker-swatch { flex: none; align-self: center; width: 14px; height: 3px; border-radius: 3px; background: var(--accent); }
 .ticker-pick .icon { align-self: center; color: var(--text-3); }
 .ticker-pick-name { flex: none; max-width: 32ch; color: var(--text-2); font: 400 14px/1.2 var(--font-ui); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chart-title .popover-root { min-width: 0; max-width: 100%; }
@@ -524,6 +520,14 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
   /* The trigger sits mid-row on a phone, so a panel anchored to it would run off-screen:
      it anchors to the full-width row of range buttons instead. */
   .ticker-card .chart-controls { position: relative; }
+  .ticker-card .segmented { flex: 1; }
+  .ticker-card .segmented button { flex: 1 1 auto; min-width: 0; }
+  .ticker-card .segmented .popover-root { flex: 1 1 auto; }
+  .ticker-card .segmented .popover-root > button { width: 100%; }
+  /* Both ticker pickers anchor to the card's content box, so they keep its margins. */
+  .ticker-card .chart-head, .ticker-card .legend { position: relative; }
+  .ticker-card .chart-title .popover-root, .ticker-card .legend .popover-root { position: static; }
+  .ticker-pop .popover { left: 0; right: 0; width: auto; }
   .segmented .popover-root.week-pop { position: static; }
   .week-pop .popover { left: 0; right: 0; width: auto; }
 }
@@ -547,7 +551,9 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .pane-cmp i { width: 10px; height: 2px; border-radius: 2px; background: var(--compare); }
 .pane-cmp .num { color: var(--text); }
 .tip-cmp { display: inline-flex; align-items: center; gap: 5px; padding-left: 12px; color: var(--text-2); }
-.compare-chip .chip-x { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: var(--text-3); }
+.compare-chip .chip-x { position: relative; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: var(--text-3); }
+/* A 44px tap area around the small ×, without a bigger icon. */
+.compare-chip .chip-x::after { content: ""; position: absolute; inset: -11px; }
 .compare-chip .chip-x:hover { background: var(--surface-3); color: var(--text); }
 .legend-chip i.dashed { height: 0; border-top: 2px dashed currentColor; border-radius: 0; }
 .footnotes-wrap { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
@@ -572,14 +578,21 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .pchart { position: relative; touch-action: pan-y; user-select: none; }
 .pchart canvas { display: block; cursor: crosshair; border-radius: 4px; }
 .pchart-heads { position: absolute; left: 64px; right: 14px; pointer-events: none; }
+/* A narrow chart's headers span the card, so a pane's inputs fit on one row. */
+.pchart-heads.narrow { left: 8px; right: 8px; }
+.pchart-heads.narrow .pane-params { margin-left: 0; gap: 8px; }
 .pchart-head {
   display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 4px 12px;
-  height: var(--pane-head, 34px); border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line);
   font-size: 12.5px; white-space: nowrap; overflow: hidden;
 }
 .pchart-head > * { pointer-events: auto; }
 .pane-name { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
-.pane-name i { width: 12px; height: 3px; border-radius: 2px; }
+.pane-name i { width: 12px; height: 3px; border-radius: 2px; background: var(--accent); }
+button.pane-name { position: relative; height: 32px; margin-left: -6px; padding: 0 6px; border-radius: 6px; }
+button.pane-name::before { content: ""; position: absolute; inset: -6px 0; }
+button.pane-name .icon { color: var(--text-3); transition: transform 0.2s var(--ease); }
+button.pane-name[aria-expanded="true"] .icon { transform: rotate(180deg); }
 .pane-bars { color: var(--text-3); }
 .pane-value { color: var(--text); }
 .pane-state { font-weight: 600; }

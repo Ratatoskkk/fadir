@@ -113,6 +113,8 @@ function useChart(symbol, range, weeks, pollSeconds) {
   };
 }
 
+const stateTone = (state) => (state === "long" ? "up" : state === "short" ? "down" : "muted");
+
 export default function Ticker({ dash }) {
   const t = useT();
   const { instruments, portfolio, interval } = dash;
@@ -124,6 +126,10 @@ export default function Ticker({ dash }) {
   const [avgOn, setAvgOn] = useState(() => saved.avgOn ?? true);
   const [compareSymbol, setCompareSymbol] = useState(() => saved.compare ?? null);
   const [hover, setHover] = useState(null);
+  // Whether the keyboard moved the reading: only then is it spoken.
+  const [keyed, setKeyed] = useState(false);
+  // Panes whose N1/N2 inputs are open on a narrow chart.
+  const [editing, setEditing] = useState(() => new Set());
 
   // First visit: open on the largest holding, if there is one.
   useEffect(() => {
@@ -270,8 +276,9 @@ export default function Ticker({ dash }) {
 
   const panes = useMemo(() => {
     if (!series) return [];
-    // Each filter keeps its own shade wherever it appears: chip, pane line, pane name.
-    return FILTERS.map((f, tone) => ({ f, tone })).filter(({ f }) => filters[f.key].on).map(({ f, tone }) => {
+    // Every pane is named, so a pane's line is the ticker's own colour, as the compared
+    // ticker's is its colour.
+    return FILTERS.filter((f) => filters[f.key].on).map((f) => {
       const { n1, n2 } = filters[f.key];
       // MA slope is in price units, so two tickers at different prices cannot share its
       // axis. While comparing, each line is its slope less the level, as a % of its own
@@ -286,7 +293,7 @@ export default function Ticker({ dash }) {
       const values = read.map((v, i) => (view.mainOwn[i] ? v : null));
       const level = asPct ? 0 : n2 * 5;
       const format = asPct ? (v) => pct(v, 4) : figure;
-      const pane = { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), tone, values, read, dash: view.closeDash ?? null, level, format, asPct, n1, n2 };
+      const pane = { key: f.key, filter: f, name: t(f.label), bars: f.period(n1), editing: editing.has(f.key), values, read, dash: view.closeDash ?? null, level, format, asPct, n1, n2 };
       if (comparing && cmpAll) {
         // The same formula over the compared ticker's own bars, in its colour.
         const cFull = asPct ? toPct(f.compute(cmpAll, n1), cmpAll) : f.compute(cmpAll, n1);
@@ -295,9 +302,14 @@ export default function Ticker({ dash }) {
       }
       return pane;
     });
-  }, [series, view, comparing, cmpAll, filters, t]);
+  }, [series, view, comparing, cmpAll, filters, editing, t]);
 
   const setFilter = (key, patch) => setFilters((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+  const toggleEditing = (key) => setEditing((prev) => {
+    const next = new Set(prev);
+    if (!next.delete(key)) next.add(key);
+    return next;
+  });
 
   const byWeek = range === "W";
   // Selected weeks show their own last close; a live range shows the latest quote.
@@ -344,6 +356,7 @@ export default function Ticker({ dash }) {
       trigger={({ open, toggle }) => (
         <h2 className="ticker-heading">
           <button type="button" className="ticker-pick" onClick={toggle} aria-expanded={open} aria-haspopup="dialog">
+            {comparing && <i className="ticker-swatch" aria-hidden="true" />}
             <span className="ticker-symbol">{symbol}</span>
             <span className="ticker-pick-name">{data?.name ?? current?.name ?? ""}</span>
             <motion.span animate={{ rotate: open ? 180 : 0 }}><Icon name="down" size={14} /></motion.span>
@@ -367,7 +380,7 @@ export default function Ticker({ dash }) {
   }
 
   // A held point is "not trading": the line there is that market's last value.
-  const closedNote = (held) => (held ? <span className="muted">{t("ticker.notTrading")}</span> : null);
+  const closedNote = (held) => (held ? <span className="muted">{t("live.closed")}</span> : null);
   const tooltip = hoverBar ? (
     <>
       <div className="tip-date">{stamp(view.times[hover])}</div>
@@ -384,7 +397,7 @@ export default function Ticker({ dash }) {
       {panes.length > 0 && <div className="tip-sep" />}
       {panes.map((p) => (
         <div key={p.key} className="tip-row">
-          <i style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}
+          {p.cmp && <i style={{ background: "var(--accent)" }} />}{p.name}
           <b className="num">{p.format(p.read[hover])}</b>
           {p.cmp && <span className="tip-cmp num"><i style={{ background: "var(--compare)" }} />{p.format(p.cmp.read[hover])}</span>}
         </div>
@@ -392,7 +405,7 @@ export default function Ticker({ dash }) {
     </>
   ) : null;
 
-  const spoken = hoverBar
+  const spoken = hoverBar && keyed
     ? [
       stamp(view.times[hover]),
       `${t("ticker.close")} ${quote(hoverBar.close)}`,
@@ -405,31 +418,39 @@ export default function Ticker({ dash }) {
     ].join(", ")
     : "";
 
-  const heads = panes.map((p) => {
+  // On a narrow chart a pane's N1/N2 inputs open from its name; a wide one always shows them.
+  const heads = (narrow) => panes.map((p) => {
     const value = at !== null ? p.read[at] : null;
     const state = filterState(value, p.level);
     const cValue = p.cmp && at !== null ? p.cmp.read[at] : null;
     const cState = filterState(cValue, p.level);
+    const name = <><i aria-hidden="true" />{p.name}</>;
     return (
       <>
-        <span className="pane-name"><i aria-hidden="true" style={{ background: `var(--pane-${p.tone + 1})` }} />{p.name}</span>
-        <span className="pane-bars num">{t("ticker.bars", { n: p.bars })}</span>
+        {narrow ? (
+          <button type="button" className="pane-name" aria-expanded={p.editing} aria-label={t("ticker.editParams", { name: p.name })} onClick={() => toggleEditing(p.key)}>
+            {name}<Icon name="down" size={12} />
+          </button>
+        ) : (
+          <span className="pane-name">{name}</span>
+        )}
         <span className="pane-value num">{p.format(value)}</span>
-        <span className={`pane-state ${state === "long" ? "up" : state === "short" ? "down" : "muted"}`}>
-          {state ? t(`ticker.${state}`) : "—"}
-        </span>
+        <span className={`pane-state ${stateTone(state)}`}>{state ? t(`ticker.${state}`) : "—"}</span>
         {p.cmp && (
           <span className="pane-cmp">
             <i aria-hidden="true" />{compareSymbol}
             <span className="num">{p.format(cValue)}</span>
-            <span className={cState === "long" ? "up" : cState === "short" ? "down" : "muted"}>{cState ? t(`ticker.${cState}`) : "—"}</span>
+            <span className={stateTone(cState)}>{cState ? t(`ticker.${cState}`) : "—"}</span>
           </span>
         )}
-        <span className="pane-params">
-          {p.filter.usesN1 && <ParamInput label="N1" ariaLabel={`${p.name} N1`} integer value={p.n1} onChange={(n1) => setFilter(p.key, { n1 })} />}
-          <ParamInput label="N2" ariaLabel={`${p.name} N2`} value={p.n2} onChange={(n2) => setFilter(p.key, { n2 })} />
-          <span className="pane-level num" title={t("ticker.level")}><i aria-hidden="true" />{p.asPct ? pct(0, 0) : figure(p.level)}</span>
-        </span>
+        {(!narrow || p.editing) && (
+          <span className="pane-params">
+            {p.filter.usesN1 && <ParamInput label="N1" ariaLabel={`${p.name} N1`} integer value={p.n1} onChange={(n1) => setFilter(p.key, { n1 })} />}
+            <span className="pane-bars num">{t("ticker.bars", { n: p.bars })}</span>
+            <ParamInput label="N2" ariaLabel={`${p.name} N2`} value={p.n2} onChange={(n2) => setFilter(p.key, { n2 })} />
+            <span className="pane-level num" title={t("ticker.level")}><i aria-hidden="true" />{p.asPct ? pct(0, 0) : figure(p.level)}</span>
+          </span>
+        )}
       </>
     );
   });
@@ -445,7 +466,7 @@ export default function Ticker({ dash }) {
           )}
           {data && (
             <span className={`ticker-session ${data.market_open ? "open" : ""}`}>
-              <i aria-hidden="true" />{t(data.market_open ? "ticker.trading" : "ticker.notTrading")}
+              <i aria-hidden="true" />{t(data.market_open ? "live.open" : "live.closed")}
             </span>
           )}
         </div>
@@ -484,7 +505,7 @@ export default function Ticker({ dash }) {
             {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
           </button>
         )}
-        {FILTERS.map((f, tone) => (
+        {FILTERS.map((f) => (
           <button
             key={f.key}
             type="button"
@@ -492,7 +513,6 @@ export default function Ticker({ dash }) {
             aria-pressed={filters[f.key].on}
             onClick={() => setFilter(f.key, { on: !filters[f.key].on })}
           >
-            <i style={{ background: `var(--pane-${tone + 1})` }} />
             {t(f.label)}
           </button>
         ))}
@@ -546,9 +566,10 @@ export default function Ticker({ dash }) {
             heads={heads}
             formatX={formatX}
             live={data.market_open}
-            onHover={setHover}
+            onHover={(i, byKey) => { setHover(i); setKeyed(byKey); }}
             tooltip={tooltip}
             ariaLabel={t("ticker.aria", { symbol })}
+            roleLabel={t("ticker.chartRole")}
           />
         ) : (
           <div className="chart-empty">

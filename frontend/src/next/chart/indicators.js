@@ -106,10 +106,10 @@ export const FILTERS = [
   },
 ];
 
-/** "long", "short", or null where the value equals the level or is not yet defined. */
+/** "long" above the level, "short" below it, "flat" on it, or null before it is defined. */
 export function filterState(value, level) {
   if (value === null || value === undefined) return null;
   if (value > level) return "long";
   if (value < level) return "short";
-  return null;
+  return "flat";
 }
