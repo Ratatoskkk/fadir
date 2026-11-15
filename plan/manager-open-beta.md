@@ -1703,3 +1703,15 @@ popovers; and moves stagger delays to `sibling-index()` with an nth-child fallba
 Frontend only, no restart. Installed checksums match the build for all 16 files; rollback
 bundle `/opt/fadir/frontend/dist.previous.modern-web-20261115`. Public health and all 14
 assets returned 200. Checked in the mock app, not yet in the signed-in owner tab.
+
+Ticker UI review deployment (owner request 2026-11-15). `83a34ed` fixes the ticker
+review: full-width range buttons and a 44px tap area for the compare × on phones; the
+chart readout is announced only on arrow keys, not hover; the chart is a focusable group
+described as a chart with its keys listed; a 280px price chart on phones, with each pane's
+N1/N2 opening from its name; pane lines in the ticker's colour and a key for the main line
+while comparing; the bar count beside N1; ticker pickers inside the card margins; "open" /
+"closed" for market state everywhere; "Flat" on the level; and the last bar's time always
+on the axis. Frontend only, no restart. Installed checksums match the build for all 16
+files; rollback bundle `/opt/fadir/frontend/dist.previous.ticker-review-20261115`. Public
+health and all 5 same-origin assets returned 200, and the signed-in owner tab shows the
+new ticker layout at phone width.
