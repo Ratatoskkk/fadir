@@ -1683,3 +1683,12 @@ checksums match the build for all 16 files; rollback bundle
 `/opt/fadir/frontend/dist.previous.compare-own-20261114`. Public health and all 15 assets
 returned 200, and the signed-in owner tab shows SIVEF against AAOI on 1D as connected
 lines with AAOI lines in each pane.
+
+MA slope in % deployment (owner choice 2026-11-15). MA slope is in price units, so a
+compared ticker at a different price flattened the other's line on the shared pane.
+`38a1122` draws each ticker's MA slope less its level as a % of its own moving average
+while comparing; the level sits at 0 and Long or Short is unchanged. Frontend only, no
+restart. Installed checksums match the build for all 16 files; rollback bundle
+`/opt/fadir/frontend/dist.previous.maslope-pct-20261115`. Public health and all 15 assets
+returned 200, and the signed-in owner tab shows SIVEF and AAOI MA slope lines on one %
+axis.
