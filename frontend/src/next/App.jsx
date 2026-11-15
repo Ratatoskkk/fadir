@@ -8,6 +8,7 @@ import "@fontsource-variable/geologica";
 import { api } from "../api.js";
 import { switchUi } from "../ui.js";
 import { RANGES } from "../ranges.js";
+import { currentTheme, toggleTheme as flipTheme, watchTheme } from "../theme.js";
 import { INTERVALS, useDashboard } from "./useDashboard.js";
 import CodeGate from "./components/CodeGate.jsx";
 import CommandPalette from "./components/CommandPalette.jsx";
@@ -47,7 +48,8 @@ function useHashView() {
 }
 
 function useTheme() {
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || "dark");
+  const [theme, setTheme] = useState(currentTheme);
+  useEffect(() => watchTheme(setTheme), []);
   /**
    * The new theme is revealed as a circle growing from the toggle. Uses the View
    * Transitions API: the browser snapshots old and new pages and animates the snapshots
@@ -56,12 +58,7 @@ function useTheme() {
    */
   const toggle = useCallback((event) => {
     const root = document.documentElement;
-    const next = root.dataset.theme === "dark" ? "light" : "dark";
-    const apply = () => {
-      root.dataset.theme = next;
-      setTheme(next);
-    };
-    try { localStorage.setItem("fadir.theme", next); } catch { /* private mode */ }
+    const apply = () => setTheme(flipTheme());
     if (!document.startViewTransition || prefersReducedMotion()) { apply(); return; }
     const rect = event?.currentTarget?.getBoundingClientRect?.();
     const x = rect ? rect.left + rect.width / 2 : window.innerWidth - 60;

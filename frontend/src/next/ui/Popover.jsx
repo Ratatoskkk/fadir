@@ -1,4 +1,5 @@
-// Anchored menu that springs out of its trigger. Closes on outside click and Escape.
+// Panel that springs out of its trigger. Closes on outside click, and on Escape with focus
+// back on the trigger. A disclosure, not an ARIA menu: its contents are ordinary Tab stops.
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -11,7 +12,11 @@ export default function Popover({ trigger, children, align = "right", className 
   useEffect(() => {
     if (!open) return undefined;
     const onDown = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
-    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      if (ref.current?.contains(document.activeElement)) ref.current.querySelector("button")?.focus();
+    };
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -27,7 +32,7 @@ export default function Popover({ trigger, children, align = "right", className 
         {open && (
           <motion.div
             className={`popover align-${align}`}
-            role="menu"
+            role="group"
             aria-label={label}
             initial={{ opacity: 0, scale: 0.92, y: -6 }}
             animate={{ opacity: 1, scale: 1, y: 0, transition: spring }}

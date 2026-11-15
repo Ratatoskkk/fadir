@@ -933,12 +933,16 @@ tfoot td:first-child { text-align: left; }
 }
 
 /* Panels settle in on first paint rather than snapping. transform + opacity only. */
-.content > * { animation: enter .45s var(--ease) both; }
-.content > *:nth-child(1) { animation-delay: 0ms; }
-.content > *:nth-child(2) { animation-delay: 40ms; }
-.content > *:nth-child(3) { animation-delay: 80ms; }
-.content > *:nth-child(4) { animation-delay: 120ms; }
-.content > *:nth-child(5) { animation-delay: 160ms; }
+.content > * {
+  animation: enter .45s var(--ease) both;
+  animation-delay: calc(min(sibling-index() - 1, 4) * 40ms);
+}
+@supports not (animation-delay: calc(sibling-index() * 1ms)) {
+  .content > *:nth-child(2) { animation-delay: 40ms; }
+  .content > *:nth-child(3) { animation-delay: 80ms; }
+  .content > *:nth-child(4) { animation-delay: 120ms; }
+  .content > *:nth-child(n + 5) { animation-delay: 160ms; }
+}
 
 /* -- condensed summary --------------------------------------------------------------- */
 

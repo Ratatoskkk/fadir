@@ -54,7 +54,7 @@ function PortfolioSwitcher({ dash, onNewPortfolio }) {
       label={t("portfolio.choose")}
       align="left"
       trigger={({ open, toggle }) => (
-        <button type="button" className="switcher" onClick={toggle} aria-expanded={open} aria-haspopup="menu" disabled={loading && !current}>
+        <button type="button" className="switcher" onClick={toggle} aria-expanded={open} disabled={loading && !current}>
           <span className="switcher-name">{current?.name ?? t("portfolio.label")}</span>
           <span className="switcher-ccy">{current?.base_currency}</span>
           <motion.span animate={{ rotate: open ? 180 : 0 }}><Icon name="down" size={14} /></motion.span>
@@ -70,8 +70,7 @@ function PortfolioSwitcher({ dash, onNewPortfolio }) {
               <button
                 key={p.id}
                 type="button"
-                role="menuitemradio"
-                aria-checked={on}
+                aria-pressed={on}
                 className={`menu-item ${on ? "on" : ""}`}
                 disabled={fetching}
                 onClick={() => { close(); selectPortfolio(Number(p.id)); }}
@@ -85,14 +84,14 @@ function PortfolioSwitcher({ dash, onNewPortfolio }) {
           {current?.code && (
             <>
               <div className="menu-label">{t("code.short")}</div>
-              <button type="button" role="menuitem" className="menu-item" onClick={() => { close(); copyCode(current.code, toast, t); }}>
+              <button type="button" className="menu-item" onClick={() => { close(); copyCode(current.code, toast, t); }}>
                 <span className="code-chip">{current.code}</span>
                 <Icon name="copy" size={14} />
               </button>
             </>
           )}
           {onNewPortfolio && (
-            <button type="button" role="menuitem" className="menu-item" onClick={() => { close(); onNewPortfolio(); }}>
+            <button type="button" className="menu-item" onClick={() => { close(); onNewPortfolio(); }}>
               <span>{t("portfolio.new")}</span>
               <Icon name="plus" size={14} />
             </button>
@@ -111,7 +110,7 @@ function LiveStatus({ dash }) {
     <Popover
       label={t("live.title")}
       trigger={({ open, toggle }) => (
-        <button type="button" className={`live ${anyMarketOpen ? "open" : ""} ${interval === 0 ? "paused" : ""}`} onClick={toggle} aria-expanded={open} aria-haspopup="menu">
+        <button type="button" className={`live ${anyMarketOpen ? "open" : ""} ${interval === 0 ? "paused" : ""}`} onClick={toggle} aria-expanded={open}>
           <span className="live-dot"><i /></span>
           <span className="live-text">{t(anyMarketOpen ? "live.open" : "live.closed")}</span>
           <span className="live-time num">{lastUpdated ? clockTime(lastUpdated) : "—"}</span>
@@ -140,8 +139,7 @@ function LiveStatus({ dash }) {
               <button
                 key={opt.value}
                 type="button"
-                role="menuitemradio"
-                aria-checked={interval === opt.value}
+                aria-pressed={interval === opt.value}
                 className={`chip chip-btn ${interval === opt.value ? "on" : ""}`}
                 onClick={() => { setIntervalSeconds(opt.value); close(); }}
               >

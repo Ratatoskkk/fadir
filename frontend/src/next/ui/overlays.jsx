@@ -2,9 +2,10 @@
 //   const confirm = useConfirm(); if (!(await confirm({...}))) return;
 //   const toast = useToast(); toast({ tone: "up", text: "Kaydedildi" });
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Icon from "./Icons.jsx";
+import { Modal } from "./Dialog.jsx";
 import { bouncy, ease, spring } from "./motion.js";
 import { useT } from "../i18n/index.jsx";
 
@@ -72,52 +73,38 @@ export function OverlayProvider({ children }) {
 
 function ConfirmDialog({ dialog, onClose }) {
   const t = useT();
+  // A destructive confirmation starts on the safe answer.
+  const cancelRef = useRef(null);
   const confirmRef = useRef(null);
-  useEffect(() => {
-    confirmRef.current?.focus();
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   return (
-    <motion.div
-      className="scrim"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.15 } }}
-      onMouseDown={(e) => e.target === e.currentTarget && onClose(false)}
+    <Modal
+      className="dialog"
+      role="alertdialog"
+      aria-labelledby="confirm-title"
+      onClose={() => onClose(false)}
+      initialFocus={dialog.danger ? cancelRef : confirmRef}
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0, transition: spring }}
+      exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } }}
     >
-      <motion.div
-        className="dialog"
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="confirm-title"
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0, transition: spring }}
-        exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } }}
-      >
-        <div className={`dialog-icon ${dialog.danger ? "danger" : ""}`}>
-          <Icon name={dialog.danger ? "trash" : "info"} size={20} />
-        </div>
-        <h3 id="confirm-title">{dialog.title}</h3>
-        {dialog.body && <div className="dialog-body">{dialog.body}</div>}
-        <div className="dialog-actions">
-          <button type="button" className="btn ghost" onClick={() => onClose(false)}>
-            {t("common.cancel")}
-          </button>
-          <button
-            ref={confirmRef}
-            type="button"
-            className={`btn ${dialog.danger ? "danger solid" : "primary"}`}
-            onClick={() => onClose(true)}
-          >
-            {dialog.confirmLabel ?? "Onayla"}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
+      <div className={`dialog-icon ${dialog.danger ? "danger" : ""}`}>
+        <Icon name={dialog.danger ? "trash" : "info"} size={20} />
+      </div>
+      <h3 id="confirm-title">{dialog.title}</h3>
+      {dialog.body && <div className="dialog-body">{dialog.body}</div>}
+      <div className="dialog-actions">
+        <button ref={cancelRef} type="button" className="btn ghost" onClick={() => onClose(false)}>
+          {t("common.cancel")}
+        </button>
+        <button
+          ref={confirmRef}
+          type="button"
+          className={`btn ${dialog.danger ? "danger solid" : "primary"}`}
+          onClick={() => onClose(true)}
+        >
+          {dialog.confirmLabel ?? "Onayla"}
+        </button>
+      </div>
+    </Modal>
   );
 }

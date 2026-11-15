@@ -57,7 +57,11 @@ export default function CodeGate({ codeLengths = [4], onOpened, onGoogle, onCrea
   }
 
   function onKeyDown(event) {
-    if (event.key === "Enter") submit(code);
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    // Enter that confirms an IME candidate (isComposing, or 229 in Safari) is not a submit.
+    if (event.isComposing || event.keyCode === 229) return;
+    submit(code);
   }
 
   async function leave(action) {

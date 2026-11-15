@@ -25,6 +25,7 @@ import PortfolioSelector from "./components/PortfolioSelector.jsx";
 import TransactionManager from "./components/TransactionManager.jsx";
 import TaxProfilePanel from "./components/TaxProfilePanel.jsx";
 import { switchUi } from "../ui.js";
+import { currentTheme, toggleTheme as flipTheme, watchTheme } from "../theme.js";
 
 // Recharts is by far the largest dependency and the chart sits below the fold, so the
 // hero card and positions table are not made to wait on it. The data fetch starts
@@ -179,9 +180,8 @@ export default function App() {
   //: the chart to it; clicking the same one again clears the filter.
   const [focusTickers, setFocusTickers] = useState([]);
   const [interval, setIntervalSeconds] = useState(DEFAULT_INTERVAL);
-  const [theme, setTheme] = useState(
-    () => document.documentElement.dataset.theme || "dark",
-  );
+  const [theme, setTheme] = useState(currentTheme);
+  useEffect(() => watchTheme(setTheme), []);
   const [activeSection, setActiveSection] = useState("ozet");
   const [order, setOrder] = useState(loadOrder);
   const [dragId, setDragId] = useState(null);
@@ -384,14 +384,7 @@ export default function App() {
   }, [interval, anyMarketOpen, closedInterval]);
 
   function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("fadir.theme", next);
-    } catch {
-      /* private mode — the choice just does not persist */
-    }
+    setTheme(flipTheme());
   }
 
   const goTo = (id) =>

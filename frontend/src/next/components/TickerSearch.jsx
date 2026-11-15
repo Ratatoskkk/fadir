@@ -115,7 +115,8 @@ export default function TickerSearch({ instruments, onPick, search = api.searchI
   function onKeyDown(e) {
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => Math.min(i + 1, rows.length - 1)); sound.key(); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); sound.key(); }
-    else if (e.key === "Enter") { e.preventDefault(); pick(current); }
+    // Enter that confirms an IME candidate (isComposing, or 229 in Safari) is not a pick.
+    else if (e.key === "Enter") { e.preventDefault(); if (!e.isComposing && e.keyCode !== 229) pick(current); }
     else if (e.key === "Tab" && ghost) { e.preventDefault(); setText(best.ticker); sound.key(); }
   }
 
