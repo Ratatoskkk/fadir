@@ -1761,3 +1761,12 @@ it released within 400ms and the page took clicks. Frontend only, no restart. In
 checksums match the build for all 16 files; rollback bundle
 `/opt/fadir/frontend/dist.previous.dialog-release-20261116`. Public health and the new bundle
 returned 200. Not confirmed in the owner's Firefox tab, which needs a reload to pick it up.
+
+Volume totals deployment (owner request 2026-11-16). `f4866ab`: with nothing pointed at, the
+Ticker Volume pane's header reads the shown range's total buying, selling and volume and
+their net, labelled with the range ("1D", or the week count); pointing at a bar reads that
+bar, labelled with its time. The UI review's three fixes ship with it: the period label,
+headroom so the ± scale labels stay inside the pane, and the net figure in its up/down
+colour. Frontend only, no restart. Installed checksums match the build for all 16 files;
+rollback bundle `/opt/fadir/frontend/dist.previous.volume-totals-20261116`. Public health and
+the new bundle returned 200. Checked in the mock app at desktop and phone width.
