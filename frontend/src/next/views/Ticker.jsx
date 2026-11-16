@@ -101,14 +101,18 @@ function useChart(symbol, range, weeks, pollSeconds, tick) {
 
   useEffect(() => { load(); }, [load]);
   const ticked = useRef(tick);
+  // Whether the chart's market is trading; a price update elsewhere cannot move a chart
+  // whose market is shut, and a hidden tab draws nothing.
+  const liveRef = useRef(false);
   useEffect(() => {
     if (ticked.current === tick) return;
     ticked.current = tick;
-    load();
+    if (liveRef.current && !document.hidden) load();
   }, [tick, load]);
 
   const fresh = state.key === key;
   const open = fresh && state.data?.market_open;
+  liveRef.current = Boolean(open);
   useEffect(() => {
     const seconds = open ? pollSeconds : CLOSED_POLL_SECONDS;
     if (!symbol || !seconds) return undefined;
@@ -362,6 +366,9 @@ export default function Ticker({ dash }) {
   });
 
   const byWeek = range === "W";
+  // 1D: the previous session's official close (closing auction included), else its last
+  // bar's close. The dotted line and the change chip both measure from it.
+  const prevClose = range !== "1D" || !data ? null : data.previous_close ?? (data.warmup > 0 ? data.bars[data.warmup - 1].close : null);
   // Selected weeks show their own last close; a live range shows the latest quote.
   const price = !series ? null : byWeek ? series.close[series.close.length - 1] : data.price;
   const change = !series
@@ -369,7 +376,7 @@ export default function Ticker({ dash }) {
     : byWeek
       ? series.ratio
       : (() => {
-        const base = data.warmup > 0 ? data.bars[data.warmup - 1].close : series.bars[0].open;
+        const base = prevClose ?? (data.warmup > 0 ? data.bars[data.warmup - 1].close : series.bars[0].open);
         return base ? price / base : null;
       })();
   const at = hover ?? (view ? view.times.length - 1 : null);
@@ -388,7 +395,7 @@ export default function Ticker({ dash }) {
     ? Number(holding.average_purchase_price_native)
     : null;
   // 1D: the previous session's last close, the base of the change chip.
-  const prevClose = range === "1D" && data?.warmup > 0 ? data.bars[data.warmup - 1].close : null;
+
   // A price-level line has no place on a chart of % changes.
   const marks = comparing ? [] : [
     ...(avgBuy !== null && avgOn ? [{ value: avgBuy, label: `${t("pos.avgBuy")} ${quote(avgBuy)}` }] : []),

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { arrow, clockTime, daysFromToday, hourMinute, money, ratioPct, toneOf, weekdayShort } from "../../format.js";
+import { PORTFOLIO_CURRENCIES, arrow, clockTime, daysFromToday, hourMinute, money, ratioPct, toneOf, weekdayShort } from "../../format.js";
 import { INTERVALS } from "../useDashboard.js";
 import AnimatedNumber from "../ui/AnimatedNumber.jsx";
 import Icon from "../ui/Icons.jsx";
@@ -43,9 +43,6 @@ export function NavTabs({ view, onChange, className = "", layoutId = "nav-pill" 
     </nav>
   );
 }
-
-/** The Base Currencies a Portfolio can choose (ADR 0006); new ones start in USD. */
-export const PORTFOLIO_CURRENCIES = ["USD", "EUR", "GBP", "TRY"];
 
 function PortfolioSwitcher({ dash, onNewPortfolio }) {
   const { portfolios, selectedPortfolioId, selectPortfolio, setBaseCurrency, loading, fetching } = dash;

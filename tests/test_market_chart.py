@@ -62,8 +62,10 @@ def test_chart_is_cached_and_a_failed_refetch_keeps_the_last_bars(monkeypatch):
     calls = []
     bars = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
 
-    def fetch(*args, **kwargs):
-        calls.append(args)
+    def fetch(symbol, interval, **kwargs):
+        if interval == "1d":
+            return None  # the previous-close lookup; not under test here
+        calls.append(interval)
         return _series(bars) if len(calls) == 1 else None
 
     clock = [1e9]
@@ -76,6 +78,17 @@ def test_chart_is_cached_and_a_failed_refetch_keeps_the_last_bars(monkeypatch):
     clock[0] += 3600
     assert market_chart.chart("AAPL", "1D") is first
     assert len(calls) == 2
+
+    # Yahoo just failed, so it is not asked again for a while; the last chart stands in.
+    clock[0] += 10
+    assert market_chart.chart("AAPL", "1D") is first
+    assert len(calls) == 2
+
+    # Past the back-off and too old to stand in: the failure surfaces.
+    clock[0] += market_chart.MAX_STALE_SECONDS
+    with pytest.raises(market_chart.ChartUnavailable):
+        market_chart.chart("AAPL", "1D")
+    assert len(calls) == 3
 
 
 def test_unknown_symbol_is_404_and_bad_input_is_422(client, monkeypatch):  # noqa: F811
@@ -281,3 +294,38 @@ def test_a_past_weeks_price_is_its_own_last_close(client, monkeypatch):  # noqa:
 def test_volume_is_kept_exact_and_bad_values_are_zero():
     assert yf_client._volume(123456789) == 123456789.0
     assert yf_client._volume(float("nan")) == yf_client._volume(-5) == yf_client._volume(None) == 0.0
+
+
+def test_a_session_that_opened_the_evening_before_starts_that_evening(monkeypatch):
+    bars = _bars(datetime(2026, 11, 13, 1, 0, tzinfo=NY), 12, timedelta(minutes=5))
+    opens = datetime(2026, 11, 13, 18, 0, tzinfo=NY)  # Yahoo: 18:00 → 17:00 next day
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(bars, session=(opens, opens + timedelta(hours=23))))
+    start, end = market_chart.chart("ES=F", "1D").day_session()
+    assert start == datetime(2026, 11, 12, 18, 0, tzinfo=NY)
+    assert end == datetime(2026, 11, 13, 17, 0, tzinfo=NY)
+
+
+def test_1d_carries_the_official_previous_close(monkeypatch):
+    intraday = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
+    daily = [
+        yf_client.Bar(at=datetime(2026, 11, d, tzinfo=NY), open=1, high=1, low=1, close=float(d))
+        for d in (11, 12, 13)
+    ]
+
+    def fetch(symbol, interval, **kwargs):
+        return _series(daily if interval == "1d" else intraday)
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    assert market_chart.chart("AAPL", "1D").previous_close == 12.0  # the day before the shown one
+    assert market_chart.chart("AAPL", "5D").previous_close is None
+
+
+def test_week_selections_cannot_push_live_charts_out(monkeypatch):
+    monkeypatch.setattr(market_chart, "MAX_WEEK_ENTRIES", 2)
+    live = object()
+    market_chart._store(("AAPL", "1D"), live)
+    for n in range(5):
+        market_chart._store(("AAPL", f"W:2026-W0{n + 1}"), object())
+    keys = list(market_chart._cache)
+    assert ("AAPL", "1D") in keys
+    assert sum(k[1].startswith("W:") for k in keys) == 2

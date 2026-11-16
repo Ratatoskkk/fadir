@@ -45,6 +45,17 @@ RANGES: dict[str, ChartRange] = {
 }
 
 MAX_ENTRIES = 128
+#: Week selections are open-ended, so they get their own share of the cache and can
+#: never push the live ranges out.
+MAX_WEEK_ENTRIES = 32
+#: After Yahoo fails for a chart, it is not asked again for this long; the last good
+#: chart (or the error) stands in, so polls from every viewer don't pile onto Yahoo.
+FAILURE_BACKOFF_SECONDS = 30
+#: A cached chart older than this is not served in place of a failed fetch.
+MAX_STALE_SECONDS = 6 * 3600
+#: The official previous close (closing auction included) comes from daily bars, which
+#: change once a day, so they are cached far longer than the 1D chart itself.
+PREV_CLOSE_TTL_SECONDS = 300
 #: Lead-in bars kept before a segment: enough for a 250-bar average or a settled
 #: 25-bar ADX. A 24-hour market would otherwise ship months of hourly bars nobody sees.
 MAX_WARMUP = 300
@@ -85,6 +96,9 @@ class Chart:
     #: False when the shown window is entirely in the past (a finished week), so the
     #: chart is not live even while the exchange trades.
     reaches_now: bool = True
+    #: 1D only: the previous session's official close (Yahoo's daily bar), which the
+    #: last 5-minute bar can miss by the closing auction. None when unavailable.
+    previous_close: float | None = None
 
     @property
     def warmup(self) -> int:
@@ -107,6 +121,10 @@ class Chart:
         if not timedelta(0) < length <= timedelta(days=1):
             return None
         opens = datetime.combine(last.date(), start.astimezone(zone).time(), tzinfo=zone)
+        if opens > last:
+            # The session opened the evening before (futures, some FX): its open is on
+            # the previous local date.
+            opens = datetime.combine(last.date() - timedelta(days=1), start.astimezone(zone).time(), tzinfo=zone)
         first = bars[self.warmup].at if self.warmup < len(bars) else last
         return min(opens, first), max(opens + length, last)
 
@@ -217,58 +235,117 @@ def trim_lead_in(bars: list[yf_client.Bar], segments: list[Segment]) -> tuple[li
     return kept, tuple(out)
 
 
-_cache: OrderedDict[tuple[str, str], tuple[float, Chart]] = OrderedDict()
+_cache: OrderedDict[tuple[str, str], tuple[float, object]] = OrderedDict()
 _lock = threading.Lock()
+#: When Yahoo last failed for a key, for the back-off.
+_failed: dict[tuple[str, str], float] = {}
+#: One fetch per key at a time: concurrent polls of a chart wait for it and reuse it.
+_key_locks: dict[tuple[str, str], threading.Lock] = {}
 
 
 def clear_cache() -> None:
     with _lock:
         _cache.clear()
+        _failed.clear()
+        _key_locks.clear()
 
 
-def _cached(key: tuple[str, str], ttl_seconds: int) -> tuple[Chart | None, Chart | None]:
-    """(fresh hit, any hit). The stale hit stands in when Yahoo fails mid-poll."""
+def _cached(key: tuple[str, str], ttl_seconds: int):
+    """(fresh hit, a stale hit still young enough to stand in for a failed fetch)."""
     now = time.monotonic()
     with _lock:
         hit = _cache.get(key)
         if hit is None:
             return None, None
         _cache.move_to_end(key)
-        return (hit[1] if now - hit[0] < ttl_seconds else None), hit[1]
+        age = now - hit[0]
+        return (hit[1] if age < ttl_seconds else None), (hit[1] if age < MAX_STALE_SECONDS else None)
 
 
-def _store(key: tuple[str, str], result: Chart) -> Chart:
+def _store(key: tuple[str, str], result):
     with _lock:
         _cache[key] = (time.monotonic(), result)
         _cache.move_to_end(key)
+        weeks = [k for k in _cache if k[1].startswith("W:")]
+        for old in weeks[: max(0, len(weeks) - MAX_WEEK_ENTRIES)]:
+            del _cache[old]
         while len(_cache) > MAX_ENTRIES:
             _cache.popitem(last=False)
+        for k in [k for k in _key_locks if k not in _cache]:
+            if not _key_locks[k].locked():
+                del _key_locks[k]
     return result
+
+
+def _through_cache(key: tuple[str, str], ttl_seconds: int, build):
+    """The cached value for `key`, or `build()`'s, fetching at most once at a time.
+
+    `build` returns None when Yahoo fails; the last good value stands in (up to
+    MAX_STALE_SECONDS old), else ChartUnavailable. After a failure Yahoo is not asked
+    again for FAILURE_BACKOFF_SECONDS.
+    """
+    fresh, stale = _cached(key, ttl_seconds)
+    if fresh is not None:
+        return fresh
+    with _lock:
+        key_lock = _key_locks.setdefault(key, threading.Lock())
+    with key_lock:
+        fresh, stale = _cached(key, ttl_seconds)  # another request may have just fetched
+        if fresh is not None:
+            return fresh
+        with _lock:
+            failed_at = _failed.get(key)
+        if failed_at is not None and time.monotonic() - failed_at < FAILURE_BACKOFF_SECONDS:
+            if stale is not None:
+                return stale
+            raise ChartUnavailable(f"no price data for {key[0]}")
+        result = build()
+        with _lock:
+            if result is None:
+                _failed[key] = time.monotonic()
+            else:
+                _failed.pop(key, None)
+        if result is None:
+            if stale is not None:
+                return stale  # a slightly old chart beats an error mid-poll
+            raise ChartUnavailable(f"no price data for {key[0]}")
+        return _store(key, result)
+
+
+def previous_close(symbol: str, day: date) -> float | None:
+    """The official close of the last session before `day`, from Yahoo's daily bars."""
+    def build():
+        series = yf_client.fetch_bars(symbol, "1d", period="5d")
+        return None if series is None else tuple((b.at.date(), b.close) for b in series.bars)
+
+    try:
+        closes = _through_cache((symbol, "prev-close"), PREV_CLOSE_TTL_SECONDS, build)
+    except ChartUnavailable:
+        return None
+    before = [close for on, close in closes if on < day]
+    return before[-1] if before else None
 
 
 def chart(symbol: str, range_key: str) -> Chart:
     spec = RANGES[range_key]
-    key = (symbol, range_key)
-    fresh, stale = _cached(key, spec.ttl_seconds)
-    if fresh is not None:
-        return fresh
 
-    series = yf_client.fetch_bars(symbol, spec.interval, period=spec.period)
-    if series is None:
-        if stale is not None:
-            return stale  # a slightly old chart beats an error mid-poll
-        raise ChartUnavailable(f"no price data for {symbol}")
+    def build() -> Chart | None:
+        series = yf_client.fetch_bars(symbol, spec.interval, period=spec.period)
+        if series is None:
+            return None
+        shown = first_shown(series.bars, spec)
+        lead = min(shown, MAX_WARMUP)
+        bars = follow_quote(series)[shown - lead :]
+        return Chart(
+            symbol=symbol,
+            range=range_key,
+            interval=spec.interval,
+            series=replace(series, bars=bars),
+            segments=((lead, len(bars)),),
+            previous_close=previous_close(symbol, bars[-1].at.date()) if range_key == "1D" else None,
+        )
 
-    shown = first_shown(series.bars, spec)
-    lead = min(shown, MAX_WARMUP)
-    bars = follow_quote(series)[shown - lead :]
-    return _store(key, Chart(
-        symbol=symbol,
-        range=range_key,
-        interval=spec.interval,
-        series=replace(series, bars=bars),
-        segments=((lead, len(bars)),),
-    ))
+    return _through_cache((symbol, range_key), spec.ttl_seconds, build)
 
 
 def week_chart(symbol: str, weeks: list[tuple[int, int]], today: date) -> Chart:
@@ -278,30 +355,27 @@ def week_chart(symbol: str, weeks: list[tuple[int, int]], today: date) -> Chart:
     reaches_now = last_sunday >= today
     key = (symbol, "W:" + ",".join(f"{y}-W{w:02d}" for y, w in weeks))
     ttl = RANGES["5D"].ttl_seconds if reaches_now else PAST_WEEKS_TTL_SECONDS
-    fresh, stale = _cached(key, ttl)
-    if fresh is not None:
-        return fresh
-
     interval, start = week_interval(first_monday, today)
     # Yahoo's `end` is exclusive; one day past the selection's Sunday (or today).
     end = min(last_sunday, today) + timedelta(days=1)
-    series = yf_client.fetch_bars(symbol, interval, start=start, end=end)
-    if series is None:
-        if stale is not None:
-            return stale
-        raise ChartUnavailable(f"no price data for {symbol}")
-    segments = week_segments(series.bars, weeks)
-    if not segments:
-        raise ChartUnavailable(f"no {symbol} trading in the selected weeks")
 
-    # A selection that runs to today ends at the latest quote, like a live range.
-    source = follow_quote(series) if reaches_now else series.bars
-    bars, trimmed = trim_lead_in(source, segments)
-    return _store(key, Chart(
-        symbol=symbol,
-        range="W",
-        interval=interval,
-        series=replace(series, bars=bars),
-        segments=trimmed,
-        reaches_now=reaches_now,
-    ))
+    def build() -> Chart | None:
+        series = yf_client.fetch_bars(symbol, interval, start=start, end=end)
+        if series is None:
+            return None
+        segments = week_segments(series.bars, weeks)
+        if not segments:
+            raise ChartUnavailable(f"no {symbol} trading in the selected weeks")
+        # A selection that runs to today ends at the latest quote, like a live range.
+        source = follow_quote(series) if reaches_now else series.bars
+        bars, trimmed = trim_lead_in(source, segments)
+        return Chart(
+            symbol=symbol,
+            range="W",
+            interval=interval,
+            series=replace(series, bars=bars),
+            segments=trimmed,
+            reaches_now=reaches_now,
+        )
+
+    return _through_cache(key, ttl, build)

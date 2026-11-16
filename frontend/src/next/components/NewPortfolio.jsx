@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { api } from "../../api.js";
+import { PORTFOLIO_CURRENCIES } from "../../format.js";
 import Dialog from "../ui/Dialog.jsx";
 import { useToast } from "../ui/overlays.jsx";
 import { useT } from "../i18n/index.jsx";
 
-const CURRENCIES = ["USD", "EUR", "GBP", "TRY"];
 
 export default function NewPortfolio({ open, onClose, dash }) {
   const t = useT();
   const toast = useToast();
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState(PORTFOLIO_CURRENCIES[0]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -49,7 +49,7 @@ export default function NewPortfolio({ open, onClose, dash }) {
         <div className="field">
           <label htmlFor="np-ccy">{t("portfolio.currency")}</label>
           <select id="np-ccy" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-            {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {PORTFOLIO_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         {error && <div className="form-error" role="alert">{error}</div>}

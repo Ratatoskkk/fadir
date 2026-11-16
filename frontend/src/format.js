@@ -82,6 +82,9 @@ export function num(value, digits = 2) {
   return ({ 0: F.nf0, 1: F.nf1, 4: F.nf4 }[digits] ?? F.nf2).format(n);
 }
 
+/** The Base Currencies a Portfolio can choose (ADR 0006); new ones start in the first. */
+export const PORTFOLIO_CURRENCIES = ["USD", "EUR", "GBP", "TRY"];
+
 /**
  * The currency an amount is in when the caller names none: the open Portfolio's Base
  * Currency, set by the app as the Portfolio loads (ADR 0006). USD until then.

@@ -386,6 +386,8 @@ class MarketChartOut(BaseModel):
     segments: list[tuple[int, int]]
     #: 1D only: the shown day's regular session as [open, close], when Yahoo reports one.
     session: tuple[datetime, datetime] | None = None
+    #: 1D only: the previous session's official close, closing auction included.
+    previous_close: float | None = None
     bars: list[MarketBarOut]
 
 

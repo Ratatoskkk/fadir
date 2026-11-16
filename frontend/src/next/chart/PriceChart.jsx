@@ -339,7 +339,11 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
     const fit = Math.max(2, Math.floor(plotW / 90));
     const every = Math.max(1, Math.ceil(slots / fit));
     const starts = bs.filter((b) => b > 0 && b < n);
-    const hours = xsT !== barTimes ? xsT.map((t, i) => (new Date(t).getMinutes() === 0 ? i : -1)).filter((i) => i >= 0) : [];
+    // The first slot of each local hour: a gap in trading or a viewer in a half-hour zone
+    // still gets one label per hour.
+    const hours = xsT !== barTimes
+      ? xsT.map((t, i) => (i > 0 && new Date(t).getHours() !== new Date(xsT[i - 1]).getHours() ? i : -1)).filter((i) => i >= 0)
+      : [];
     let labelled;
     if (hours.length >= 2) {
       // A full session: every k-th whole hour, as many as fit.
