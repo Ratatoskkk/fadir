@@ -17,7 +17,15 @@ const mainHeight = (width) => (width < NARROW ? 280 : 320);
  * reading one more, and the N1/N2 inputs (44px touch targets) a third, shown only while
  * that pane is being edited.
  */
-const headHeight = (narrow, pane, compared) => (narrow ? 36 + (compared ? 32 : 0) + (pane.editing ? 52 : 0) : 40);
+const headHeight = (narrow, pane, compared) => (narrow ? 36 + ((compared && pane.cmp) || pane.histogram ? 32 : 0) + (pane.editing ? 52 : 0) : 40);
+/** The smallest round number (1, 2, 2.5 or 5 times a power of ten) at or above `v`. */
+const roundUp = (v) => {
+  if (!(v > 0)) return 1;
+  const mag = 10 ** Math.floor(Math.log10(v));
+  return [1, 2, 2.5, 5, 10].map((f) => f * mag).find((x) => x >= v);
+};
+/** The share of the price area the volume bars may fill, along its bottom. */
+const VOLUME_BAND = 0.18;
 /** Where each pane's plot starts, below the price and the panes and headers above it. */
 const paneTops = (w, panes, compared) => {
   const narrow = w < NARROW;
@@ -84,6 +92,11 @@ function extent(values, extra = []) {
  */
 /** `breaks` are bar indices where a skipped stretch of time ends (unselected weeks). */
 /**
+ * `volume`, per point, is { v, up }: the bar's volume and whether it closed up, drawn as
+ * bars along the bottom of the price area. A pane with `histogram` draws its values as a
+ * histogram around zero (net buying), coloured by sign, instead of a line.
+ */
+/**
  * `axisTimes`, when longer than `times`, is the whole x axis: the bars fill its start and
  * the rest is time still to trade (a full session). Its labels fall on the hour.
  * A mark with `fit` widens the price axis to include it; a `dotted` one is drawn faint.
@@ -99,20 +112,20 @@ function extent(values, extra = []) {
  * drawn faint and dashed. A pane may carry `cmp` ({ values, dash }), the compared
  * ticker's line for the same formula.
  */
-export default function PriceChart({ times, axisTimes = null, close, compare = null, closeDash = null, compareDash = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel, roleLabel }) {
+export default function PriceChart({ times, axisTimes = null, volume = null, close, compare = null, closeDash = null, compareDash = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel, roleLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
   const [narrow, setNarrow] = useState(false);
-  st.props = { times, axisTimes, close, compare, closeDash, compareDash, formatY, panes, marks, breaks, formatX, live };
+  st.props = { times, axisTimes, volume, close, compare, closeDash, compareDash, formatY, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
   const draw = () => {
     st.frame = 0;
     const canvas = canvasRef.current;
     if (!canvas || !st.colors) return;
-    const { times: barTimes, axisTimes: span, close: ys, compare: cs, closeDash: yDash, compareDash: cDash, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
+    const { times: barTimes, axisTimes: span, volume: vol, close: ys, compare: cs, closeDash: yDash, compareDash: cDash, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
     const { w, h, dpr, colors: c } = st;
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -128,13 +141,14 @@ export default function PriceChart({ times, axisTimes = null, close, compare = n
     ctx.font = `11.5px ${c.font}`;
     ctx.lineWidth = 1;
 
-    const area = (top, height, lo, hi, format, tickCount) => {
+    // `ticks` overrides the evenly spaced ones; nothing is labelled below `floor` (a y).
+    const area = (top, height, lo, hi, format, tickCount, { ticks = null, floor = Infinity } = {}) => {
       const yOf = (v) => top + (1 - (v - lo) / (hi - lo || 1)) * height;
       ctx.textAlign = "right";
       ctx.textBaseline = "middle";
-      for (const tick of niceTicks(lo, hi, tickCount)) {
+      for (const tick of ticks ?? niceTicks(lo, hi, tickCount)) {
         const y = Math.round(yOf(tick)) + 0.5;
-        if (y < top - 1 || y > top + height + 1) continue;
+        if (y < top - 1 || y > top + height + 1 || y > floor) continue;
         ctx.strokeStyle = c.grid;
         ctx.beginPath();
         ctx.moveTo(PAD.left, y);
@@ -182,8 +196,30 @@ export default function PriceChart({ times, axisTimes = null, close, compare = n
     };
 
     // Price.
-    const [pLo, pHi] = cs ? extent([...ys, ...cs]) : extent(ys, ms.filter((m) => m.fit).map((m) => m.value));
-    const yPrice = area(PAD.top, mainH, pLo, pHi, fy, Math.max(3, Math.round(mainH / 64)));
+    let [pLo, pHi] = cs ? extent([...ys, ...cs]) : extent(ys, ms.filter((m) => m.fit).map((m) => m.value));
+    // Volume bars take the bottom band; the price range drops to make room, so the line
+    // runs above them rather than through them.
+    if (vol) pLo -= ((pHi - pLo) * VOLUME_BAND) / (1 - VOLUME_BAND);
+    const yPrice = area(PAD.top, mainH, pLo, pHi, fy, Math.max(3, Math.round(mainH / 64)), {
+      // No price label among the volume bars: the range only drops there to make room.
+      floor: vol ? PAD.top + mainH * (1 - VOLUME_BAND) : Infinity,
+    });
+    const barW = (count) => Math.max(1, Math.min(8, (plotW / Math.max(1, count - 1)) * 0.6));
+    if (vol) {
+      let top = 0;
+      for (const b of vol) if (b && b.v > top) top = b.v;
+      const band = mainH * VOLUME_BAND;
+      const bw = barW(slots);
+      ctx.globalAlpha = 0.45;
+      for (let i = 0; i < n; i++) {
+        const b = vol[i];
+        if (!b || !b.v || !top) continue;
+        const bh = Math.max(1, (b.v / top) * band);
+        ctx.fillStyle = b.up ? c.up : c.down;
+        ctx.fillRect(xOf(i) - bw / 2, PAD.top + mainH - bh, bw, bh);
+      }
+      ctx.globalAlpha = 1;
+    }
     if (n > 1 && ys.some((v) => v != null)) {
       const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + mainH);
       grad.addColorStop(0, c.price);
@@ -239,9 +275,35 @@ export default function PriceChart({ times, axisTimes = null, close, compare = n
     const tops = paneTops(w, ps, Boolean(cs));
     ps.forEach((pane, k) => {
       const top = tops[k];
-      const [lo, hi] = extent(pane.cmp ? [...pane.values, ...pane.cmp.values] : pane.values, [pane.level]);
-      const yOf = area(top, PANE_PLOT, lo, hi, pane.format ?? figure, 2);
+      // A histogram is symmetric around zero, labelled at a round bound above and below.
+      let bound = 0;
+      if (pane.histogram) for (const v of pane.values) if (v != null && Math.abs(v) > bound) bound = Math.abs(v);
+      bound = roundUp(bound);
+      const [lo, hi] = pane.histogram
+        ? [-bound * 1.06, bound * 1.06]
+        : extent(pane.cmp ? [...pane.values, ...pane.cmp.values] : pane.values, [pane.level]);
+      const yOf = area(top, PANE_PLOT, lo, hi, pane.format ?? figure, 2, pane.histogram ? { ticks: [-bound, 0, bound] } : {});
       paneY.push(yOf);
+      if (pane.histogram) {
+        const zero = yOf(0);
+        const bw = barW(slots);
+        ctx.globalAlpha = 0.8;
+        for (let i = 0; i < n; i++) {
+          const v = pane.values[i];
+          if (v == null || v === 0) continue;
+          const y = yOf(v);
+          ctx.fillStyle = v > 0 ? c.up : c.down;
+          ctx.fillRect(xOf(i) - bw / 2, Math.min(y, zero), bw, Math.max(1, Math.abs(zero - y)));
+        }
+        ctx.globalAlpha = 1;
+        const zy = Math.round(zero) + 0.5;
+        ctx.strokeStyle = c.grid;
+        ctx.beginPath();
+        ctx.moveTo(PAD.left, zy);
+        ctx.lineTo(w - PAD.right, zy);
+        ctx.stroke();
+        return;
+      }
       const ly = Math.round(yOf(pane.level)) + 0.5;
       ctx.strokeStyle = c.level;
       ctx.lineWidth = 1;
@@ -331,6 +393,7 @@ export default function PriceChart({ times, axisTimes = null, close, compare = n
       dot(ys, yPrice, c.price);
       dot(cs, yPrice, c.compare);
       ps.forEach((pane, k) => {
+        if (pane.histogram) return;
         dot(pane.values, paneY[k], c.price);
         dot(pane.cmp?.values, paneY[k], c.compare);
       });
@@ -346,7 +409,8 @@ export default function PriceChart({ times, axisTimes = null, close, compare = n
       }
       if (tip) {
         const tw = tip.offsetWidth || 200;
-        const left = x + 16 + tw > w ? x - 16 - tw : x + 16;
+        // Right of the crosshair when it fits, else left of it, never past either edge.
+        const left = Math.max(0, Math.min(w - tw, x + 16 + tw > w ? x - 16 - tw : x + 16));
         tip.style.transform = `translate3d(${Math.round(left)}px, ${PAD.top + 4}px, 0)`;
       }
     } else if (isLive) {

@@ -277,7 +277,9 @@ function marketChart(symbol, range) {
     const open = price;
     price *= 1 + (rand() - 0.49) * step * 2;
     const swing = Math.abs(price - open) + open * step * rand();
-    bars.push({ at: new Date(at).toISOString(), open, high: Math.max(open, price) + swing * 0.4, low: Math.min(open, price) - swing * 0.4, close: price });
+    // Indices trade no shares of their own; everything else gets a noisy volume.
+    const volume = symbol.startsWith("^") ? 0 : Math.round(20000 + rand() * 180000 * (1 + Math.abs(price - open) / (open * step)));
+    bars.push({ at: new Date(at).toISOString(), open, high: Math.max(open, price) + swing * 0.4, low: Math.min(open, price) - swing * 0.4, close: price, volume });
   }
   const last = bars[bars.length - 1];
   last.close *= 1 + (Math.random() - 0.5) * 0.004;

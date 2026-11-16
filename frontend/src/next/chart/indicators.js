@@ -79,6 +79,28 @@ export function adx(high, low, close, length) {
 
 export const ADX_LENGTH = 25;
 
+/**
+ * Each bar's volume split into buying and selling. Yahoo does not say which side started
+ * a trade, so a bar's buying share is where its close sits between its low and high (the
+ * close location used by Accumulation/Distribution); a bar with no range counts as
+ * buying if it closed above the bar before, selling if below, half each if level.
+ */
+export function volumeSplit(bars) {
+  const buy = new Array(bars.close.length).fill(0);
+  const sell = new Array(bars.close.length).fill(0);
+  for (let i = 0; i < bars.close.length; i++) {
+    const v = bars.volume[i] || 0;
+    const range = bars.high[i] - bars.low[i];
+    const prev = i > 0 ? bars.close[i - 1] : bars.close[i];
+    const share = range > 0
+      ? (bars.close[i] - bars.low[i]) / range
+      : bars.close[i] > prev ? 1 : bars.close[i] < prev ? 0 : 0.5;
+    buy[i] = v * share;
+    sell[i] = v - buy[i];
+  }
+  return { buy, sell };
+}
+
 export const FILTERS = [
   {
     key: "maSlope",

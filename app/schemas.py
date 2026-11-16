@@ -351,6 +351,7 @@ class MarketBarOut(BaseModel):
     high: float
     low: float
     close: float
+    volume: float = 0
 
 
 class MarketChartOut(BaseModel):

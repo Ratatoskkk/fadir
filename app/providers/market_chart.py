@@ -34,8 +34,10 @@ class ChartRange:
 
 
 RANGES: dict[str, ChartRange] = {
-    "1D": ChartRange("5m", "5d", sessions=1),
-    "5D": ChartRange("15m", "1mo", sessions=5),
+    # The live ranges are cached no longer than the shortest poll (5s), so every poll can
+    # move the line.
+    "1D": ChartRange("5m", "5d", sessions=1, ttl_seconds=5),
+    "5D": ChartRange("15m", "1mo", sessions=5, ttl_seconds=5),
     "1M": ChartRange("1h", "6mo", days=31, ttl_seconds=60),
     "6M": ChartRange("1d", "2y", days=183, ttl_seconds=300),
     "1Y": ChartRange("1d", "2y", days=366, ttl_seconds=300),
@@ -125,6 +127,23 @@ def first_shown(bars: list[yf_client.Bar], spec: ChartRange) -> int:
         return next(i for i, b in enumerate(bars) if b.at.date() >= first_day)
     cutoff = bars[-1].at - timedelta(days=spec.days or 0)
     return next(i for i, b in enumerate(bars) if b.at >= cutoff)
+
+
+def follow_quote(series: yf_client.BarSeries) -> list[yf_client.Bar]:
+    """The bars with the newest one ending at Yahoo's latest quote.
+
+    The quote moves with every trade, while the newest bar's close can lag it, and after
+    the close the quote includes the closing auction the bars miss. Only a bar inside the
+    reported session follows it, so a quote never lands on a past day's bar.
+    """
+    bars, price = series.bars, series.price
+    start, end = series.session_start, series.session_end
+    if not bars or price is None or start is None or end is None:
+        return bars
+    last = bars[-1]
+    if not start <= last.at < end:
+        return bars
+    return [*bars[:-1], replace(last, close=price, high=max(last.high, price), low=min(last.low, price))]
 
 
 def parse_weeks(values: list[str], today: date) -> list[tuple[int, int]]:
@@ -238,7 +257,7 @@ def chart(symbol: str, range_key: str) -> Chart:
 
     shown = first_shown(series.bars, spec)
     lead = min(shown, MAX_WARMUP)
-    bars = series.bars[shown - lead :]
+    bars = follow_quote(series)[shown - lead :]
     return _store(key, Chart(
         symbol=symbol,
         range=range_key,

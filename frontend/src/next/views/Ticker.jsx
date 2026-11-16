@@ -4,9 +4,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { api } from "../../api.js";
-import { arrow, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, pct, quote, ratioPct, shortDate, signedMoney, toneOf } from "../../format.js";
+import { arrow, compact, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, pct, quote, ratioPct, shortDate, signedCompact, signedMoney, toneOf } from "../../format.js";
 import PriceChart from "../chart/PriceChart.jsx";
-import { FILTERS, filterState, sma } from "../chart/indicators.js";
+import { FILTERS, filterState, sma, volumeSplit } from "../chart/indicators.js";
 import TickerSearch from "../components/TickerSearch.jsx";
 import { WeekPicker } from "../components/WeekPicker.jsx";
 import { useT } from "../i18n/index.jsx";
@@ -74,8 +74,13 @@ function ParamInput({ label, ariaLabel, value, integer, onChange }) {
   );
 }
 
-/** Bars for (symbol, range[, weeks]), polled while the market is open. A stale answer is dropped. */
-function useChart(symbol, range, weeks, pollSeconds) {
+/**
+ * Bars for (symbol, range[, weeks]), polled while the market is open. A stale answer is
+ * dropped. `tick` changes with every dashboard price update: the chart reloads then and
+ * restarts its own timer, so the line moves with the prices on the rest of the page. The
+ * timer covers a ticker whose market trades while the portfolio's are shut.
+ */
+function useChart(symbol, range, weeks, pollSeconds, tick) {
   const weekList = range === "W" ? weeks.join(",") : "";
   const key = `${symbol}|${range}|${weekList}`;
   const keyRef = useRef(key);
@@ -95,6 +100,12 @@ function useChart(symbol, range, weeks, pollSeconds) {
   }, [symbol, range, weekList]);
 
   useEffect(() => { load(); }, [load]);
+  const ticked = useRef(tick);
+  useEffect(() => {
+    if (ticked.current === tick) return;
+    ticked.current = tick;
+    load();
+  }, [tick, load]);
 
   const fresh = state.key === key;
   const open = fresh && state.data?.market_open;
@@ -103,7 +114,7 @@ function useChart(symbol, range, weeks, pollSeconds) {
     if (!symbol || !seconds) return undefined;
     const id = window.setInterval(() => { if (!document.hidden) load(); }, seconds * 1000);
     return () => window.clearInterval(id);
-  }, [load, symbol, open, pollSeconds]);
+  }, [load, symbol, open, pollSeconds, tick]);
 
   return {
     data: fresh ? state.data : null,
@@ -117,7 +128,7 @@ const stateTone = (state) => (state === "long" ? "up" : state === "short" ? "dow
 
 export default function Ticker({ dash }) {
   const t = useT();
-  const { instruments, portfolio, interval } = dash;
+  const { instruments, portfolio, interval, lastUpdated } = dash;
   const [saved] = useState(loadSaved);
   const [symbol, setSymbol] = useState(() => saved.symbol ?? null);
   const [weeks, setWeeks] = useState(() => (Array.isArray(saved.weeks) ? saved.weeks.filter((w) => /^\d{4}-W\d{2}$/.test(w)) : []));
@@ -125,6 +136,7 @@ export default function Ticker({ dash }) {
   const [filters, setFilters] = useState(() => initialFilters(saved.filters));
   const [avgOn, setAvgOn] = useState(() => saved.avgOn ?? true);
   const [prevOn, setPrevOn] = useState(() => saved.prevOn ?? true);
+  const [volOn, setVolOn] = useState(() => saved.volOn ?? false);
   const [fullDay, setFullDay] = useState(() => saved.fullDay ?? false);
   const [compareSymbol, setCompareSymbol] = useState(() => saved.compare ?? null);
   const [hover, setHover] = useState(null);
@@ -142,10 +154,10 @@ export default function Ticker({ dash }) {
   }, [symbol, portfolio, instruments]);
 
   useEffect(() => {
-    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, weeks, filters, avgOn, prevOn, fullDay, compare: compareSymbol })); } catch { /* private mode */ }
-  }, [symbol, range, weeks, filters, avgOn, prevOn, fullDay, compareSymbol]);
+    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, weeks, filters, avgOn, prevOn, volOn, fullDay, compare: compareSymbol })); } catch { /* private mode */ }
+  }, [symbol, range, weeks, filters, avgOn, prevOn, volOn, fullDay, compareSymbol]);
 
-  const { data, error, loading, reload } = useChart(symbol, range, weeks, interval);
+  const { data, error, loading, reload } = useChart(symbol, range, weeks, interval, lastUpdated);
   const weekKey = weeks.join(",");
   useEffect(() => { setHover(null); }, [symbol, range, weekKey]);
 
@@ -158,6 +170,7 @@ export default function Ticker({ dash }) {
       close: bars.map((b) => b.close),
       high: bars.map((b) => b.high),
       low: bars.map((b) => b.low),
+      volume: bars.map((b) => b.volume ?? 0),
     };
     const segments = data.segments?.length ? data.segments : [[data.warmup, bars.length]];
     const idx = segments.flatMap(([s, e]) => Array.from({ length: e - s }, (_, k) => s + k));
@@ -170,7 +183,11 @@ export default function Ticker({ dash }) {
       const before = s > 0 ? bars[s - 1].close : bars[s].open;
       return before ? r * (bars[e - 1].close / before) : r;
     }, 1);
+    // Indices, currencies and some funds report no volume at all.
+    const hasVolume = idx.some((i) => all.volume[i] > 0);
+    const split = hasVolume ? volumeSplit(all) : null;
     return {
+      hasVolume, split,
       bars: idx.map((i) => bars[i]),
       times: idx.map((i) => Date.parse(bars[i].at)),
       close: idx.map((i) => all.close[i]),
@@ -178,7 +195,7 @@ export default function Ticker({ dash }) {
     };
   }, [data]);
 
-  const { data: cmpData, error: cmpError } = useChart(compareSymbol, range, weeks, interval);
+  const { data: cmpData, error: cmpError } = useChart(compareSymbol, range, weeks, interval, lastUpdated);
 
   // What the chart draws. Alone, the ticker's own bars. With a comparison, both lines
   // show the change since the window starts, so tickers at different prices or in
@@ -276,11 +293,32 @@ export default function Ticker({ dash }) {
     ? { close: cmpData.bars.map((b) => b.close), high: cmpData.bars.map((b) => b.high), low: cmpData.bars.map((b) => b.low) }
     : null), [cmpData]);
 
+  // Volume is the ticker's own: two tickers' share counts never share a scale.
+  const showVolume = Boolean(series?.hasVolume) && !comparing;
+  const volumeBars = useMemo(() => (showVolume
+    ? view.mainAt.map((at, i) => {
+      if (!view.mainOwn[i]) return null;
+      const b = series.bars[at];
+      return { v: b.volume ?? 0, up: b.close >= b.open };
+    })
+    : null), [showVolume, view, series]);
+
   const panes = useMemo(() => {
     if (!series) return [];
+    // Net buying per bar: the estimated buying volume less the selling volume.
+    const volumePane = volOn && showVolume ? (() => {
+      const at = (arr) => view.mainAt.map((k) => arr[series.idx[k]]);
+      const buy = at(series.split.buy), sell = at(series.split.sell);
+      const read = buy.map((b, i) => b - sell[i]);
+      return {
+        key: "volume", histogram: true, name: t("ticker.volume"), level: 0, format: compact,
+        values: read.map((v, i) => (view.mainOwn[i] ? v : null)), read, buy, sell,
+        volume: view.mainAt.map((k) => series.bars[k].volume ?? 0),
+      };
+    })() : null;
     // Every pane is named, so a pane's line is the ticker's own colour, as the compared
     // ticker's is its colour.
-    return FILTERS.filter((f) => filters[f.key].on).map((f) => {
+    const filterPanes = FILTERS.filter((f) => filters[f.key].on).map((f) => {
       const { n1, n2 } = filters[f.key];
       // MA slope is in price units, so two tickers at different prices cannot share its
       // axis. While comparing, each line is its slope less the level, as a % of its own
@@ -304,7 +342,8 @@ export default function Ticker({ dash }) {
       }
       return pane;
     });
-  }, [series, view, comparing, cmpAll, filters, editing, t]);
+    return volumePane ? [volumePane, ...filterPanes] : filterPanes;
+  }, [series, view, comparing, cmpAll, filters, editing, volOn, showVolume, t]);
 
   const setFilter = (key, patch) => setFilters((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
   const toggleEditing = (key) => setEditing((prev) => {
@@ -360,8 +399,9 @@ export default function Ticker({ dash }) {
   // Explain only what is on the chart now.
   const notes = [
     comparing ? ["ticker.compareLine", "ticker.note.compare"] : ["ticker.priceLine", "ticker.note.price"],
-    ...(panes.length ? [["ticker.levelLine", "ticker.note.level"]] : []),
-    ...panes.map((p) => (p.asPct ? ["ticker.maSlope", "ticker.note.maSlopePct"] : FILTER_NOTES[p.key])).filter(Boolean),
+    ...(showVolume ? [["ticker.volume", "ticker.note.volume"]] : []),
+    ...(panes.some((p) => !p.histogram) ? [["ticker.levelLine", "ticker.note.level"]] : []),
+    ...panes.filter((p) => !p.histogram).map((p) => (p.asPct ? ["ticker.maSlope", "ticker.note.maSlopePct"] : FILTER_NOTES[p.key])).filter(Boolean),
     ...(marks.some((m) => !m.dotted) ? [["pos.avgBuy", "ticker.note.avgBuy"]] : []),
     ...(marks.some((m) => m.dotted) ? [["ticker.prevClose", "ticker.note.prevClose"]] : []),
     ...(holding ? [["attr.fx", "ticker.note.fx"]] : []),
@@ -413,17 +453,23 @@ export default function Ticker({ dash }) {
           <div key={key} className="tip-row">{t(label)}<b className="num">{quote(hoverBar[key])}</b></div>
         ))
       )}
+      {showVolume && <div className="tip-row">{t("ticker.volume")}<b className="num">{compact(hoverBar.volume)}</b></div>}
       {prevClose !== null && !comparing && (
         <div className="tip-row">{t("ticker.vsPrevClose")}<b className={`num ${toneOf(hoverBar.close - prevClose)}`}>{ratioPct(hoverBar.close / prevClose)}</b></div>
       )}
       {panes.length > 0 && <div className="tip-sep" />}
-      {panes.map((p) => (
+      {panes.map((p) => (p.histogram ? (
+        <div key={p.key} className="tip-row">
+          {t("ticker.netVolume")}
+          <b className={`num ${toneOf(p.read[hover])}`}>{signedCompact(p.read[hover])}</b>
+        </div>
+      ) : (
         <div key={p.key} className="tip-row">
           {p.cmp && <i style={{ background: "var(--accent)" }} />}{p.name}
           <b className="num">{p.format(p.read[hover])}</b>
           {p.cmp && <span className="tip-cmp num"><i style={{ background: "var(--compare)" }} />{p.format(p.cmp.read[hover])}</span>}
         </div>
-      ))}
+      )))}
     </>
   ) : null;
 
@@ -434,6 +480,10 @@ export default function Ticker({ dash }) {
       ...(prevClose !== null && !comparing ? [`${t("ticker.vsPrevClose")} ${ratioPct(hoverBar.close / prevClose)}`] : []),
       ...(comparing ? [`${symbol} ${pct(view.closeRead[hover])}`, `${compareSymbol} ${pct(view.compareRead[hover])}`] : []),
       ...panes.map((p) => {
+        if (p.histogram) {
+          const net = p.read[hover];
+          return `${t("ticker.netVolume")} ${signedCompact(net)}${net ? `, ${t(net > 0 ? "ticker.netBuyers" : "ticker.netSellers")}` : ""}`;
+        }
         const s = filterState(p.read[hover], p.level);
         const own = `${p.name} ${p.format(p.read[hover])}${s ? ` ${t(`ticker.${s}`)}` : ""}`;
         return p.cmp ? `${own}, ${compareSymbol} ${p.format(p.cmp.read[hover])}` : own;
@@ -443,6 +493,23 @@ export default function Ticker({ dash }) {
 
   // On a narrow chart a pane's N1/N2 inputs open from its name; a wide one always shows them.
   const heads = (narrow) => panes.map((p) => {
+    if (p.histogram) {
+      const net = at !== null ? p.read[at] : null;
+      return (
+        <>
+          <span className="pane-name"><i aria-hidden="true" />{p.name}</span>
+          <span className={`pane-value num ${toneOf(net)}`}>{signedCompact(net)}</span>
+          <span className={`pane-state ${toneOf(net)}`}>{net ? t(net > 0 ? "ticker.netBuyers" : "ticker.netSellers") : "—"}</span>
+          {at !== null && (
+            <span className="pane-params pane-volume num">
+              <span>{t("ticker.buyVol")} <b className="up">{compact(p.buy[at])}</b></span>
+              <span>{t("ticker.sellVol")} <b className="down">{compact(p.sell[at])}</b></span>
+              <span>{t("ticker.volume")} <b>{compact(p.volume[at])}</b></span>
+            </span>
+          )}
+        </>
+      );
+    }
     const value = at !== null ? p.read[at] : null;
     const state = filterState(value, p.level);
     const cValue = p.cmp && at !== null ? p.cmp.read[at] : null;
@@ -539,6 +606,11 @@ export default function Ticker({ dash }) {
             {t("ticker.fullDay")}
           </button>
         )}
+        {showVolume && (
+          <button type="button" className={`legend-chip ${volOn ? "" : "off"}`} aria-pressed={volOn} onClick={() => setVolOn((v) => !v)}>
+            {t("ticker.volume")}
+          </button>
+        )}
         {FILTERS.map((f) => (
           <button
             key={f.key}
@@ -590,6 +662,7 @@ export default function Ticker({ dash }) {
           <PriceChart
             times={view.times}
             axisTimes={axisTimes}
+            volume={volumeBars}
             close={view.close}
             compare={view.compare}
             closeDash={view.closeDash}

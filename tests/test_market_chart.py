@@ -226,3 +226,34 @@ def test_chart_route_returns_the_day_session_in_utc(client, monkeypatch):  # noq
     body = client.get("/api/market/chart", params={"symbol": "AAPL", "range": "1D"}).json()
     assert body["session"][0].startswith("2026-11-13T14:30:00")
     assert body["session"][1].startswith("2026-11-13T21:00:00")
+
+
+def test_newest_bar_follows_the_live_quote_inside_the_session(monkeypatch):
+    bars = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
+    opens = datetime(2026, 11, 13, 9, 30, tzinfo=NY)
+    session = (opens, opens + timedelta(hours=6, minutes=30))
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(bars, price=30.0, session=session))
+    last = market_chart.chart("AAPL", "1D").series.bars[-1]
+    assert (last.close, last.high, last.low) == (30.0, 30.0, bars[-1].low)
+    assert last.at == bars[-1].at
+
+
+def test_a_quote_never_lands_on_a_past_days_bar(monkeypatch):
+    """Before the open Yahoo reports the coming session; Friday's bar keeps its close."""
+    bars = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
+    opens = datetime(2026, 11, 16, 9, 30, tzinfo=NY)
+    monkeypatch.setattr(
+        yf_client, "fetch_bars",
+        lambda *a, **k: _series(bars, price=30.0, session=(opens, opens + timedelta(hours=6, minutes=30))),
+    )
+    assert market_chart.chart("AAPL", "1D").series.bars[-1] == bars[-1]
+
+
+def test_chart_route_returns_each_bars_volume(client, monkeypatch):  # noqa: F811
+    bars = [
+        yf_client.Bar(at=b.at, open=b.open, high=b.high, low=b.low, close=b.close, volume=1000 * (i + 1))
+        for i, b in enumerate(_bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 3, timedelta(minutes=5)))
+    ]
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(bars))
+    body = client.get("/api/market/chart", params={"symbol": "AAPL", "range": "1D"}).json()
+    assert [b["volume"] for b in body["bars"]] == [1000, 2000, 3000]

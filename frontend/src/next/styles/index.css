@@ -597,6 +597,11 @@ button.pane-name[aria-expanded="true"] .icon { transform: rotate(180deg); }
 .pane-bars { color: var(--text-3); }
 .pane-value { color: var(--text); }
 .pane-state { font-weight: 600; }
+.pane-volume { color: var(--text-2); }
+.pchart-heads.narrow .pane-volume { flex-basis: 100%; }
+.pane-volume b { font-weight: 600; color: var(--text); }
+.pane-volume b.up { color: var(--up); }
+.pane-volume b.down { color: var(--down); }
 .pane-params { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .param { display: inline-flex; align-items: center; gap: 6px; color: var(--text-3); }
 .param input { width: 56px; height: 30px; padding: 0 6px; text-align: right; }

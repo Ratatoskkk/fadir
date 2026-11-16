@@ -140,6 +140,20 @@ export function compactMoney(value) {
   return `₺${F.nfCompact.format(n)}`;
 }
 
+/** A count in the viewer's short form (1.2M, 1,2 Mn), for volumes. */
+export function compact(value) {
+  const n = Number(value);
+  if (value === null || value === undefined || !Number.isFinite(n)) return "—";
+  return F.nfCompact.format(n);
+}
+
+/** A signed count, always with + or − so colour is never the only signal. */
+export function signedCompact(value) {
+  const n = Number(value);
+  if (value === null || value === undefined || !Number.isFinite(n)) return "—";
+  return `${n > 0 ? "+" : n < 0 ? "−" : ""}${F.nfCompact.format(Math.abs(n))}`;
+}
+
 /** An unsigned share of a whole, already in percent (81.5%, %81,5). */
 export function share(value, digits = 1) {
   const n = Number(value);

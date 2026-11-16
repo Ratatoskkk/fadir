@@ -325,6 +325,8 @@ class Bar:
     high: float
     low: float
     close: float
+    #: Shares traded in the bar; 0 where Yahoo reports none (indices, currencies).
+    volume: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -406,6 +408,7 @@ def fetch_bars(
                 high=max(high, close),
                 low=min(low, close),
                 close=close,
+                volume=max(0.0, _display_float(row.get("Volume")) or 0.0),
             )
         )
     if not bars:
