@@ -1790,3 +1790,22 @@ read-only check on the VM valued each Portfolio in USD in memory and rolled back
 today's rate equals the TRY value, cost uses trade-date rates, the lira tax carries through,
 history (233 days) and intraday (122 points) value every point, with no new warnings. Tests
 match the baseline apart from the two known zero-FX failures.
+
+Base Currency and Ticker review fixes deployment (owner-requested /code-review --fix,
+2026-11-16). Four Sonnet reviewers covered the Base Currency backend and frontend and the
+Ticker frontend and backend; `fc0cfd1` fixes the ten most severe findings: first-save
+currency validation, cache-first base FX for history, a missing previous-day base rate
+costing only Today's figure, one position set for the Base Currency and TRY tax runs (view,
+history, intraday), cleared series and non-counting figures on a currency switch, the
+Classic UI's currency, exact volume, week and daily prices following the quote, and the
+Ticker hover reset. Backend: the four changed VM files matched `bb7e2a9`; previous copies are
+in `/home/fadir-agent/fadir-tests/deploy-fc0cfd1/rollback/app.previous.tar`, and the service
+restarted once at 10:19:33 UTC with `NRestarts=0` and no journal errors. Installed checksums
+match the build for all 16 frontend files; rollback bundle
+`/opt/fadir/frontend/dist.previous.review-fixes-20261116`. Local and public health and the new
+bundle returned 200. The read-only VM check (owner Portfolio now saved in USD) still finds the
+USD value equal to the TRY value at today's rate, the lira tax carried, and every history
+(233) and intraday (124) point valued. Tests match the baseline apart from the two known
+zero-FX failures. Not fixed (beyond the cap): Yahoo backoff and negative caching for the chart
+cache, midnight-crossing sessions, half-hour viewer timezones on the Full day axis, the official
+previous close, tick reloads on daily ranges, and duplicated currency lists.
