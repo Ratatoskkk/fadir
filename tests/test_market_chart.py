@@ -188,7 +188,7 @@ def test_week_route_returns_segments_and_is_not_live_for_a_past_week(client, mon
     now = datetime.now(timezone.utc)
     asked = {}
 
-    def fetch(symbol, interval, period=None, *, start=None, end=None):
+    def fetch(symbol, interval, period=None, *, start=None, end=None, prepost=False):
         asked.update(interval=interval, start=start, end=end)
         return _series(bars, session=(now - timedelta(hours=1), now + timedelta(hours=1)))
 
@@ -329,3 +329,87 @@ def test_week_selections_cannot_push_live_charts_out(monkeypatch):
     keys = list(market_chart._cache)
     assert ("AAPL", "1D") in keys
     assert sum(k[1].startswith("W:") for k in keys) == 2
+
+
+def _extended_day(on: date) -> tuple[list[yf_client.Bar], tuple[datetime, datetime], tuple[datetime, datetime]]:
+    """A US day of 30-minute bars from the 04:00 pre-market to the 20:00 after-hours close."""
+    pre = datetime.combine(on, datetime.min.time(), tzinfo=NY).replace(hour=4)
+    bars = _bars(pre, 32, timedelta(minutes=30))
+    regular = (pre.replace(hour=9, minute=30), pre.replace(hour=16))
+    return bars, regular, (pre, pre.replace(hour=20))
+
+
+def test_bars_outside_the_regular_session_are_tagged_pre_and_post():
+    import pandas as pd
+
+    bars, (opens, closes), _ = _extended_day(date(2026, 11, 13))
+    periods = pd.DataFrame({"start": [pd.Timestamp(opens)], "end": [pd.Timestamp(closes)]})
+    tags = [b.extended for b in yf_client._tag_sessions(bars, periods, {})]
+    assert tags[:12] == ["pre"] * 11 + [None]  # 04:00 … 09:00 are pre-market; 09:30 opens
+    assert tags[23] is None and tags[24:] == ["post"] * 8  # 15:30 regular; 16:00 on after hours
+
+
+def test_a_day_yahoo_leaves_out_takes_the_current_sessions_hours():
+    import pandas as pd
+
+    bars, _, _ = _extended_day(date(2026, 11, 12))
+    current = {"start": pd.Timestamp(datetime(2026, 11, 13, 9, 30, tzinfo=NY)), "end": pd.Timestamp(datetime(2026, 11, 13, 16, tzinfo=NY))}
+    tags = [b.extended for b in yf_client._tag_sessions(bars, None, current)]
+    assert tags.count("pre") == 11 and tags.count("post") == 8
+
+
+def test_intraday_ranges_ask_for_extended_hours_and_daily_ones_do_not(monkeypatch):
+    asked = {}
+
+    def fetch(symbol, interval, **kwargs):
+        asked[interval] = kwargs.get("prepost", False)
+        return _series(_bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 3, timedelta(minutes=5)))
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    for key in ("1D", "5D", "1M", "6M", "5Y"):
+        market_chart.chart("AAPL", key)
+    assert asked == {"5m": True, "15m": True, "1h": True, "1d": False, "1wk": False}
+
+
+def _extended_series(bars, regular, extended, price=None):
+    from dataclasses import replace
+
+    return replace(_series(bars, price=price, session=regular), extended_start=extended[0], extended_end=extended[1])
+
+
+def test_extended_session_and_the_full_day_run_from_pre_market_to_after_hours(monkeypatch):
+    bars, regular, extended = _extended_day(date(2026, 11, 13))
+    bars = yf_client._tag_sessions(bars, None, {"start": regular[0], "end": regular[1]})
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _extended_series(bars[:6], regular, extended))
+    result = market_chart.chart("AAPL", "1D")
+    assert result.day_session() == extended
+    assert result.extended_session(datetime(2026, 11, 13, 7, tzinfo=NY)) == "pre"
+    assert result.extended_session(datetime(2026, 11, 13, 12, tzinfo=NY)) is None
+    assert result.extended_session(datetime(2026, 11, 13, 18, tzinfo=NY)) == "post"
+    assert result.extended_session(datetime(2026, 11, 13, 21, tzinfo=NY)) is None
+    assert not result.market_open(datetime(2026, 11, 13, 7, tzinfo=NY))
+
+
+def test_after_hours_bars_keep_their_closes_and_the_last_regular_bar_takes_the_quote(monkeypatch):
+    import pandas as pd
+
+    bars, regular, extended = _extended_day(date(2026, 11, 13))
+    bars = yf_client._tag_sessions(bars, None, {"start": pd.Timestamp(regular[0]), "end": pd.Timestamp(regular[1])})
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _extended_series(bars, regular, extended, price=99.0))
+    shown = market_chart.chart("AAPL", "1D").series.bars
+    assert shown[-8:] == bars[-8:]  # after hours untouched
+    assert shown[23].close == 99.0 and shown[23].extended is None  # 15:30, the closing auction
+
+
+def test_chart_route_marks_extended_bars_and_session(client, monkeypatch):  # noqa: F811
+    import pandas as pd
+
+    bars, regular, extended = _extended_day(date(2026, 11, 13))
+    bars = yf_client._tag_sessions(bars, None, {"start": pd.Timestamp(regular[0]), "end": pd.Timestamp(regular[1])})
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _extended_series(bars, regular, extended))
+    body = client.get("/api/market/chart", params={"symbol": "AAPL", "range": "1D"}).json()
+    assert [b["extended"] for b in body["bars"]][9:12] == ["pre", "pre", None]
+    assert body["bars"][-1]["extended"] == "post"
+    assert body["session"][0].startswith("2026-11-13T09:00:00")  # 04:00 New York
+    assert body["session"][1].startswith("2026-11-14T01:00:00")  # 20:00 New York
+    assert body["extended_session"] is None  # long past

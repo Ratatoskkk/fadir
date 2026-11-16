@@ -58,6 +58,8 @@ function readColors() {
     level: v("--text-3"),
     mark: v("--cost"),
     compare: v("--compare"),
+    extended: v("--extended"),
+    compareExtended: v("--compare-extended"),
     grid: v("--chart-grid"),
     axis: v("--text-3"),
     cross: v("--text-2"),
@@ -112,20 +114,24 @@ function extent(values, extra = []) {
  * drawn faint and dashed. A pane may carry `cmp` ({ values, dash }), the compared
  * ticker's line for the same formula.
  */
-export default function PriceChart({ times, axisTimes = null, volume = null, close, compare = null, closeDash = null, compareDash = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel, roleLabel }) {
+/**
+ * `closeExtended` and `compareExtended` flag the points that are pre-market or after-hours
+ * bars; the connection into such a point is drawn in the line's extended-hours colour.
+ */
+export default function PriceChart({ times, axisTimes = null, volume = null, close, compare = null, closeDash = null, compareDash = null, closeExtended = null, compareExtended = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel, roleLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
   const [narrow, setNarrow] = useState(false);
-  st.props = { times, axisTimes, volume, close, compare, closeDash, compareDash, formatY, panes, marks, breaks, formatX, live };
+  st.props = { times, axisTimes, volume, close, compare, closeDash, compareDash, closeExtended, compareExtended, formatY, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
   const draw = () => {
     st.frame = 0;
     const canvas = canvasRef.current;
     if (!canvas || !st.colors) return;
-    const { times: barTimes, axisTimes: span, volume: vol, close: ys, compare: cs, closeDash: yDash, compareDash: cDash, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
+    const { times: barTimes, axisTimes: span, volume: vol, close: ys, compare: cs, closeDash: yDash, compareDash: cDash, closeExtended: yExt, compareExtended: cExt, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
     const { w, h, dpr, colors: c } = st;
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -161,26 +167,30 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
     };
 
     // Each line runs through its non-null points, straight across the nulls between them.
-    // Two passes: solid connections, then faint dashes across closed markets.
-    const stroke = (values, yOf, color, width, dash = null) => {
-      ctx.strokeStyle = color;
+    // Solid connections, then faint dashes across closed markets; each in the line's own
+    // colour, or its extended-hours colour into a pre-market or after-hours point.
+    const stroke = (values, yOf, color, width, dash = null, ext = null, extColor = color) => {
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
       for (const dashed of dash ? [false, true] : [false]) {
-        ctx.lineWidth = dashed ? Math.max(1, width - 0.6) : width;
         ctx.globalAlpha = dashed ? 0.45 : 1;
         ctx.setLineDash(dashed ? [2, 4] : []);
-        ctx.beginPath();
-        let prev = -1;
-        for (let i = 0; i < n; i++) {
-          if (values[i] == null) continue;
-          if (prev >= 0 && Boolean(dash?.[i]) === dashed) {
-            ctx.moveTo(xOf(prev), yOf(values[prev]));
-            ctx.lineTo(xOf(i), yOf(values[i]));
+        for (const extended of ext ? [false, true] : [false]) {
+          // Extended hours are also thinner, so they read apart from the session by more than hue.
+          ctx.lineWidth = Math.max(1, (dashed ? width - 0.6 : width) - (extended ? 0.6 : 0));
+          ctx.strokeStyle = extended ? extColor : color;
+          ctx.beginPath();
+          let prev = -1;
+          for (let i = 0; i < n; i++) {
+            if (values[i] == null) continue;
+            if (prev >= 0 && Boolean(dash?.[i]) === dashed && Boolean(ext?.[i]) === extended) {
+              ctx.moveTo(xOf(prev), yOf(values[prev]));
+              ctx.lineTo(xOf(i), yOf(values[i]));
+            }
+            prev = i;
           }
-          prev = i;
+          ctx.stroke();
         }
-        ctx.stroke();
       }
       ctx.setLineDash([]);
       ctx.globalAlpha = 1;
@@ -266,8 +276,8 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
       ctx.fillStyle = c.cross;
       ctx.fillText(mark.label, right - 4, y - 4);
     }
-    if (cs) stroke(cs, yPrice, c.compare, 1.8, cDash);
-    stroke(ys, yPrice, c.price, 2, yDash);
+    if (cs) stroke(cs, yPrice, c.compare, 1.8, cDash, cExt, c.compareExtended);
+    stroke(ys, yPrice, c.price, 2, yDash, yExt, c.extended);
     const dots = [];
 
     // Indicator panes: the formula's left side against its level.
@@ -314,8 +324,8 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
       ctx.lineTo(w - PAD.right, ly);
       ctx.stroke();
       ctx.setLineDash([]);
-      if (pane.cmp) stroke(pane.cmp.values, yOf, c.compare, 1.4, pane.cmp.dash);
-      stroke(pane.values, yOf, c.price, 1.6, pane.dash);
+      if (pane.cmp) stroke(pane.cmp.values, yOf, c.compare, 1.4, pane.cmp.dash, cExt, c.compareExtended);
+      stroke(pane.values, yOf, c.price, 1.6, pane.dash, yExt, c.extended);
     });
 
     // A skipped stretch: a solid rule between the last bar before it and the first after,
@@ -395,8 +405,8 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
         const v = values && valueAt(values, i);
         if (v != null) dots.push([yOf(v), color]);
       };
-      dot(ys, yPrice, c.price);
-      dot(cs, yPrice, c.compare);
+      dot(ys, yPrice, yExt?.[i] ? c.extended : c.price);
+      dot(cs, yPrice, cExt?.[i] ? c.compareExtended : c.compare);
       ps.forEach((pane, k) => {
         if (pane.histogram) return;
         dot(pane.values, paneY[k], c.price);
@@ -427,7 +437,7 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
       ctx.beginPath();
       ctx.arc(x, y, 5.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = c.price;
+      ctx.fillStyle = yExt?.[last] ? c.extended : c.price;
       ctx.beginPath();
       ctx.arc(x, y, 3.5, 0, Math.PI * 2);
       ctx.fill();

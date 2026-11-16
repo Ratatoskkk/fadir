@@ -368,6 +368,8 @@ class MarketBarOut(BaseModel):
     low: float
     close: float
     volume: float = 0
+    #: "pre" or "post" for a pre-market or after-hours bar; absent for a regular one.
+    extended: Literal["pre", "post"] | None = None
 
 
 class MarketChartOut(BaseModel):
@@ -378,13 +380,16 @@ class MarketChartOut(BaseModel):
     range: str
     interval: str
     market_open: bool
+    #: "pre" or "post" while the listing trades outside its regular session.
+    extended_session: Literal["pre", "post"] | None = None
     #: Latest regular-session quote; the last bar's close when Yahoo gives none.
     price: float
     #: Bars before this index are indicator lead-in, not part of the shown window.
     warmup: int
     #: Shown bars as [start, end) index pairs; one pair unless weeks were selected.
     segments: list[tuple[int, int]]
-    #: 1D only: the shown day's regular session as [open, close], when Yahoo reports one.
+    #: 1D only: the shown day as [open, close], when Yahoo reports one; from the pre-market
+    #: open to the after-hours close where the listing trades outside its regular session.
     session: tuple[datetime, datetime] | None = None
     #: 1D only: the previous session's official close, closing auction included.
     previous_close: float | None = None

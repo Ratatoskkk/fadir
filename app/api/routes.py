@@ -1615,6 +1615,7 @@ def get_market_chart(
         range=range_,
         interval=result.interval,
         market_open=result.market_open(utcnow()),
+        extended_session=result.extended_session(utcnow()),
         # A past week ends at its own last close, not today's quote.
         price=series.price if series.price is not None and result.reaches_now else series.bars[-1].close,
         warmup=result.warmup,
@@ -1622,7 +1623,10 @@ def get_market_chart(
         session=None if day is None else tuple(t.astimezone(timezone.utc) for t in day),
         previous_close=result.previous_close,
         bars=[
-            MarketBarOut(at=b.at.astimezone(timezone.utc), open=b.open, high=b.high, low=b.low, close=b.close, volume=b.volume)
+            MarketBarOut(
+                at=b.at.astimezone(timezone.utc), open=b.open, high=b.high, low=b.low, close=b.close,
+                volume=b.volume, extended=b.extended,
+            )
             for b in series.bars
         ],
     )

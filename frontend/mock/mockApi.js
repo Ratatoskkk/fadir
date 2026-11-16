@@ -260,11 +260,19 @@ function marketChart(symbol, range) {
   // Intraday bars only inside the symbol's own session (UTC), so a comparison across
   // exchanges sees the same interleaved hours the real API returns. Crypto never closes.
   const hours = /-USD$/.test(symbol) ? null : /\.(ST|IS|AS|DE|PA|L)$/.test(symbol) ? [8, 16.5] : [14.5, 21];
+  // US listings also trade pre-market from 09:00 and after hours to midnight (UTC).
+  const extendedHours = hours && hours[0] === 14.5 && !symbol.startsWith("^") ? [9, 24] : null;
+  const hourOf = (ms) => { const d = new Date(ms); return d.getUTCHours() + d.getUTCMinutes() / 60; };
   const trades = (ms) => {
     if (!hours || minutes >= 1440) return true;
-    const d = new Date(ms);
-    const h = d.getUTCHours() + d.getUTCMinutes() / 60;
-    return d.getUTCDay() % 6 !== 0 && h >= hours[0] && h < hours[1];
+    const [from, to] = extendedHours ?? hours;
+    const h = hourOf(ms);
+    return new Date(ms).getUTCDay() % 6 !== 0 && h >= from && h < to;
+  };
+  const extendedOf = (ms) => {
+    if (!extendedHours || minutes >= 1440) return undefined;
+    const h = hourOf(ms);
+    return h < hours[0] ? "pre" : h >= hours[1] ? "post" : undefined;
   };
   const stamps = [];
   for (let at = Math.floor(Date.now() / (minutes * 60000)) * minutes * 60000; stamps.length < total; at -= minutes * 60000) {
@@ -279,7 +287,7 @@ function marketChart(symbol, range) {
     const swing = Math.abs(price - open) + open * step * rand();
     // Indices trade no shares of their own; everything else gets a noisy volume.
     const volume = symbol.startsWith("^") ? 0 : Math.round(20000 + rand() * 180000 * (1 + Math.abs(price - open) / (open * step)));
-    bars.push({ at: new Date(at).toISOString(), open, high: Math.max(open, price) + swing * 0.4, low: Math.min(open, price) - swing * 0.4, close: price, volume });
+    bars.push({ at: new Date(at).toISOString(), open, high: Math.max(open, price) + swing * 0.4, low: Math.min(open, price) - swing * 0.4, close: price, volume, extended: extendedOf(at) });
   }
   const last = bars[bars.length - 1];
   last.close *= 1 + (Math.random() - 0.5) * 0.004;
@@ -288,14 +296,15 @@ function marketChart(symbol, range) {
   // 1D: the last bar's own session, which runs on past it when the day isn't over.
   const day = new Date(last.at);
   day.setUTCHours(0, 0, 0, 0);
-  const hoursOf = hours ?? [0, 24];
+  const hoursOf = extendedHours ?? hours ?? [0, 24];
   const session = range === "1D"
     ? [new Date(+day + hoursOf[0] * 3600000).toISOString(), new Date(Math.max(+day + hoursOf[1] * 3600000, Date.parse(last.at) + 3 * 3600000)).toISOString()]
     : null;
   return {
     session,
     symbol, name: known?.name ?? MARKET_EXTRA.find(([s]) => s === symbol)?.[1] ?? symbol, currency: known?.currency ?? "USD",
-    exchange: known?.exchange ?? "NASDAQ", range, interval, market_open: symbol !== "AAPL", price: last.close, warmup,
+    exchange: known?.exchange ?? "NASDAQ", range, interval, market_open: symbol !== "AAPL" && !last.extended,
+    extended_session: symbol === "AAPL" ? null : last.extended ?? null, price: last.close, warmup,
     segments: [[warmup, bars.length]], bars,
   };
 }

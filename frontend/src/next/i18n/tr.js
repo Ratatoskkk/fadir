@@ -102,6 +102,9 @@ export default {
   "ticker.vsPrevClose": "önceki kapanışa göre",
   "ticker.fullDay": "Tüm gün",
   "ticker.note.prevClose": "Önceki işlem gününün son kapanışı; fiyatın yanındaki değişim buna göre hesaplanır.",
+  "ticker.extended": "Seans öncesi ve sonrası",
+  "ticker.extendedKey": "Uzatılmış seans",
+  "ticker.note.extended": "Normal seans açılmadan önceki ve kapandıktan sonraki işlemler, soluk renkte çizilir; yalnızca Yahoo'nun uzatılmış seans bildirdiği hisselerde vardır. Yukarıdaki fiyat ve değişim normal seansındır.",
 
   "theme.light": "Açık tema",
   "theme.dark": "Koyu tema",
@@ -139,6 +142,8 @@ export default {
   "live.title": "Canlı veri",
   "live.open": "açık",
   "live.closed": "kapalı",
+  "live.pre": "seans öncesi",
+  "live.post": "seans sonrası",
   "live.status": "Durum",
   "live.openCount": "{n} borsa açık",
   "live.allClosed": "Tüm piyasalar kapalı",

@@ -102,6 +102,9 @@ export default {
   "ticker.vsPrevClose": "vs prev. close",
   "ticker.fullDay": "Full day",
   "ticker.note.prevClose": "The previous trading day's last close, the base of the change next to the price.",
+  "ticker.extended": "Pre-market and after hours",
+  "ticker.extendedKey": "Extended hours",
+  "ticker.note.extended": "Trades before the regular session opens and after it closes, drawn in a muted colour, for listings Yahoo reports extended hours for. The price and change above are the regular session's.",
 
   "theme.light": "Light theme",
   "theme.dark": "Dark theme",
@@ -139,6 +142,8 @@ export default {
   "live.title": "Live data",
   "live.open": "open",
   "live.closed": "closed",
+  "live.pre": "pre-market",
+  "live.post": "after hours",
   "live.status": "Status",
   "live.openCount": "{n} exchanges open",
   "live.allClosed": "All markets closed",

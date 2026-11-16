@@ -102,6 +102,9 @@ export default {
   "ticker.vsPrevClose": "vs clôture veille",
   "ticker.fullDay": "Journée entière",
   "ticker.note.prevClose": "La dernière clôture de la séance précédente, la base de la variation à côté du cours.",
+  "ticker.extended": "Pré-marché et après-bourse",
+  "ticker.extendedKey": "Horaires étendus",
+  "ticker.note.extended": "Échanges avant l'ouverture et après la clôture de la séance normale, tracés dans une couleur atténuée, pour les titres dont Yahoo publie les horaires étendus. Le cours et la variation ci-dessus sont ceux de la séance normale.",
 
   "theme.light": "Thème clair",
   "theme.dark": "Thème sombre",
@@ -139,6 +142,8 @@ export default {
   "live.title": "Données en direct",
   "live.open": "ouvert",
   "live.closed": "fermé",
+  "live.pre": "pré-marché",
+  "live.post": "après-bourse",
   "live.status": "État",
   "live.openCount": "{n} bourses ouvertes",
   "live.allClosed": "Tous les marchés sont fermés",

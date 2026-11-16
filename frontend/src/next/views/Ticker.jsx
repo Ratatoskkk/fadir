@@ -74,8 +74,11 @@ function ParamInput({ label, ariaLabel, value, integer, onChange }) {
   );
 }
 
+/** Whether a chart's market is trading now, pre-market and after hours included. */
+const trading = (data) => Boolean(data?.market_open || data?.extended_session);
+
 /**
- * Bars for (symbol, range[, weeks]), polled while the market is open. A stale answer is
+ * Bars for (symbol, range[, weeks]), polled while the market trades. A stale answer is
  * dropped. `tick` changes with every dashboard price update: the chart reloads then and
  * restarts its own timer, so the line moves with the prices on the rest of the page. The
  * timer covers a ticker whose market trades while the portfolio's are shut.
@@ -111,8 +114,8 @@ function useChart(symbol, range, weeks, pollSeconds, tick) {
   }, [tick, load]);
 
   const fresh = state.key === key;
-  const open = fresh && state.data?.market_open;
-  liveRef.current = Boolean(open);
+  const open = fresh && trading(state.data);
+  liveRef.current = open;
   useEffect(() => {
     const seconds = open ? pollSeconds : CLOSED_POLL_SECONDS;
     if (!symbol || !seconds) return undefined;
@@ -215,7 +218,8 @@ export default function Ticker({ dash }) {
     if (!series) return null;
     if (!cmpData?.bars?.length) {
       const all = series.times.map(() => true);
-      return { times: series.times, close: series.close, closeRead: series.close, mainOwn: all, mainAt: series.times.map((_, i) => i), breaks: series.breaks, compare: null };
+      const closeExt = series.bars.map((b) => Boolean(b.extended));
+      return { times: series.times, close: series.close, closeRead: series.close, closeExt, mainOwn: all, mainAt: series.times.map((_, i) => i), breaks: series.breaks, compare: null };
     }
     const bars = data.bars;
     const mTimes = bars.map((b) => Date.parse(b.at));
@@ -225,7 +229,7 @@ export default function Ticker({ dash }) {
     const step = INTERVAL_MS[data.interval] ?? INTERVAL_MS["1h"];
     const closedGap = step >= INTERVAL_MS["1d"] ? step * 1.5 : Math.max(CLOSED_GAP, 4 * step);
     const segments = data.segments?.length ? data.segments : [[data.warmup, bars.length]];
-    const out = { times: [], close: [], closeRead: [], compare: [], compareRead: [], mainOwn: [], cmpOwn: [], mainAt: [], cmpAt: [], breaks: [] };
+    const out = { times: [], close: [], closeRead: [], closeExt: [], compare: [], compareRead: [], compareExt: [], mainOwn: [], cmpOwn: [], mainAt: [], cmpAt: [], breaks: [] };
     let mainSoFar = 1, otherSoFar = 1, shown = 0;
     let cj = -1;
     segments.forEach(([s, e], k) => {
@@ -251,10 +255,12 @@ export default function Ticker({ dash }) {
         out.mainOwn.push(mainOwn);
         out.close.push(mainOwn ? mainPct : null);
         out.closeRead.push(mainPct);
+        out.closeExt.push(mainOwn && Boolean(bars[mi].extended));
         out.mainAt.push(shown + mi - s);
         out.cmpAt.push(cj);
         const cmpOwn = cOwnTimes.has(time);
         out.cmpOwn.push(cmpOwn);
+        out.compareExt.push(cmpOwn && cj >= 0 && Boolean(cBars[cj].extended));
         if (cj < 0 || !cBase) { out.compare.push(null); out.compareRead.push(null); continue; }
         otherLast = cBars[cj].close / cBase;
         const otherPct = (otherSoFar * otherLast - 1) * 100;
@@ -379,6 +385,12 @@ export default function Ticker({ dash }) {
         const base = prevClose ?? (data.warmup > 0 ? data.bars[data.warmup - 1].close : series.bars[0].open);
         return base ? price / base : null;
       })();
+  // While the listing trades before or after its session: the newest extended bar's price
+  // and its change from the regular session's last price.
+  const lastBar = data?.bars?.[data.bars.length - 1];
+  const extQuote = data?.extended_session && lastBar?.extended && data.price
+    ? { price: lastBar.close, change: lastBar.close / data.price }
+    : null;
   const at = hover ?? (view ? view.times.length - 1 : null);
   const hoverBar = hover !== null && view ? series.bars[view.mainAt[hover]] : null;
   const formatX = X_FORMAT[range] ?? ((ms) => shortDate(ms));
@@ -402,8 +414,9 @@ export default function Ticker({ dash }) {
     ...(prevClose !== null && prevOn ? [{ value: prevClose, label: `${t("ticker.prevClose")} ${quote(prevClose)}`, dotted: true, fit: true }] : []),
   ];
   // 1D over the whole session: the x axis runs on, one bar step at a time, to the close.
-  // After the close the bars already span the session, so the option only shows while it trades.
-  const session = range === "1D" && data?.market_open ? data?.session ?? null : null;
+  // After the close the bars already span the session, so the option only shows while it
+  // trades. A listing with extended hours runs from the pre-market open to the after-hours close.
+  const session = range === "1D" && trading(data) ? data?.session ?? null : null;
   const axisTimes = useMemo(() => {
     if (!fullDay || !session || !view?.times.length) return null;
     const step = INTERVAL_MS[data.interval] ?? INTERVAL_MS["5m"];
@@ -415,6 +428,7 @@ export default function Ticker({ dash }) {
   // Explain only what is on the chart now.
   const notes = [
     comparing ? ["ticker.compareLine", "ticker.note.compare"] : ["ticker.priceLine", "ticker.note.price"],
+    ...(view?.closeExt.some(Boolean) || view?.compareExt?.some(Boolean) ? [["ticker.extended", "ticker.note.extended"]] : []),
     ...(showVolume ? [["ticker.volume", "ticker.note.volume"]] : []),
     ...(panes.some((p) => !p.histogram) ? [["ticker.levelLine", "ticker.note.level"]] : []),
     ...panes.filter((p) => !p.histogram).map((p) => (p.asPct ? ["ticker.maSlope", "ticker.note.maSlopePct"] : FILTER_NOTES[p.key])).filter(Boolean),
@@ -455,14 +469,21 @@ export default function Ticker({ dash }) {
   }
 
   // A held point is "not trading": the line there is that market's last value.
+  // A pre-market or after-hours point names its session.
   const closedNote = (held) => (held ? <span className="muted">{t("live.closed")}</span> : null);
+  const sessionOf = (bar) => (bar?.extended ? t(`live.${bar.extended}`) : null);
+  const cmpBarAt = (i) => (comparing && view.cmpOwn[i] && view.cmpAt[i] >= 0 ? cmpData.bars[view.cmpAt[i]] : null);
+  const lineNote = (idle, bar) => closedNote(idle) ?? (sessionOf(bar) && <span className="muted">{sessionOf(bar)}</span>);
   const tooltip = hoverBar ? (
     <>
-      <div className="tip-date">{stamp(view.times[hover])}</div>
+      <div className="tip-date">
+        {stamp(view.times[hover])}
+        {!comparing && sessionOf(hoverBar) && <span className="tip-session">{sessionOf(hoverBar)}</span>}
+      </div>
       {comparing ? (
         <>
-          <div className="tip-row"><i style={{ background: "var(--accent)" }} />{symbol} {closedNote(view.closeIdle[hover])}<b className="num">{pct(view.closeRead[hover])}</b></div>
-          <div className="tip-row"><i style={{ background: "var(--compare)" }} />{compareSymbol} {closedNote(view.compareIdle[hover])}<b className="num">{pct(view.compareRead[hover])}</b></div>
+          <div className="tip-row"><i style={{ background: "var(--accent)" }} />{symbol} {lineNote(view.closeIdle[hover], view.mainOwn[hover] ? hoverBar : null)}<b className="num">{pct(view.closeRead[hover])}</b></div>
+          <div className="tip-row"><i style={{ background: "var(--compare)" }} />{compareSymbol} {lineNote(view.compareIdle[hover], cmpBarAt(hover))}<b className="num">{pct(view.compareRead[hover])}</b></div>
         </>
       ) : (
         [["ticker.open", "open"], ["ticker.high", "high"], ["ticker.low", "low"], ["ticker.close", "close"]].map(([label, key]) => (
@@ -492,6 +513,7 @@ export default function Ticker({ dash }) {
   const spoken = hoverBar && keyed
     ? [
       stamp(view.times[hover]),
+      ...(sessionOf(hoverBar) && (!comparing || view.mainOwn[hover]) ? [sessionOf(hoverBar)] : []),
       `${t("ticker.close")} ${quote(hoverBar.close)}`,
       ...(prevClose !== null && !comparing ? [`${t("ticker.vsPrevClose")} ${ratioPct(hoverBar.close / prevClose)}`] : []),
       ...(comparing ? [`${symbol} ${pct(view.closeRead[hover])}`, `${compareSymbol} ${pct(view.compareRead[hover])}`] : []),
@@ -575,8 +597,14 @@ export default function Ticker({ dash }) {
             <span className={`chip num ${toneOf(change - 1)}`}>{arrow(change - 1)} {ratioPct(change)}</span>
           )}
           {data && (
-            <span className={`ticker-session ${data.market_open ? "open" : ""}`}>
-              <i aria-hidden="true" />{t(data.market_open ? "live.open" : "live.closed")}
+            <span className={`ticker-session ${data.market_open ? "open" : data.extended_session ? "extended" : ""}`}>
+              <i aria-hidden="true" />{t(data.market_open ? "live.open" : data.extended_session ? `live.${data.extended_session}` : "live.closed")}
+              {extQuote && (
+                <>
+                  <span className="num">{quote(extQuote.price)}</span>
+                  <span className={`num ${toneOf(extQuote.change - 1)}`}>{ratioPct(extQuote.change)}</span>
+                </>
+              )}
             </span>
           )}
         </div>
@@ -614,6 +642,12 @@ export default function Ticker({ dash }) {
             <i className="dashed" style={{ color: "var(--cost)" }} />
             {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
           </button>
+        )}
+        {(view?.closeExt.some(Boolean) || view?.compareExt?.some(Boolean)) && (
+          <span className="legend-chip legend-key">
+            <i style={{ background: comparing && !view.closeExt.some(Boolean) ? "var(--compare-extended)" : "var(--extended)" }} />
+            {t("ticker.extendedKey")}
+          </span>
         )}
         {prevClose !== null && !comparing && (
           <button type="button" className={`legend-chip ${prevOn ? "" : "off"}`} aria-pressed={prevOn} onClick={() => setPrevOn((v) => !v)}>
@@ -687,13 +721,15 @@ export default function Ticker({ dash }) {
             compare={view.compare}
             closeDash={view.closeDash}
             compareDash={view.compareDash}
+            closeExtended={view.closeExt}
+            compareExtended={view.compareExt ?? null}
             formatY={comparing ? (v) => pct(v, 1) : quote}
             panes={panes}
             marks={marks}
             breaks={view.breaks}
             heads={heads}
             formatX={formatX}
-            live={data.market_open}
+            live={trading(data)}
             onHover={(i, byKey) => { setHover(i); setKeyed(byKey); }}
             tooltip={tooltip}
             ariaLabel={t("ticker.aria", { symbol })}

@@ -48,6 +48,9 @@
   /* The Ticker filters: one accent hue at three lightnesses (DESLOP 50). */
   /* A compared ticker: the one warm hue on the Ticker tab, so it never reads as a shade of the main line. */
   --compare: oklch(0.8 0.13 65);
+  /* Pre-market and after hours: each line's own hue, muted, so it reads as the same price out of session. */
+  --extended: oklch(0.6 0.05 258);
+  --compare-extended: oklch(0.64 0.06 65);
   --chart-grid: oklch(0.26 0.009 258);
   --shadow: none;
   --shadow-pop: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 10px 28px -10px oklch(0 0 0 / 0.55);
@@ -75,6 +78,8 @@
   --warn: oklch(0.52 0.11 75);
   --on-solid: oklch(0.985 0.004 258);
   --compare: oklch(0.56 0.14 55);
+  --extended: oklch(0.62 0.06 258);
+  --compare-extended: oklch(0.62 0.07 55);
   --chart-grid: oklch(0.92 0.006 258);
   --shadow: 0 1px 2px oklch(0.3 0.02 258 / 0.06);
   --shadow-pop: 0 1px 2px oklch(0.3 0.02 258 / 0.08), 0 10px 24px -10px oklch(0.3 0.02 258 / 0.22);
@@ -449,6 +454,8 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .legend-chip i { width: 14px; height: 3px; border-radius: 3px; transition: transform 0.3s var(--ease); }
 .legend-chip i.band { height: 10px; opacity: 0.45; border-radius: 3px; }
 .legend-chip.off { opacity: 0.45; }
+/* A key, not a toggle: no border or hover, so it never reads as a button. */
+.legend-key, .legend-key:hover { border-color: transparent; background: none; color: var(--text-2); }
 .legend-chip.off i { transform: scaleX(0.3); }
 .legend-meta { margin-left: auto; font-size: 12px; color: var(--text-3); }
 .chart-stage { position: relative; margin: 0 -8px; }
@@ -465,6 +472,7 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 }
 .vchart-tip.on { opacity: 1; }
 .tip-date { font-weight: 600; margin-bottom: 6px; }
+.tip-session { margin-left: 8px; font-weight: 400; color: var(--text-3); }
 .tip-row { display: flex; align-items: center; gap: 8px; color: var(--text-2); line-height: 1.75; font-variant-numeric: tabular-nums; }
 .tip-row i { width: 8px; height: 8px; border-radius: 2px; }
 .tip-row b { margin-left: auto; padding-left: 14px; color: var(--text); font-weight: 600; }
@@ -494,6 +502,11 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .ticker-session { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); }
 .ticker-session i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
 .ticker-session.open i { background: var(--up); }
+/* Trading outside the regular session: the open colour as a ring. */
+.ticker-session.extended i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--up); }
+.ticker-session .num { color: var(--text); }
+.ticker-session .num.up { color: var(--up); }
+.ticker-session .num.down { color: var(--down); }
 .ticker-empty-card { display: flex; flex-direction: column; gap: 16px; }
 .chart-error { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .segmented .popover-root { display: flex; }

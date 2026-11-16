@@ -102,6 +102,9 @@ export default {
   "ticker.vsPrevClose": "ggü. Vortag",
   "ticker.fullDay": "Ganzer Tag",
   "ticker.note.prevClose": "Der letzte Schlusskurs des vorherigen Handelstags, die Basis der Veränderung neben dem Kurs.",
+  "ticker.extended": "Vor- und nachbörslich",
+  "ticker.extendedKey": "Erweiterter Handel",
+  "ticker.note.extended": "Handel vor Beginn und nach Ende der regulären Sitzung, in einer gedämpften Farbe gezeichnet, für Werte, für die Yahoo verlängerte Handelszeiten meldet. Kurs und Veränderung oben beziehen sich auf die reguläre Sitzung.",
 
   "theme.light": "Helles Design",
   "theme.dark": "Dunkles Design",
@@ -139,6 +142,8 @@ export default {
   "live.title": "Live-Daten",
   "live.open": "offen",
   "live.closed": "geschlossen",
+  "live.pre": "vorbörslich",
+  "live.post": "nachbörslich",
   "live.status": "Status",
   "live.openCount": "{n} Börsen offen",
   "live.allClosed": "Alle Märkte geschlossen",

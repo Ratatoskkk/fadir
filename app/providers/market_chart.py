@@ -105,13 +105,15 @@ class Chart:
         return self.segments[0][0]
 
     def day_session(self) -> tuple[datetime, datetime] | None:
-        """The shown trading day's regular session, open to close, for a 1D chart.
+        """The shown trading day, open to close, for a 1D chart: from the pre-market open
+        to the after-hours close where the listing trades outside its regular session.
 
         Yahoo reports the current session, which after the close can already be the next
         day's; its hours are moved onto the shown bars' local date. None when Yahoo gives
         no session or the chart is not 1D.
         """
-        start, end = self.series.session_start, self.series.session_end
+        start = self.series.extended_start or self.series.session_start
+        end = self.series.extended_end or self.series.session_end
         bars = self.series.bars
         if self.range != "1D" or start is None or end is None or not bars:
             return None
@@ -133,6 +135,17 @@ class Chart:
         in_session = start is not None and end is not None and start <= now < end
         return in_session and self.reaches_now
 
+    def extended_session(self, now: datetime) -> str | None:
+        """"pre" or "post" while the listing trades before or after its regular session."""
+        s = self.series
+        if not self.reaches_now or None in (s.extended_start, s.extended_end, s.session_start, s.session_end):
+            return None
+        if s.extended_start <= now < s.session_start:
+            return "pre"
+        if s.session_end <= now < s.extended_end:
+            return "post"
+        return None
+
 
 def first_shown(bars: list[yf_client.Bar], spec: ChartRange) -> int:
     """Index of the first bar inside the shown window."""
@@ -148,24 +161,27 @@ def first_shown(bars: list[yf_client.Bar], spec: ChartRange) -> int:
 
 
 def follow_quote(series: yf_client.BarSeries) -> list[yf_client.Bar]:
-    """The bars with the newest one ending at Yahoo's latest quote.
+    """The bars with the newest regular one ending at Yahoo's latest quote.
 
     The quote moves with every trade, while the newest bar's close can lag it, and after
     the close the quote includes the closing auction the bars miss. Only a bar inside the
-    reported session follows it, so a quote never lands on a past day's bar.
+    reported session follows it, so a quote never lands on a past day's bar. The quote is
+    the regular session's, so pre-market and after-hours bars keep their own closes.
     """
     bars, price = series.bars, series.price
     start, end = series.session_start, series.session_end
-    if not bars or price is None or start is None or end is None:
+    at = next((i for i in range(len(bars) - 1, -1, -1) if bars[i].extended is None), None)
+    if at is None or price is None or start is None or end is None:
         return bars
-    last = bars[-1]
+    last = bars[at]
     # An intraday bar inside the session, or a daily bar (stamped at local midnight) for
     # the session's own date. Weekly bars and past days never follow the quote.
     zone = last.at.tzinfo
     daily_today = last.at.time() == day_time(0) and last.at.date() == start.astimezone(zone).date()
     if not (start <= last.at < end or daily_today):
         return bars
-    return [*bars[:-1], replace(last, close=price, high=max(last.high, price), low=min(last.low, price))]
+    followed = replace(last, close=price, high=max(last.high, price), low=min(last.low, price))
+    return [*bars[:at], followed, *bars[at + 1 :]]
 
 
 def parse_weeks(values: list[str], today: date) -> list[tuple[int, int]]:
@@ -326,11 +342,16 @@ def previous_close(symbol: str, day: date) -> float | None:
     return before[-1] if before else None
 
 
+def intraday(interval: str) -> bool:
+    """Minute and hour bars, the ones that can hold pre-market and after-hours trading."""
+    return interval.endswith(("m", "h"))
+
+
 def chart(symbol: str, range_key: str) -> Chart:
     spec = RANGES[range_key]
 
     def build() -> Chart | None:
-        series = yf_client.fetch_bars(symbol, spec.interval, period=spec.period)
+        series = yf_client.fetch_bars(symbol, spec.interval, period=spec.period, prepost=intraday(spec.interval))
         if series is None:
             return None
         shown = first_shown(series.bars, spec)
@@ -360,7 +381,7 @@ def week_chart(symbol: str, weeks: list[tuple[int, int]], today: date) -> Chart:
     end = min(last_sunday, today) + timedelta(days=1)
 
     def build() -> Chart | None:
-        series = yf_client.fetch_bars(symbol, interval, start=start, end=end)
+        series = yf_client.fetch_bars(symbol, interval, start=start, end=end, prepost=intraday(interval))
         if series is None:
             return None
         segments = week_segments(series.bars, weeks)

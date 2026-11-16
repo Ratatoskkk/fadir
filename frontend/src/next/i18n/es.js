@@ -102,6 +102,9 @@ export default {
   "ticker.vsPrevClose": "vs cierre ant.",
   "ticker.fullDay": "Día completo",
   "ticker.note.prevClose": "El último cierre de la sesión anterior, la base del cambio junto al precio.",
+  "ticker.extended": "Preapertura y después del cierre",
+  "ticker.extendedKey": "Horario extendido",
+  "ticker.note.extended": "Operaciones antes de que abra la sesión regular y después de que cierre, dibujadas en un color apagado, para los valores de los que Yahoo informa horario extendido. El precio y el cambio de arriba son de la sesión regular.",
 
   "theme.light": "Tema claro",
   "theme.dark": "Tema oscuro",
@@ -139,6 +142,8 @@ export default {
   "live.title": "Datos en vivo",
   "live.open": "abierto",
   "live.closed": "cerrado",
+  "live.pre": "preapertura",
+  "live.post": "después del cierre",
   "live.status": "Estado",
   "live.openCount": "{n} bolsas abiertas",
   "live.allClosed": "Todos los mercados cerrados",

@@ -21,7 +21,7 @@ import logging
 import math
 import random
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import ROUND_HALF_EVEN, Decimal
 
@@ -107,6 +107,7 @@ def fetch_close_series(
             end=(end + timedelta(days=1)).isoformat(),
             auto_adjust=False,
             actions=False,
+            prepost=prepost,
             raise_errors=True,
         )
 
@@ -207,6 +208,7 @@ def fetch_intraday_closes(
             interval=interval,
             auto_adjust=False,
             actions=False,
+            prepost=prepost,
             raise_errors=True,
         )
 
@@ -327,6 +329,9 @@ class Bar:
     close: float
     #: Shares traded in the bar; 0 where Yahoo reports none (indices, currencies).
     volume: float = 0.0
+    #: "pre" or "post" for a bar outside the regular session (US pre-market and after
+    #: hours); None for a regular bar.
+    extended: str | None = None
 
 
 @dataclass(frozen=True)
@@ -341,6 +346,10 @@ class BarSeries:
     #: Yahoo's latest regular-session quote; it can differ from the last bar's close,
     #: which misses the closing auction.
     price: float | None
+    #: The current day's pre-market open and after-hours close, for a listing that
+    #: trades outside its regular session and whose extended bars were asked for.
+    extended_start: datetime | None = None
+    extended_end: datetime | None = None
 
 
 def _display_float(value: object) -> float | None:
@@ -374,10 +383,12 @@ def fetch_bars(
     *,
     start: date | None = None,
     end: date | None = None,
+    prepost: bool = False,
 ) -> BarSeries | None:
     """OHLC bars plus the quote metadata Yahoo returns alongside them. None on failure.
 
-    Pass either `period` or `start` and an exclusive `end`.
+    Pass either `period` or `start` and an exclusive `end`. With `prepost`, intraday bars
+    include pre-market and after hours where the listing has them, each tagged by session.
     """
     ticker = yf.Ticker(symbol)
     window = (
@@ -392,6 +403,7 @@ def fetch_bars(
             interval=interval,
             auto_adjust=False,
             actions=False,
+            prepost=prepost,
             raise_errors=True,
         )
 
@@ -424,7 +436,11 @@ def fetch_bars(
         return None
 
     meta = ticker.history_metadata or {}
-    regular = (meta.get("currentTradingPeriod") or {}).get("regular") or {}
+    periods = meta.get("currentTradingPeriod") or {}
+    regular = periods.get("regular") or {}
+    extended = prepost and bool(meta.get("hasPrePostMarketData"))
+    if extended:
+        bars = _tag_sessions(bars, meta.get("tradingPeriods"), regular)
     currency = meta.get("currency")
     return BarSeries(
         bars=bars,
@@ -434,4 +450,37 @@ def fetch_bars(
         session_start=_stamp(regular.get("start")),
         session_end=_stamp(regular.get("end")),
         price=_display_float(meta.get("regularMarketPrice")),
+        extended_start=_stamp((periods.get("pre") or {}).get("start")) if extended else None,
+        extended_end=_stamp((periods.get("post") or {}).get("end")) if extended else None,
     )
+
+
+def _tag_sessions(bars: list[Bar], periods: object, current: dict) -> list[Bar]:
+    """Tag each bar that opens before its day's regular session "pre", at or after its
+    close "post".
+
+    Yahoo's `tradingPeriods` gives each day's regular hours (half days included); a day it
+    leaves out takes the current session's hours.
+    """
+    hours: dict[date, tuple[datetime, datetime]] = {}
+    if isinstance(periods, pd.DataFrame) and {"start", "end"} <= set(periods.columns):
+        for start, end in zip(periods["start"], periods["end"]):
+            opens, closes = _stamp(start), _stamp(end)
+            if opens is not None and closes is not None:
+                hours[opens.date()] = (opens, closes)
+    opens, closes = _stamp(current.get("start")), _stamp(current.get("end"))
+    out = []
+    for bar in bars:
+        day = hours.get(bar.at.date())
+        if day is None and opens is not None and closes is not None:
+            zone = bar.at.tzinfo
+            day = (
+                datetime.combine(bar.at.date(), opens.astimezone(zone).time(), tzinfo=zone),
+                datetime.combine(bar.at.date(), closes.astimezone(zone).time(), tzinfo=zone),
+            )
+        if day is None:
+            out.append(bar)
+            continue
+        tag = "pre" if bar.at < day[0] else "post" if bar.at >= day[1] else None
+        out.append(replace(bar, extended=tag) if tag else bar)
+    return out
