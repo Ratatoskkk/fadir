@@ -1770,3 +1770,23 @@ headroom so the ± scale labels stay inside the pane, and the net figure in its 
 colour. Frontend only, no restart. Installed checksums match the build for all 16 files;
 rollback bundle `/opt/fadir/frontend/dist.previous.volume-totals-20261116`. Public health and
 the new bundle returned 200. Checked in the mock app at desktop and phone width.
+
+Base Currency choice deployment (owner request 2026-11-16: change the Portfolio currency,
+USD by default, saved). `31fd547` implements ADR 0006: the top-bar Portfolio menu chooses USD,
+EUR, GBP or TRY, saved on the Portfolio through `PATCH /api/portfolios/{id}`; new Portfolios
+start in USD and existing ones keep theirs (the owner's stays TRY until changed in the menu).
+Rates stay stored to TRY and are crossed to the Base Currency on their own date
+(`app/calc/rebase.py`), so the engine is unchanged; the Turkey tax is worked out in lira and
+shown converted, with the lira amount beside it. The UI review's three fixes ship with it:
+44px currency buttons on phones, the lira tax shown beside a converted one, and arrow keys in
+the currency radio group. Backend: the six changed VM files matched `b62caf9` before
+replacement and `app/calc/rebase.py` is new; previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-31fd547/rollback/app.previous.tar` (delete the added
+file on rollback). The service restarted once at 10:06:38 UTC with `NRestarts=0` and no
+journal errors. Installed checksums match the commit and the build for all 16 frontend files;
+rollback bundle `/opt/fadir/frontend/dist.previous.base-currency-20261116`. Local and public
+health returned 200, the new bundle returned 200 and an unauthenticated PATCH returned 401. A
+read-only check on the VM valued each Portfolio in USD in memory and rolled back: USD value at
+today's rate equals the TRY value, cost uses trade-date rates, the lira tax carries through,
+history (233 days) and intraday (122 points) value every point, with no new warnings. Tests
+match the baseline apart from the two known zero-FX failures.
