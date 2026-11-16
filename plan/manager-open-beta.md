@@ -1826,3 +1826,23 @@ match the build for all 16 frontend files; rollback bundle
 bundle returned 200. In the signed-in owner tab a 1D chart returned the official previous
 close (for one US listing 0.10 above the last 5-minute bar, the closing auction). Tests match
 the baseline apart from the two known zero-FX failures.
+
+Extended hours deployment (owner request 2026-11-16: show pre-market and after-hours data on
+the ticker charts in a different colour, run /ui-design-review:review, apply every fix, push
+and deploy). `9326e63` asks Yahoo for extended hours on the intraday ranges (1D, 5D, 1M,
+intraday weeks) and tags each bar outside its day's regular session pre or post; listings
+without extended hours are unchanged. Extended stretches draw in a muted, thinner line
+(`--extended`, `--compare-extended`), the chart stays live and the session pill reads
+pre-market or after hours, and Full day runs from the pre-market open to the after-hours
+close. The review's five fixes ship with it: an Extended hours legend key, the latest
+extended price and its change in the session pill, a ring dot so pre-market never reads as
+closed, the thinner line for dark mode, and the same colouring in the indicator panes.
+Backend: the four changed VM files matched `749ff25` before replacement and the new code was
+dry-run on the VM's yfinance 1.7.0 first; previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-9326e63/rollback/app.previous.tar`, and the service
+restarted once at 12:46:48 UTC with `NRestarts=0` and no journal warnings. Installed
+checksums match the build for all 16 frontend files; rollback bundle
+`/opt/fadir/frontend/dist.previous.extended-hours-20261116`. Local and public health and the
+new bundle returned 200 and an unauthenticated chart returned 401. In the signed-in owner tab
+a 1D AAPL chart returned 45 pre-market bars with `extended_session` "pre". Tests match the
+baseline apart from the two known zero-FX failures.
