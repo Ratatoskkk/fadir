@@ -280,7 +280,8 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
       if (pane.histogram) for (const v of pane.values) if (v != null && Math.abs(v) > bound) bound = Math.abs(v);
       bound = roundUp(bound);
       const [lo, hi] = pane.histogram
-        ? [-bound * 1.06, bound * 1.06]
+        // Headroom so the ± labels, centred on their ticks, stay inside the pane.
+        ? [-bound * 1.25, bound * 1.25]
         : extent(pane.cmp ? [...pane.values, ...pane.cmp.values] : pane.values, [pane.level]);
       const yOf = area(top, PANE_PLOT, lo, hi, pane.format ?? figure, 2, pane.histogram ? { ticks: [-bound, 0, bound] } : {});
       paneY.push(yOf);

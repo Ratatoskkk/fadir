@@ -596,6 +596,8 @@ button.pane-name .icon { color: var(--text-3); transition: transform 0.2s var(--
 button.pane-name[aria-expanded="true"] .icon { transform: rotate(180deg); }
 .pane-bars { color: var(--text-3); }
 .pane-value { color: var(--text); }
+.pane-value.up { color: var(--up); }
+.pane-value.down { color: var(--down); }
 .pane-state { font-weight: 600; }
 .pane-volume { color: var(--text-2); }
 .pchart-heads.narrow .pane-volume { flex-basis: 100%; }

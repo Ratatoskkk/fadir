@@ -310,10 +310,19 @@ export default function Ticker({ dash }) {
       const at = (arr) => view.mainAt.map((k) => arr[series.idx[k]]);
       const buy = at(series.split.buy), sell = at(series.split.sell);
       const read = buy.map((b, i) => b - sell[i]);
+      const volume = view.mainAt.map((k) => series.bars[k].volume ?? 0);
+      // The shown range's totals, read while no bar is pointed at; each bar counts once.
+      const total = { buy: 0, sell: 0, volume: 0 };
+      view.mainOwn.forEach((own, i) => {
+        if (!own) return;
+        total.buy += buy[i];
+        total.sell += sell[i];
+        total.volume += volume[i];
+      });
+      total.net = total.buy - total.sell;
       return {
         key: "volume", histogram: true, name: t("ticker.volume"), level: 0, format: compact,
-        values: read.map((v, i) => (view.mainOwn[i] ? v : null)), read, buy, sell,
-        volume: view.mainAt.map((k) => series.bars[k].volume ?? 0),
+        values: read.map((v, i) => (view.mainOwn[i] ? v : null)), read, buy, sell, volume, total,
       };
     })() : null;
     // Every pane is named, so a pane's line is the ticker's own colour, as the compared
@@ -494,19 +503,23 @@ export default function Ticker({ dash }) {
   // On a narrow chart a pane's N1/N2 inputs open from its name; a wide one always shows them.
   const heads = (narrow) => panes.map((p) => {
     if (p.histogram) {
-      const net = at !== null ? p.read[at] : null;
+      // The range's totals, or the bar under the pointer.
+      const r = hover === null ? p.total : { buy: p.buy[hover], sell: p.sell[hover], volume: p.volume[hover], net: p.read[hover] };
+      const net = r.net;
       return (
         <>
           <span className="pane-name"><i aria-hidden="true" />{p.name}</span>
+          {/* What the figures cover: the shown range, or the bar under the pointer. */}
+          <span className="pane-bars">
+            {hover !== null ? stamp(view.times[hover]) : byWeek ? t("ticker.weeksCount", { n: weeks.length }) : t(`ticker.range.${range}`)}
+          </span>
           <span className={`pane-value num ${toneOf(net)}`}>{signedCompact(net)}</span>
           <span className={`pane-state ${toneOf(net)}`}>{net ? t(net > 0 ? "ticker.netBuyers" : "ticker.netSellers") : "—"}</span>
-          {at !== null && (
-            <span className="pane-params pane-volume num">
-              <span>{t("ticker.buyVol")} <b className="up">{compact(p.buy[at])}</b></span>
-              <span>{t("ticker.sellVol")} <b className="down">{compact(p.sell[at])}</b></span>
-              <span>{t("ticker.volume")} <b>{compact(p.volume[at])}</b></span>
-            </span>
-          )}
+          <span className="pane-params pane-volume num">
+            <span>{t("ticker.buyVol")} <b className="up">{compact(r.buy)}</b></span>
+            <span>{t("ticker.sellVol")} <b className="down">{compact(r.sell)}</b></span>
+            <span>{t("ticker.volume")} <b>{compact(r.volume)}</b></span>
+          </span>
         </>
       );
     }
