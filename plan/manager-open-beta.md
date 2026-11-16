@@ -1809,3 +1809,20 @@ USD value equal to the TRY value at today's rate, the lira tax carried, and ever
 zero-FX failures. Not fixed (beyond the cap): Yahoo backoff and negative caching for the chart
 cache, midnight-crossing sessions, half-hour viewer timezones on the Full day axis, the official
 previous close, tick reloads on daily ranges, and duplicated currency lists.
+
+Remaining review findings deployment (owner instruction 2026-11-16). `a58bc2b` fixes the
+findings left beyond the review's cap: the chart cache fetches once per chart at a time,
+backs off 30s after a Yahoo failure, serves a stale chart for at most 6h and caps week
+selections at 32 entries; a session that opens the evening before is placed on that
+evening; 1D measures from the official previous close (Yahoo's daily bar), with the last
+bar's close as fallback; Full day hour labels go on the first slot of each local hour; a
+dashboard price update reloads the chart only while its market trades and the tab is
+visible; and one list of Portfolio currencies is shared. Backend: the three changed VM files
+matched `fd12652`; previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-a58bc2b/rollback/app.previous.tar`, and the service
+restarted once at 10:24:54 UTC with `NRestarts=0` and no journal errors. Installed checksums
+match the build for all 16 frontend files; rollback bundle
+`/opt/fadir/frontend/dist.previous.review-rest-20261116`. Local and public health and the new
+bundle returned 200. In the signed-in owner tab a 1D chart returned the official previous
+close (for one US listing 0.10 above the last 5-minute bar, the closing auction). Tests match
+the baseline apart from the two known zero-FX failures.
