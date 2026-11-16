@@ -10,6 +10,8 @@ import { useT } from "../i18n/index.jsx";
 import Icon from "./Icons.jsx";
 
 const FIRST_FIELD = "input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])";
+/** Longer than any exit animation here (0.12–0.16s). */
+const EXIT_MS = 250;
 
 const outside = (e, el) => {
   const r = el.getBoundingClientRect();
@@ -53,6 +55,20 @@ export function Modal({ onClose, initialFocus, className = "", children, ...prop
     // initialFocus is read once on open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The exit animation runs on animation frames, and a background tab or a covered or
+  // minimised window gets none (Firefox stops them outright), so it can stall with the
+  // dialog transparent but still modal: the whole page stays inert. The browser is told
+  // to close once the exit's time is up, frames or not; reopened mid-exit, it shows again.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (present) {
+      if (!el.open) el.showModal();
+      return undefined;
+    }
+    const id = window.setTimeout(() => { if (el.open) el.close(); }, EXIT_MS);
+    return () => window.clearTimeout(id);
+  }, [present]);
 
   return (
     <motion.dialog ref={ref} className={className} data-closing={present ? undefined : ""} {...props}>
