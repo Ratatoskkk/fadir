@@ -257,3 +257,27 @@ def test_chart_route_returns_each_bars_volume(client, monkeypatch):  # noqa: F81
     monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(bars))
     body = client.get("/api/market/chart", params={"symbol": "AAPL", "range": "1D"}).json()
     assert [b["volume"] for b in body["bars"]] == [1000, 2000, 3000]
+
+
+def test_todays_daily_bar_follows_the_quote_but_yesterdays_does_not(monkeypatch):
+    opens = datetime(2026, 11, 13, 9, 30, tzinfo=NY)
+    session = (opens, opens + timedelta(hours=6, minutes=30))
+    today = _bars(datetime(2026, 11, 12, tzinfo=NY), 2, timedelta(days=1))
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(today, price=30.0, session=session))
+    assert market_chart.chart("AAPL", "6M").series.bars[-1].close == 30.0
+    market_chart.clear_cache()
+    before = _bars(datetime(2026, 11, 11, tzinfo=NY), 2, timedelta(days=1))
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(before, price=30.0, session=session))
+    assert market_chart.chart("AAPL", "6M").series.bars[-1] == before[-1]
+
+
+def test_a_past_weeks_price_is_its_own_last_close(client, monkeypatch):  # noqa: F811
+    bars = _bars(datetime(2026, 1, 5, 10, tzinfo=NY), 10, timedelta(hours=1))
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(bars, price=999.0))
+    body = client.get("/api/market/chart", params={"symbol": "AAPL", "range": "W", "week": "2026-W02"}).json()
+    assert body["price"] == bars[-1].close
+
+
+def test_volume_is_kept_exact_and_bad_values_are_zero():
+    assert yf_client._volume(123456789) == 123456789.0
+    assert yf_client._volume(float("nan")) == yf_client._volume(-5) == yf_client._volume(None) == 0.0

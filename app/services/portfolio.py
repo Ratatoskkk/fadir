@@ -285,10 +285,25 @@ class PortfolioService:
         """A current quote's rates (now, and the previous session's) to the Base Currency."""
         if self.base_currency == TRY or not quote.ok:
             return quote
+        now = cross(quote.fx_rate_to_try, self._base_now())
         prev = quote.prev_fx_rate_to_try
         if prev is not None and quote.prev_price_date is not None:
-            prev = cross(prev, self._base_rate(quote.prev_price_date))
-        return replace(quote, fx_rate_to_try=cross(quote.fx_rate_to_try, self._base_now()), prev_fx_rate_to_try=prev)
+            try:
+                prev = cross(prev, self._base_rate(quote.prev_price_date))
+            except ProviderError:
+                # As with a missing CCY/TRY rate: only the daily change is lost.
+                return replace(quote, fx_rate_to_try=now, prev_price_native=None, prev_price_date=None, prev_fx_rate_to_try=None)
+        return replace(quote, fx_rate_to_try=now, prev_fx_rate_to_try=prev)
+
+    def _base_series(self, start: date, end: date) -> dict[date, Decimal]:
+        """Published B/TRY rates, from the cache; fetched only when it holds nothing recent."""
+        series = self.fx.published_series(self.base_currency, start, end)
+        if not series or max(series) < end - timedelta(days=self.settings.fx.max_lookback_days):
+            try:
+                series = self.fx.published_series(self.base_currency, start, end, allow_fetch=True)
+            except ProviderError as exc:
+                log.warning("history FX refresh failed for %s: %s", self.base_currency, exc)
+        return series
 
     def _tax_in_base(self, tax: TaxEstimate) -> TaxEstimate:
         """The TRY tax estimate's amounts in the Base Currency at today's rate."""
@@ -461,10 +476,16 @@ class PortfolioService:
             if transactions_by_instrument.get(i.id)
         }
         rebase = self.base_currency != TRY
-        positions = self._positions(instruments, transactions_by_instrument, quotes, warnings, rebase=rebase)
-        # The tax estimate is Turkish and in TRY, so it is worked out from a TRY run.
+        unrebased: set[int] = set()
+        positions = self._positions(
+            instruments, transactions_by_instrument, quotes, warnings, rebase=rebase, unrebased=unrebased
+        )
+        # The tax estimate is Turkish and in TRY, so it is worked out from a TRY run over
+        # the same holdings the totals value.
         try_positions = (
-            self._positions(instruments, transactions_by_instrument, quotes, [], rebase=False)
+            self._positions(
+                [i for i in instruments if i.id not in unrebased], transactions_by_instrument, quotes, [], rebase=False
+            )
             if rebase
             else positions
         )
@@ -497,6 +518,7 @@ class PortfolioService:
             except (ProviderError, DecimalException) as exc:
                 warnings.append(f"{self.base_currency}: no FX rate ({exc})")
                 tax = disabled_estimate(liq.net_proceeds_try)
+                tax_in_lira = None
 
         # Only meaningful when nothing is trading; otherwise the frontend polls normally.
         exchanges = {
@@ -527,8 +549,13 @@ class PortfolioService:
         warnings: list[str],
         *,
         rebase: bool,
+        unrebased: set[int] | None = None,
     ) -> list[PositionMetrics]:
-        """Each position's metrics, in the Base Currency when `rebase`, else in TRY."""
+        """Each position's metrics, in the Base Currency when `rebase`, else in TRY.
+
+        Instruments whose rates could not be crossed to the Base Currency are added to
+        `unrebased`, so the caller can leave them out of the TRY run as well.
+        """
         positions: list[PositionMetrics] = []
         for instrument in instruments:
             transactions = transactions_by_instrument.get(instrument.id, [])
@@ -546,6 +573,8 @@ class PortfolioService:
                     quote = self._rebased_quote(quote)
                 book = build_lot_book(instrument.ticker, instrument.currency, txns)
             except (InsufficientLots, ValueError, DecimalException, ProviderError) as exc:
+                if isinstance(exc, ProviderError) and unrebased is not None:
+                    unrebased.add(instrument.id)
                 # One malformed position must not take the whole dashboard down —
                 # otherwise the screen that can fix the bad row refuses to load.
                 log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
@@ -650,36 +679,37 @@ class PortfolioService:
                 fx_rates[currency] = {}
 
         tax_config = with_official_brackets(self.settings.tax)
-        try_points = build_history(
-            positions,
-            closes,
-            fx_rates,
-            start,
-            end,
-            freq=freq,
-            max_lookback_days=lookback,
-            tax_config=tax_config,
-        )
         if self.base_currency == TRY:
-            return try_points
-
-        # The same series in the Base Currency; its after-tax line is the TRY run's tax
-        # at each date's rate.
-        try:
-            base_series = self.fx.published_series(
-                self.base_currency, start - timedelta(days=lookback), end, allow_fetch=True
+            return build_history(
+                positions,
+                closes,
+                fx_rates,
+                start,
+                end,
+                freq=freq,
+                max_lookback_days=lookback,
+                tax_config=tax_config,
             )
-            rebased_positions = []
-            for position in positions:
-                try:
-                    rebased_positions.append(
-                        replace(position, transactions=[self._rebased(t) for t in position.transactions])
-                    )
-                except ProviderError as exc:
-                    log.error("history rebase failed for %s: %s", position.ticker, exc)
-        except ProviderError as exc:
-            log.error("history FX unavailable for %s: %s", self.base_currency, exc)
-            return []
+
+        # The series in the Base Currency; its after-tax line is a TRY run's tax at each
+        # date's rate. A position that cannot be crossed is left out of both runs.
+        base_series = self._base_series(start - timedelta(days=lookback), end)
+        rebased_positions, kept = [], []
+        for position in positions:
+            try:
+                rebased_positions.append(
+                    replace(position, transactions=[self._rebased(t) for t in position.transactions])
+                )
+                kept.append(position)
+            except ProviderError as exc:
+                log.error("history rebase failed for %s: %s", position.ticker, exc)
+        try_points = (
+            build_history(
+                kept, closes, fx_rates, start, end, freq=freq, max_lookback_days=lookback, tax_config=tax_config
+            )
+            if tax_config.enabled
+            else []
+        )
         points = build_history(
             rebased_positions,
             closes,
@@ -766,19 +796,22 @@ class PortfolioService:
         step = {"5m": 5, "15m": 15, "1h": 60}.get(interval, 5)
         grid = build_grid(bounds[0], bounds[1], step)
 
-        try_points = build_intraday_series(
-            positions, prices, fx_rates, grid, tax_config=with_official_brackets(self.settings.tax)
-        )
+        tax_config = with_official_brackets(self.settings.tax)
         if base == TRY:
-            return try_points, errors, available
+            points = build_intraday_series(positions, prices, fx_rates, grid, tax_config=tax_config)
+            return points, errors, available
 
         base_series = fetched.get(base, {})
-        try:
-            rebased_positions = [
-                replace(p, transactions=[self._rebased(t) for t in p.transactions]) for p in positions
-            ]
-        except ProviderError as exc:
-            return [], errors + [f"{base}: {exc}"], available
+        rebased_positions, kept = [], []
+        for p in positions:
+            try:
+                rebased_positions.append(replace(p, transactions=[self._rebased(t) for t in p.transactions]))
+                kept.append(p)
+            except ProviderError as exc:
+                errors.append(f"{p.ticker}: {exc}")
+        try_points = (
+            build_intraday_series(kept, prices, fx_rates, grid, tax_config=tax_config) if tax_config.enabled else []
+        )
         points = build_intraday_series(
             rebased_positions,
             prices,

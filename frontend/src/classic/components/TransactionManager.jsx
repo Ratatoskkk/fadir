@@ -298,7 +298,7 @@ export default function TransactionManager({ transactions, instruments, portfoli
                     {money(group.totalNative, group.currency)}
                   </td>
                   <td colSpan={3} className="group-summary group-sep" />
-                  <td className="num group-summary group-sep">{money(group.totalTry)}</td>
+                  <td className="num group-summary group-sep">{money(group.totalTry, "TRY")}</td>
                   <td />
                 </tr>
 
@@ -413,7 +413,7 @@ export default function TransactionManager({ transactions, instruments, portfoli
                     )}
                   </td>
 
-                  <td className="num group-sep">{money(t.total_try)}</td>
+                  <td className="num group-sep">{money(t.total_try, "TRY")}</td>
 
                   <td>
                     <div className="row-actions">

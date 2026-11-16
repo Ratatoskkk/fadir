@@ -14,7 +14,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";
 import { useFlash } from "../flash.js";
-import { arrow, clockTime, money, ratioPct, toneOf } from "../format.js";
+import { arrow, clockTime, money, ratioPct, setMoneyCurrency, toneOf } from "../format.js";
 import { isIntradayRange, isPannable, panExhausted, rangeWindow } from "../ranges.js";
 import AttributionBar from "./components/AttributionBar.jsx";
 import Brand from "./components/Brand.jsx";
@@ -170,6 +170,8 @@ export default function App() {
   const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
   const [portfolio, setPortfolio] = useState(null);
+  // Amounts are in the loaded Portfolio's Base Currency; set before children render.
+  setMoneyCurrency(portfolio?.base_currency);
   const [history, setHistory] = useState(null);
   const [intraday, setIntraday] = useState(null);
   const [transactions, setTransactions] = useState([]);

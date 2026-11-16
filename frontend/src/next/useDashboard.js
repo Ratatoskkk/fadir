@@ -266,6 +266,10 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
     if (!id) return;
     const updated = await api.updatePortfolio(id, { base_currency: code });
     setPortfolios((list) => list.map((p) => (Number(p.id) === Number(id) ? { ...p, base_currency: updated.base_currency } : p)));
+    // Both series are in the old currency; the one not reloaded now must not show later
+    // under the new symbol.
+    setHistory(null);
+    setIntraday(null);
     await run(() => loadMarket({ portfolioId: id }));
   }, [run, loadMarket]);
 

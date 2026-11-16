@@ -5,6 +5,7 @@
 // from what is on screen and tint briefly in the direction they moved.
 
 import { useLayoutEffect, useRef, useState } from "react";
+import { moneyCurrency } from "../../format.js";
 import { prefersReducedMotion } from "./motion.js";
 
 const easeOutExpo = (t) => (t >= 1 ? 1 : 1 - 2 ** (-10 * t));
@@ -16,6 +17,10 @@ export default function AnimatedNumber({ value, format, className = "", duration
   const formatRef = useRef(format);
   formatRef.current = format;
   const [tick, setTick] = useState("");
+  // A Base Currency change is a new figure, not a move: it is shown at once, never
+  // counted from the old currency's number.
+  const ccy = moneyCurrency();
+  const ccyRef = useRef(ccy);
 
   useLayoutEffect(() => {
     const node = ref.current;
@@ -30,7 +35,9 @@ export default function AnimatedNumber({ value, format, className = "", duration
 
     const first = shown.current === null;
     const from = first ? (countUp ? 0 : target) : shown.current;
-    if (prefersReducedMotion() || from === target) {
+    const switched = ccyRef.current !== ccy;
+    ccyRef.current = ccy;
+    if (prefersReducedMotion() || from === target || switched) {
       node.textContent = format(target);
       shown.current = target;
       return undefined;
@@ -57,7 +64,7 @@ export default function AnimatedNumber({ value, format, className = "", duration
       cancelAnimationFrame(frame);
       window.clearTimeout(timer);
     };
-  }, [value, duration, countUp]);
+  }, [value, duration, countUp, ccy]);
 
   return <span ref={ref} className={`anum num ${tick} ${className}`} />;
 }

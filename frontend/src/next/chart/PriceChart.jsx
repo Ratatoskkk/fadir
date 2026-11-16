@@ -442,7 +442,12 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
   };
 
   useEffect(() => {
-    if (st.hover !== null && st.hover >= close.length) st.hover = null;
+    // Fewer bars than the reading points at (a new session): drop the reading and say so,
+    // or the owner keeps an index past the end of its arrays.
+    if (st.hover !== null && st.hover >= close.length) {
+      st.hover = null;
+      st.onHover?.(null, false);
+    }
     const canvas = canvasRef.current;
     if (canvas && st.w) {
       st.h = height(st.w);

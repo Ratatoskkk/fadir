@@ -57,6 +57,7 @@ from app.schemas import (
     PortfolioCodeIn,
     PortfolioCodeOut,
     PortfolioCreateIn,
+    PortfolioCurrency,
     PortfolioUpdateIn,
     AttributionOut,
     DailyOut,
@@ -1371,7 +1372,8 @@ def create_transaction(
     authority: AuthorityDep,
     settings: SettingsDep,
     portfolio_id: int | None = Query(default=None),
-    base_currency: str | None = Query(default=None, min_length=3, max_length=3, pattern="^[A-Za-z]{3}$"),
+    #: Only for the first save, which creates the Default Portfolio in this currency.
+    base_currency: PortfolioCurrency | None = Query(default=None),
 ) -> TransactionOut:
     if payload.yf_symbol is not None:
         try:
@@ -1421,7 +1423,7 @@ def create_transaction(
         authority,
         portfolio_id,
         for_write=True,
-        base_currency=(base_currency or DEFAULT_PORTFOLIO_CURRENCY).upper(),
+        base_currency=base_currency or DEFAULT_PORTFOLIO_CURRENCY,
     )
     assert scope is not None
     held = session.scalar(
@@ -1613,7 +1615,8 @@ def get_market_chart(
         range=range_,
         interval=result.interval,
         market_open=result.market_open(utcnow()),
-        price=series.price if series.price is not None else series.bars[-1].close,
+        # A past week ends at its own last close, not today's quote.
+        price=series.price if series.price is not None and result.reaches_now else series.bars[-1].close,
         warmup=result.warmup,
         segments=[list(s) for s in result.segments],
         session=None if day is None else tuple(t.astimezone(timezone.utc) for t in day),

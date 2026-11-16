@@ -18,7 +18,7 @@ import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, replace
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time as day_time, timedelta
 
 from app.providers import yf_client
 
@@ -141,7 +141,11 @@ def follow_quote(series: yf_client.BarSeries) -> list[yf_client.Bar]:
     if not bars or price is None or start is None or end is None:
         return bars
     last = bars[-1]
-    if not start <= last.at < end:
+    # An intraday bar inside the session, or a daily bar (stamped at local midnight) for
+    # the session's own date. Weekly bars and past days never follow the quote.
+    zone = last.at.tzinfo
+    daily_today = last.at.time() == day_time(0) and last.at.date() == start.astimezone(zone).date()
+    if not (start <= last.at < end or daily_today):
         return bars
     return [*bars[:-1], replace(last, close=price, high=max(last.high, price), low=min(last.low, price))]
 
@@ -290,7 +294,9 @@ def week_chart(symbol: str, weeks: list[tuple[int, int]], today: date) -> Chart:
     if not segments:
         raise ChartUnavailable(f"no {symbol} trading in the selected weeks")
 
-    bars, trimmed = trim_lead_in(series.bars, segments)
+    # A selection that runs to today ends at the latest quote, like a live range.
+    source = follow_quote(series) if reaches_now else series.bars
+    bars, trimmed = trim_lead_in(source, segments)
     return _store(key, Chart(
         symbol=symbol,
         range="W",

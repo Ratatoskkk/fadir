@@ -151,3 +151,38 @@ def test_the_lira_tax_rides_along_in_another_base(tmp_path):
     try_view = _service(tmp_path, "TRY", tax=True).build_view(now_utc=now)
     assert usd.tax_in_lira == try_view.tax.tax_try
     assert try_view.tax_in_lira is None
+
+
+def test_a_first_save_rejects_a_currency_the_app_cannot_price(client):  # noqa: F811
+    from tests.test_api import TODAY
+
+    sale = {"ticker": "AAPL", "trade_date": TODAY.isoformat(), "side": "SELL", "quantity": "1",
+            "price_native": "200.00", "fees_native": "0", "fx_rate_override": "47.50"}
+    assert client.post("/api/transactions", params={"base_currency": "JPY"}, json=sale).status_code == 422
+    assert client.post("/api/transactions", params={"base_currency": "USD"}, json=sale).status_code == 201
+
+
+class GappyFx(StubFx):
+    """No USD/TRY on the previous session's date."""
+
+    def quote(self, currency, on, *, allow_fetch=True):
+        if currency == "USD" and on == D1 and getattr(self, "gap", False):
+            from app.providers.base import ProviderError
+            raise ProviderError("no rate")
+        return super().quote(currency, on)
+
+
+def test_a_missing_previous_day_base_rate_costs_only_the_daily_figure(tmp_path):
+    service = _service(tmp_path, "USD")
+    from app.calc import MarketQuote
+    fx = GappyFx()
+    service.fx = fx
+    quote = MarketQuote(
+        ticker="U", currency="USD", price_native=Decimal("12"), price_date=D2,
+        fx_rate_to_try=Decimal("40"), fx_rate_date=D2, fx_provider="synthetic",
+        prev_price_native=Decimal("11"), prev_price_date=D1, prev_fx_rate_to_try=Decimal("35"),
+    )
+    fx.gap = True
+    rebased = service._rebased_quote(quote)
+    assert rebased.ok and rebased.fx_rate_to_try == Decimal("1")
+    assert rebased.prev_price_date is None and rebased.prev_fx_rate_to_try is None

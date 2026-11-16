@@ -354,6 +354,15 @@ def _display_float(value: object) -> float | None:
     return float(f"{f:.7g}")
 
 
+def _volume(value: object) -> float:
+    """A share count as Yahoo gives it: not rounded like a price; NaN or negative is 0."""
+    try:
+        v = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return 0.0
+    return v if math.isfinite(v) and v > 0 else 0.0
+
+
 def _stamp(value: object) -> datetime | None:
     return value.to_pydatetime() if isinstance(value, pd.Timestamp) else None
 
@@ -408,7 +417,7 @@ def fetch_bars(
                 high=max(high, close),
                 low=min(low, close),
                 close=close,
-                volume=max(0.0, _display_float(row.get("Volume")) or 0.0),
+                volume=_volume(row.get("Volume")),
             )
         )
     if not bars:
