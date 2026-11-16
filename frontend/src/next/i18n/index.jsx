@@ -2,7 +2,7 @@
 // choice made in Hesap is remembered. Numbers and dates follow the same locale.
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { setFormatLocale } from "../../format.js";
+import { currencySymbol, setFormatLocale } from "../../format.js";
 import de from "./de.js";
 import en from "./en.js";
 import es from "./es.js";
@@ -56,10 +56,11 @@ export function browserRegion() {
 const lookup = (code, key) => DICTIONARIES[code]?.[key] ?? en[key] ?? tr[key];
 
 /** `{n}` of exactly 1 uses the `<key>.one` form when a language has one. */
+/** `{ccy}` in any string is the open Portfolio's currency symbol unless a caller names one. */
 function translate(code, key, vars) {
   const text = (vars?.n === 1 && lookup(code, `${key}.one`)) || lookup(code, key) || key;
-  if (!vars) return text;
-  return text.replace(/\{(\w+)\}/g, (match, name) => (vars[name] ?? match));
+  if (!text.includes("{")) return text;
+  return text.replace(/\{(\w+)\}/g, (match, name) => (vars?.[name] ?? (name === "ccy" ? currencySymbol() : match)));
 }
 
 const I18n = createContext(null);

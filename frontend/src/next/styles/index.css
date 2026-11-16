@@ -161,6 +161,8 @@ ul { margin: 0; padding-left: 18px; }
 .switcher:hover { background: var(--surface-3); border-color: var(--line-2); }
 .switcher-name { font-weight: 600; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .switcher-ccy { color: var(--text-3); font-size: 12px; }
+.seg.menu-seg { margin: 2px 6px 6px; width: auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+.seg.menu-seg button { justify-content: center; padding: 0 8px; }
 
 .mini { display: flex; align-items: baseline; gap: 10px; flex: none; }
 .mini-net { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
@@ -907,7 +909,7 @@ dialog[data-closing]::backdrop { opacity: 0; }
   .modal-body { padding: 8px 16px 18px; }
   .search input { width: 90px; }
   .drag-handle { opacity: 0.6; }
-  .icon-btn, .switcher, .live { height: 44px; }
+  .icon-btn, .switcher, .live, .seg.menu-seg button { height: 44px; }
   .icon-btn { width: 44px; }
   .segmented button { height: 38px; }
   .segmented button::before, .legend-chip::before, .pan .icon-btn::before { content: ""; position: absolute; inset: -4px 0; }

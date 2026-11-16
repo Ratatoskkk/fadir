@@ -63,7 +63,11 @@ function Hero({ portfolio }) {
               </motion.span>
             </button>
             <div className="after-tax-sub num meta">
-              <span>{t("hero.tax")} <strong>−{money(tax.tax_try)}</strong></span>
+              <span>
+                {t("hero.tax")} <strong>−{money(tax.tax_try)}</strong>
+                {/* The estimate is Turkish and worked out in lira; another Base Currency shows its lira too. */}
+                {tax.tax_in_lira != null && <span className="muted"> ({money(tax.tax_in_lira, "TRY")})</span>}
+              </span>
               <span>{t("hero.base")} {money(tax.taxable_gain_try)}</span>
               <span>{t("hero.effective")} {pct(Number(tax.effective_rate) * 100)}</span>
               <span>{t("hero.bracket")} {pct(Number(tax.marginal_rate) * 100, 0).replace(/^[+]/, "")}</span>

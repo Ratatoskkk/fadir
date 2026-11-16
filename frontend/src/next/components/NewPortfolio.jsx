@@ -6,13 +6,13 @@ import Dialog from "../ui/Dialog.jsx";
 import { useToast } from "../ui/overlays.jsx";
 import { useT } from "../i18n/index.jsx";
 
-const CURRENCIES = ["TRY", "USD", "EUR", "GBP"];
+const CURRENCIES = ["USD", "EUR", "GBP", "TRY"];
 
 export default function NewPortfolio({ open, onClose, dash }) {
   const t = useT();
   const toast = useToast();
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("TRY");
+  const [currency, setCurrency] = useState("USD");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 

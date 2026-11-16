@@ -162,6 +162,9 @@ class TaxOut(BaseModel):
     disclaimer: str
     tax_year: int | None = None
     jurisdiction: str | None = None
+    #: The tax in lira, where the Turkish estimate is worked out, when the amounts above
+    #: are in another Base Currency; None for a TRY Portfolio.
+    tax_in_lira: Money | None = None
     source_url: str | None = None
     source_version: str | None = None
 
@@ -213,7 +216,9 @@ class TaxProfileOut(BaseModel):
 
 class PortfolioOut(BaseModel):
     as_of: datetime
-    base_currency: str = "TRY"
+    #: Every `*_try` amount in this view is in this currency (the names predate ADR
+    #: 0006); the tax estimate is worked out in TRY and shown in it at today's rate.
+    base_currency: str = "USD"
     positions: list[PositionOut]
     totals: TotalsOut
     liquidation: LiquidationOut
@@ -238,10 +243,21 @@ class AccessOut(BaseModel):
     code_lengths: list[int]
 
 
+#: The Base Currencies a Portfolio can choose; keep in step with registry.PORTFOLIO_CURRENCIES.
+PortfolioCurrency = Literal["USD", "EUR", "GBP", "TRY"]
+
+
 class PortfolioCreateIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str = Field(min_length=1, max_length=128)
-    base_currency: Literal["TRY", "USD", "EUR", "GBP"] = "TRY"
+    base_currency: PortfolioCurrency = "USD"
+
+
+class PortfolioUpdateIn(BaseModel):
+    """A Base Currency change revalues every view; no transaction is rewritten (ADR 0006)."""
+
+    model_config = ConfigDict(extra="forbid")
+    base_currency: PortfolioCurrency
 
 
 class PortfolioCodeIn(BaseModel):

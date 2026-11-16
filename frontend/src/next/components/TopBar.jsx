@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { arrow, clockTime, daysFromToday, hourMinute, money, ratioPct, toneOf, weekdayShort } from "../../format.js";
 import { INTERVALS } from "../useDashboard.js";
@@ -43,11 +44,27 @@ export function NavTabs({ view, onChange, className = "", layoutId = "nav-pill" 
   );
 }
 
+/** The Base Currencies a Portfolio can choose (ADR 0006); new ones start in USD. */
+export const PORTFOLIO_CURRENCIES = ["USD", "EUR", "GBP", "TRY"];
+
 function PortfolioSwitcher({ dash, onNewPortfolio }) {
-  const { portfolios, selectedPortfolioId, selectPortfolio, loading, fetching } = dash;
+  const { portfolios, selectedPortfolioId, selectPortfolio, setBaseCurrency, loading, fetching } = dash;
   const current = portfolios.find((p) => Number(p.id) === Number(selectedPortfolioId));
   const toast = useToast();
   const t = useT();
+  // A currency save in flight; the dashboard's own polls must not lock the choice.
+  const [saving, setSaving] = useState(false);
+  const pickCurrency = async (code) => {
+    if (saving || code === current?.base_currency) return;
+    setSaving(true);
+    try {
+      await setBaseCurrency(code);
+    } catch (err) {
+      toast({ tone: "down", text: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
   if (!portfolios.length) return null;
   return (
     <Popover
@@ -81,6 +98,45 @@ function PortfolioSwitcher({ dash, onNewPortfolio }) {
               </button>
             );
           })}
+          {current && (
+            <>
+              <div className="menu-label" id="ccy-label">{t("portfolio.currency")}</div>
+              <div
+                className="seg menu-seg"
+                role="radiogroup"
+                aria-labelledby="ccy-label"
+                onKeyDown={(e) => {
+                  // Arrow keys move the choice, as in any radio group; focus follows it.
+                  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+                  if (!step || saving) return;
+                  e.preventDefault();
+                  const at = PORTFOLIO_CURRENCIES.indexOf(current.base_currency);
+                  const next = (at + step + PORTFOLIO_CURRENCIES.length) % PORTFOLIO_CURRENCIES.length;
+                  e.currentTarget.querySelectorAll("button")[next]?.focus();
+                  pickCurrency(PORTFOLIO_CURRENCIES[next]);
+                }}
+              >
+                {PORTFOLIO_CURRENCIES.map((code) => {
+                  const on = current.base_currency === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      tabIndex={on ? 0 : -1}
+                      className={on ? "on" : ""}
+                      aria-busy={saving || undefined}
+                      onClick={() => pickCurrency(code)}
+                    >
+                      {on && <motion.span layoutId="ccy-pill" className="seg-pill" />}
+                      <span>{code}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
           {current?.code && (
             <>
               <div className="menu-label">{t("code.short")}</div>

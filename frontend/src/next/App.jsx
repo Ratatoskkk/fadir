@@ -6,6 +6,7 @@ import { flushSync } from "react-dom";
 import { MotionConfig, motion } from "framer-motion";
 import "@fontsource-variable/geologica";
 import { api } from "../api.js";
+import { setMoneyCurrency } from "../format.js";
 import { switchUi } from "../ui.js";
 import { RANGES } from "../ranges.js";
 import { currentTheme, toggleTheme as flipTheme, watchTheme } from "../theme.js";
@@ -86,6 +87,9 @@ function Skeleton() {
 
 function Shell({ access, onLeave, onSignOut, onAccessLost }) {
   const dash = useDashboard(access, { onAccessLost });
+  // Amounts are formatted in the currency the loaded figures are in, set before any
+  // child renders so a switch never shows old numbers under a new symbol.
+  setMoneyCurrency(dash.portfolio?.base_currency);
   const [view, go] = useHashView();
   const [theme, toggleTheme] = useTheme();
   const [paletteOpen, setPaletteOpen] = useState(false);

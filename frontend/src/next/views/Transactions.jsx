@@ -178,7 +178,7 @@ function TxnRow({ t: txn, editing, setEditing, busy, onSave, onDelete, index }) 
             ? <span className="badge info" title={txn.fx_provider}>{t("txn.cross")}</span>
             : <span className="ticker-name">{txn.fx_provider}</span>}
       </td>
-      <td className="num sep">{money(txn.total_try)}</td>
+      <td className="num sep">{money(txn.total_try, "TRY")}</td>
       <td>
         <div className="row-actions">
           {isEditing ? (
@@ -307,7 +307,7 @@ export default function Transactions({ dash, sheetOpen, setSheetOpen }) {
                     <span className="grow" />
                     <span className="num muted">{t("txn.units", { n: num(g.netQuantity, 0) })}</span>
                     <span className="num muted hide-sm">{money(g.totalNative, g.currency)}</span>
-                    <span className="num strong">{money(g.totalTry)}</span>
+                    <span className="num strong">{money(g.totalTry, "TRY")}</span>
                   </button>
                   <AnimatePresence initial={false}>
                     {open && (

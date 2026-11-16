@@ -44,6 +44,11 @@ BY_TICKER: dict[str, RegistryEntry] = {e.ticker: e for e in REGISTRY}
 
 BASE_CURRENCY = "TRY"
 
+#: The Base Currencies a Portfolio can choose (ADR 0006), and the one a new Portfolio
+#: starts in. Each has a daily and an intraday route to TRY, which every view crosses.
+PORTFOLIO_CURRENCIES: tuple[str, ...] = ("USD", "EUR", "GBP", "TRY")
+DEFAULT_PORTFOLIO_CURRENCY = "USD"
+
 #: Every non-TRY currency the app can price. Extend it when you add a holding in a
 #: currency not listed, and give the new currency a route below.
 CURRENCIES: tuple[str, ...] = ("USD", "SEK", "EUR", "TWD")

@@ -260,6 +260,15 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
     await run(() => Promise.all([loadMarket({ portfolioId: id }), loadLedger(id)]));
   }, [run, loadMarket, loadLedger]);
 
+  /** Saves the open Portfolio's Base Currency, then reloads its views in it. */
+  const setBaseCurrency = useCallback(async (code) => {
+    const id = portfolioIdRef.current;
+    if (!id) return;
+    const updated = await api.updatePortfolio(id, { base_currency: code });
+    setPortfolios((list) => list.map((p) => (Number(p.id) === Number(id) ? { ...p, base_currency: updated.base_currency } : p)));
+    await run(() => loadMarket({ portfolioId: id }));
+  }, [run, loadMarket]);
+
   const changeRange = useCallback(async (next) => {
     setRange(next);
     rangeRef.current = next;
@@ -325,7 +334,7 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
     portfolios, selectedPortfolioId, portfolio, history, intraday, transactions, instruments,
     range, focusTickers, interval, lastUpdated, loading, refreshing, fetching, error,
     guestAccess, identityReady, pan, panDir, anyMarketOpen, nextMarketOpen, canPanBack,
-    selectPortfolio, changeRange, panBy, toggleFocus, setIntervalSeconds, manualRefresh,
+    selectPortfolio, setBaseCurrency, changeRange, panBy, toggleFocus, setIntervalSeconds, manualRefresh,
     reloadAfterTransaction, refreshAfterIdentity, loadAll, clearAfterAccountDeletion,
     setError,
   };

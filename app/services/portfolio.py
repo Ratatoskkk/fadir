@@ -32,6 +32,7 @@ from app.calc.attribution import position_metrics
 from app.calc.fifo import InsufficientLots
 from app.calc.history import HistoryPoint, PositionHistoryInput
 from app.calc.intraday import IntradayPoint, build_grid, build_intraday_series
+from app.calc.rebase import TRY, cross, cross_daily, cross_intraday, last_at
 from app.calc.tax import TaxEstimate, disabled_estimate, estimate_tax
 from app.calc.tax_sources import with_official_brackets
 from app.calc.types import Side as CalcSide
@@ -70,6 +71,9 @@ class PortfolioView:
     #: The instruments behind `positions`, keyed by ticker. Carried on the view so the
     #: serialisation layer can label rows without re-querying what was just loaded.
     instruments: dict[str, Instrument] = field(default_factory=dict)
+    #: The tax in lira, as the Turkish estimate works it out, when `tax` is shown in
+    #: another Base Currency; None for a TRY Portfolio.
+    tax_in_lira: Decimal | None = None
 
 
 def load_instruments(session: Session, *, active_only: bool = True) -> list[Instrument]:
@@ -161,6 +165,9 @@ class PortfolioService:
         self.prices = price_service or PriceService(session, settings)
         self.intraday = intraday_service or _intraday_service
         self._scope: PortfolioScope | None = None
+        # Base Currency rates for this request: B/TRY by date, and the current one.
+        self._base_rates: dict[date, Decimal] = {}
+        self._base_current: Decimal | None = None
 
     def scoped(self, scope: PortfolioScope) -> PortfolioService:
         self._validate_scope(scope)
@@ -238,6 +245,61 @@ class PortfolioService:
         if self._scope is not None and {instrument.ticker.upper() for instrument in selected} != wanted:
             raise PortfolioScopeNotFound("Ticker not found")
         return selected
+
+    # -- Base Currency (ADR 0006) ----------------------------------------------------
+    #
+    # The engine values in whatever its rates are to. Rates are stored and fetched to
+    # TRY; for a Portfolio in another Base Currency B each one is crossed to B through
+    # TRY on its own date (app.calc.rebase), so every view comes out in B without any
+    # transaction being rewritten. The Turkey tax estimate stays in TRY (beta brief): it
+    # is worked out from a TRY run and shown in B at the matching date's rate.
+
+    @property
+    def base_currency(self) -> str:
+        return self._scope.portfolio.base_currency.upper() if self._scope is not None else TRY
+
+    def _base_rate(self, on: date) -> Decimal:
+        if on not in self._base_rates:
+            self._base_rates[on] = self.fx.quote(self.base_currency, on).rate
+        return self._base_rates[on]
+
+    def _base_now(self) -> Decimal:
+        if self._base_current is None:
+            self._base_current = self.fx.current(self.base_currency).rate
+        return self._base_current
+
+    def _rebased(self, txn: TxnInput) -> TxnInput:
+        """A transaction's trade-date rates to TRY as rates to the Base Currency."""
+        if self.base_currency == TRY:
+            return txn
+        fee_rate = txn.fee_fx_rate_to_try
+        if fee_rate is not None and txn.fee_fx_rate_date is not None:
+            fee_rate = cross(fee_rate, self._base_rate(txn.fee_fx_rate_date))
+        return replace(
+            txn,
+            fx_rate_to_try=cross(txn.fx_rate_to_try, self._base_rate(txn.fx_rate_date)),
+            fee_fx_rate_to_try=fee_rate,
+        )
+
+    def _rebased_quote(self, quote: MarketQuote) -> MarketQuote:
+        """A current quote's rates (now, and the previous session's) to the Base Currency."""
+        if self.base_currency == TRY or not quote.ok:
+            return quote
+        prev = quote.prev_fx_rate_to_try
+        if prev is not None and quote.prev_price_date is not None:
+            prev = cross(prev, self._base_rate(quote.prev_price_date))
+        return replace(quote, fx_rate_to_try=cross(quote.fx_rate_to_try, self._base_now()), prev_fx_rate_to_try=prev)
+
+    def _tax_in_base(self, tax: TaxEstimate) -> TaxEstimate:
+        """The TRY tax estimate's amounts in the Base Currency at today's rate."""
+        if self.base_currency == TRY:
+            return tax
+        rate = self._base_now()
+        return replace(tax, **{
+            name: cross(getattr(tax, name), rate)
+            for name in tax.__dataclass_fields__
+            if name.endswith("_try")
+        })
 
     # -- inception -----------------------------------------------------------------
 
@@ -391,79 +453,50 @@ class PortfolioService:
     def build_view(self, *, now_utc: datetime | None = None) -> PortfolioView:
         now_utc = now_utc or datetime.now(timezone.utc)
         warnings: list[str] = []
-        positions: list[PositionMetrics] = []
         instruments, transactions_by_instrument = self._calculation_inputs()
         latest_closes = self.prices.last_two_cached_closes([i.id for i in instruments])
-
-        for instrument in instruments:
-            transactions = transactions_by_instrument.get(instrument.id, [])
-            if not transactions:
-                continue
-
-            try:
-                txns = [
-                    to_txn_input(t, instrument.ticker, instrument.currency)
-                    for t in transactions
-                ]
-                book = build_lot_book(instrument.ticker, instrument.currency, txns)
-            except (InsufficientLots, ValueError, DecimalException) as exc:
-                # One malformed position must not take the whole dashboard down —
-                # otherwise the screen that can fix the bad row refuses to load.
-                log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
-                warnings.append(f"{instrument.ticker}: {exc}")
-                book = build_lot_book(instrument.ticker, instrument.currency, [])
-                quote = self._current_quote(instrument, now_utc, warnings, latest_closes[instrument.id])
-                error = (
-                    f"lot uyuşmazlığı: {exc}"
-                    if isinstance(exc, InsufficientLots)
-                    else f"veri uyumsuzluğu: {exc}"
-                )
-                positions.append(
-                    position_metrics(
-                        book,
-                        replace(quote, ok=False, stale=True, error=error),
-                    )
-                )
-                continue
-
-            quote = self._current_quote(instrument, now_utc, warnings, latest_closes[instrument.id])
-            try:
-                positions.append(position_metrics(book, quote))
-            except DecimalException as exc:
-                log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
-                warnings.append(f"{instrument.ticker}: {exc}")
-                empty_book = build_lot_book(instrument.ticker, instrument.currency, [])
-                positions.append(
-                    position_metrics(
-                        empty_book,
-                        replace(
-                            quote,
-                            ok=False,
-                            stale=True,
-                            error=f"veri uyumsuzluğu: {exc}",
-                        ),
-                    )
-                )
+        quotes = {
+            i.id: self._current_quote(i, now_utc, warnings, latest_closes[i.id])
+            for i in instruments
+            if transactions_by_instrument.get(i.id)
+        }
+        rebase = self.base_currency != TRY
+        positions = self._positions(instruments, transactions_by_instrument, quotes, warnings, rebase=rebase)
+        # The tax estimate is Turkish and in TRY, so it is worked out from a TRY run.
+        try_positions = (
+            self._positions(instruments, transactions_by_instrument, quotes, [], rebase=False)
+            if rebase
+            else positions
+        )
 
         # Open positions first, then fully-closed ones that still carry realized PnL.
         positions.sort(key=lambda p: (p.quantity == 0, -p.market_value_try, p.ticker))
 
         totals = summarise_portfolio(positions)
         liq = liquidation(totals, self.settings.liquidation.haircut_pct)
+        try_totals = summarise_portfolio(try_positions) if rebase else totals
+        try_liq = liquidation(try_totals, self.settings.liquidation.haircut_pct) if rebase else liq
 
         tax_config = with_official_brackets(self.settings.tax)
         tax = (
             estimate_tax(
-                liq.net_proceeds_try,
-                liq.total_invested_try,
+                try_liq.net_proceeds_try,
+                try_liq.total_invested_try,
                 tax_config,
                 # So the estimate can report how much of the bill is the currency move.
-                price_effect_try=totals.price_effect_try,
-                fx_effect_try=totals.fx_effect_try,
+                price_effect_try=try_totals.price_effect_try,
+                fx_effect_try=try_totals.fx_effect_try,
             )
             if tax_config.enabled
-            else disabled_estimate(liq.net_proceeds_try)
+            else disabled_estimate(try_liq.net_proceeds_try)
         )
+        tax_in_lira = tax.tax_try if rebase else None
+        if rebase:
+            try:
+                tax = self._tax_in_base(tax)
+            except (ProviderError, DecimalException) as exc:
+                warnings.append(f"{self.base_currency}: no FX rate ({exc})")
+                tax = disabled_estimate(liq.net_proceeds_try)
 
         # Only meaningful when nothing is trading; otherwise the frontend polls normally.
         exchanges = {
@@ -483,7 +516,72 @@ class PortfolioService:
             warnings=warnings,
             next_market_open=next_open,
             instruments={i.ticker: i for i in instruments},
+            tax_in_lira=tax_in_lira,
         )
+
+    def _positions(
+        self,
+        instruments: list[Instrument],
+        transactions_by_instrument: dict[int, list[Transaction]],
+        quotes: dict[int, MarketQuote],
+        warnings: list[str],
+        *,
+        rebase: bool,
+    ) -> list[PositionMetrics]:
+        """Each position's metrics, in the Base Currency when `rebase`, else in TRY."""
+        positions: list[PositionMetrics] = []
+        for instrument in instruments:
+            transactions = transactions_by_instrument.get(instrument.id, [])
+            if not transactions:
+                continue
+
+            quote = quotes[instrument.id]
+            try:
+                txns = [
+                    to_txn_input(t, instrument.ticker, instrument.currency)
+                    for t in transactions
+                ]
+                if rebase:
+                    txns = [self._rebased(t) for t in txns]
+                    quote = self._rebased_quote(quote)
+                book = build_lot_book(instrument.ticker, instrument.currency, txns)
+            except (InsufficientLots, ValueError, DecimalException, ProviderError) as exc:
+                # One malformed position must not take the whole dashboard down —
+                # otherwise the screen that can fix the bad row refuses to load.
+                log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
+                warnings.append(f"{instrument.ticker}: {exc}")
+                book = build_lot_book(instrument.ticker, instrument.currency, [])
+                error = (
+                    f"lot uyuşmazlığı: {exc}"
+                    if isinstance(exc, InsufficientLots)
+                    else f"veri uyumsuzluğu: {exc}"
+                )
+                positions.append(
+                    position_metrics(
+                        book,
+                        replace(quote, ok=False, stale=True, error=error),
+                    )
+                )
+                continue
+
+            try:
+                positions.append(position_metrics(book, quote))
+            except DecimalException as exc:
+                log.error("portfolio position failed for %s: %s", instrument.ticker, exc)
+                warnings.append(f"{instrument.ticker}: {exc}")
+                empty_book = build_lot_book(instrument.ticker, instrument.currency, [])
+                positions.append(
+                    position_metrics(
+                        empty_book,
+                        replace(
+                            quote,
+                            ok=False,
+                            stale=True,
+                            error=f"veri uyumsuzluğu: {exc}",
+                        ),
+                    )
+                )
+        return positions
 
     # -- history -------------------------------------------------------------------
 
@@ -551,7 +649,8 @@ class PortfolioService:
                 log.error("history FX unavailable for %s: %s", currency, exc)
                 fx_rates[currency] = {}
 
-        return build_history(
+        tax_config = with_official_brackets(self.settings.tax)
+        try_points = build_history(
             positions,
             closes,
             fx_rates,
@@ -559,8 +658,43 @@ class PortfolioService:
             end,
             freq=freq,
             max_lookback_days=lookback,
-            tax_config=with_official_brackets(self.settings.tax),
+            tax_config=tax_config,
         )
+        if self.base_currency == TRY:
+            return try_points
+
+        # The same series in the Base Currency; its after-tax line is the TRY run's tax
+        # at each date's rate.
+        try:
+            base_series = self.fx.published_series(
+                self.base_currency, start - timedelta(days=lookback), end, allow_fetch=True
+            )
+            rebased_positions = []
+            for position in positions:
+                try:
+                    rebased_positions.append(
+                        replace(position, transactions=[self._rebased(t) for t in position.transactions])
+                    )
+                except ProviderError as exc:
+                    log.error("history rebase failed for %s: %s", position.ticker, exc)
+        except ProviderError as exc:
+            log.error("history FX unavailable for %s: %s", self.base_currency, exc)
+            return []
+        points = build_history(
+            rebased_positions,
+            closes,
+            {c: cross_daily(c, fx_rates.get(c, {}), base_series) for c in currencies},
+            start,
+            end,
+            freq=freq,
+            max_lookback_days=lookback,
+        )
+        tax_on = {p.point_date: p.tax_try for p in try_points}
+        base_on = last_at(base_series)
+        return [
+            _with_tax(point, tax_on.get(point.point_date, 0), base_on(point.point_date))
+            for point in points
+        ]
 
     # -- intraday ------------------------------------------------------------------
 
@@ -608,9 +742,15 @@ class PortfolioService:
             list(symbol_of), interval, force=force, errors=errors
         )
         prices = {symbol_of[sym]: series for sym, series in raw_prices.items()}
-        fx_rates = self.intraday.fx(
-            sorted({i.currency for i in instruments}), interval, force=force, errors=errors
+        base = self.base_currency
+        currencies = {i.currency for i in instruments}
+        fetched = self.intraday.fx(
+            sorted(currencies | ({base} if base != TRY else set())),
+            interval,
+            force=force,
+            errors=errors,
         )
+        fx_rates = {c: series for c, series in fetched.items() if c in currencies}
 
         combined = {**prices, **fx_rates}
         available = len(session_days(combined))
@@ -626,7 +766,35 @@ class PortfolioService:
         step = {"5m": 5, "15m": 15, "1h": 60}.get(interval, 5)
         grid = build_grid(bounds[0], bounds[1], step)
 
-        points = build_intraday_series(
+        try_points = build_intraday_series(
             positions, prices, fx_rates, grid, tax_config=with_official_brackets(self.settings.tax)
         )
-        return points, errors, available
+        if base == TRY:
+            return try_points, errors, available
+
+        base_series = fetched.get(base, {})
+        try:
+            rebased_positions = [
+                replace(p, transactions=[self._rebased(t) for t in p.transactions]) for p in positions
+            ]
+        except ProviderError as exc:
+            return [], errors + [f"{base}: {exc}"], available
+        points = build_intraday_series(
+            rebased_positions,
+            prices,
+            {c: cross_intraday(c, fx_rates.get(c, {}), base_series) for c in currencies},
+            grid,
+        )
+        tax_at = {p.at: p.value_try - p.value_after_tax_try for p in try_points}
+        base_at = last_at(base_series)
+        return [
+            _with_tax(point, tax_at.get(point.at, 0), base_at(point.at))
+            for point in points
+        ], errors, available
+
+
+def _with_tax(point, tax_try: Decimal, base_rate: Decimal | None):
+    """A Base Currency point whose after-tax value takes off the TRY tax at `base_rate`."""
+    if not tax_try or base_rate is None or point.value_try <= 0:
+        return point
+    return replace(point, value_after_tax_try=point.value_try - cross(tax_try, base_rate))

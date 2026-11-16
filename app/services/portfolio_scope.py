@@ -8,6 +8,7 @@ from sqlalchemy import inspect, select
 from sqlalchemy.orm import Session
 
 from app.models import Portfolio, Snapshot, Transaction, Workspace
+from app.registry import DEFAULT_PORTFOLIO_CURRENCY
 
 
 class PortfolioScopeNotFound(LookupError):
@@ -73,7 +74,7 @@ class PortfolioScope:
         *,
         workspace_id: int,
         portfolio_id: int | None = None,
-        base_currency: str = "TRY",
+        base_currency: str = DEFAULT_PORTFOLIO_CURRENCY,
     ) -> PortfolioScope:
         """Select a Portfolio, creating the first-save default in the caller transaction."""
         existing = cls.select(

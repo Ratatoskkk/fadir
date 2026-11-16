@@ -95,13 +95,13 @@ def test_portfolio_names_are_unique_inside_each_workspace(session) -> None:
     session.rollback()
 
 
-def test_base_currency_defaults_to_try(session) -> None:
+def test_base_currency_defaults_to_usd(session) -> None:
     _, Workspace, Portfolio = _domain_models()
     portfolio = Portfolio(name="Ana Portföy")
     session.add(Workspace(portfolios=[portfolio]))
     session.commit()
 
-    assert portfolio.base_currency == "TRY"
+    assert portfolio.base_currency == "USD"
 
 
 def test_user_delete_removes_workspace_and_portfolios(session) -> None:

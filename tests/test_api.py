@@ -94,7 +94,8 @@ def client(session, monkeypatch):
 
 
 def _seed(session) -> tuple[int, int]:
-    workspace = Workspace(portfolios=[Portfolio(name="Ana Portföy")])
+    # TRY, as the owner's migrated Portfolio is: these tests check the engine's TRY sums.
+    workspace = Workspace(portfolios=[Portfolio(name="Ana Portföy", base_currency="TRY")])
     session.add(workspace)
     session.flush()
     portfolio_id = workspace.portfolios[0].id
@@ -201,7 +202,7 @@ def test_spa_route_refuses_to_serve_files_outside_the_bundle(client, path):
 def test_get_portfolio_shape_and_identity(client):
     body = client.get("/api/portfolio").json()
 
-    assert body["base_currency"] == "TRY"
+    assert body["base_currency"] == "TRY"  # the seeded Portfolio's own choice
     assert len(body["positions"]) == 2
 
     for position in body["positions"]:

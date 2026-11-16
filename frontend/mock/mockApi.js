@@ -169,7 +169,7 @@ function portfolioOut(portfolioId) {
   next.setUTCHours(7, 0, 0, 0);
   if (next < new Date()) next.setUTCDate(next.getUTCDate() + 1);
   return {
-    as_of: new Date().toISOString(), base_currency: "TRY", positions,
+    as_of: new Date().toISOString(), base_currency: store.portfolios.find((p) => p.id === Number(portfolioId))?.base_currency ?? "USD", positions,
     totals: {
       cost_try: f(cost), market_value_try: f(mv), pnl_try: f(pnl), price_effect_try: f(price), fx_effect_try: f(pnl - price),
       total_return: cost ? f(mv / cost, 6) : null, realized_pnl_try: f(realized), realized_price_effect_try: "0", realized_fx_effect_try: "0",
@@ -180,7 +180,7 @@ function portfolioOut(portfolioId) {
       total_invested_try: f(cost), net_pnl_try: f(net - cost), net_return: cost ? f(net / cost, 6) : null, excludes_tax: true,
     },
     tax: {
-      applicable: positions.length > 0, gross_gain_try: f(pnl), taxable_gain_try: f(taxable), tax_try: f(tax), net_after_tax_try: f(net - tax),
+      applicable: positions.length > 0, tax_in_lira: (store.portfolios.find((p) => p.id === Number(portfolioId))?.base_currency ?? "USD") === "TRY" ? null : f(tax * 40), gross_gain_try: f(pnl), taxable_gain_try: f(taxable), tax_try: f(tax), net_after_tax_try: f(net - tax),
       effective_rate: f(pnl > 0 ? tax / pnl : 0, 4), marginal_rate: "0.15", indexing_applied: true, indexing_rate: "0.21",
       price_portion_try: f(taxable * 0.62), fx_portion_try: f(taxable * 0.38), tax_on_price_try: f(tax * 0.62), tax_on_fx_try: f(tax * 0.38),
       assumptions: ["Yİ-ÜFE endekslemesi alış ayından bir önceki aya göre uygulanır.", "Yabancı hisse kazançları beyana tabidir; BIST hisseleri stopaja tabidir (%0)."],
@@ -473,6 +473,14 @@ async function handle(req, res) {
     return send(res, 200, body, { "Content-Type": format === "csv" ? "text/csv" : "application/json", "Content-Disposition": `attachment; filename="portfolio-${exportMatch[1]}.${format}"` });
   }
   const pfMatch = path.match(/^\/api\/portfolios\/(\d+)$/);
+  if (pfMatch && method === "PATCH") {
+    const body = await readBody(req);
+    const hit = store.portfolios.find((p) => p.id === Number(pfMatch[1]));
+    if (!hit) return send(res, 404, { detail: "Portfolio not found" });
+    if (!["USD", "EUR", "GBP", "TRY"].includes(body?.base_currency)) return send(res, 422, { detail: "invalid currency" });
+    hit.base_currency = body.base_currency;
+    return send(res, 200, hit);
+  }
   if (pfMatch && method === "DELETE") {
     store.portfolios = store.portfolios.filter((p) => p.id !== Number(pfMatch[1]));
     delete store.txns[Number(pfMatch[1])];

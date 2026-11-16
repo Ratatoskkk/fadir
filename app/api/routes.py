@@ -49,6 +49,7 @@ from app.providers import market_chart, market_hours, yf_client
 from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
 from app.providers.price_service import PriceService
+from app.registry import DEFAULT_PORTFOLIO_CURRENCY
 from app.schemas import (
     JurisdictionTaxOut,
     TaxJurisdictionOut,
@@ -56,6 +57,7 @@ from app.schemas import (
     PortfolioCodeIn,
     PortfolioCodeOut,
     PortfolioCreateIn,
+    PortfolioUpdateIn,
     AttributionOut,
     DailyOut,
     GuestBootstrapOut,
@@ -720,7 +722,7 @@ def _scope(
     portfolio_id: int | None,
     *,
     for_write: bool = False,
-    base_currency: str = "TRY",
+    base_currency: str = DEFAULT_PORTFOLIO_CURRENCY,
 ) -> PortfolioScope | None:
     if authority.mode == "code":
         # A Portfolio Pass reaches exactly one Portfolio and never creates another.
@@ -960,6 +962,27 @@ def create_portfolio(
     )
 
 
+@private_router.patch(
+    "/portfolios/{portfolio_id}",
+    response_model=PortfolioOptionOut,
+    dependencies=[Depends(_write_guard)],
+)
+def update_portfolio(
+    portfolio_id: int,
+    payload: PortfolioUpdateIn,
+    session: RequestSessionDep,
+    authority: AuthorityDep,
+) -> PortfolioOptionOut:
+    """Change the Base Currency. Views revalue; transactions keep their own rates."""
+    scope = _scope(session, authority, portfolio_id)
+    portfolio = scope.portfolio
+    portfolio.base_currency = payload.base_currency
+    session.flush()
+    return PortfolioOptionOut(
+        id=portfolio.id, name=portfolio.name, base_currency=portfolio.base_currency, code=portfolio.code
+    )
+
+
 @private_router.post(
     "/portfolios/{portfolio_id}/code",
     response_model=PortfolioCodeOut,
@@ -1067,6 +1090,7 @@ def get_portfolio(
 
     return PortfolioOut(
         as_of=view.as_of,
+        base_currency=service.base_currency,
         # The view already loaded these; re-querying them here was a third pass over
         # the same table for data that is sitting in hand.
         positions=[_position_out(p, view.instruments.get(p.ticker)) for p in view.positions],
@@ -1092,6 +1116,7 @@ def get_portfolio(
             net_return=view.liquidation.net_return,
         ),
         tax=TaxOut(
+            tax_in_lira=view.tax_in_lira,
             applicable=view.tax.applicable,
             gross_gain_try=view.tax.gross_gain_try,
             taxable_gain_try=view.tax.taxable_gain_try,
@@ -1396,7 +1421,7 @@ def create_transaction(
         authority,
         portfolio_id,
         for_write=True,
-        base_currency=(base_currency or "TRY").upper(),
+        base_currency=(base_currency or DEFAULT_PORTFOLIO_CURRENCY).upper(),
     )
     assert scope is not None
     held = session.scalar(

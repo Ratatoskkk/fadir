@@ -52,7 +52,7 @@ class StubFx:
     def quote(self, currency: str, on: date, *, allow_fetch: bool = True) -> FxQuote:
         return self._quote(on)
 
-    def published_series(self, currency: str, start: date, end: date):
+    def published_series(self, currency: str, start: date, end: date, *, allow_fetch: bool = False):
         return {
             day: Decimal("35")
             for day in (date(2026, 1, 2), date(2026, 1, 3))
@@ -77,8 +77,8 @@ def scoped_fixture(tmp_path):
     models.Base.metadata.create_all(engine)
     session = Session(engine)
 
-    first = Workspace(portfolios=[Portfolio(name="First"), Portfolio(name="Second")])
-    second = Workspace(portfolios=[Portfolio(name="Third"), Portfolio(name="Empty")])
+    first = Workspace(portfolios=[Portfolio(name="First", base_currency="TRY"), Portfolio(name="Second", base_currency="TRY")])
+    second = Workspace(portfolios=[Portfolio(name="Third", base_currency="TRY"), Portfolio(name="Empty", base_currency="TRY")])
     session.add_all([User(), first, second])
     session.flush()
 

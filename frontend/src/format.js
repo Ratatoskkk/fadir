@@ -82,7 +82,18 @@ export function num(value, digits = 2) {
   return ({ 0: F.nf0, 1: F.nf1, 4: F.nf4 }[digits] ?? F.nf2).format(n);
 }
 
-export function money(value, currency = "TRY", digits = 2) {
+/**
+ * The currency an amount is in when the caller names none: the open Portfolio's Base
+ * Currency, set by the app as the Portfolio loads (ADR 0006). USD until then.
+ */
+let moneyCcy = "USD";
+export function setMoneyCurrency(code) {
+  moneyCcy = code || "USD";
+}
+export const moneyCurrency = () => moneyCcy;
+export const currencySymbol = (code = moneyCcy) => CURRENCY_SYMBOL[code] ?? code;
+
+export function money(value, currency = moneyCcy, digits = 2) {
   if (value === null || value === undefined) return "—";
   const symbol = CURRENCY_SYMBOL[currency] ?? currency;
   const formatted = num(value, digits);
@@ -92,7 +103,7 @@ export function money(value, currency = "TRY", digits = 2) {
 }
 
 /** Signed money, always with an explicit + or − so colour is never the only signal. */
-export function signedMoney(value, currency = "TRY", digits = 2) {
+export function signedMoney(value, currency = moneyCcy, digits = 2) {
   if (value === null || value === undefined) return "—";
   const n = Number(value);
   const sign = n > 0 ? "+" : n < 0 ? "−" : "";
@@ -133,11 +144,11 @@ export function fxRate(value) {
   return F.nfRate.format(n);
 }
 
-/** Lira in the viewer's short form (₺1.5M, ₺1,5 Mn), for chart axes. */
-export function compactMoney(value) {
+/** An amount in the viewer's short form ($1.5M, ₺1,5 Mn), for chart axes. */
+export function compactMoney(value, currency = moneyCcy) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "";
-  return `₺${F.nfCompact.format(n)}`;
+  return `${currencySymbol(currency)}${F.nfCompact.format(n)}`;
 }
 
 /** A count in the viewer's short form (1.2M, 1,2 Mn), for volumes. */

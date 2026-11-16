@@ -33,6 +33,8 @@ from sqlalchemy import (
 from sqlalchemy import event
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship
 
+from app.registry import DEFAULT_PORTFOLIO_CURRENCY
+
 #: Wide enough for TWD prices in the hundreds and FX rates to six decimals.
 MONEY = Numeric(24, 8)
 QTY = Numeric(24, 8)
@@ -273,7 +275,7 @@ class Portfolio(Base):
     )
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     base_currency: Mapped[str] = mapped_column(
-        String(3), nullable=False, default="TRY"
+        String(3), nullable=False, default=DEFAULT_PORTFOLIO_CURRENCY
     )
     #: Portfolio Code: digits only, unique across the service. Allocated on first flush
     #: by `app.services.portfolio_codes`; 4 digits until that space runs out, then 5, 6.

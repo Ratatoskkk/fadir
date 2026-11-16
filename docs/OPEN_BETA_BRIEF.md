@@ -20,7 +20,7 @@ Each Portfolio has a unique name inside its Workspace. The first saved transacti
 
 Each Portfolio has a unique Portfolio Code. A browser with no access first asks for a code; Google sign-in and a new Portfolio are smaller options on that screen. See [ADR 0011](adr/0011-portfolio-codes.md).
 
-Each Portfolio has one Base Currency. A currency change revalues views and does not rewrite source transactions.
+Each Portfolio has one Base Currency. A currency change revalues views and does not rewrite source transactions. The owner can choose USD, EUR, GBP or TRY from the Portfolio menu; the choice is saved on the Portfolio. A new Portfolio starts in USD (owner instruction, 2026-11-16).
 
 The original private SQLite portfolio will move through a protected administrator migration into the owner's existing verified Google User Workspace. The owner selected `Ana Portföy`, TRY Base Currency, and mapping every legacy Transaction and Snapshot to it. See the [migration runbook](PRIVATE_MIGRATION_RUNBOOK.md).
 

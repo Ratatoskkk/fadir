@@ -353,7 +353,7 @@ def test_empty_read_does_not_create_but_first_save_creates_default_and_rolls_bac
                 session, workspace_id=workspace_id
             )
             assert scope.portfolio.name == "Ana Portföy"
-            assert scope.portfolio.base_currency == "TRY"
+            assert scope.portfolio.base_currency == "USD"
             assert scope.portfolio.workspace_id == workspace_id
             assert session.query(models.Portfolio).count() == 1
             session.rollback()

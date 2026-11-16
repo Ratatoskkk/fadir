@@ -104,6 +104,9 @@ export const api = {
   leaveCode: () => request("/api/access/code", { method: "DELETE" }),
   startPortfolio: () => request("/api/portfolios/start", { method: "POST" }),
   createPortfolio: (payload) => request("/api/portfolios", { method: "POST", body: JSON.stringify(payload) }),
+  /** `{ base_currency }`: the Portfolio's views revalue in it; transactions are untouched. */
+  updatePortfolio: (portfolioId, payload) =>
+    request(`/api/portfolios/${encodeURIComponent(portfolioId)}`, { method: "PATCH", body: JSON.stringify(payload) }),
   signOut: () => request("/api/auth/sign-out", { method: "POST" }),
   renewCode: (portfolioId) =>
     request(`/api/portfolios/${encodeURIComponent(portfolioId)}/code`, { method: "POST" }),
