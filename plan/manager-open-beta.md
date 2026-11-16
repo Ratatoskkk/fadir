@@ -1731,3 +1731,21 @@ match the commit and the build for all 16 frontend files; rollback bundle
 200, the new bundle returned 200, and an unauthenticated chart returned 401. In the
 signed-in owner tab a 1D chart returned the shown day's session. Tests match the baseline
 apart from the two known zero-FX failures.
+
+Volume and live-following chart deployment (owner request 2026-11-16). `341095b` draws each
+bar's volume along the bottom of the Ticker price chart; adds a Volume chip and pane before
+MA slope with net buying per bar (each bar's volume split by where its close sits in its
+range, since Yahoo gives no trade side), Net buyers/Net sellers and a Buy, Sell and Volume
+readout; and makes the chart follow prices: it reloads on every dashboard price update, live
+1D/5D bars are cached for 5s, and the newest bar inside the session ends at Yahoo's latest
+quote. The UI review's five fixes ship with it: the readout on its own row on phones, a
+± round-number pane scale, no price label inside the volume band, a grid-weight zero line
+and a tooltip kept inside the chart. Backend: the four changed VM files matched `5632bc1`
+before replacement; previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-341095b/rollback/app.previous.tar`, and the service
+restarted once at 09:28:42 UTC with `NRestarts=0` and no journal errors. Installed checksums
+match the commit and the build for all 16 frontend files; rollback bundle
+`/opt/fadir/frontend/dist.previous.volume-20261116`. Local and public health returned 200,
+the new bundle returned 200 and an unauthenticated chart returned 401. In the signed-in
+owner tab 1D charts returned volume on every bar and a last close equal to the quote.
+Tests match the baseline apart from the two known zero-FX failures.
