@@ -283,7 +283,15 @@ function marketChart(symbol, range) {
   last.close *= 1 + (Math.random() - 0.5) * 0.004;
   last.high = Math.max(last.high, last.close);
   last.low = Math.min(last.low, last.close);
+  // 1D: the last bar's own session, which runs on past it when the day isn't over.
+  const day = new Date(last.at);
+  day.setUTCHours(0, 0, 0, 0);
+  const hoursOf = hours ?? [0, 24];
+  const session = range === "1D"
+    ? [new Date(+day + hoursOf[0] * 3600000).toISOString(), new Date(Math.max(+day + hoursOf[1] * 3600000, Date.parse(last.at) + 3 * 3600000)).toISOString()]
+    : null;
   return {
+    session,
     symbol, name: known?.name ?? MARKET_EXTRA.find(([s]) => s === symbol)?.[1] ?? symbol, currency: known?.currency ?? "USD",
     exchange: known?.exchange ?? "NASDAQ", range, interval, market_open: symbol !== "AAPL", price: last.close, warmup,
     segments: [[warmup, bars.length]], bars,

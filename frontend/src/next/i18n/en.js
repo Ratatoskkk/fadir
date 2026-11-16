@@ -91,6 +91,10 @@ export default {
   "ticker.note.adx": "Average Directional Index over 25 bars (Wilder). It measures how strong a trend is, not which way it runs; readings above about 25 are usually taken as a trend.",
   "ticker.note.avgBuy": "Average buy price of your open position in this portfolio, in the ticker's own currency. The figures above the chart are this position's, in the portfolio's currency.",
   "ticker.note.fx": "The part of the position's P/L that came from the exchange rate moving since you bought, rather than from the price.",
+  "ticker.prevClose": "Prev. close",
+  "ticker.vsPrevClose": "vs prev. close",
+  "ticker.fullDay": "Full day",
+  "ticker.note.prevClose": "The previous trading day's last close, the base of the change next to the price.",
 
   "theme.light": "Light theme",
   "theme.dark": "Dark theme",

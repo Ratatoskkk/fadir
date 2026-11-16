@@ -91,6 +91,10 @@ export default {
   "ticker.note.adx": "Average Directional Index über 25 Kerzen (Wilder). Er misst die Stärke eines Trends, nicht seine Richtung; Werte über etwa 25 gelten meist als Trend.",
   "ticker.note.avgBuy": "Durchschnittlicher Kaufpreis deiner offenen Position in diesem Portfolio, in der Währung des Tickers. Die Zahlen über dem Chart gehören zu dieser Position, in der Portfoliowährung.",
   "ticker.note.fx": "Der Teil des Gewinns oder Verlusts, der seit dem Kauf aus der Wechselkursbewegung stammt statt aus dem Kurs.",
+  "ticker.prevClose": "Vortagesschluss",
+  "ticker.vsPrevClose": "ggü. Vortag",
+  "ticker.fullDay": "Ganzer Tag",
+  "ticker.note.prevClose": "Der letzte Schlusskurs des vorherigen Handelstags, die Basis der Veränderung neben dem Kurs.",
 
   "theme.light": "Helles Design",
   "theme.dark": "Dunkles Design",

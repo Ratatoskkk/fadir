@@ -192,3 +192,37 @@ def test_week_route_returns_segments_and_is_not_live_for_a_past_week(client, mon
 def test_week_route_rejects_a_future_week(client):  # noqa: F811
     r = client.get("/api/market/chart", params={"symbol": "AAPL", "range": "W", "week": "2099-W01"})
     assert r.status_code == 422
+
+
+def test_day_session_moves_yahoos_session_hours_onto_the_shown_day(monkeypatch):
+    """After the close Yahoo already reports the next session; the shown day keeps its own."""
+    bars = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
+    next_open = datetime(2026, 11, 16, 9, 30, tzinfo=NY)
+    monkeypatch.setattr(
+        yf_client, "fetch_bars",
+        lambda *a, **k: _series(bars, session=(next_open, next_open + timedelta(hours=6, minutes=30))),
+    )
+    start, end = market_chart.chart("AAPL", "1D").day_session()
+    assert start == datetime(2026, 11, 13, 9, 30, tzinfo=NY)
+    assert end == datetime(2026, 11, 13, 16, 0, tzinfo=NY)
+
+
+def test_day_session_is_only_for_1d_with_a_reported_session(monkeypatch):
+    bars = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(bars))
+    assert market_chart.chart("AAPL", "1D").day_session() is None
+    now = datetime(2026, 11, 13, 9, 30, tzinfo=NY)
+    monkeypatch.setattr(yf_client, "fetch_bars", lambda *a, **k: _series(bars, session=(now, now + timedelta(hours=6))))
+    assert market_chart.chart("AAPL", "5D").day_session() is None
+
+
+def test_chart_route_returns_the_day_session_in_utc(client, monkeypatch):  # noqa: F811
+    bars = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
+    opens = datetime(2026, 11, 13, 9, 30, tzinfo=NY)
+    monkeypatch.setattr(
+        yf_client, "fetch_bars",
+        lambda *a, **k: _series(bars, session=(opens, opens + timedelta(hours=6, minutes=30))),
+    )
+    body = client.get("/api/market/chart", params={"symbol": "AAPL", "range": "1D"}).json()
+    assert body["session"][0].startswith("2026-11-13T14:30:00")
+    assert body["session"][1].startswith("2026-11-13T21:00:00")

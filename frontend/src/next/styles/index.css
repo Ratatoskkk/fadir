@@ -556,6 +556,7 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .compare-chip .chip-x::after { content: ""; position: absolute; inset: -11px; }
 .compare-chip .chip-x:hover { background: var(--surface-3); color: var(--text); }
 .legend-chip i.dashed { height: 0; border-top: 2px dashed currentColor; border-radius: 0; }
+.legend-chip i.dotted { height: 0; border-top: 2px dotted var(--text-3); border-radius: 0; }
 .footnotes-wrap { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
 .footnotes-wrap summary { width: fit-content; min-height: 32px; display: flex; align-items: center; cursor: pointer; font-size: 12.5px; color: var(--text-2); list-style: none; }
 .footnotes-wrap summary::-webkit-details-marker { display: none; }

@@ -91,6 +91,10 @@ export default {
   "ticker.note.adx": "25 çubukluk Ortalama Yön Endeksi (Wilder). Trendin yönünü değil gücünü ölçer; yaklaşık 25'in üstü genellikle trend olarak okunur.",
   "ticker.note.avgBuy": "Bu portföydeki açık pozisyonunun ortalama alış fiyatı, sembolün kendi para biriminde. Grafiğin üstündeki rakamlar bu pozisyona ait ve portföyün para birimindedir.",
   "ticker.note.fx": "Pozisyonun kâr/zararının fiyattan değil, alıştan bu yana kurun değişmesinden gelen kısmı.",
+  "ticker.prevClose": "Önceki kapanış",
+  "ticker.vsPrevClose": "önceki kapanışa göre",
+  "ticker.fullDay": "Tüm gün",
+  "ticker.note.prevClose": "Önceki işlem gününün son kapanışı; fiyatın yanındaki değişim buna göre hesaplanır.",
 
   "theme.light": "Açık tema",
   "theme.dark": "Koyu tema",

@@ -1579,6 +1579,7 @@ def get_market_chart(
     except market_chart.ChartUnavailable as exc:
         raise HTTPException(404, str(exc)) from exc
     series = result.series
+    day = result.day_session()
     return MarketChartOut(
         symbol=symbol,
         name=series.name,
@@ -1590,6 +1591,7 @@ def get_market_chart(
         price=series.price if series.price is not None else series.bars[-1].close,
         warmup=result.warmup,
         segments=[list(s) for s in result.segments],
+        session=None if day is None else tuple(t.astimezone(timezone.utc) for t in day),
         bars=[
             MarketBarOut(at=b.at.astimezone(timezone.utc), open=b.open, high=b.high, low=b.low, close=b.close)
             for b in series.bars

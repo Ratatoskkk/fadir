@@ -124,6 +124,8 @@ export default function Ticker({ dash }) {
   const [range, setRange] = useState(() => (RANGES.includes(saved.range) || (saved.range === "W" && weeks.length) ? saved.range : "1D"));
   const [filters, setFilters] = useState(() => initialFilters(saved.filters));
   const [avgOn, setAvgOn] = useState(() => saved.avgOn ?? true);
+  const [prevOn, setPrevOn] = useState(() => saved.prevOn ?? true);
+  const [fullDay, setFullDay] = useState(() => saved.fullDay ?? false);
   const [compareSymbol, setCompareSymbol] = useState(() => saved.compare ?? null);
   const [hover, setHover] = useState(null);
   // Whether the keyboard moved the reading: only then is it spoken.
@@ -140,8 +142,8 @@ export default function Ticker({ dash }) {
   }, [symbol, portfolio, instruments]);
 
   useEffect(() => {
-    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, weeks, filters, avgOn, compare: compareSymbol })); } catch { /* private mode */ }
-  }, [symbol, range, weeks, filters, avgOn, compareSymbol]);
+    try { localStorage.setItem(STORE, JSON.stringify({ symbol, range, weeks, filters, avgOn, prevOn, fullDay, compare: compareSymbol })); } catch { /* private mode */ }
+  }, [symbol, range, weeks, filters, avgOn, prevOn, fullDay, compareSymbol]);
 
   const { data, error, loading, reload } = useChart(symbol, range, weeks, interval);
   const weekKey = weeks.join(",");
@@ -337,14 +339,31 @@ export default function Ticker({ dash }) {
   const avgBuy = holding?.average_purchase_price_native != null && data?.currency === holding.currency
     ? Number(holding.average_purchase_price_native)
     : null;
+  // 1D: the previous session's last close, the base of the change chip.
+  const prevClose = range === "1D" && data?.warmup > 0 ? data.bars[data.warmup - 1].close : null;
   // A price-level line has no place on a chart of % changes.
-  const marks = avgBuy !== null && avgOn && !comparing ? [{ value: avgBuy, label: `${t("pos.avgBuy")} ${quote(avgBuy)}` }] : [];
+  const marks = comparing ? [] : [
+    ...(avgBuy !== null && avgOn ? [{ value: avgBuy, label: `${t("pos.avgBuy")} ${quote(avgBuy)}` }] : []),
+    ...(prevClose !== null && prevOn ? [{ value: prevClose, label: `${t("ticker.prevClose")} ${quote(prevClose)}`, dotted: true, fit: true }] : []),
+  ];
+  // 1D over the whole session: the x axis runs on, one bar step at a time, to the close.
+  // After the close the bars already span the session, so the option only shows while it trades.
+  const session = range === "1D" && data?.market_open ? data?.session ?? null : null;
+  const axisTimes = useMemo(() => {
+    if (!fullDay || !session || !view?.times.length) return null;
+    const step = INTERVAL_MS[data.interval] ?? INTERVAL_MS["5m"];
+    const end = Date.parse(session[1]);
+    const out = [...view.times];
+    for (let next = out[out.length - 1] + step; next <= end; next += step) out.push(next);
+    return out;
+  }, [fullDay, session, view, data]);
   // Explain only what is on the chart now.
   const notes = [
     comparing ? ["ticker.compareLine", "ticker.note.compare"] : ["ticker.priceLine", "ticker.note.price"],
     ...(panes.length ? [["ticker.levelLine", "ticker.note.level"]] : []),
     ...panes.map((p) => (p.asPct ? ["ticker.maSlope", "ticker.note.maSlopePct"] : FILTER_NOTES[p.key])).filter(Boolean),
-    ...(marks.length ? [["pos.avgBuy", "ticker.note.avgBuy"]] : []),
+    ...(marks.some((m) => !m.dotted) ? [["pos.avgBuy", "ticker.note.avgBuy"]] : []),
+    ...(marks.some((m) => m.dotted) ? [["ticker.prevClose", "ticker.note.prevClose"]] : []),
     ...(holding ? [["attr.fx", "ticker.note.fx"]] : []),
   ];
 
@@ -394,6 +413,9 @@ export default function Ticker({ dash }) {
           <div key={key} className="tip-row">{t(label)}<b className="num">{quote(hoverBar[key])}</b></div>
         ))
       )}
+      {prevClose !== null && !comparing && (
+        <div className="tip-row">{t("ticker.vsPrevClose")}<b className={`num ${toneOf(hoverBar.close - prevClose)}`}>{ratioPct(hoverBar.close / prevClose)}</b></div>
+      )}
       {panes.length > 0 && <div className="tip-sep" />}
       {panes.map((p) => (
         <div key={p.key} className="tip-row">
@@ -409,6 +431,7 @@ export default function Ticker({ dash }) {
     ? [
       stamp(view.times[hover]),
       `${t("ticker.close")} ${quote(hoverBar.close)}`,
+      ...(prevClose !== null && !comparing ? [`${t("ticker.vsPrevClose")} ${ratioPct(hoverBar.close / prevClose)}`] : []),
       ...(comparing ? [`${symbol} ${pct(view.closeRead[hover])}`, `${compareSymbol} ${pct(view.compareRead[hover])}`] : []),
       ...panes.map((p) => {
         const s = filterState(p.read[hover], p.level);
@@ -505,6 +528,17 @@ export default function Ticker({ dash }) {
             {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
           </button>
         )}
+        {prevClose !== null && !comparing && (
+          <button type="button" className={`legend-chip ${prevOn ? "" : "off"}`} aria-pressed={prevOn} onClick={() => setPrevOn((v) => !v)}>
+            <i className="dotted" />
+            {t("ticker.prevClose")} <span className="num">{quote(prevClose)}</span>
+          </button>
+        )}
+        {session && (
+          <button type="button" className={`legend-chip ${fullDay ? "" : "off"}`} aria-pressed={fullDay} onClick={() => setFullDay((v) => !v)}>
+            {t("ticker.fullDay")}
+          </button>
+        )}
         {FILTERS.map((f) => (
           <button
             key={f.key}
@@ -555,6 +589,7 @@ export default function Ticker({ dash }) {
         {series ? (
           <PriceChart
             times={view.times}
+            axisTimes={axisTimes}
             close={view.close}
             compare={view.compare}
             closeDash={view.closeDash}

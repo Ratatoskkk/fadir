@@ -91,6 +91,10 @@ export default {
   "ticker.note.adx": "Average Directional Index sur 25 barres (Wilder). Il mesure la force d'une tendance, pas son sens ; au-dessus d'environ 25, on parle généralement de tendance.",
   "ticker.note.avgBuy": "Prix d'achat moyen de ta position ouverte dans ce portefeuille, dans la devise du ticker. Les chiffres au-dessus du graphique sont ceux de cette position, dans la devise du portefeuille.",
   "ticker.note.fx": "La part du gain ou de la perte qui vient de la variation du taux de change depuis l'achat, et non du cours.",
+  "ticker.prevClose": "Clôture veille",
+  "ticker.vsPrevClose": "vs clôture veille",
+  "ticker.fullDay": "Journée entière",
+  "ticker.note.prevClose": "La dernière clôture de la séance précédente, la base de la variation à côté du cours.",
 
   "theme.light": "Thème clair",
   "theme.dark": "Thème sombre",

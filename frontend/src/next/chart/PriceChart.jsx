@@ -84,6 +84,11 @@ function extent(values, extra = []) {
  */
 /** `breaks` are bar indices where a skipped stretch of time ends (unselected weeks). */
 /**
+ * `axisTimes`, when longer than `times`, is the whole x axis: the bars fill its start and
+ * the rest is time still to trade (a full session). Its labels fall on the hour.
+ * A mark with `fit` widens the price axis to include it; a `dotted` one is drawn faint.
+ */
+/**
  * `compare` is a second line over the same bars (a compared ticker), drawn in its own
  * colour; when given, `close` and `compare` share one axis labelled by `formatY`.
  */
@@ -94,30 +99,32 @@ function extent(values, extra = []) {
  * drawn faint and dashed. A pane may carry `cmp` ({ values, dash }), the compared
  * ticker's line for the same formula.
  */
-export default function PriceChart({ times, close, compare = null, closeDash = null, compareDash = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel, roleLabel }) {
+export default function PriceChart({ times, axisTimes = null, close, compare = null, closeDash = null, compareDash = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel, roleLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
   const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
   const [narrow, setNarrow] = useState(false);
-  st.props = { times, close, compare, closeDash, compareDash, formatY, panes, marks, breaks, formatX, live };
+  st.props = { times, axisTimes, close, compare, closeDash, compareDash, formatY, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
   const draw = () => {
     st.frame = 0;
     const canvas = canvasRef.current;
     if (!canvas || !st.colors) return;
-    const { times: xsT, close: ys, compare: cs, closeDash: yDash, compareDash: cDash, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
+    const { times: barTimes, axisTimes: span, close: ys, compare: cs, closeDash: yDash, compareDash: cDash, formatY: fy, panes: ps, marks: ms, breaks: bs, formatX: fx, live: isLive } = st.props;
     const { w, h, dpr, colors: c } = st;
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     const n = ys.length;
     if (!n) return;
+    const xsT = span && span.length > n ? span : barTimes;
+    const slots = xsT.length;
 
     const plotW = Math.max(10, w - PAD.left - PAD.right);
     const mainH = mainHeight(w);
-    const xOf = (i) => PAD.left + (n > 1 ? (i * plotW) / (n - 1) : plotW / 2);
+    const xOf = (i) => PAD.left + (slots > 1 ? (i * plotW) / (slots - 1) : plotW / 2);
     ctx.font = `11.5px ${c.font}`;
     ctx.lineWidth = 1;
 
@@ -175,7 +182,7 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
     };
 
     // Price.
-    const [pLo, pHi] = cs ? extent([...ys, ...cs]) : extent(ys);
+    const [pLo, pHi] = cs ? extent([...ys, ...cs]) : extent(ys, ms.filter((m) => m.fit).map((m) => m.value));
     const yPrice = area(PAD.top, mainH, pLo, pHi, fy, Math.max(3, Math.round(mainH / 64)));
     if (n > 1 && ys.some((v) => v != null)) {
       const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + mainH);
@@ -205,15 +212,22 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
         continue;
       }
       const y = Math.round(yPrice(mark.value)) + 0.5;
-      ctx.strokeStyle = c.mark;
-      ctx.lineWidth = 1.4;
-      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = mark.dotted ? c.axis : c.mark;
+      ctx.lineWidth = mark.dotted ? 1.2 : 1.4;
+      ctx.setLineDash(mark.dotted ? [1, 4] : [6, 4]);
       ctx.beginPath();
       ctx.moveTo(PAD.left, y);
       ctx.lineTo(right, y);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.textBaseline = "bottom";
+      // A backing in the surface colour, so a price line crossing the label never runs through it.
+      const tw = ctx.measureText(mark.label).width;
+      ctx.fillStyle = c.bg;
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(right - 8 - tw, y - 19, tw + 8, 15);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = c.cross;
       ctx.fillText(mark.label, right - 4, y - 4);
     }
     if (cs) stroke(cs, yPrice, c.compare, 1.8, cDash);
@@ -259,16 +273,39 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
     ctx.fillStyle = c.axis;
     ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
-    const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(plotW / 90))));
+    const fit = Math.max(2, Math.floor(plotW / 90));
+    const every = Math.max(1, Math.ceil(slots / fit));
     const starts = bs.filter((b) => b > 0 && b < n);
-    const labelled = [0, ...starts];
-    // The last bar is always labelled, so the axis says where the window ends; a regular
-    // label too close to it gives way.
-    const last = n - 1;
-    for (let i = every; i < n; i += every) {
-      if ([...starts, last].every((b) => Math.abs(b - i) >= every * 0.6)) labelled.push(i);
+    const hours = xsT !== barTimes ? xsT.map((t, i) => (new Date(t).getMinutes() === 0 ? i : -1)).filter((i) => i >= 0) : [];
+    let labelled;
+    if (hours.length >= 2) {
+      // A full session: every k-th whole hour, as many as fit.
+      // A full session: every k-th whole hour, as many as fit, and the close, so the axis
+      // says where the day ends; an hour too close to the close gives way.
+      const k = Math.ceil(hours.length / fit);
+      const close = slots - 1;
+      const gap = (k * slots) / hours.length;
+      labelled = [...hours.filter((i, j) => j % k === 0 && close - i >= gap * 0.6), close];
+      // Faint hour rules, so the stretch still to trade reads as time, not missing data.
+      ctx.strokeStyle = c.grid;
+      for (const i of labelled) {
+        const x = Math.round(xOf(i)) + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x, PAD.top);
+        ctx.lineTo(x, PAD.top + mainH);
+        ctx.stroke();
+      }
+      ctx.fillStyle = c.axis;
+    } else {
+      labelled = [0, ...starts];
+      // The last bar is always labelled, so the axis says where the window ends; a regular
+      // label too close to it gives way.
+      const last = slots - 1;
+      for (let i = every; i < slots; i += every) {
+        if ([...starts, last].every((b) => Math.abs(b - i) >= every * 0.6)) labelled.push(i);
+      }
+      if (last > 0 && !labelled.includes(last)) labelled.push(last);
     }
-    if (last > 0 && !labelled.includes(last)) labelled.push(last);
     for (const i of labelled) {
       ctx.fillText(fx(xsT[i]), Math.min(w - PAD.right - 18, Math.max(PAD.left + 18, xOf(i))), h - 8);
     }
@@ -406,7 +443,9 @@ export default function PriceChart({ times, close, compare = null, closeDash = n
     if (!n) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const rel = (e.clientX - rect.left - PAD.left) / Math.max(10, st.w - PAD.left - PAD.right);
-    setHover(Math.max(0, Math.min(n - 1, Math.round(rel * (n - 1)))));
+    // Over a full session's untraded stretch the reading stays on the newest bar.
+    const slots = Math.max(n, st.props.axisTimes?.length ?? 0);
+    setHover(Math.max(0, Math.min(n - 1, Math.round(rel * (slots - 1)))));
   };
 
   return (

@@ -88,6 +88,26 @@ class Chart:
     def warmup(self) -> int:
         return self.segments[0][0]
 
+    def day_session(self) -> tuple[datetime, datetime] | None:
+        """The shown trading day's regular session, open to close, for a 1D chart.
+
+        Yahoo reports the current session, which after the close can already be the next
+        day's; its hours are moved onto the shown bars' local date. None when Yahoo gives
+        no session or the chart is not 1D.
+        """
+        start, end = self.series.session_start, self.series.session_end
+        bars = self.series.bars
+        if self.range != "1D" or start is None or end is None or not bars:
+            return None
+        last = bars[-1].at
+        zone = last.tzinfo
+        length = end - start
+        if not timedelta(0) < length <= timedelta(days=1):
+            return None
+        opens = datetime.combine(last.date(), start.astimezone(zone).time(), tzinfo=zone)
+        first = bars[self.warmup].at if self.warmup < len(bars) else last
+        return min(opens, first), max(opens + length, last)
+
     def market_open(self, now: datetime) -> bool:
         start, end = self.series.session_start, self.series.session_end
         in_session = start is not None and end is not None and start <= now < end

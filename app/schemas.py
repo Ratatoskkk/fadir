@@ -367,6 +367,8 @@ class MarketChartOut(BaseModel):
     warmup: int
     #: Shown bars as [start, end) index pairs; one pair unless weeks were selected.
     segments: list[tuple[int, int]]
+    #: 1D only: the shown day's regular session as [open, close], when Yahoo reports one.
+    session: tuple[datetime, datetime] | None = None
     bars: list[MarketBarOut]
 
 

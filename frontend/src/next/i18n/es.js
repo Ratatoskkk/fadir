@@ -91,6 +91,10 @@ export default {
   "ticker.note.adx": "Average Directional Index sobre 25 barras (Wilder). Mide la fuerza de una tendencia, no su dirección; por encima de 25 aproximadamente se suele considerar tendencia.",
   "ticker.note.avgBuy": "Precio medio de compra de tu posición abierta en esta cartera, en la moneda del ticker. Las cifras sobre el gráfico son de esta posición, en la moneda de la cartera.",
   "ticker.note.fx": "La parte de la ganancia o pérdida que viene del movimiento del tipo de cambio desde la compra, no del precio.",
+  "ticker.prevClose": "Cierre anterior",
+  "ticker.vsPrevClose": "vs cierre ant.",
+  "ticker.fullDay": "Día completo",
+  "ticker.note.prevClose": "El último cierre de la sesión anterior, la base del cambio junto al precio.",
 
   "theme.light": "Tema claro",
   "theme.dark": "Tema oscuro",
