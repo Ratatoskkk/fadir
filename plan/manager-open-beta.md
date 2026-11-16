@@ -1749,3 +1749,15 @@ match the commit and the build for all 16 frontend files; rollback bundle
 the new bundle returned 200 and an unauthenticated chart returned 401. In the signed-in
 owner tab 1D charts returned volume on every bar and a last close equal to the quote.
 Tests match the baseline apart from the two known zero-FX failures.
+
+Inert page after a modal closes, fix deployment (owner report 2026-11-16: a long-open Firefox
+tab stopped taking clicks while prices kept updating). Modals called `dialog.close()` only
+after framer-motion's exit animation ended; with no animation frames (background tab, covered
+or minimised window) the exit stalled with the dialog transparent but still modal, so the
+page stayed inert. Reproduced in the mock with the command palette: still modal 20s after
+closing while frames were stalled. `0bfa30d` closes the native dialog once the exit's time is
+up (250ms), frames or not, and shows it again if reopened mid-exit; under the same conditions
+it released within 400ms and the page took clicks. Frontend only, no restart. Installed
+checksums match the build for all 16 files; rollback bundle
+`/opt/fadir/frontend/dist.previous.dialog-release-20261116`. Public health and the new bundle
+returned 200. Not confirmed in the owner's Firefox tab, which needs a reload to pick it up.
