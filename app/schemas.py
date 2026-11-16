@@ -396,6 +396,29 @@ class MarketChartOut(BaseModel):
     bars: list[MarketBarOut]
 
 
+class MarketProfileOut(BaseModel):
+    """What the company behind a symbol does, from Yahoo. Display-only."""
+
+    symbol: str
+    name: str | None = None
+    #: Yahoo's word for the instrument: Equity, ETF, Index, Futures, Cryptocurrency, ...
+    kind: str | None = None
+    sector: str | None = None
+    industry: str | None = None
+    #: Funds have a category and a fund family instead of a sector and an industry.
+    category: str | None = None
+    fund_family: str | None = None
+    #: Yahoo's business summary, in English.
+    summary: str | None = None
+    website: str | None = None
+    city: str | None = None
+    country: str | None = None
+    employees: int | None = None
+    market_cap: float | None = None
+    #: The market cap's currency.
+    currency: str | None = None
+
+
 class TransactionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

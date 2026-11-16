@@ -166,6 +166,7 @@ export const api = {
     if (range === "W") for (const week of weeks) params.append("week", week);
     return request(`/api/market/chart?${params}`);
   },
+  marketProfile: (symbol) => request(`/api/market/profile?symbol=${encodeURIComponent(symbol)}`),
   taxJurisdictions: () => request("/api/tax/jurisdictions"),
   taxEstimateFor: (jurisdiction, year) =>
     request(`/api/tax/estimates?jurisdiction=${encodeURIComponent(jurisdiction)}&year=${encodeURIComponent(year)}`),

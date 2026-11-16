@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import ipaddress
 import logging
 from datetime import date, timedelta, timezone
@@ -45,7 +46,7 @@ from app.api.request_authority import (
 from app.api.request_transaction import RequestTransactionRoute, request_session
 from app.db import get_session
 from app.models import FxCache, GuestAccess, Instrument, LoginIdentity, Portfolio, Side, Transaction, Workspace, utcnow
-from app.providers import market_chart, market_hours, yf_client
+from app.providers import company_profile, market_chart, market_hours, yf_client
 from app.providers.base import ProviderError, RateUnavailable
 from app.providers.fx_service import MANUAL_PROVIDER, FxService
 from app.providers.price_service import PriceService
@@ -74,6 +75,7 @@ from app.schemas import (
     LiquidationOut,
     MarketBarOut,
     MarketChartOut,
+    MarketProfileOut,
     PortfolioOut,
     PortfolioOptionOut,
     PositionOut,
@@ -1630,6 +1632,25 @@ def get_market_chart(
             for b in series.bars
         ],
     )
+
+
+@private_router.get("/market/profile", response_model=MarketProfileOut)
+def get_market_profile(
+    _authority: AuthorityDep,
+    symbol: str = Query(min_length=1, max_length=32),
+) -> MarketProfileOut:
+    """What the company behind `symbol` does: sector, industry and Yahoo's business summary.
+    404 when Yahoo has no profile (indices, futures), 503 when Yahoo could not be reached."""
+    symbol = symbol.strip().upper()
+    if not instruments_service.SYMBOL_PATTERN.fullmatch(symbol):
+        raise HTTPException(422, "invalid symbol")
+    try:
+        found = company_profile.profile(symbol)
+    except company_profile.ProfileUnavailable as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except company_profile.ProfileFailed as exc:
+        raise HTTPException(503, str(exc)) from exc
+    return MarketProfileOut(**dataclasses.asdict(found))
 
 
 @private_router.post(

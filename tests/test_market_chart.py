@@ -413,3 +413,92 @@ def test_chart_route_marks_extended_bars_and_session(client, monkeypatch):  # no
     assert body["session"][0].startswith("2026-11-13T09:00:00")  # 04:00 New York
     assert body["session"][1].startswith("2026-11-14T01:00:00")  # 20:00 New York
     assert body["extended_session"] is None  # long past
+
+
+# --- company profile -------------------------------------------------------------
+
+from app.providers import company_profile  # noqa: E402
+
+AAPL_INFO = {
+    "longName": "Apple Inc.", "typeDisp": "Equity", "sectorDisp": "Technology", "industryDisp": "Consumer Electronics",
+    "longBusinessSummary": "Apple designs   phones.\nIt also sells services.", "website": "https://www.apple.com",
+    "city": "Cupertino", "country": "United States", "fullTimeEmployees": 167000, "marketCap": 5.1e12, "currency": "usd",
+}
+
+
+@pytest.fixture
+def _fresh_profiles():
+    company_profile.clear_cache()
+    yield
+    company_profile.clear_cache()
+
+
+class _FakeTicker:
+    calls = 0
+    info: object = AAPL_INFO
+
+    def __init__(self, symbol):
+        pass
+
+    def __getattribute__(self, name):
+        if name == "info":
+            type(self).calls += 1
+            if isinstance(type(self).info, Exception):
+                raise type(self).info
+            return type(self).info
+        return object.__getattribute__(self, name)
+
+
+@pytest.fixture
+def fake_yahoo(monkeypatch, _fresh_profiles):
+    _FakeTicker.calls = 0
+    _FakeTicker.info = AAPL_INFO
+    monkeypatch.setattr(company_profile.yf, "Ticker", _FakeTicker)
+    return _FakeTicker
+
+
+def test_profile_reads_yahoos_fields_and_tidies_them(fake_yahoo):
+    p = company_profile.profile("AAPL")
+    assert (p.name, p.kind, p.sector, p.industry) == ("Apple Inc.", "Equity", "Technology", "Consumer Electronics")
+    assert p.summary == "Apple designs phones. It also sells services."
+    assert (p.employees, p.market_cap, p.currency) == (167000, 5.1e12, "USD")
+
+
+def test_profile_drops_a_website_that_is_not_http():
+    p = company_profile.from_info("X", {**AAPL_INFO, "website": "javascript:alert(1)"})
+    assert p.website is None
+
+
+def test_a_long_summary_is_cut_at_a_sentence():
+    text = "A sentence here. " * 400
+    p = company_profile.from_info("X", {**AAPL_INFO, "longBusinessSummary": text})
+    assert len(p.summary) <= company_profile.MAX_SUMMARY and p.summary.endswith(".")
+
+
+def test_profile_is_cached(fake_yahoo):
+    company_profile.profile("AAPL")
+    company_profile.profile("AAPL")
+    assert fake_yahoo.calls == 1
+
+
+def test_a_symbol_yahoo_knows_nothing_about_is_unavailable(fake_yahoo):
+    fake_yahoo.info = {"trailingPegRatio": None}
+    with pytest.raises(company_profile.ProfileUnavailable):
+        company_profile.profile("ZZZZ")
+
+
+def test_a_yahoo_failure_is_retryable_and_backs_off(fake_yahoo):
+    fake_yahoo.info = RuntimeError("down")
+    with pytest.raises(company_profile.ProfileFailed):
+        company_profile.profile("AAPL")
+    with pytest.raises(company_profile.ProfileFailed):
+        company_profile.profile("AAPL")
+    assert fake_yahoo.calls == 1  # the second ask waited out the back-off
+
+
+def test_profile_route(client, fake_yahoo):  # noqa: F811
+    body = client.get("/api/market/profile", params={"symbol": "aapl"}).json()
+    assert body["symbol"] == "AAPL" and body["sector"] == "Technology"
+    assert client.get("/api/market/profile", params={"symbol": "bad symbol!"}).status_code == 422
+    fake_yahoo.info = {}
+    assert client.get("/api/market/profile", params={"symbol": "ZZZZ"}).status_code == 404

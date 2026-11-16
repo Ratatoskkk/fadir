@@ -243,6 +243,22 @@ function intraday(portfolioId, offset, tickers) {
   return { interval: "5m", session_date: day.toISOString().slice(0, 10), points, warnings: [], tickers: tickers ?? [], offset, sessions_available: 5 };
 }
 
+// Company profiles for the Ticker view's About panel, in Yahoo's shape (synthetic text).
+const MARKET_PROFILES = {
+  AAPL: {
+    name: "Apple Inc.", kind: "Equity", sector: "Technology", industry: "Consumer Electronics",
+    summary: "Mock profile text. The company makes phones, computers, tablets and watches, and sells them with its own operating systems. A growing share of revenue comes from services: an app store, cloud storage, music and video subscriptions, payments and extended warranties. It sells through its own retail stores and website as well as carriers, wholesalers and resellers. Customers range from individual consumers to schools, businesses and government agencies. Most products are assembled by contract manufacturers in Asia. The company designs much of its own silicon, including the processors in its phones and computers. This paragraph is long on purpose, so the panel's clamp and More button can be seen in the mock.",
+    website: "https://www.apple.com", city: "Cupertino", country: "United States", employees: 167000, market_cap: 5.12e12, currency: "USD",
+  },
+  "THYAO.IS": {
+    name: "Türk Hava Yollari Anonim Ortakligi", kind: "Equity", sector: "Industrials", industry: "Airlines",
+    summary: "Mock profile text. The national airline: passenger and cargo flights, and aircraft maintenance for its own fleet and other carriers.",
+    website: "https://www.turkishairlines.com", city: "Istanbul", country: "Turkey", employees: 66549, market_cap: 4.4e11, currency: "TRY",
+  },
+  SPY: { name: "SPDR S&P 500 ETF Trust", kind: "ETF", category: "Large Blend", fund_family: "State Street Investment Management", summary: "Mock profile text. A fund that holds the stocks of a large-company index." },
+  "BTC-USD": { name: "Bitcoin USD", kind: "Cryptocurrency", summary: "Mock profile text. A decentralised digital currency.", website: "https://bitcoin.org/", market_cap: 1.3e12, currency: "USD" },
+};
+
 // The Ticker view: a seeded random walk per symbol and range, so a symbol always draws
 // the same history, with the newest bar re-rolled on each read so polling is visible.
 const MARKET_RANGES = { "1D": [5, 78, "5m"], "5D": [15, 130, "15m"], "1M": [60, 160, "1h"], "6M": [1440, 128, "1d"], "1Y": [1440, 252, "1d"], "5Y": [10080, 260, "1wk"] };
@@ -505,6 +521,19 @@ async function handle(req, res) {
       return body ? send(res, 200, body) : send(res, 404, { detail: `no ${symbol} trading in the selected weeks` });
     }
     return send(res, 200, marketChart(symbol, range));
+  }
+  if (path === "/api/market/profile") {
+    const symbol = (url.searchParams.get("symbol") || "").toUpperCase();
+    const body = MARKET_PROFILES[symbol];
+    if (symbol === "FAIL") return send(res, 503, { detail: "profile unavailable" });
+    if (body) return send(res, 200, { symbol, ...body });
+    if (symbol.startsWith("^") || symbol.endsWith("=F")) return send(res, 404, { detail: `no profile for ${symbol}` });
+    // Anything else: a plain company with a short summary.
+    const known = INSTRUMENTS.find((i) => i.yf_symbol === symbol);
+    return send(res, 200, {
+      symbol, name: known?.name ?? symbol, kind: "Equity", sector: "Technology", industry: "Software—Application",
+      summary: `${known?.name ?? symbol} develops software for businesses.`, country: "United States",
+    });
   }
   if (path === "/api/market/search") {
     const q = (url.searchParams.get("q") || "").toUpperCase();

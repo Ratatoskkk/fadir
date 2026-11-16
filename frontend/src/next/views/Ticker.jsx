@@ -7,6 +7,7 @@ import { api } from "../../api.js";
 import { arrow, compact, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, pct, quote, ratioPct, shortDate, signedCompact, signedMoney, toneOf } from "../../format.js";
 import PriceChart from "../chart/PriceChart.jsx";
 import { FILTERS, filterState, sma, volumeSplit } from "../chart/indicators.js";
+import CompanyInfo from "../components/CompanyInfo.jsx";
 import TickerSearch from "../components/TickerSearch.jsx";
 import { WeekPicker } from "../components/WeekPicker.jsx";
 import { useT } from "../i18n/index.jsx";
@@ -588,186 +589,189 @@ export default function Ticker({ dash }) {
   });
 
   return (
-    <section className="card chart-card ticker-card">
-      <header className="card-head chart-head">
-        <div className="chart-title">
-          {picker}
-          {price !== null && <span className="ticker-price num">{quote(price)} <small>{data.currency}</small></span>}
-          {change !== null && (
-            <span className={`chip num ${toneOf(change - 1)}`}>{arrow(change - 1)} {ratioPct(change)}</span>
+    <div className="ticker-layout">
+      <section className="card chart-card ticker-card">
+        <header className="card-head chart-head">
+          <div className="chart-title">
+            {picker}
+            {price !== null && <span className="ticker-price num">{quote(price)} <small>{data.currency}</small></span>}
+            {change !== null && (
+              <span className={`chip num ${toneOf(change - 1)}`}>{arrow(change - 1)} {ratioPct(change)}</span>
+            )}
+            {data && (
+              <span className={`ticker-session ${data.market_open ? "open" : data.extended_session ? "extended" : ""}`}>
+                <i aria-hidden="true" />{t(data.market_open ? "live.open" : data.extended_session ? `live.${data.extended_session}` : "live.closed")}
+                {extQuote && (
+                  <>
+                    <span className="num">{quote(extQuote.price)}</span>
+                    <span className={`num ${toneOf(extQuote.change - 1)}`}>{ratioPct(extQuote.change)}</span>
+                  </>
+                )}
+              </span>
+            )}
+          </div>
+          <div className="chart-controls">
+            <div className="segmented" role="group" aria-label={t("chart.range")}>
+              {RANGES.map((r) => (
+                <button key={r} type="button" aria-pressed={range === r} onClick={() => pickRange(r)}>
+                  {range === r && <motion.span layoutId="ticker-range-pill" className="segmented-pill" transition={spring} />}
+                  <span>{t(`ticker.range.${r}`)}</span>
+                </button>
+              ))}
+              <WeekPicker weeks={weeks} active={byWeek} onChange={pickWeeks} />
+            </div>
+          </div>
+        </header>
+
+        {holding && (
+          <dl className="holding">
+            <div><dt>{t("pos.value")}</dt><dd className="num">{holding.ok ? money(holding.market_value_try) : "—"}</dd></div>
+            <div><dt>{t("pos.cost")}</dt><dd className="num">{money(holding.cost_try)}</dd></div>
+            <div>
+              <dt>{t("chart.totalPnl")}</dt>
+              <dd className={`num ${holding.ok ? toneOf(holding.pnl_try) : "muted"}`}>
+                {holding.ok ? <>{arrow(holding.pnl_try)} {signedMoney(holding.pnl_try)} <small>{ratioPct(holding.attribution.total_return)}</small></> : "—"}
+              </dd>
+            </div>
+            <div><dt>{t("attr.price")}</dt><dd className={`num ${toneOf(holding.attribution.price_effect_try)}`}>{signedMoney(holding.attribution.price_effect_try)}</dd></div>
+            <div><dt>{t("attr.fx")}</dt><dd className={`num ${toneOf(holding.attribution.fx_effect_try)}`}>{signedMoney(holding.attribution.fx_effect_try)}</dd></div>
+          </dl>
+        )}
+
+        <div className="legend" role="group" aria-label={t("ticker.filters")}>
+          {avgBuy !== null && !comparing && (
+            <button type="button" className={`legend-chip ${avgOn ? "" : "off"}`} aria-pressed={avgOn} onClick={() => setAvgOn((v) => !v)}>
+              <i className="dashed" style={{ color: "var(--cost)" }} />
+              {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
+            </button>
           )}
-          {data && (
-            <span className={`ticker-session ${data.market_open ? "open" : data.extended_session ? "extended" : ""}`}>
-              <i aria-hidden="true" />{t(data.market_open ? "live.open" : data.extended_session ? `live.${data.extended_session}` : "live.closed")}
-              {extQuote && (
-                <>
-                  <span className="num">{quote(extQuote.price)}</span>
-                  <span className={`num ${toneOf(extQuote.change - 1)}`}>{ratioPct(extQuote.change)}</span>
-                </>
-              )}
+          {(view?.closeExt.some(Boolean) || view?.compareExt?.some(Boolean)) && (
+            <span className="legend-chip legend-key">
+              <i style={{ background: comparing && !view.closeExt.some(Boolean) ? "var(--compare-extended)" : "var(--extended)" }} />
+              {t("ticker.extendedKey")}
             </span>
           )}
-        </div>
-        <div className="chart-controls">
-          <div className="segmented" role="group" aria-label={t("chart.range")}>
-            {RANGES.map((r) => (
-              <button key={r} type="button" aria-pressed={range === r} onClick={() => pickRange(r)}>
-                {range === r && <motion.span layoutId="ticker-range-pill" className="segmented-pill" transition={spring} />}
-                <span>{t(`ticker.range.${r}`)}</span>
-              </button>
-            ))}
-            <WeekPicker weeks={weeks} active={byWeek} onChange={pickWeeks} />
-          </div>
-        </div>
-      </header>
-
-      {holding && (
-        <dl className="holding">
-          <div><dt>{t("pos.value")}</dt><dd className="num">{holding.ok ? money(holding.market_value_try) : "—"}</dd></div>
-          <div><dt>{t("pos.cost")}</dt><dd className="num">{money(holding.cost_try)}</dd></div>
-          <div>
-            <dt>{t("chart.totalPnl")}</dt>
-            <dd className={`num ${holding.ok ? toneOf(holding.pnl_try) : "muted"}`}>
-              {holding.ok ? <>{arrow(holding.pnl_try)} {signedMoney(holding.pnl_try)} <small>{ratioPct(holding.attribution.total_return)}</small></> : "—"}
-            </dd>
-          </div>
-          <div><dt>{t("attr.price")}</dt><dd className={`num ${toneOf(holding.attribution.price_effect_try)}`}>{signedMoney(holding.attribution.price_effect_try)}</dd></div>
-          <div><dt>{t("attr.fx")}</dt><dd className={`num ${toneOf(holding.attribution.fx_effect_try)}`}>{signedMoney(holding.attribution.fx_effect_try)}</dd></div>
-        </dl>
-      )}
-
-      <div className="legend" role="group" aria-label={t("ticker.filters")}>
-        {avgBuy !== null && !comparing && (
-          <button type="button" className={`legend-chip ${avgOn ? "" : "off"}`} aria-pressed={avgOn} onClick={() => setAvgOn((v) => !v)}>
-            <i className="dashed" style={{ color: "var(--cost)" }} />
-            {t("pos.avgBuy")} <span className="num">{quote(avgBuy)}</span>
-          </button>
-        )}
-        {(view?.closeExt.some(Boolean) || view?.compareExt?.some(Boolean)) && (
-          <span className="legend-chip legend-key">
-            <i style={{ background: comparing && !view.closeExt.some(Boolean) ? "var(--compare-extended)" : "var(--extended)" }} />
-            {t("ticker.extendedKey")}
-          </span>
-        )}
-        {prevClose !== null && !comparing && (
-          <button type="button" className={`legend-chip ${prevOn ? "" : "off"}`} aria-pressed={prevOn} onClick={() => setPrevOn((v) => !v)}>
-            <i className="dotted" />
-            {t("ticker.prevClose")} <span className="num">{quote(prevClose)}</span>
-          </button>
-        )}
-        {session && (
-          <button type="button" className={`legend-chip ${fullDay ? "" : "off"}`} aria-pressed={fullDay} onClick={() => setFullDay((v) => !v)}>
-            {t("ticker.fullDay")}
-          </button>
-        )}
-        {showVolume && (
-          <button type="button" className={`legend-chip ${volOn ? "" : "off"}`} aria-pressed={volOn} onClick={() => setVolOn((v) => !v)}>
-            {t("ticker.volume")}
-          </button>
-        )}
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            className={`legend-chip ${filters[f.key].on ? "" : "off"}`}
-            aria-pressed={filters[f.key].on}
-            onClick={() => setFilter(f.key, { on: !filters[f.key].on })}
-          >
-            {t(f.label)}
-          </button>
-        ))}
-        {compareSymbol ? (
-          <span className="legend-chip compare-chip">
-            <i style={{ background: "var(--compare)" }} />
-            {t("ticker.vs", { symbol: compareSymbol })}
-            {view?.change != null ? (
-              <span className={`num ${toneOf(view.change - 1)}`}>{ratioPct(view.change)}</span>
-            ) : cmpError ? (
-              <span className="muted">{t("ticker.compareNoData")}</span>
-            ) : null}
-            <button type="button" className="chip-x" onClick={() => setCompareSymbol(null)} aria-label={t("ticker.compareRemove", { symbol: compareSymbol })}>
-              <Icon name="x" size={12} />
+          {prevClose !== null && !comparing && (
+            <button type="button" className={`legend-chip ${prevOn ? "" : "off"}`} aria-pressed={prevOn} onClick={() => setPrevOn((v) => !v)}>
+              <i className="dotted" />
+              {t("ticker.prevClose")} <span className="num">{quote(prevClose)}</span>
             </button>
-          </span>
-        ) : (
-          <Popover
-            label={t("ticker.compare")}
-            align="left"
-            className="ticker-pop"
-            trigger={({ open, toggle }) => (
-              <button type="button" className="legend-chip" onClick={toggle} aria-expanded={open} aria-haspopup="dialog">
-                <Icon name="plus" size={13} />{t("ticker.compare")}
+          )}
+          {session && (
+            <button type="button" className={`legend-chip ${fullDay ? "" : "off"}`} aria-pressed={fullDay} onClick={() => setFullDay((v) => !v)}>
+              {t("ticker.fullDay")}
+            </button>
+          )}
+          {showVolume && (
+            <button type="button" className={`legend-chip ${volOn ? "" : "off"}`} aria-pressed={volOn} onClick={() => setVolOn((v) => !v)}>
+              {t("ticker.volume")}
+            </button>
+          )}
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              className={`legend-chip ${filters[f.key].on ? "" : "off"}`}
+              aria-pressed={filters[f.key].on}
+              onClick={() => setFilter(f.key, { on: !filters[f.key].on })}
+            >
+              {t(f.label)}
+            </button>
+          ))}
+          {compareSymbol ? (
+            <span className="legend-chip compare-chip">
+              <i style={{ background: "var(--compare)" }} />
+              {t("ticker.vs", { symbol: compareSymbol })}
+              {view?.change != null ? (
+                <span className={`num ${toneOf(view.change - 1)}`}>{ratioPct(view.change)}</span>
+              ) : cmpError ? (
+                <span className="muted">{t("ticker.compareNoData")}</span>
+              ) : null}
+              <button type="button" className="chip-x" onClick={() => setCompareSymbol(null)} aria-label={t("ticker.compareRemove", { symbol: compareSymbol })}>
+                <Icon name="x" size={12} />
               </button>
-            )}
-          >
-            {({ close }) => (
-              <TickerSearch
-                instruments={instruments}
-                search={api.searchMarket}
-                onPick={(item) => { close(); if (item.yf_symbol !== symbol) setCompareSymbol(item.yf_symbol); }}
-              />
-            )}
-          </Popover>
+            </span>
+          ) : (
+            <Popover
+              label={t("ticker.compare")}
+              align="left"
+              className="ticker-pop"
+              trigger={({ open, toggle }) => (
+                <button type="button" className="legend-chip" onClick={toggle} aria-expanded={open} aria-haspopup="dialog">
+                  <Icon name="plus" size={13} />{t("ticker.compare")}
+                </button>
+              )}
+            >
+              {({ close }) => (
+                <TickerSearch
+                  instruments={instruments}
+                  search={api.searchMarket}
+                  onPick={(item) => { close(); if (item.yf_symbol !== symbol) setCompareSymbol(item.yf_symbol); }}
+                />
+              )}
+            </Popover>
+          )}
+        </div>
+
+        <div className="chart-stage">
+          {series ? (
+            <PriceChart
+              times={view.times}
+              axisTimes={axisTimes}
+              volume={volumeBars}
+              close={view.close}
+              compare={view.compare}
+              closeDash={view.closeDash}
+              compareDash={view.compareDash}
+              closeExtended={view.closeExt}
+              compareExtended={view.compareExt ?? null}
+              formatY={comparing ? (v) => pct(v, 1) : quote}
+              panes={panes}
+              marks={marks}
+              breaks={view.breaks}
+              heads={heads}
+              formatX={formatX}
+              live={trading(data)}
+              onHover={(i, byKey) => { setHover(i); setKeyed(byKey); }}
+              tooltip={tooltip}
+              ariaLabel={t("ticker.aria", { symbol })}
+              roleLabel={t("ticker.chartRole")}
+            />
+          ) : (
+            <div className="chart-empty">
+              {loading ? (
+                <div className="skeleton-chart" />
+              ) : error?.status === 404 ? (
+                t("ticker.noData", { symbol })
+              ) : error ? (
+                <div className="chart-error">
+                  <p>{t("ticker.loadFailed")}</p>
+                  <button type="button" className="btn small" onClick={reload}><Icon name="refresh" size={14} /> {t("common.retry")}</button>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        {series && (
+          <p className="sr-only" aria-live="polite">{spoken}</p>
         )}
-      </div>
 
-      <div className="chart-stage">
-        {series ? (
-          <PriceChart
-            times={view.times}
-            axisTimes={axisTimes}
-            volume={volumeBars}
-            close={view.close}
-            compare={view.compare}
-            closeDash={view.closeDash}
-            compareDash={view.compareDash}
-            closeExtended={view.closeExt}
-            compareExtended={view.compareExt ?? null}
-            formatY={comparing ? (v) => pct(v, 1) : quote}
-            panes={panes}
-            marks={marks}
-            breaks={view.breaks}
-            heads={heads}
-            formatX={formatX}
-            live={trading(data)}
-            onHover={(i, byKey) => { setHover(i); setKeyed(byKey); }}
-            tooltip={tooltip}
-            ariaLabel={t("ticker.aria", { symbol })}
-            roleLabel={t("ticker.chartRole")}
-          />
-        ) : (
-          <div className="chart-empty">
-            {loading ? (
-              <div className="skeleton-chart" />
-            ) : error?.status === 404 ? (
-              t("ticker.noData", { symbol })
-            ) : error ? (
-              <div className="chart-error">
-                <p>{t("ticker.loadFailed")}</p>
-                <button type="button" className="btn small" onClick={reload}><Icon name="refresh" size={14} /> {t("common.retry")}</button>
-              </div>
-            ) : null}
-          </div>
+        {series && (
+          <details className="footnotes-wrap">
+            <summary>{t("ticker.explain")}</summary>
+            <dl className="footnotes">
+              {notes.map(([term, text]) => (
+                <div key={text}>
+                  <dt>{t(term)}</dt>
+                  <dd>{t(text)}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
         )}
-      </div>
-
-      {series && (
-        <p className="sr-only" aria-live="polite">{spoken}</p>
-      )}
-
-      {series && (
-        <details className="footnotes-wrap">
-          <summary>{t("ticker.explain")}</summary>
-          <dl className="footnotes">
-            {notes.map(([term, text]) => (
-              <div key={text}>
-                <dt>{t(term)}</dt>
-                <dd>{t(text)}</dd>
-              </div>
-            ))}
-          </dl>
-        </details>
-      )}
-    </section>
+      </section>
+      <CompanyInfo symbol={symbol} />
+    </div>
   );
 }
