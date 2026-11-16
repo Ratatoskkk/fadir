@@ -1846,3 +1846,26 @@ checksums match the build for all 16 frontend files; rollback bundle
 new bundle returned 200 and an unauthenticated chart returned 401. In the signed-in owner tab
 a 1D AAPL chart returned 45 pre-market bars with `extended_session` "pre". Tests match the
 baseline apart from the two known zero-FX failures.
+
+About panel deployment (owner request 2026-11-17: a brief summary of what the company does,
+its sector and what it produces, on the right of the Ticker tab, with a new API if needed;
+run /ui-design-review:review, apply every fix, push and deploy). `cda1cab` adds
+`GET /api/market/profile` (sector, industry or fund category and family, Yahoo's business
+summary, headquarters, employees, market cap, website, from yfinance `Ticker.info`; cached a
+day per symbol, an empty answer an hour, 5-minute back-off after a failure; 404 none, 503
+failed) and an About panel beside the chart from 1180px wide, under it below. The review's
+five fixes ship with it: facts in as many columns as fit under the chart, 44px touch targets
+on phones, no panel when Yahoo has nothing beyond the type, an expanded summary that is not
+sticky, and a new-tab note on the website link. Line endings: the `9326e63` deploy had
+copied Windows working-copy files, so `routes.py`, `schemas.py` and `market_chart.py` on
+the VM were CRLF copies of the release (same content). This deploy ships from `git archive`
+and re-installs those plus `yf_client.py`; no `.py` under `/opt/fadir/app` has a CR now.
+Backend: previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-cda1cab/rollback/app.previous.tar` (delete the added
+`app/providers/company_profile.py` on rollback); the provider was dry-run on the VM first,
+and the service restarted once at 21:07:31 UTC with `NRestarts=0` and no journal warnings.
+Installed checksums match the build for all 16 frontend files; rollback bundle
+`/opt/fadir/frontend/dist.previous.about-panel-20261117`. Local and public health and the
+new bundle returned 200 and an unauthenticated profile returned 401. In the signed-in owner
+tab the panel showed SIVEF's sector, industry, headquarters and summary, and AAPL's profile
+returned 200. Tests match the baseline apart from the two known zero-FX failures.
