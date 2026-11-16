@@ -1715,3 +1715,19 @@ on the axis. Frontend only, no restart. Installed checksums match the build for 
 files; rollback bundle `/opt/fadir/frontend/dist.previous.ticker-review-20261115`. Public
 health and all 5 same-origin assets returned 200, and the signed-in owner tab shows the
 new ticker layout at phone width.
+
+Previous close and full-day 1D deployment (owner request 2026-11-16). `8be073c` adds a
+dotted previous-close line on 1D, toggled from its legend chip, with the change against it
+in the tooltip and spoken reading; and a "Full day" chip, shown while the market trades,
+that runs the 1D axis on to the session close with hour labels and rules. The chart route
+returns the shown day's regular session for 1D. A UI review then labelled the session close
+on phones, hid the chip after the close, backed the canvas label and added the hour rules
+and the tooltip change. Backend: the three changed VM files matched `d1262d6` before
+replacement; previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-8be073c/rollback/app.previous.tar`, and the service
+restarted once at 09:10:11 UTC with `NRestarts=0` and no journal errors. Installed checksums
+match the commit and the build for all 16 frontend files; rollback bundle
+`/opt/fadir/frontend/dist.previous.prev-close-20261116`. Local and public health returned
+200, the new bundle returned 200, and an unauthenticated chart returned 401. In the
+signed-in owner tab a 1D chart returned the shown day's session. Tests match the baseline
+apart from the two known zero-FX failures.
