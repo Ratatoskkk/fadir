@@ -24,7 +24,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import private_router, router
 from app.api.csrf import CsrfError, no_store
-from app.api.request_authority import RequestAuthorityConfigurationError, RequestAuthorityError
+from app.api.request_authority import RequestAuthorityError, RequestAuthorityUnavailable
 from app.config import PROJECT_ROOT, get_settings
 from app.db import check_migration_heads, get_engine, get_sessionmaker, init_db, session_scope
 from app.providers import market_hours
@@ -287,8 +287,8 @@ async def unhandled_exception_handler(request, exc: Exception):  # pragma: no co
     return JSONResponse(status_code=500, content={"detail": "internal server error"})
 
 
-@app.exception_handler(RequestAuthorityConfigurationError)
-async def request_authority_configuration_error(request, exc):
+@app.exception_handler(RequestAuthorityUnavailable)
+async def request_authority_unavailable(request, exc):
     return no_store(JSONResponse(status_code=503, content={"detail": "request unavailable"}))
 
 

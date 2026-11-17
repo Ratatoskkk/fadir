@@ -15,8 +15,8 @@ from starlette.responses import JSONResponse, Response, StreamingResponse
 
 from app.api.csrf import no_store
 from app.api.request_authority import (
-    RequestAuthorityConfigurationError,
     RequestAuthorityError,
+    RequestAuthorityUnavailable,
 )
 from app.api.csrf import CsrfError
 
@@ -85,7 +85,7 @@ def _safe_guest_deletion(response: Response) -> bytes | None:
 
 
 def _exception_response(error: Exception) -> Response:
-    if isinstance(error, RequestAuthorityConfigurationError):
+    if isinstance(error, RequestAuthorityUnavailable):
         return no_store(JSONResponse(status_code=503, content={"detail": "request unavailable"}))
     if isinstance(error, RequestAuthorityError):
         return no_store(JSONResponse(status_code=401, content={"detail": "request rejected"}))

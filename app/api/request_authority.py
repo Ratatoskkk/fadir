@@ -38,7 +38,17 @@ class RequestAuthorityError(RuntimeError):
         super().__init__(self.message)
 
 
-class RequestAuthorityConfigurationError(RequestAuthorityError):
+class RequestAuthorityUnavailable(RequestAuthorityError):
+    """Authority could not be checked right now; the credential itself was not judged.
+
+    Answered with 503 rather than 401, so a valid browser is never told it is signed out
+    because another of its own requests held the same row lock.
+    """
+
+    message = "request authentication is temporarily unavailable"
+
+
+class RequestAuthorityConfigurationError(RequestAuthorityUnavailable):
     message = "request authentication is not configured"
 
 
@@ -157,6 +167,8 @@ def resolve_request_authority(
             authority = user_sessions.authenticate(
                 session, public_id, secret, clock=clock
             )
+        except user_sessions.UserSessionBusy:
+            raise RequestAuthorityUnavailable() from None
         except Exception:
             pass
         if authority is None:
@@ -175,6 +187,8 @@ def resolve_request_authority(
     authority = None
     try:
         authority = guest_access.require(session, token, clock=clock)
+    except guest_access.GuestAccessBusy:
+        raise RequestAuthorityUnavailable() from None
     except Exception:
         pass
     if authority is None:
@@ -208,6 +222,8 @@ def recover_invalid_user_cookie(
             user_authority = user_sessions.authenticate(
                 session, public_id, secret, clock=clock
             )
+        except user_sessions.UserSessionBusy:
+            raise RequestAuthorityUnavailable() from None
         except user_sessions.UserSessionDenied:
             user_authority = None
     if user_authority is not None:
@@ -219,6 +235,8 @@ def recover_invalid_user_cookie(
     try:
         token = _guest_cookie(guest_value)
         guest_access.require(session, token, clock=clock)
+    except guest_access.GuestAccessBusy:
+        raise RequestAuthorityUnavailable() from None
     except (RequestAuthorityError, guest_access.GuestAccessDenied):
         raise RequestAuthorityError() from None
     return True

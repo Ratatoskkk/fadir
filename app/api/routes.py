@@ -31,6 +31,7 @@ from app.api.request_authority import (
     RequestAuthority,
     RequestAuthorityConfigurationError,
     RequestAuthorityError,
+    RequestAuthorityUnavailable,
     USER_COOKIE_NAME,
     _user_cookie,
     delete_guest_cookie,
@@ -492,7 +493,9 @@ def bootstrap_guest(
             authority = guest_access.require(
                 session, token, clock=utcnow
             )
-        except Exception:
+        except guest_access.GuestAccessBusy:
+            raise RequestAuthorityUnavailable() from None
+        except guest_access.GuestAccessDenied:
             delete_guest_cookie(response)
             response.status_code = 401
             response.body = b'{"detail":"request rejected"}'
@@ -1027,6 +1030,8 @@ def read_access(
             delete_pass_cookie(response)
     try:
         mode = resolve_request_authority(session, cookies, clock=lambda: now).mode
+    except RequestAuthorityUnavailable:
+        raise
     except RequestAuthorityError:
         mode = "none"
     return AccessOut(mode=mode, code_lengths=portfolio_codes.lengths_in_use(session))
@@ -1377,6 +1382,20 @@ def create_transaction(
     #: Only for the first save, which creates the Default Portfolio in this currency.
     base_currency: PortfolioCurrency | None = Query(default=None),
 ) -> TransactionOut:
+    # Scope and cap first: a refused write must not spend Yahoo calls or the budget.
+    scope = _scope(
+        session,
+        authority,
+        portfolio_id,
+        for_write=True,
+        base_currency=base_currency or DEFAULT_PORTFOLIO_CURRENCY,
+    )
+    assert scope is not None
+    held = session.scalar(
+        select(func.count()).select_from(Transaction).where(Transaction.portfolio_id == scope.portfolio.id)
+    )
+    if held >= MAX_TRANSACTIONS_PER_PORTFOLIO:
+        raise HTTPException(422, "portfolio transaction limit reached")
     if payload.yf_symbol is not None:
         try:
             instrument = instruments_service.ensure_instrument(
@@ -1420,19 +1439,6 @@ def create_transaction(
         fee_fx_provider=fee_provider,
         note=payload.note,
     )
-    scope = _scope(
-        session,
-        authority,
-        portfolio_id,
-        for_write=True,
-        base_currency=base_currency or DEFAULT_PORTFOLIO_CURRENCY,
-    )
-    assert scope is not None
-    held = session.scalar(
-        select(func.count()).select_from(Transaction).where(Transaction.portfolio_id == scope.portfolio.id)
-    )
-    if held >= MAX_TRANSACTIONS_PER_PORTFOLIO:
-        raise HTTPException(422, "portfolio transaction limit reached")
     scope.add(txn)
     session.flush()
     _reject_oversell(session, scope.portfolio.id, instrument.id)
@@ -1467,10 +1473,25 @@ def update_transaction(
     if txn is None:
         raise HTTPException(404, f"transaction {txn_id} not found")
 
-    fee_changed = any(
-        getattr(payload, field) is not None
-        for field in ("trade_date", "fees_native", "fee_currency")
-    ) or payload.fee_fx_rate_override is not None
+    # Clients resend unchanged fields; only a value that differs may replace a rate the
+    # user recorded by hand.
+    def changed(field: str) -> bool:
+        value = getattr(payload, field)
+        if value is None:
+            return False
+        current = getattr(txn, field)
+        if field == "fee_currency":
+            current = (current or txn.instrument.currency).upper()
+            value = value.upper()
+        return value != current
+
+    date_changed = changed("trade_date")
+    fee_changed = (
+        date_changed
+        or changed("fees_native")
+        or changed("fee_currency")
+        or payload.fee_fx_rate_override is not None
+    )
     for field in ("trade_date", "quantity", "price_native", "fees_native", "note", "fee_currency"):
         value = getattr(payload, field)
         if value is not None:
@@ -1499,7 +1520,7 @@ def update_transaction(
         txn.fx_rate_to_try = payload.fx_rate_override
         txn.fx_rate_date = txn.trade_date
         txn.fx_provider = MANUAL_PROVIDER
-    elif payload.refetch_fx or payload.trade_date is not None:
+    elif payload.refetch_fx or date_changed:
         # The trade date moved, so the previously recorded rate belongs to the wrong day.
         rate, rate_date, provider = _resolve_fx(fx, txn.instrument.currency, txn.trade_date, None)
         txn.fx_rate_to_try = rate

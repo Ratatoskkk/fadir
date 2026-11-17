@@ -214,3 +214,27 @@ def test_auth_cookies_are_host_only_secure_and_http_only() -> None:
     assert len(headers) == 2
     assert all("Secure" in header and "HttpOnly" in header for header in headers)
     assert all("Path=/" in header and "Domain=" not in header for header in headers)
+
+
+@pytest.mark.parametrize("cookie", ["user", "guest"])
+def test_busy_lock_is_unavailable_not_a_sign_out(monkeypatch, cookie):
+    """Another request from the same browser holding the row lock must not read as 401."""
+    from app.api.request_authority import RequestAuthorityUnavailable
+    from app.services.guest_access import GuestAccessBusy
+    from app.services.user_sessions import UserSessionBusy
+
+    def busy_user(*_args, **_kwargs):
+        raise UserSessionBusy()
+
+    def busy_guest(*_args, **_kwargs):
+        raise GuestAccessBusy()
+
+    monkeypatch.setattr("app.api.request_authority.user_sessions.authenticate", busy_user)
+    monkeypatch.setattr("app.api.request_authority.guest_access.require", busy_guest)
+    cookies = (
+        {USER_COOKIE_NAME: f"{USER_ID}.{SECRET}"}
+        if cookie == "user"
+        else {GUEST_COOKIE_NAME: SECRET}
+    )
+    with pytest.raises(RequestAuthorityUnavailable):
+        resolve_request_authority(DummySession(), cookies, clock=lambda: NOW)

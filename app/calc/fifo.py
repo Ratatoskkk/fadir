@@ -329,5 +329,11 @@ def _consume(book: LotBook, sell: TxnInput) -> None:
         lot.quantity_open -= take
         remaining -= take
 
+    if book._quantity == ZERO:
+        # A fee per unit like 1/3 never divides exactly, so draining lot by lot leaves a
+        # residual such as 1E-48. With no shares left there is no basis at all.
+        book._cost_native = ZERO
+        book._cost_try = ZERO
+
     while book._first_open < len(lots) and lots[book._first_open].quantity_open <= ZERO:
         book._first_open += 1

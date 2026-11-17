@@ -344,3 +344,21 @@ def test_alternating_buy_sell_replay_stays_linear():
     assert book.quantity == Decimal("0")
     assert len(book.disposals) == 10000
     assert sum(d.pnl_native for d in book.disposals) == Decimal("10000")
+
+
+def test_selling_every_share_leaves_no_cost_residual():
+    """A fee of 1 over 3 shares never divides exactly; a closed position has no basis."""
+    book = build_lot_book(
+        "ERIC",
+        "SEK",
+        [
+            txn(1, "ERIC", "SEK", "2026-03-02", Side.BUY, "3", "10.00", "4.00", fees="1"),
+            txn(2, "ERIC", "SEK", "2026-03-03", Side.SELL, "1", "11.00", "4.00"),
+            txn(3, "ERIC", "SEK", "2026-03-04", Side.SELL, "1", "11.00", "4.00"),
+            txn(4, "ERIC", "SEK", "2026-03-05", Side.SELL, "1", "11.00", "4.00"),
+        ],
+    )
+    assert book.quantity == 0
+    assert book.cost_native == 0
+    assert book.cost_try == 0
+    assert book.weighted_avg_cost_fx_rate is None

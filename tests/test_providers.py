@@ -530,3 +530,18 @@ def test_live_symbols_and_fx_resolve():
 
     for currency, leg in FX_VIA_USD.items():
         assert yf_client.fetch_last_close(leg) is not None, f"{currency} leg {leg} is dead"
+
+
+def test_backoff_does_not_retry_code_errors(monkeypatch):
+    """A bug in our own call is not a Yahoo outage: no sleeps, one attempt."""
+    from app.providers import yf_client
+
+    monkeypatch.setattr(yf_client.time, "sleep", lambda _s: pytest.fail("no retry expected"))
+    attempts = {"n": 0}
+
+    def broken():
+        attempts["n"] += 1
+        raise NameError("prepost")
+
+    assert yf_client._with_backoff(broken, "test") is None
+    assert attempts["n"] == 1

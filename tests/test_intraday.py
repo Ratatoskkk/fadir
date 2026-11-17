@@ -177,7 +177,7 @@ def test_intraday_cache_serves_within_ttl_and_refetches_after(monkeypatch):
 
     calls = {"n": 0}
 
-    def fake(symbol, interval="5m", period=None):
+    def fake(symbol, interval="5m", period=None, **_):
         calls["n"] += 1
         return {ts(9): Decimal("100")}
 
@@ -205,7 +205,7 @@ def test_intraday_cache_is_bounded_by_symbol_not_by_uptime(monkeypatch):
     from app.providers import intraday as mod
 
     monkeypatch.setattr(
-        mod.yf_client, "fetch_intraday_closes", lambda s, i="5m", p=None: {ts(9): Decimal("1")}
+        mod.yf_client, "fetch_intraday_closes", lambda s, i="5m", p=None, **_: {ts(9): Decimal("1")}
     )
     service = mod.IntradayService(ttl_seconds=0)
     for _ in range(50):
@@ -219,7 +219,7 @@ def test_intraday_failure_falls_back_to_the_stale_copy(monkeypatch):
 
     state = {"fail": False}
 
-    def flaky(symbol, interval="5m", period=None):
+    def flaky(symbol, interval="5m", period=None, **_):
         if state["fail"]:
             raise RuntimeError("Yahoo down")
         return {ts(9): Decimal("100")}
@@ -246,7 +246,7 @@ def test_intraday_errors_belong_to_the_caller_not_the_service(monkeypatch):
     monkeypatch.setattr(
         mod.yf_client,
         "fetch_intraday_closes",
-        lambda s, i="5m", p=None: (_ for _ in ()).throw(RuntimeError("Yahoo down")),
+        lambda s, i="5m", p=None, **_: (_ for _ in ()).throw(RuntimeError("Yahoo down")),
     )
     service = mod.IntradayService(ttl_seconds=0)
 
@@ -268,7 +268,7 @@ def test_triangulated_intraday_fx_matches_the_daily_route(monkeypatch):
         "USDTRY=X": {ts(9): Decimal("47.50")},  # one leg missing at 10:00
     }
     monkeypatch.setattr(
-        mod.yf_client, "fetch_intraday_closes", lambda s, i="5m", p=None: series.get(s, {})
+        mod.yf_client, "fetch_intraday_closes", lambda s, i="5m", p=None, **_: series.get(s, {})
     )
 
     out = mod.IntradayService(ttl_seconds=300).fx(["SEK"])
@@ -341,3 +341,38 @@ def test_session_bounds_page_back_through_retained_days():
     # Past the retained window there is nothing to show, and that is not an error.
     assert latest_session_bounds(series, 3) is None
     assert latest_session_bounds(series, 99) is None
+
+
+def test_intraday_fx_legs_keep_rate_precision(monkeypatch):
+    """TWDUSD near 0.031 at price precision would move a TWD value by up to 0.16%."""
+    from app.providers import intraday as mod
+
+    asked = {}
+
+    def fake(symbol, interval="5m", period=None, *, quantum=mod.yf_client.PRICE_QUANTUM):
+        asked[symbol] = quantum
+        return {ts(9): Decimal("1")}
+
+    monkeypatch.setattr(mod.yf_client, "fetch_intraday_closes", fake)
+    service = mod.IntradayService(ttl_seconds=300)
+    service.fx(["TWD", "EUR"])
+    service.prices(["AAPL"])
+    assert asked["TWDUSD=X"] == asked["USDTRY=X"] == asked["EURTRY=X"] == mod.yf_client.RATE_QUANTUM
+    assert asked["AAPL"] == mod.yf_client.PRICE_QUANTUM
+
+
+def test_an_empty_intraday_answer_waits_out_the_ttl(monkeypatch):
+    """A symbol with no bars must not be re-asked on every request."""
+    from app.providers import intraday as mod
+
+    calls = {"n": 0}
+
+    def empty(symbol, interval="5m", period=None, **_):
+        calls["n"] += 1
+        return {}
+
+    monkeypatch.setattr(mod.yf_client, "fetch_intraday_closes", empty)
+    service = mod.IntradayService(ttl_seconds=300)
+    for _ in range(3):
+        assert service.prices(["DEAD"])["DEAD"] == {}
+    assert calls["n"] == 1

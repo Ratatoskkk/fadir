@@ -354,3 +354,16 @@ def test_recovery_allows_following_guest_request_without_data_mutation(monkeypat
     with engine.connect() as connection:
         assert connection.execute(select(models.Workspace.id)).all() == []
     engine.dispose()
+
+
+def test_busy_guest_lock_keeps_the_guest_cookie(monkeypatch):
+    """A lock held by the browser's own other request is not an invalid secret."""
+    from app.api.request_authority import RequestAuthorityUnavailable
+    from app.services.guest_access import GuestAccessBusy
+
+    monkeypatch.setattr(routes.guest_access, "require", lambda *_args, **_kwargs: (_ for _ in ()).throw(GuestAccessBusy()))
+    with Session(create_engine("sqlite:///:memory:")) as session:
+        response = Response()
+        with pytest.raises(RequestAuthorityUnavailable):
+            routes.bootstrap_guest(_request(cookies={GUEST_COOKIE_NAME: "busy"}), response, session)
+        assert "set-cookie" not in response.headers

@@ -63,6 +63,7 @@ class IntradayService:
         *,
         force: bool = False,
         errors: list[str] | None = None,
+        quantum: Decimal = yf_client.PRICE_QUANTUM,
     ) -> dict[datetime, Decimal]:
         key = (symbol, interval)
         entry = self._cache.get(key)
@@ -73,7 +74,7 @@ class IntradayService:
             return entry.series
 
         try:
-            series = yf_client.fetch_intraday_closes(symbol, interval)
+            series = yf_client.fetch_intraday_closes(symbol, interval, quantum=quantum)
         except Exception as exc:  # noqa: BLE001 - one symbol must not break the chart
             log.error("intraday fetch failed for %s: %s", symbol, exc)
             if errors is not None:
@@ -82,7 +83,9 @@ class IntradayService:
             return entry.series if entry is not None else {}
 
         if not series and entry is not None:
-            return entry.series
+            # Keep the last good curve, but stamp it: an empty answer must wait out the
+            # TTL like any other instead of being re-asked on every request.
+            series = entry.series
 
         # Replacing the entry wholesale is what keeps the cache bounded.
         self._cache[key] = _Entry(fetched_at=now, series=series)
@@ -126,8 +129,12 @@ class IntradayService:
         out: dict[str, dict[datetime, Decimal]] = {}
 
         needs_usd = any(c in FX_VIA_USD for c in wanted)
+        # FX legs keep rate precision: TWDUSD near 0.031 loses 0.16% at price precision.
+        rate = yf_client.RATE_QUANTUM
         usd_series = (
-            self._get(USD_TRY, interval, force=force, errors=errors) if needs_usd else {}
+            self._get(USD_TRY, interval, force=force, errors=errors, quantum=rate)
+            if needs_usd
+            else {}
         )
 
         for currency in wanted:
@@ -135,7 +142,7 @@ class IntradayService:
                 continue
             if currency in FX_DIRECT:
                 out[currency] = self._get(
-                    FX_SYMBOL[currency], interval, force=force, errors=errors
+                    FX_SYMBOL[currency], interval, force=force, errors=errors, quantum=rate
                 )
                 continue
 
@@ -145,7 +152,7 @@ class IntradayService:
                 out[currency] = {}
                 continue
 
-            leg = self._get(leg_symbol, interval, force=force, errors=errors)
+            leg = self._get(leg_symbol, interval, force=force, errors=errors, quantum=rate)
             common = leg.keys() & usd_series.keys()
             out[currency] = {
                 stamp: (leg[stamp] * usd_series[stamp]).quantize(yf_client.RATE_QUANTUM)

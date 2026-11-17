@@ -572,6 +572,25 @@ def test_patch_override_switches_provider_to_manual(client):
     assert r.json()["fx_provider"] == "manual"
 
 
+def test_resending_unchanged_fields_keeps_a_manual_rate(client):
+    """The edit form resends trade_date and fees; only a real change may refetch FX."""
+    row = client.get("/api/transactions").json()[0]
+    client.patch(f"/api/transactions/{row['id']}", json={"fx_rate_override": "50.0"})
+    r = client.patch(
+        f"/api/transactions/{row['id']}",
+        json={
+            "quantity": "7",
+            "trade_date": row["trade_date"],
+            "fees_native": row["fees_native"],
+            "price_native": row["price_native"],
+            "side": row["side"],
+        },
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["fx_provider"] == "manual"
+    assert Decimal(r.json()["fx_rate_to_try"]) == Decimal("50")
+
+
 def test_delete_transaction_recomputes_portfolio(client):
     """US-6.2: deleting a transaction recomputes FIFO lots and totals."""
     before = Decimal(client.get("/api/portfolio").json()["totals"]["cost_try"])
@@ -663,6 +682,8 @@ def test_portfolio_degrades_a_position_with_unconvertible_foreign_fee(client, se
 def test_portfolio_degrades_a_position_with_zero_fx_rate(client, session):
     eric = next(i for i in session.query(Instrument) if i.ticker == "ERIC")
     portfolio_id = session.query(Portfolio.id).first()[0]
+    # Before the add: autoflush would otherwise insert the row while the CHECK holds.
+    session.execute(text("PRAGMA ignore_check_constraints = ON"))
     session.add(
         Transaction(
             instrument_id=eric.id,
@@ -679,7 +700,6 @@ def test_portfolio_degrades_a_position_with_zero_fx_rate(client, session):
             fx_provider="synthetic",
         )
     )
-    session.execute(text("PRAGMA ignore_check_constraints = ON"))
     session.commit()
     session.execute(text("PRAGMA ignore_check_constraints = OFF"))
 
@@ -711,6 +731,7 @@ def test_portfolio_zero_fx_rate_after_lot_book_does_not_500(client, session):
             is_adjusted=False,
         )
     )
+    session.execute(text("PRAGMA ignore_check_constraints = ON"))
     session.add(
         Transaction(
             instrument_id=zero.id,
@@ -725,7 +746,6 @@ def test_portfolio_zero_fx_rate_after_lot_book_does_not_500(client, session):
             fx_provider="synthetic",
         )
     )
-    session.execute(text("PRAGMA ignore_check_constraints = ON"))
     session.commit()
     session.execute(text("PRAGMA ignore_check_constraints = OFF"))
 

@@ -58,12 +58,20 @@ def _to_decimal(value: object, quantum: Decimal | None = None) -> Decimal | None
     return dec.quantize(quantum, rounding=ROUND_HALF_EVEN) if quantum is not None else dec
 
 
+#: Raised by our own code, not by Yahoo: retrying cannot help, and sleeping on them made
+#: an undefined name look like a slow outage for a day (9326e63).
+_CODE_ERRORS = (NameError, AttributeError, TypeError)
+
+
 def _with_backoff(fn, what: str):  # type: ignore[no-untyped-def]
     """Retry `fn` with exponential backoff and jitter. Returns None on final failure."""
     last: Exception | None = None
     for attempt in range(MAX_ATTEMPTS):
         try:
             return fn()
+        except _CODE_ERRORS:
+            log.exception("%s failed on a code error, not retried", what)
+            return None
         except Exception as exc:  # noqa: BLE001 - any Yahoo failure is retryable here
             last = exc
             if attempt == MAX_ATTEMPTS - 1:
@@ -189,7 +197,11 @@ INTRADAY_INTERVALS: dict[str, str] = {"5m": "5d", "15m": "1mo", "1h": "1mo"}
 
 
 def fetch_intraday_closes(
-    symbol: str, interval: str = "5m", period: str | None = None
+    symbol: str,
+    interval: str = "5m",
+    period: str | None = None,
+    *,
+    quantum: Decimal = PRICE_QUANTUM,
 ) -> dict[datetime, Decimal]:
     """Intraday closes for one symbol, keyed by timezone-aware UTC timestamps.
 
@@ -217,7 +229,7 @@ def fetch_intraday_closes(
 
     out: dict[datetime, Decimal] = {}
     for idx, value in frame["Close"].items():
-        dec = _to_decimal(value, PRICE_QUANTUM)
+        dec = _to_decimal(value, quantum)
         if dec is None:
             continue  # docs/FINDINGS.md F-4 applies intraday too
         stamp = idx.to_pydatetime() if hasattr(idx, "to_pydatetime") else idx

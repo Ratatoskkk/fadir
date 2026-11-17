@@ -55,7 +55,8 @@ def _recently_failed(key: tuple) -> bool:
         return False
     if time.monotonic() - at < NEGATIVE_TTL_SECONDS:
         return True
-    del _failed_fetches[key]
+    # pop, not del: two threadpool requests can both find the same expired entry.
+    _failed_fetches.pop(key, None)
     return False
 
 
