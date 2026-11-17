@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { LayoutGroup, motion } from "framer-motion";
 import { useFlash } from "../../flash.js";
-import { arrow, fullDate, money, num, ratioPct, signedMoney, toneOf } from "../../format.js";
+import { arrow, fullDate, money, num, qty, ratioPct, signedMoney, toneOf } from "../../format.js";
 import Icon from "../ui/Icons.jsx";
 import { ease, spring } from "../ui/motion.js";
 import { useT } from "../i18n/index.jsx";
@@ -124,7 +124,7 @@ function PositionCard({ p, on, onFocus, index }) {
       <ReturnBar label={t("pos.fx")} ratio={p.attribution.fx_return} />
       <ReturnBar label={t("pos.total")} ratio={p.attribution.total_return} />
       <footer className="num">
-        <span>{t("txn.units", { n: num(p.quantity, 0) })}</span>
+        <span>{t("txn.units", { n: qty(p.quantity) })}</span>
         <span>{p.ok ? money(p.price_native, p.currency) : "—"}</span>
         <span className={p.daily?.available ? toneOf(p.daily.pnl_try) : "muted"}>
           {p.daily?.available ? `${arrow(p.daily.pnl_try)} ${signedMoney(p.daily.pnl_try)}` : "—"}
@@ -272,7 +272,7 @@ export default function Positions({ dash, onFocusTicker }) {
                           </span>
                         </div>
                       </td>
-                      <td className="num">{num(p.quantity, 0)}</td>
+                      <td className="num">{qty(p.quantity)}</td>
                       <PriceCell p={p} />
                       <td className="num">{p.average_purchase_price_native === null ? "—" : money(p.average_purchase_price_native, p.currency)}</td>
                       <td className="num sep">{money(p.cost_native, p.currency)}</td>

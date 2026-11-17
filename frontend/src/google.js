@@ -40,7 +40,12 @@ export function loadGoogleIdentityServices() {
     return Promise.reject(new Error("Sentetik Google sağlayıcısı hazır değil."));
   }
   return new Promise((resolve, reject) => {
-    const existing = document.getElementById(GIS_SCRIPT_ID);
+    let existing = document.getElementById(GIS_SCRIPT_ID);
+    // A copy that already failed never fires again; drop it so this attempt can retry.
+    if (existing?.dataset.failed) {
+      existing.remove();
+      existing = null;
+    }
     if (existing) {
       existing.addEventListener("load", () => resolve(window.google), { once: true });
       existing.addEventListener("error", () => reject(new Error("Google sağlayıcısı yüklenemedi.")), { once: true });
@@ -52,7 +57,10 @@ export function loadGoogleIdentityServices() {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve(window.google);
-    script.onerror = () => reject(new Error("Google sağlayıcısı yüklenemedi."));
+    script.onerror = () => {
+      script.dataset.failed = "1";
+      reject(new Error("Google sağlayıcısı yüklenemedi."));
+    };
     document.head.appendChild(script);
   });
 }

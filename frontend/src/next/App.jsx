@@ -226,6 +226,13 @@ function Shell({ access, onLeave, onSignOut, onAccessLost }) {
 
 const GOOGLE_INTENT_KEY = "fadir.google-intent";
 
+/** Per-viewer choices that name holdings; they must not outlive whoever made them. */
+function forgetViewer() {
+  for (const key of ["fadir.ticker", "fadir.tax"]) {
+    try { localStorage.removeItem(key); } catch { /* private mode */ }
+  }
+}
+
 /** Ask what this browser can open; a browser with nothing gets the code screen first. */
 function useAccess() {
   const [access, setAccess] = useState(null);
@@ -263,6 +270,7 @@ function Root() {
 
   const leave = useCallback(async () => {
     try { await api.leaveCode(); } finally {
+      forgetViewer();
       window.location.hash = "/genel";
       setAccess(null);
       read();
@@ -271,10 +279,14 @@ function Root() {
 
   const signOut = useCallback(async () => {
     await api.signOut();
+    forgetViewer();
     window.location.hash = "/genel";
     setAccess(null);
     read();
   }, [read, setAccess]);
+
+  // Nothing opens any more (an expired Guest, a deleted account): the next viewer starts clean.
+  useEffect(() => { if (access === "none") forgetViewer(); }, [access]);
 
   if (access === null) return <div className="app" />;
   if (access === "none") {

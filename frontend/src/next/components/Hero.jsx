@@ -110,7 +110,7 @@ function Hero({ portfolio }) {
         </Metric>
         <Metric label={t("hero.totalReturn")} tone={toneOf(totals.pnl_try)} sub={<AnimatedNumber value={totals.pnl_try} format={signedMoney} className={toneOf(totals.pnl_try)} />}>
           <span className={toneOf(totals.pnl_try)}>
-            {arrow(totals.pnl_try)} <AnimatedNumber value={totals.total_return} format={ratioPct} />
+            {arrow(totals.pnl_try)} <AnimatedNumber value={totals.total_return} format={ratioPct} countUp={false} />
           </span>
         </Metric>
         <Metric

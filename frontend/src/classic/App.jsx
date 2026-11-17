@@ -15,7 +15,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import { api } from "../api.js";
 import { useFlash } from "../flash.js";
 import { arrow, clockTime, money, ratioPct, setMoneyCurrency, toneOf } from "../format.js";
-import { isIntradayRange, isPannable, panExhausted, rangeWindow } from "../ranges.js";
+import { firstTradeDate, isIntradayRange, isPannable, panExhausted, rangeWindow } from "../ranges.js";
 import AttributionBar from "./components/AttributionBar.jsx";
 import Brand from "./components/Brand.jsx";
 import GoogleIdentityPanel from "./components/GoogleIdentityPanel.jsx";
@@ -224,6 +224,8 @@ export default function App() {
   const [pan, setPan] = useState(0);
   const panRef = useRef(pan);
   panRef.current = pan;
+  const inceptionRef = useRef(null);
+  inceptionRef.current = firstTradeDate(transactions);
   //: Which way the last pan went, so the chart can slide in from the right side.
   const [panDir, setPanDir] = useState(0);
 
@@ -250,7 +252,7 @@ export default function App() {
         if (portfolioIdRef.current === selectedId) setIntraday(value);
         return;
       }
-      const { from, to } = rangeWindow(target, at);
+      const { from, to } = rangeWindow(target, at, inceptionRef.current);
       const value = await api.history({ from, to, freq: "D", tickers: focus, portfolioId: selectedId });
       if (portfolioIdRef.current === selectedId) setHistory(value);
     },
@@ -938,7 +940,7 @@ export default function App() {
                       isPannable(range) &&
                       (isIntradayRange(range)
                         ? pan + 1 < (intraday?.sessions_available ?? 0)
-                        : !panExhausted(range, pan + 1))
+                        : !panExhausted(range, pan + 1, firstTradeDate(transactions)))
                     }
                   />
                 </Suspense>

@@ -35,6 +35,7 @@ const buildFormatters = () => ({
   nf0: nf(0, 0),
   nf1: nf(1, 1),
   nf4: nf(2, 4),
+  nfQty: nf(0, 8),
   nfRate: nf(4, 4),
   nfCompact: new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 2 }),
   dfShort: df({ day: "2-digit", month: "2-digit" }),
@@ -79,8 +80,11 @@ const percent = (sign, body) => (percentFirst ? `${sign}%${body}` : `${sign}${bo
 export function num(value, digits = 2) {
   const n = Number(value);
   if (value === null || value === undefined || Number.isNaN(n)) return "—";
-  return ({ 0: F.nf0, 1: F.nf1, 4: F.nf4 }[digits] ?? F.nf2).format(n);
+  return ({ 0: F.nf0, 1: F.nf1, 4: F.nf4, qty: F.nfQty }[digits] ?? F.nf2).format(n);
 }
+
+/** A share or unit count at the precision it was recorded: 0.4 stays 0.4, 12 stays 12. */
+export const qty = (value) => num(value, "qty");
 
 /** The Base Currencies a Portfolio can choose (ADR 0006); new ones start in the first. */
 export const PORTFOLIO_CURRENCIES = ["USD", "EUR", "GBP", "TRY"];

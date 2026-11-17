@@ -19,8 +19,9 @@ export const isPannable = (range) => RANGES.find((r) => r.key === range)?.days !
 
 export const rangeDays = (range) => RANGES.find((r) => r.key === range)?.days ?? null;
 
-/** First day any portfolio can hold a trade; no window reaches back before it. */
-const INCEPTION = "2026-03-29";
+/** The Portfolio's first trade date (ISO), or null before its transactions load. */
+export const firstTradeDate = (transactions) =>
+  (transactions ?? []).reduce((first, t) => (t?.trade_date && (!first || t.trade_date < first) ? t.trade_date : first), null);
 
 const isoOf = (d) => d.toISOString().slice(0, 10);
 
@@ -29,11 +30,12 @@ const isoOf = (d) => d.toISOString().slice(0, 10);
  *
  * Paging by a whole window rather than a fixed number of days keeps each step the same
  * size as what is on screen, so "back" always means "the previous 1A", never a partial
- * overlap that makes two adjacent views hard to compare.
+ * overlap that makes two adjacent views hard to compare. "Tümü" leaves `from` to the
+ * server, which starts at the Portfolio's own first trade.
  */
-export function rangeWindow(range, pan = 0) {
+export function rangeWindow(range, pan = 0, inception = null) {
   const days = rangeDays(range);
-  if (days === null) return { from: INCEPTION, to: undefined };
+  if (days === null) return { from: undefined, to: undefined };
 
   const to = new Date();
   to.setDate(to.getDate() - days * pan);
@@ -42,16 +44,16 @@ export function rangeWindow(range, pan = 0) {
 
   const fromIso = isoOf(from);
   return {
-    from: fromIso < INCEPTION ? INCEPTION : fromIso,
+    from: inception && fromIso < inception ? inception : fromIso,
     to: pan > 0 ? isoOf(to) : undefined, // live window stays open-ended at today
   };
 }
 
 /** True once the window would sit entirely before the first trade. */
-export function panExhausted(range, pan) {
+export function panExhausted(range, pan, inception = null) {
   const days = rangeDays(range);
-  if (days === null) return true;
+  if (days === null || !inception) return true;
   const to = new Date();
   to.setDate(to.getDate() - days * pan);
-  return isoOf(to) <= INCEPTION;
+  return isoOf(to) <= inception;
 }

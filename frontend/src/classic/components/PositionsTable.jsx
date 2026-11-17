@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { useFlash } from "../../flash.js";
-import { arrow, fullDate, money, num, ratioPct, signedMoney, toneOf } from "../../format.js";
+import { arrow, fullDate, money, num, qty, ratioPct, signedMoney, toneOf } from "../../format.js";
 
 const COLUMNS = [
   { key: "ticker", label: "Enstrüman", align: "left" },
@@ -217,7 +217,7 @@ export default function PositionsTable({ positions, focusTickers = [], onFocusTi
                     </div>
                   </td>
 
-                  <td className="num">{num(p.quantity, 0)}</td>
+                  <td className="num">{qty(p.quantity)}</td>
                   <PriceCell position={p} />
                   <td className="num">
                     {p.average_purchase_price_native === null

@@ -4,7 +4,7 @@
 
 import { Fragment, useMemo, useState } from "react";
 import { api } from "../../api.js";
-import { fullDate, money, num } from "../../format.js";
+import { fullDate, money, num, qty } from "../../format.js";
 
 const BLANK = {
   ticker: "",
@@ -138,7 +138,7 @@ export default function TransactionManager({ transactions, instruments, portfoli
   }
 
   async function remove(txn) {
-    const label = `${txn.ticker} · ${fullDate(txn.trade_date)} · ${num(txn.quantity, 0)} adet`;
+    const label = `${txn.ticker} · ${fullDate(txn.trade_date)} · ${qty(txn.quantity)} adet`;
     if (!window.confirm(`Bu işlem silinsin mi?\n\n${label}\n\nFIFO lotları ve geçmiş seri yeniden hesaplanacak.`)) {
       return;
     }
@@ -292,7 +292,7 @@ export default function TransactionManager({ transactions, instruments, portfoli
                     </div>
                   </td>
                   <td colSpan={2} className="group-summary" />
-                  <td className="num group-summary">{num(group.netQuantity, 0)}</td>
+                  <td className="num group-summary">{qty(group.netQuantity)}</td>
                   <td colSpan={2} className="group-summary" />
                   <td className="num group-summary">
                     {money(group.totalNative, group.currency)}
@@ -354,7 +354,7 @@ export default function TransactionManager({ transactions, instruments, portfoli
                         onChange={(e) => setEditing({ ...editing, quantity: e.target.value })}
                       />
                     ) : (
-                      num(t.quantity, 0)
+                      qty(t.quantity)
                     )}
                   </td>
 

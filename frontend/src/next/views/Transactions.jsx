@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { api } from "../../api.js";
-import { fullDate, fxRate, money, num } from "../../format.js";
+import { fullDate, fxRate, money, qty } from "../../format.js";
 import TickerSearch from "../components/TickerSearch.jsx";
 import { useT } from "../i18n/index.jsx";
 import Dialog from "../ui/Dialog.jsx";
@@ -158,7 +158,7 @@ function TxnRow({ t: txn, editing, setEditing, busy, onSave, onDelete, index }) 
           <span className={`badge ${txn.side === "BUY" ? "open" : "warn"}`}>{t(txn.side === "BUY" ? "txn.buy" : "txn.sell")}</span>
         )}
       </td>
-      <td className="num">{isEditing ? <input className="small w80" type="number" step="any" value={editing.quantity} onChange={edit("quantity")} /> : num(txn.quantity, 0)}</td>
+      <td className="num">{isEditing ? <input className="small w80" type="number" step="any" value={editing.quantity} onChange={edit("quantity")} /> : qty(txn.quantity)}</td>
       <td className="num">{isEditing ? <input className="small w90" type="number" step="any" value={editing.price_native} onChange={edit("price_native")} /> : money(txn.price_native, txn.currency)}</td>
       <td className="num">{isEditing ? <input className="small w80" type="number" step="any" value={editing.fees_native} onChange={edit("fees_native")} /> : Number(txn.fees_native) === 0 ? "–" : money(txn.fees_native, txn.currency)}</td>
       <td className="num">{money(txn.total_native, txn.currency)}</td>
@@ -243,7 +243,7 @@ export default function Transactions({ dash, sheetOpen, setSheetOpen }) {
   async function remove(txn) {
     const ok = await confirm({
       title: t("txn.deleteTitle"),
-      body: <><strong>{txn.ticker}</strong>, {fullDate(txn.trade_date)}, {t("txn.units", { n: num(txn.quantity, 0) })}<br /><span className="muted">{t("txn.deleteBody")}</span></>,
+      body: <><strong>{txn.ticker}</strong>, {fullDate(txn.trade_date)}, {t("txn.units", { n: qty(txn.quantity) })}<br /><span className="muted">{t("txn.deleteBody")}</span></>,
       confirmLabel: t("common.delete"),
       danger: true,
     });
@@ -305,7 +305,7 @@ export default function Transactions({ dash, sheetOpen, setSheetOpen }) {
                       {g.sells > 0 && ` (${t("txn.split", { buys: g.buys, sells: g.sells })})`}
                     </span>
                     <span className="grow" />
-                    <span className="num muted">{t("txn.units", { n: num(g.netQuantity, 0) })}</span>
+                    <span className="num muted">{t("txn.units", { n: qty(g.netQuantity) })}</span>
                     <span className="num muted hide-sm">{money(g.totalNative, g.currency)}</span>
                     <span className="num strong">{money(g.totalTry, "TRY")}</span>
                   </button>

@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";
-import { isIntradayRange, isPannable, panExhausted, rangeWindow } from "../ranges.js";
+import { firstTradeDate, isIntradayRange, isPannable, panExhausted, rangeWindow } from "../ranges.js";
 
 export const INTERVALS = [
   { value: 5, label: "interval.5s" },
@@ -63,6 +63,9 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
   focusRef.current = focusTickers;
   const panRef = useRef(pan);
   panRef.current = pan;
+  const inception = useMemo(() => firstTradeDate(transactions), [transactions]);
+  const inceptionRef = useRef(inception);
+  inceptionRef.current = inception;
 
   const anyMarketOpen = useMemo(
     () => (portfolio?.positions ?? []).some((p) => p.session === "open"),
@@ -81,7 +84,7 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
       const value = await api.intraday({ interval: "5m", force, tickers: focus, offset: at, portfolioId: selectedId });
       return () => { if (current()) setIntraday(value); };
     }
-    const { from, to } = rangeWindow(target, at);
+    const { from, to } = rangeWindow(target, at, inceptionRef.current);
     const value = await api.history({ from, to, freq: "D", tickers: focus, portfolioId: selectedId });
     return () => { if (current()) setHistory(value); };
   }, []);
@@ -93,13 +96,15 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
 
   const loadMarket = useCallback(async ({ force = false, portfolioId } = {}) => {
     const selectedId = portfolioId ?? portfolioIdRef.current;
-    const [p, storeHistory] = await Promise.all([
+    const [p, storeHistory] = await Promise.allSettled([
       api.portfolio(selectedId),
       fetchHistory(undefined, { force, portfolioId: selectedId }),
     ]);
-    // Both land in one render rather than two.
-    storeHistory();
-    if (portfolioIdRef.current === selectedId) setPortfolio(p);
+    // Both land in one render rather than two, and a failed chart keeps the positions.
+    if (storeHistory.status === "fulfilled") storeHistory.value();
+    if (p.status === "fulfilled" && portfolioIdRef.current === selectedId) setPortfolio(p.value);
+    const failed = [p, storeHistory].find((r) => r.status === "rejected");
+    if (failed) throw failed.reason;
   }, [fetchHistory]);
 
   const loadLedger = useCallback(async (portfolioId) => {
@@ -131,8 +136,9 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
-      // A code whose Portfolio got a new code stops working; go back to the code screen.
-      if (access === "code" && err?.status === 401) onAccessLost?.();
+      // A rejected credential (a renewed code, a revoked session, an expired Guest) means
+      // this browser must ask again what it can open.
+      if (err?.status === 401) onAccessLost?.();
       setError(err.message);
     } finally {
       setLoading(false);
@@ -319,13 +325,17 @@ export function useDashboard(access = "guest", { onAccessLost } = {}) {
     setPortfolios([]);
     setSelectedPortfolioId(null);
     portfolioIdRef.current = null;
-  }, []);
+    setTransactions([]);
+    setHistory(null);
+    setIntraday(null);
+    onAccessLost?.();
+  }, [onAccessLost]);
 
   const canPanBack =
     isPannable(range) &&
     (isIntradayRange(range)
       ? pan + 1 < (intraday?.sessions_available ?? 0)
-      : !panExhausted(range, pan + 1));
+      : !panExhausted(range, pan + 1, inception));
 
   const renewCode = useCallback(async (id) => {
     const { code } = await api.renewCode(id);
