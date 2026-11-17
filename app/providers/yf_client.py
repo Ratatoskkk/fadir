@@ -107,7 +107,6 @@ def fetch_close_series(
             end=(end + timedelta(days=1)).isoformat(),
             auto_adjust=False,
             actions=False,
-            prepost=prepost,
             raise_errors=True,
         )
 
@@ -208,7 +207,6 @@ def fetch_intraday_closes(
             interval=interval,
             auto_adjust=False,
             actions=False,
-            prepost=prepost,
             raise_errors=True,
         )
 

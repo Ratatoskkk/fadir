@@ -480,6 +480,32 @@ def test_backoff_succeeds_on_a_later_attempt(monkeypatch):
     assert attempts["n"] == 2
 
 
+def test_close_and_intraday_fetches_reach_yahoo_with_regular_hours(monkeypatch):
+    """Both portfolio fetches call Yahoo once, regular session only, and keep its bars."""
+    import pandas as pd
+
+    from app.providers import yf_client
+
+    calls = []
+
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, **kwargs):
+            calls.append(kwargs)
+            index = pd.DatetimeIndex([datetime(2026, 7, 31, 14, 30, tzinfo=timezone.utc)])
+            return pd.DataFrame({"Close": [12.0]}, index=index)
+
+    monkeypatch.setattr(yf_client.yf, "Ticker", FakeTicker)
+    monkeypatch.setattr(yf_client.time, "sleep", lambda _s: pytest.fail("no retry expected"))
+
+    assert yf_client.fetch_close_series("AAPL", date(2026, 7, 30), date(2026, 7, 31))
+    assert yf_client.fetch_intraday_closes("AAPL", "5m")
+    assert len(calls) == 2
+    assert all(not call.get("prepost", False) for call in calls)
+
+
 # -- live -----------------------------------------------------------------------------
 
 
