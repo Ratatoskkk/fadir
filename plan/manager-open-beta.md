@@ -1869,3 +1869,17 @@ Installed checksums match the build for all 16 frontend files; rollback bundle
 new bundle returned 200 and an unauthenticated profile returned 401. In the signed-in owner
 tab the panel showed SIVEF's sector, industry, headquarters and summary, and AAPL's profile
 returned 200. Tests match the baseline apart from the two known zero-FX failures.
+
+Prepost fix deployment (owner request 2026-11-17: debug the slow first load, then commit and
+deploy). `9326e63` passed an undefined `prepost` to `fetch_close_series` and
+`fetch_intraday_closes`, so every FX leg and portfolio intraday fetch raised `NameError`,
+was retried as a Yahoo failure for about 2 s and returned nothing; the VM journal held
+20,235 such lines in the previous 24 hours. `36a25d0` drops the argument (both fetches stay
+on regular-session bars) and adds a regression test. Yahoo itself answered in 0.06-0.8 s.
+Only `/opt/fadir/app/providers/yf_client.py` changed; the served copy matched `cda1cab`
+before replacement, the fix was dry-run on the VM first (USDTRY 7 closes, AAPL 390 5-minute
+bars), and the previous copy is in
+`/home/fadir-agent/fadir-tests/deploy-36a25d0/rollback/yf_client.py.previous`. The service
+restarted once at 08:50:05 UTC with `NRestarts=0`, `ExecMainStatus=0` and no journal
+warnings; loopback and public health and `/` returned 200. Tests match the baseline apart
+from the two known zero-FX failures.
