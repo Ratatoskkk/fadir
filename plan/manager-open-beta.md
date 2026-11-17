@@ -1883,3 +1883,24 @@ bars), and the previous copy is in
 restarted once at 08:50:05 UTC with `NRestarts=0`, `ExecMainStatus=0` and no journal
 warnings; loopback and public health and `/` returned 200. Tests match the baseline apart
 from the two known zero-FX failures.
+
+Whole-codebase review and classic removal deployment (owner requests 2026-11-17: review the
+whole backend, then the rest of the codebase, fix the findings, remove the classic UI, commit
+and deploy). `f271000` fixes the backend findings: a busy session or guest row lock answers
+503 instead of 401, guest bootstrap deletes the cookie only for a denied guest, a fully sold
+position keeps no cost residual, Yahoo back-off no longer retries our own code errors,
+intraday FX legs keep rate precision, an empty intraday answer waits out its TTL, the FX
+negative cache no longer races, transaction create checks scope and cap before Yahoo, a
+transaction edit re-resolves FX only when the date or fee changed, and alembic is a runtime
+requirement. `9ffcd12` fixes the frontend findings (access loss, fractional quantities,
+history from the first trade, the -100% count-up, chart failure keeping positions,
+per-viewer storage cleared on sign-out, Google script retry, one reload on a missing chunk).
+`2a67bd1` removes the classic interface; the `classic-frontend-v1` tag still holds it.
+Owner decision: the shared instrument catalog stays public (`GET /api/instruments`,
+`/api/health` and search keep listing every instrument). Backend: the eight changed VM files
+matched `36a25d0` before replacement and the new modules were dry-run on the VM first;
+previous copies are in `/home/fadir-agent/fadir-tests/deploy-2a67bd1/rollback/app.previous.tar`.
+The service restarted once at 09:46:38 UTC with `NRestarts=0`, `ExecMainStatus=0` and no
+journal warnings. Installed files match the release for all 8 backend and 15 frontend files;
+rollback bundle `/opt/fadir/frontend/dist.previous.review-classic-20261117`. Loopback and
+public health, `/` and every shell asset returned 200. Tests: 672 passed, none failing.
