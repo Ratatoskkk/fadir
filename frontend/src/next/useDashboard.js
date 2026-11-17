@@ -1,9 +1,8 @@
 // Everything the dashboard knows and can do, independent of how it is drawn.
 //
-// Ported from the classic App so both interfaces share one behaviour: the same loaders,
-// the same poll cadence (fast while something trades, 15 min floor while only FX moves),
-// the same per-portfolio race guards. Views read state and call actions; none of them
-// talks to the API for portfolio data directly.
+// The loaders, the poll cadence (fast while something trades, 15 min floor while only FX
+// moves) and the per-portfolio race guards. Views read state and call actions; none of
+// them talks to the API for portfolio data directly.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";

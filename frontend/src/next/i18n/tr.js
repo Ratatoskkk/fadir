@@ -426,8 +426,6 @@ export default {
 
   "ui.title": "Arayüz",
   "ui.language": "Dil",
-  "ui.classicTitle": "Önceki arayüz",
-  "ui.classic": "Klasik arayüz",
 
   "legal.title": "Bilgilendirmeler",
   "legal.privacy": "Gizlilik: Özel Portföy verileri Operator araçlarına veya normal loglara girmez.",

@@ -17,7 +17,7 @@ Each jurisdiction uses the simplest defensible model for a private investor and 
 
 The estimate lists each assumption in the interface. It remains an estimate, not tax advice.
 
-The rebuilt interface speaks Turkish, English, German, French and Spanish. The first visit follows the browser's language, then the region picks the default Tax Jurisdiction; a choice in Hesap is remembered on that browser. Numbers and dates follow the same locale. The classic interface stays Turkish.
+The rebuilt interface speaks Turkish, English, German, French and Spanish. The first visit follows the browser's language, then the region picks the default Tax Jurisdiction; a choice in Hesap is remembered on that browser. Numbers and dates follow the same locale. (The classic interface, Turkish only, was removed on 2026-11-17.)
 
 ## Not decided
 

@@ -578,15 +578,6 @@ async function handle(req, res) {
       source_url: "https://example.invalid/tax", source_version: `Synthetic ${code} ${year}`,
     });
   }
-  if (path === "/api/tax/profile") {
-    if (!store.authed) return send(res, 403, { detail: "403" });
-    if (url.searchParams.get("year") === "2001") return send(res, 404, { detail: "missing" });
-    return send(res, 200, { id: 1, jurisdiction: "TR", tax_year: Number(url.searchParams.get("year")), currency: "TRY", source_url: "https://example.invalid/tarife", source_version: "mock-1", assumptions: ["Sentetik tarife."], disclaimer: "Geliştirme verisidir." });
-  }
-  if (path === "/api/tax/estimate") {
-    const p = portfolioOut(pid);
-    return send(res, 200, { tax_year: Number(url.searchParams.get("year")), jurisdiction: "TR", tax_try: p.tax.tax_try, taxable_gain_try: p.tax.taxable_gain_try, gross_gain_try: p.totals.realized_pnl_try, net_after_tax_try: p.tax.net_after_tax_try, effective_rate: p.tax.effective_rate, marginal_rate: p.tax.marginal_rate });
-  }
   return send(res, 404, { detail: "mock: unknown endpoint" });
 }
 

@@ -1,4 +1,4 @@
-// Canvas chart for the portfolio series, replacing Recharts in the new interface.
+// Canvas chart for the portfolio series.
 //
 // Why canvas: the chart animates constantly (polls, range swaps, series toggles, the
 // crosshair) and an SVG chart re-renders hundreds of DOM nodes through React for each of

@@ -24,7 +24,7 @@ product promise.
 
 ## Product and stack
 
-- Python/FastAPI and SQLAlchemy on the backend; React, Vite and Framer Motion on the frontend, with the original Recharts interface kept as a switchable classic UI ([frontend/README.md](frontend/README.md)).
+- Python/FastAPI and SQLAlchemy on the backend; React, Vite and Framer Motion on the frontend ([frontend/README.md](frontend/README.md)).
 - One PostgreSQL database for hosted data, with Workspace and Portfolio ownership
   boundaries. SQLite remains available for local development and the legacy source.
 - Google-only sign-in for beta, with explicit Claim, Portfolio Transfer, and Portfolio
@@ -133,7 +133,7 @@ release rollback, and service reconstruction still require appropriate proof.
 | `app/services/` | Ownership, sessions, transitions, finance, and data workflows |
 | `app/providers/` | Prices, FX, and provider boundaries |
 | `migrations/` | Alembic schema history |
-| `frontend/` | React interface (`src/next/`) and the classic UI (`src/classic/`); see [frontend/README.md](frontend/README.md) |
+| `frontend/` | React interface (`src/next/`); see [frontend/README.md](frontend/README.md) |
 | `tests/` | Offline and explicitly guarded live proof |
 | `examples/` | Synthetic import examples |
 | `docs/` | Product decisions and focused reference documents |

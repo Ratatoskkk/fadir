@@ -426,8 +426,6 @@ export default {
 
   "ui.title": "Oberfläche",
   "ui.language": "Sprache",
-  "ui.classicTitle": "Vorherige Oberfläche",
-  "ui.classic": "Klassische Oberfläche",
 
   "legal.title": "Hinweise",
   "legal.privacy": "Datenschutz: private Portfoliodaten gelangen nie in Betreiberwerkzeuge oder normale Logs.",

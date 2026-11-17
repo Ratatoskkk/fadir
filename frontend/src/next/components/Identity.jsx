@@ -1,5 +1,5 @@
 // Google identity: sign in, then an explicit choice for the Guest data (claim, transfer,
-// merge). Same state machine as the classic panel, drawn as a stepper.
+// merge), drawn as a stepper.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";

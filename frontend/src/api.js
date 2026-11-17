@@ -171,6 +171,4 @@ export const api = {
   taxEstimateFor: (jurisdiction, year) =>
     request(`/api/tax/estimates?jurisdiction=${encodeURIComponent(jurisdiction)}&year=${encodeURIComponent(year)}`),
   refresh: () => request("/api/refresh", { method: "POST" }),
-  taxProfile: (year) => request(`/api/tax/profile?year=${encodeURIComponent(year)}`),
-  taxEstimate: (year) => request(`/api/tax/estimate?year=${encodeURIComponent(year)}`),
 };

@@ -426,8 +426,6 @@ export default {
 
   "ui.title": "Interface",
   "ui.language": "Language",
-  "ui.classicTitle": "Previous interface",
-  "ui.classic": "Classic interface",
 
   "legal.title": "Notices",
   "legal.privacy": "Privacy: private portfolio data never enters operator tools or normal logs.",

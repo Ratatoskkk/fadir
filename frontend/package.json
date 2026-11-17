@@ -7,7 +7,6 @@
     "dev": "vite",
     "dev:mock": "vite --mode mock",
     "build": "vite build",
-    "build:classic": "vite build --mode classic",
     "preview": "vite preview",
     "preview:mock": "vite preview --mode mock --port 4173 --strictPort"
   },
@@ -15,8 +14,7 @@
     "@fontsource-variable/geologica": "5.3.0",
     "framer-motion": "11.18.2",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "recharts": "2.13.3"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

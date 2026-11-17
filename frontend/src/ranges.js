@@ -1,6 +1,4 @@
-// The chart's range selector, kept in its own module so App.jsx can read it without
-// importing HistoryChart.jsx — that import would pull Recharts into the initial bundle
-// and defeat the lazy load.
+// The chart's ranges and the date window each one asks the server for.
 
 export const RANGES = [
   { key: "1G", label: "1G", days: 1, intraday: true },

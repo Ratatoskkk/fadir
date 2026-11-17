@@ -22,7 +22,7 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage();
 await page.setViewport(MOBILE ? { width: 375, height: 812, deviceScaleFactor: 2, isMobile: true, hasTouch: true } : { width: 1440, height: 900, deviceScaleFactor: 1 });
 // Turkish pins the label selectors below; 4821 is the mock API's synthetic Portfolio Code.
-await page.evaluateOnNewDocument(() => { localStorage.setItem("fadir.ui", "next"); localStorage.setItem("fadir.lang", "tr"); });
+await page.evaluateOnNewDocument(() => { localStorage.setItem("fadir.lang", "tr"); });
 const cdp = await page.createCDPSession();
 if (THROTTLE > 1) await cdp.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
 

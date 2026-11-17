@@ -426,8 +426,6 @@ export default {
 
   "ui.title": "Interface",
   "ui.language": "Langue",
-  "ui.classicTitle": "Interface précédente",
-  "ui.classic": "Interface classique",
 
   "legal.title": "Mentions",
   "legal.privacy": "Confidentialité : les données privées des portefeuilles n’entrent jamais dans les outils d’exploitation ni dans les journaux.",

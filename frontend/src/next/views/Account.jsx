@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { api } from "../../api.js";
-import { switchUi } from "../../ui.js";
 import Identity from "../components/Identity.jsx";
 import Icon from "../ui/Icons.jsx";
 import { copyCode } from "../ui/copy.js";
@@ -177,10 +176,6 @@ function Preferences() {
             </button>
           ))}
         </div>
-      </div>
-      <div className="rights-row">
-        <strong>{t("ui.classicTitle")}</strong>
-        <button className="btn" type="button" onClick={() => switchUi("classic")}>{t("ui.classic")}</button>
       </div>
     </section>
   );

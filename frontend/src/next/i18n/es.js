@@ -426,8 +426,6 @@ export default {
 
   "ui.title": "Interfaz",
   "ui.language": "Idioma",
-  "ui.classicTitle": "Interfaz anterior",
-  "ui.classic": "Interfaz clásica",
 
   "legal.title": "Avisos",
   "legal.privacy": "Privacidad: los datos privados de las carteras nunca entran en las herramientas de operación ni en los registros.",

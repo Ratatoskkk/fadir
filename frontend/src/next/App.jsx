@@ -7,7 +7,6 @@ import { MotionConfig, motion } from "framer-motion";
 import "@fontsource-variable/geologica";
 import { api } from "../api.js";
 import { setMoneyCurrency } from "../format.js";
-import { switchUi } from "../ui.js";
 import { RANGES } from "../ranges.js";
 import { currentTheme, toggleTheme as flipTheme, watchTheme } from "../theme.js";
 import { INTERVALS, useDashboard } from "./useDashboard.js";
@@ -165,7 +164,6 @@ function Shell({ access, onLeave, onSignOut, onAccessLost }) {
       id: `pf-${p.id}`, group: t("portfolio.label"), label: p.name, hint: p.base_currency, icon: "layers", run: () => selectPortfolio(Number(p.id)),
     })),
     ...INTERVALS.map((o) => ({ id: `int-${o.value}`, group: t("live.interval"), label: t(o.label), icon: "clock", keywords: "interval", run: () => setIntervalSeconds(o.value) })),
-    { id: "classic", group: t("ui.title"), label: t("ui.classic"), icon: "swap", run: () => switchUi("classic") },
     ...(access === "code"
       ? [{ id: "leave", group: t("portfolio.label"), label: t("code.leave"), icon: "x", run: onLeave }]
       : [{ id: "new-portfolio", group: t("portfolio.label"), label: t("portfolio.new"), icon: "plus", run: () => setNewPortfolioOpen(true) }]),
