@@ -1904,3 +1904,25 @@ The service restarted once at 09:46:38 UTC with `NRestarts=0`, `ExecMainStatus=0
 journal warnings. Installed files match the release for all 8 backend and 15 frontend files;
 rollback bundle `/opt/fadir/frontend/dist.previous.review-classic-20261117`. Loopback and
 public health, `/` and every shell asset returned 200. Tests: 672 passed, none failing.
+
+Previous close fix deployment (owner report 2026-11-18: the prev. close line for Sivers
+showed the close from two days before; fix it, run code review on medium with Sonnet
+subagents and a UI review, apply every fix, push and deploy). Yahoo's daily series for
+SIVE.ST had bars for 16 and 18 November but none for the 17th, while the 5-minute bars held
+the whole 17th session, so the 1D chart took the 16th's close (13.97). `afe1940` takes the
+previous session from the intraday lead-in and counts a daily close only for that exact
+date, else the session's last regular bar (13.51 for the 17th). The ten code review findings
+are fixed: sessions crossing midnight match no daily bar and are never tagged pre/post, an
+after-hours-only lead-in never reaches an older daily close, one `last_regular()` helper,
+the daily closes cached as a read-only mapping, the 1D client fallback removed, and tests
+for every fallback. UI review: the Prev. close chip's tooltip names the session date
+(`previous_close_date`), and `fullDate`/`shortDate` read a bare date as a local calendar day.
+Backend: the four changed VM files matched `8a033a6` before replacement and the fix was
+dry-run on the VM first; previous copies are in
+`/home/fadir-agent/fadir-tests/deploy-afe1940/rollback/app.previous.tar`. The service
+restarted once at 08:48:17 UTC with `NRestarts=0`, `ExecMainStatus=0` and no journal
+warnings. Installed files match the release for all 4 backend and 12 frontend files;
+rollback bundle `/opt/fadir/frontend/dist.previous.prev-close-20261118`. Loopback and public
+health and the new bundle returned 200 and an unauthenticated chart returned 401. In the
+signed-in owner tab SIVE.ST's 1D chart returned a previous close of 13.51 dated 2026-11-17.
+Tests: all passed.
