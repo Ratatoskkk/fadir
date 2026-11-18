@@ -316,8 +316,12 @@ function marketChart(symbol, range) {
   const session = range === "1D"
     ? [new Date(+day + hoursOf[0] * 3600000).toISOString(), new Date(Math.max(+day + hoursOf[1] * 3600000, Date.parse(last.at) + 3 * 3600000)).toISOString()]
     : null;
+  // 1D: like the server, the close of the last regular bar before the shown window.
+  const before = bars.slice(0, warmup).reverse().find((b) => !b.extended);
   return {
     session,
+    previous_close: range === "1D" ? before?.close ?? null : null,
+    previous_close_date: range === "1D" && before ? before.at.slice(0, 10) : null,
     symbol, name: known?.name ?? MARKET_EXTRA.find(([s]) => s === symbol)?.[1] ?? symbol, currency: known?.currency ?? "USD",
     exchange: known?.exchange ?? "NASDAQ", range, interval, market_open: symbol !== "AAPL" && !last.extended,
     extended_session: symbol === "AAPL" ? null : last.extended ?? null, price: last.close, warmup,

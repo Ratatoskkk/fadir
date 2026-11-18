@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -305,19 +306,104 @@ def test_a_session_that_opened_the_evening_before_starts_that_evening(monkeypatc
     assert end == datetime(2026, 11, 13, 17, 0, tzinfo=NY)
 
 
-def test_1d_carries_the_official_previous_close(monkeypatch):
-    intraday = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
-    daily = [
-        yf_client.Bar(at=datetime(2026, 11, d, tzinfo=NY), open=1, high=1, low=1, close=float(d))
-        for d in (11, 12, 13)
-    ]
+def _daily(*days: int) -> list[yf_client.Bar]:
+    return [yf_client.Bar(at=datetime(2026, 11, d, tzinfo=NY), open=1, high=1, low=1, close=float(d)) for d in days]
 
+
+def _two_sessions() -> list[yf_client.Bar]:
+    """The 12th (closes at 10.5 + 9) and the shown 13th, 5-minute bars."""
+    return _bars(datetime(2026, 11, 12, 9, 30, tzinfo=NY), 10, timedelta(minutes=5)) + _bars(
+        datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5)
+    )
+
+
+def test_1d_carries_the_official_previous_close(monkeypatch):
     def fetch(symbol, interval, **kwargs):
-        return _series(daily if interval == "1d" else intraday)
+        return _series(_daily(11, 12, 13) if interval == "1d" else _two_sessions())
 
     monkeypatch.setattr(yf_client, "fetch_bars", fetch)
-    assert market_chart.chart("AAPL", "1D").previous_close == 12.0  # the day before the shown one
+    result = market_chart.chart("AAPL", "1D")
+    assert (result.previous_close, result.previous_close_on) == (12.0, date(2026, 11, 12))
     assert market_chart.chart("AAPL", "5D").previous_close is None
+
+
+def test_a_daily_series_missing_the_previous_session_falls_back_to_its_last_bar(monkeypatch):
+    """Yahoo's daily bars skipped the 12th; the 11th's close would be two sessions old."""
+    def fetch(symbol, interval, **kwargs):
+        return _series(_daily(11, 13) if interval == "1d" else _two_sessions())
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    assert market_chart.chart("SIVE.ST", "1D").previous_close == 19.5  # the 12th's last 5-minute close
+
+
+def test_a_failed_daily_fetch_falls_back_to_the_last_bar(monkeypatch):
+    def fetch(symbol, interval, **kwargs):
+        return None if interval == "1d" else _series(_two_sessions())
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    assert market_chart.chart("AAPL", "1D").previous_close == 19.5
+
+
+def test_the_previous_close_skips_after_hours(monkeypatch):
+    bars = _two_sessions()
+    bars[9] = replace(bars[9], extended="post")  # the 12th's last bar was after hours
+
+    def fetch(symbol, interval, **kwargs):
+        return _series(_daily(11) if interval == "1d" else bars)
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    assert market_chart.chart("AAPL", "1D").previous_close == 18.5  # the 12th's last regular bar
+
+
+def test_a_lead_in_of_only_after_hours_never_reaches_an_older_daily_close(monkeypatch):
+    bars = [replace(b, extended="post") if b.at.day == 12 else b for b in _two_sessions()]
+
+    def fetch(symbol, interval, **kwargs):
+        return _series(_daily(11) if interval == "1d" else bars)
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    assert market_chart.chart("AAPL", "1D").previous_close == 19.5  # the 12th's own last bar, not the 11th
+
+
+def test_with_no_lead_in_the_last_daily_close_before_the_day_stands_in(monkeypatch):
+    shown_only = _bars(datetime(2026, 11, 13, 9, 30, tzinfo=NY), 10, timedelta(minutes=5))
+
+    def fetch(symbol, interval, **kwargs):
+        return _series(_daily(11, 12, 13) if interval == "1d" else shown_only)
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    result = market_chart.chart("AAPL", "1D")
+    assert (result.previous_close, result.previous_close_on) == (12.0, date(2026, 11, 12))
+
+
+def test_a_session_crossing_midnight_takes_its_own_last_bar(monkeypatch):
+    """A future's daily bar is stamped by trade date, not by the evening its session opened."""
+    opens = datetime(2026, 11, 13, 18, 0, tzinfo=NY)
+
+    def fetch(symbol, interval, **kwargs):
+        if interval == "1d":
+            return _series(_daily(11, 12, 13))
+        return _series(_two_sessions(), session=(opens, opens + timedelta(hours=23)))
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    assert market_chart.chart("ES=F", "1D").previous_close == 19.5
+
+
+def test_bars_of_a_session_crossing_midnight_are_never_tagged():
+    import pandas as pd
+
+    bars = _bars(datetime(2026, 11, 13, 1, 0, tzinfo=NY), 6, timedelta(hours=1))
+    current = {"start": pd.Timestamp(datetime(2026, 11, 13, 18, tzinfo=NY)), "end": pd.Timestamp(datetime(2026, 11, 14, 17, tzinfo=NY))}
+    assert all(b.extended is None for b in yf_client._tag_sessions(bars, None, current))
+
+
+def test_chart_route_dates_the_previous_close(client, monkeypatch):  # noqa: F811
+    def fetch(symbol, interval, **kwargs):
+        return _series(_daily(11, 12, 13) if interval == "1d" else _two_sessions())
+
+    monkeypatch.setattr(yf_client, "fetch_bars", fetch)
+    body = client.get("/api/market/chart", params={"symbol": "AAPL", "range": "1D"}).json()
+    assert (body["previous_close"], body["previous_close_date"]) == (12.0, "2026-11-12")
 
 
 def test_week_selections_cannot_push_live_charts_out(monkeypatch):
@@ -372,8 +458,6 @@ def test_intraday_ranges_ask_for_extended_hours_and_daily_ones_do_not(monkeypatc
 
 
 def _extended_series(bars, regular, extended, price=None):
-    from dataclasses import replace
-
     return replace(_series(bars, price=price, session=regular), extended_start=extended[0], extended_end=extended[1])
 
 

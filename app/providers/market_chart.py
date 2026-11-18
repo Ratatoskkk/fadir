@@ -17,8 +17,10 @@ import re
 import threading
 import time
 from collections import OrderedDict
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from datetime import date, datetime, time as day_time, timedelta
+from types import MappingProxyType
 
 from app.providers import yf_client
 
@@ -54,7 +56,9 @@ FAILURE_BACKOFF_SECONDS = 30
 #: A cached chart older than this is not served in place of a failed fetch.
 MAX_STALE_SECONDS = 6 * 3600
 #: The official previous close (closing auction included) comes from daily bars, which
-#: change once a day, so they are cached far longer than the 1D chart itself.
+#: change once a day, so they are cached far longer than the 1D chart itself. A daily bar
+#: only counts for the date of the session the intraday bars say came before: Yahoo's
+#: daily series sometimes skips a day, and its last bar is then two sessions old.
 PREV_CLOSE_TTL_SECONDS = 300
 #: Lead-in bars kept before a segment: enough for a 250-bar average or a settled
 #: 25-bar ADX. A 24-hour market would otherwise ship months of hourly bars nobody sees.
@@ -99,6 +103,8 @@ class Chart:
     #: 1D only: the previous session's official close (Yahoo's daily bar), which the
     #: last 5-minute bar can miss by the closing auction. None when unavailable.
     previous_close: float | None = None
+    #: The local date of that session.
+    previous_close_on: date | None = None
 
     @property
     def warmup(self) -> int:
@@ -160,6 +166,20 @@ def first_shown(bars: list[yf_client.Bar], spec: ChartRange) -> int:
     return next(i for i, b in enumerate(bars) if b.at >= cutoff)
 
 
+def last_regular(bars: list[yf_client.Bar]) -> int | None:
+    """Index of the newest bar of a regular session, past pre-market and after hours."""
+    return next((i for i in range(len(bars) - 1, -1, -1) if bars[i].extended is None), None)
+
+
+def overnight(series: yf_client.BarSeries) -> bool:
+    """Whether the regular session crosses local midnight (futures, some FX)."""
+    start, end = series.session_start, series.session_end
+    if start is None or end is None:
+        return False
+    zone = start.tzinfo
+    return start.astimezone(zone).date() != end.astimezone(zone).date()
+
+
 def follow_quote(series: yf_client.BarSeries) -> list[yf_client.Bar]:
     """The bars with the newest regular one ending at Yahoo's latest quote.
 
@@ -170,7 +190,7 @@ def follow_quote(series: yf_client.BarSeries) -> list[yf_client.Bar]:
     """
     bars, price = series.bars, series.price
     start, end = series.session_start, series.session_end
-    at = next((i for i in range(len(bars) - 1, -1, -1) if bars[i].extended is None), None)
+    at = last_regular(bars)
     if at is None or price is None or start is None or end is None:
         return bars
     last = bars[at]
@@ -328,18 +348,38 @@ def _through_cache(key: tuple[str, str], ttl_seconds: int, build):
         return _store(key, result)
 
 
-def previous_close(symbol: str, day: date) -> float | None:
-    """The official close of the last session before `day`, from Yahoo's daily bars."""
+def _daily_closes(symbol: str) -> Mapping[date, float]:
+    """Yahoo's daily closes for the last few sessions, by local date; empty on failure."""
     def build():
         series = yf_client.fetch_bars(symbol, "1d", period="5d")
-        return None if series is None else tuple((b.at.date(), b.close) for b in series.bars)
+        return None if series is None else MappingProxyType({b.at.date(): b.close for b in series.bars})
 
     try:
-        closes = _through_cache((symbol, "prev-close"), PREV_CLOSE_TTL_SECONDS, build)
+        return _through_cache((symbol, "prev-close"), PREV_CLOSE_TTL_SECONDS, build)
     except ChartUnavailable:
-        return None
-    before = [close for on, close in closes if on < day]
-    return before[-1] if before else None
+        return MappingProxyType({})
+
+
+def previous_close(symbol: str, series: yf_client.BarSeries, lead: int) -> tuple[float, date] | None:
+    """The close of the session before the shown day, and that session's local date.
+
+    The intraday bars before the shown window (`series.bars[:lead]`) end in that session.
+    Its official close, closing auction included, is Yahoo's daily bar for the same date;
+    a daily bar for any other date is never taken (see PREV_CLOSE_TTL_SECONDS), and the
+    session's last regular bar, else its last bar, stands in. A session that crosses
+    midnight has no daily bar to match by date, so it always takes its own last bar.
+    With no lead-in at all, the last daily close before the shown day.
+    """
+    bars = series.bars
+    if lead:
+        on = bars[lead - 1].at.date()
+        at = last_regular(bars[:lead])
+        own = bars[at].close if at is not None and bars[at].at.date() == on else bars[lead - 1].close
+        official = None if overnight(series) else _daily_closes(symbol).get(on)
+        return (own if official is None else official), on
+    day = bars[-1].at.date()
+    before = [(on, close) for on, close in _daily_closes(symbol).items() if on < day]
+    return (before[-1][1], before[-1][0]) if before else None
 
 
 def intraday(interval: str) -> bool:
@@ -356,14 +396,16 @@ def chart(symbol: str, range_key: str) -> Chart:
             return None
         shown = first_shown(series.bars, spec)
         lead = min(shown, MAX_WARMUP)
-        bars = follow_quote(series)[shown - lead :]
+        trimmed = replace(series, bars=follow_quote(series)[shown - lead :])
+        prev = previous_close(symbol, trimmed, lead) if range_key == "1D" else None
         return Chart(
             symbol=symbol,
             range=range_key,
             interval=spec.interval,
-            series=replace(series, bars=bars),
-            segments=((lead, len(bars)),),
-            previous_close=previous_close(symbol, bars[-1].at.date()) if range_key == "1D" else None,
+            series=trimmed,
+            segments=((lead, len(trimmed.bars)),),
+            previous_close=prev[0] if prev else None,
+            previous_close_on=prev[1] if prev else None,
         )
 
     return _through_cache((symbol, range_key), spec.ttl_seconds, build)

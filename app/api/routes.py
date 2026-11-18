@@ -1645,6 +1645,7 @@ def get_market_chart(
         segments=[list(s) for s in result.segments],
         session=None if day is None else tuple(t.astimezone(timezone.utc) for t in day),
         previous_close=result.previous_close,
+        previous_close_date=result.previous_close_on,
         bars=[
             MarketBarOut(
                 at=b.at.astimezone(timezone.utc), open=b.open, high=b.high, low=b.low, close=b.close,

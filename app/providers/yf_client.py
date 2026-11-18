@@ -488,7 +488,9 @@ def _tag_sessions(bars: list[Bar], periods: object, current: dict) -> list[Bar]:
                 datetime.combine(bar.at.date(), opens.astimezone(zone).time(), tzinfo=zone),
                 datetime.combine(bar.at.date(), closes.astimezone(zone).time(), tzinfo=zone),
             )
-        if day is None:
+        # A session that crosses midnight (futures, some FX) has no single local date to
+        # place its hours on, so its bars are never tagged.
+        if day is None or day[1] <= day[0] or day[0].date() != day[1].date():
             out.append(bar)
             continue
         tag = "pre" if bar.at < day[0] else "post" if bar.at >= day[1] else None

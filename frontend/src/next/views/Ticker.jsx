@@ -132,6 +132,13 @@ function useChart(symbol, range, weeks, pollSeconds, tick) {
   };
 }
 
+/** The close of the newest regular bar before index `end`; after-hours bars move after the
+ *  session's close, so they never stand in for it. */
+const lastRegularClose = (bars, end) => {
+  for (let i = end - 1; i >= 0; i--) if (!bars[i].extended) return bars[i].close;
+  return null;
+};
+
 const stateTone = (state) => (state === "long" ? "up" : state === "short" ? "down" : "muted");
 
 export default function Ticker({ dash }) {
@@ -373,9 +380,11 @@ export default function Ticker({ dash }) {
   });
 
   const byWeek = range === "W";
-  // 1D: the previous session's official close (closing auction included), else its last
-  // bar's close. The dotted line and the change chip both measure from it.
-  const prevClose = range !== "1D" || !data ? null : data.previous_close ?? (data.warmup > 0 ? data.bars[data.warmup - 1].close : null);
+  // The close before the shown window, for the change on ranges other than 1D.
+  const leadClose = useMemo(() => (data ? lastRegularClose(data.bars, data.warmup) : null), [data]);
+  // 1D: the previous session's close, worked out by the server (official, closing auction
+  // included, from the right session). The dotted line and the change chip measure from it.
+  const prevClose = range === "1D" ? data?.previous_close ?? null : null;
   // Selected weeks show their own last close; a live range shows the latest quote.
   const price = !series ? null : byWeek ? series.close[series.close.length - 1] : data.price;
   const change = !series
@@ -383,7 +392,8 @@ export default function Ticker({ dash }) {
     : byWeek
       ? series.ratio
       : (() => {
-        const base = prevClose ?? (data.warmup > 0 ? data.bars[data.warmup - 1].close : series.bars[0].open);
+        // With no close before the window, the first regular bar's open, never a pre-market one.
+        const base = prevClose ?? leadClose ?? (series.bars.find((b) => !b.extended) ?? series.bars[0]).open;
         return base ? price / base : null;
       })();
   // While the listing trades before or after its session: the newest extended bar's price
@@ -652,7 +662,13 @@ export default function Ticker({ dash }) {
             </span>
           )}
           {prevClose !== null && !comparing && (
-            <button type="button" className={`legend-chip ${prevOn ? "" : "off"}`} aria-pressed={prevOn} onClick={() => setPrevOn((v) => !v)}>
+            <button
+            type="button"
+            className={`legend-chip ${prevOn ? "" : "off"}`}
+            aria-pressed={prevOn}
+            title={data.previous_close_date ? t("hero.prevSession", { date: fullDate(data.previous_close_date) }) : undefined}
+            onClick={() => setPrevOn((v) => !v)}
+          >
               <i className="dotted" />
               {t("ticker.prevClose")} <span className="num">{quote(prevClose)}</span>
             </button>

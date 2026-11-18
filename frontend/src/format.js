@@ -200,14 +200,18 @@ export function toneOf(value) {
   return n > 0 ? "up" : "down";
 }
 
+/** A bare "2026-11-17" is a calendar day, not UTC midnight, so it never shows as the day
+ *  before west of UTC; anything else is an instant. */
+const toDate = (value) => (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00`) : new Date(value));
+
 export function shortDate(iso) {
   if (!iso) return "—";
-  return F.dfShort.format(new Date(iso));
+  return F.dfShort.format(toDate(iso));
 }
 
 export function fullDate(iso) {
   if (!iso) return "—";
-  return F.dfFull.format(new Date(iso));
+  return F.dfFull.format(toDate(iso));
 }
 
 export function clockTime(date) {

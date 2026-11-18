@@ -393,6 +393,8 @@ class MarketChartOut(BaseModel):
     session: tuple[datetime, datetime] | None = None
     #: 1D only: the previous session's official close, closing auction included.
     previous_close: float | None = None
+    #: The local date of that session.
+    previous_close_date: date | None = None
     bars: list[MarketBarOut]
 
 
