@@ -47,6 +47,9 @@ const buildFormatters = () => ({
   dfMonth: df({ month: "short", year: "2-digit" }),
   dfDayMonth: df({ day: "numeric", month: "short", timeZone: "UTC" }),
   nfSig: new Intl.NumberFormat(locale, { maximumSignificantDigits: 4 }),
+  nfDay: new Intl.NumberFormat(locale, { style: "unit", unit: "day", unitDisplay: "short" }),
+  nfHour: new Intl.NumberFormat(locale, { style: "unit", unit: "hour", unitDisplay: "short" }),
+  nfMinute: new Intl.NumberFormat(locale, { style: "unit", unit: "minute", unitDisplay: "short" }),
 });
 let F = buildFormatters();
 
@@ -158,6 +161,27 @@ export function compactMoney(value, currency = moneyCcy) {
   return `${currencySymbol(currency)}${F.nfCompact.format(n)}`;
 }
 
+/** A length of time in the viewer's short form: 3 days, 4 hr 20 min, 15 min. Two days
+ *  and more count whole days only. */
+export function duration(ms) {
+  const minutes = Math.max(0, Math.round(ms / 60000));
+  if (minutes >= 2880) return F.nfDay.format(Math.round(minutes / 1440));
+  const parts = [[Math.floor(minutes / 1440), F.nfDay], [Math.floor((minutes % 1440) / 60), F.nfHour], [minutes % 60, F.nfMinute]];
+  const shown = parts.filter(([v]) => v > 0).slice(0, 2);
+  return shown.length ? shown.map(([v, f]) => f.format(v)).join(" ") : F.nfMinute.format(0);
+}
+
+/** `format`'s text for a change, with its sign always written (+, or a true minus), so
+ *  colour is never the only signal. */
+export function withSign(value, format) {
+  const n = Number(value);
+  if (value === null || value === undefined || !Number.isFinite(n)) return "—";
+  return `${n > 0 ? "+" : n < 0 ? "−" : ""}${format(Math.abs(n))}`;
+}
+
+/** A price change with its sign always written. */
+export const signedQuote = (value) => withSign(value, quote);
+
 /** A count in the viewer's short form (1.2M, 1,2 Mn), for volumes. */
 export function compact(value) {
   const n = Number(value);
@@ -167,9 +191,7 @@ export function compact(value) {
 
 /** A signed count, always with + or − so colour is never the only signal. */
 export function signedCompact(value) {
-  const n = Number(value);
-  if (value === null || value === undefined || !Number.isFinite(n)) return "—";
-  return `${n > 0 ? "+" : n < 0 ? "−" : ""}${F.nfCompact.format(Math.abs(n))}`;
+  return withSign(value, (n) => F.nfCompact.format(n));
 }
 
 /** An unsigned share of a whole, already in percent (81.5%, %81,5). */

@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { api } from "../../api.js";
-import { arrow, compact, dateTimeStamp, figure, fullDate, hourMinute, money, monthYear, pct, quote, ratioPct, shortDate, signedCompact, signedMoney, toneOf } from "../../format.js";
+import { arrow, compact, dateTimeStamp, duration, figure, fullDate, hourMinute, money, monthYear, pct, quote, ratioPct, shortDate, signedCompact, signedMoney, signedQuote, toneOf, withSign } from "../../format.js";
 import PriceChart from "../chart/PriceChart.jsx";
 import { FILTERS, filterState, sma, volumeSplit } from "../chart/indicators.js";
 import CompanyInfo from "../components/CompanyInfo.jsx";
@@ -445,8 +445,96 @@ export default function Ticker({ dash }) {
     ...panes.filter((p) => !p.histogram).map((p) => (p.asPct ? ["ticker.maSlope", "ticker.note.maSlopePct"] : FILTER_NOTES[p.key])).filter(Boolean),
     ...(marks.some((m) => !m.dotted) ? [["pos.avgBuy", "ticker.note.avgBuy"]] : []),
     ...(marks.some((m) => m.dotted) ? [["ticker.prevClose", "ticker.note.prevClose"]] : []),
+    ["ticker.measure", "ticker.note.measure"],
     ...(holding ? [["attr.fx", "ticker.note.fx"]] : []),
   ];
+
+  // Between two points (a before b): the change of everything on the chart, for the
+  // measuring pop-up, and the same as one sentence for a screen reader. The move runs from
+  // a's close to b's, so what traded in between (high, low, volume) counts from bar a + 1.
+  // Rebuilt only when the data or the panes change, not on every hover.
+  const measure = useCallback((a, b) => {
+    const at = intraday ? (ms) => dateTimeStamp(ms) : (ms) => fullDate(ms);
+    const took = duration(view.times[b] - view.times[a]);
+    const when = `${at(view.times[a])} – ${at(view.times[b])}`;
+    const said = [when, took];
+    // One pass over the bars traded after the start: the main ticker's own bars only.
+    const histograms = panes.filter((p) => p.histogram);
+    const nets = histograms.map(() => 0);
+    let high = -Infinity, low = Infinity, volume = 0;
+    for (let i = a + 1; i <= b; i++) {
+      if (!view.mainOwn[i]) continue;
+      const bar = series.bars[view.mainAt[i]];
+      if (bar.high > high) high = bar.high;
+      if (bar.low < low) low = bar.low;
+      volume += bar.volume ?? 0;
+      histograms.forEach((p, k) => { nets[k] += p.read[i] ?? 0; });
+    }
+    const rows = [];
+    let head;
+    if (comparing) {
+      // Each line is a % change since the window starts; between two points it compounds.
+      const lines = [[symbol, "var(--accent)", view.closeRead], [compareSymbol, "var(--compare)", view.compareRead]].map(([name, color, read]) => {
+        const r = read[a] == null || read[b] == null ? null : (1 + read[b] / 100) / (1 + read[a] / 100);
+        said.push(`${name} ${r === null ? "—" : ratioPct(r)}`);
+        return { name, color, r };
+      });
+      head = lines.map(({ name, color, r }) => (
+        <div key={name} className="tip-row measure-line">
+          <i style={{ background: color }} />{name}
+          <b className={`num ${r === null ? "" : toneOf(r - 1)}`}>{r === null ? "—" : <>{arrow(r - 1)} {ratioPct(r)}</>}</b>
+        </div>
+      ));
+    } else {
+      const from = view.closeRead[a], to = view.closeRead[b];
+      const diff = to - from;
+      said.push(`${signedQuote(diff)} ${from ? ratioPct(to / from) : ""}`);
+      head = (
+        <div className={`measure-change num ${toneOf(diff)}`}>
+          {arrow(diff)} {signedQuote(diff)}{from ? <small>{ratioPct(to / from)}</small> : null}
+        </div>
+      );
+      rows.push(["ticker.measure.from", quote(from)], ["ticker.measure.to", quote(to)]);
+      // The start price counts towards the range, so a quiet stretch never reads beyond it.
+      if (Number.isFinite(high)) rows.push(["ticker.high", quote(Math.max(high, from))], ["ticker.low", quote(Math.min(low, from))]);
+    }
+    if (showVolume) rows.push(["ticker.volume", compact(volume)]);
+    const paneRows = panes.map((p) => {
+      if (p.histogram) {
+        const net = nets[histograms.indexOf(p)];
+        said.push(`${t("ticker.netVolume")} ${signedCompact(net)}`);
+        return <div key={p.key} className="tip-row">{t("ticker.netVolume")}<b className={`num ${toneOf(net)}`}>{signedCompact(net)}</b></div>;
+      }
+      const change = (read) => (read[a] == null || read[b] == null ? null : read[b] - read[a]);
+      const value = (v) => (v == null ? "—" : p.format(v));
+      const d = change(p.read);
+      said.push(`${p.name} ${withSign(d, p.format)}`);
+      return (
+        <div key={p.key} className="tip-row">
+          {p.cmp && <i style={{ background: "var(--accent)" }} />}{p.name}
+          <span className="measure-span num">{value(p.read[a])} → {value(p.read[b])}</span>
+          <b className="num">{withSign(d, p.format)}</b>
+          {p.cmp && <span className="tip-cmp num"><i style={{ background: "var(--compare)" }} />{withSign(change(p.cmp.read), p.format)}</span>}
+        </div>
+      );
+    });
+    return {
+      spoken: said.join(", "),
+      content: (
+        <>
+          <div className="tip-date measure-when">
+            <span>{at(view.times[a])} → {at(view.times[b])}</span>
+            <span className="measure-took">{took}</span>
+          </div>
+          {head}
+          {rows.length > 0 && <div className="tip-sep" />}
+          {rows.map(([label, value]) => <div key={label} className="tip-row">{t(label)}<b className="num">{value}</b></div>)}
+          {paneRows.length > 0 && <div className="tip-sep" />}
+          {paneRows}
+        </>
+      ),
+    };
+  }, [view, series, panes, comparing, showVolume, symbol, compareSymbol, intraday, t]);
 
   const picker = (
     <Popover
@@ -750,6 +838,10 @@ export default function Ticker({ dash }) {
               live={trading(data)}
               onHover={(i, byKey) => { setHover(i); setKeyed(byKey); }}
               tooltip={tooltip}
+              measure={measure}
+              measureName={t("ticker.measure")}
+              measureLabel={t("ticker.measure.clear")}
+              resetKey={`${symbol}|${range}|${weekKey}|${comparing ? compareSymbol : ""}`}
               ariaLabel={t("ticker.aria", { symbol })}
               roleLabel={t("ticker.chartRole")}
             />

@@ -4,8 +4,9 @@
 // Panes are separate rather than overlaid because price and indicators never share a
 // unit (DESLOP 51: no dual y axes).
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { quote, figure } from "../../format.js";
+import Icon from "../ui/Icons.jsx";
 
 const PAD = { left: 64, right: 14, top: 14, bottom: 28 };
 const PANE_PLOT = 78;
@@ -24,6 +25,14 @@ const roundUp = (v) => {
   const mag = 10 ** Math.floor(Math.log10(v));
   return [1, 2, 2.5, 5, 10].map((f) => f * mag).find((x) => x >= v);
 };
+/** Viewers who ask for less motion get the measuring band without its easing. */
+const REDUCED_MOTION = typeof window !== "undefined" && window.matchMedia
+  ? window.matchMedia("(prefers-reduced-motion: reduce)")
+  : { matches: false };
+/** Pixels a press must travel before it measures instead of reading one bar. */
+const DRAG_START = 4;
+/** How far the measured band's edges close on their bars each 60 Hz frame (0..1). */
+const EASE = 0.35;
 /** The share of the price area the volume bars may fill, along its bottom. */
 const VOLUME_BAND = 0.18;
 /** Where each pane's plot starts, below the price and the panes and headers above it. */
@@ -118,12 +127,36 @@ function extent(values, extra = []) {
  * `closeExtended` and `compareExtended` flag the points that are pre-market or after-hours
  * bars; the connection into such a point is drawn in the line's extended-hours colour.
  */
-export default function PriceChart({ times, axisTimes = null, volume = null, close, compare = null, closeDash = null, compareDash = null, closeExtended = null, compareExtended = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, ariaLabel, roleLabel }) {
+/**
+ * Dragging across the chart (or Enter, then the arrow keys) measures between two bars:
+ * a band across every pane, a line between the two prices, and `measure(a, b)`'s
+ * { content, spoken } in a pop-up beside the band (under the chart on a narrow one); `a`
+ * and `b` are point indices in time order. A click, Escape or a new drag clears it, and so
+ * does a new `resetKey` (another ticker, range or comparison: the indices mean other bars).
+ */
+export default function PriceChart({ times, axisTimes = null, volume = null, close, compare = null, closeDash = null, compareDash = null, closeExtended = null, compareExtended = null, formatY = quote, panes, marks = [], breaks = [], heads, formatX, live, onHover, tooltip, measure = null, measureName, measureLabel, resetKey, ariaLabel, roleLabel }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const tipRef = useRef(null);
-  const st = useRef({ w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0 }).current;
+  const measureRef = useRef(null);
+  const st = useRef({
+    w: 0, h: 0, dpr: 1, colors: null, hover: null, frame: 0,
+    // The measured bars ({ from, to }, as pressed: `to` may be before `from`), the press
+    // that may become a drag, and the band as drawn, eased towards its bars.
+    sel: null, down: null, dragging: false,
+    band: { x0: 0, x1: 0, alpha: 0, at: 0 }, popW: 0,
+  }).current;
   const [narrow, setNarrow] = useState(false);
+  const [sel, setSelState] = useState(null);
+  // Whether a drag is under way: the pop-up ignores the pointer and stays unannounced.
+  const [dragging, setDragging] = useState(false);
+  // What the pop-up last showed, kept while it fades out.
+  const shown = useRef(null);
+  // A press or drag in progress belongs to one pointer; the rest are ignored.
+  const endPress = () => {
+    st.down = null;
+    if (st.dragging) { st.dragging = false; setDragging(false); }
+  };
   st.props = { times, axisTimes, volume, close, compare, closeDash, compareDash, closeExtended, compareExtended, formatY, panes, marks, breaks, formatX, live };
   st.onHover = onHover;
 
@@ -144,6 +177,44 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
     const plotW = Math.max(10, w - PAD.left - PAD.right);
     const mainH = mainHeight(w);
     const xOf = (i) => PAD.left + (slots > 1 ? (i * plotW) / (slots - 1) : plotW / 2);
+
+    // The measured stretch: its edges ease towards their bars, by elapsed time so the
+    // motion is the same at any refresh rate, and the band fades in and out.
+    const m = st.sel && st.sel.from !== st.sel.to && Math.max(st.sel.from, st.sel.to) < n ? st.sel : null;
+    const band = st.band;
+    const now = performance.now();
+    const frames = band.at ? Math.min(4, (now - band.at) / (1000 / 60)) : 1;
+    const k = REDUCED_MOTION.matches ? 1 : 1 - (1 - EASE) ** frames;
+    band.at = now;
+    let moving = false;
+    if (m) {
+      const t0 = xOf(Math.min(m.from, m.to)), t1 = xOf(Math.max(m.from, m.to));
+      if (band.alpha <= 0.01) { band.x0 = t0; band.x1 = t1; }
+      band.x0 += (t0 - band.x0) * k;
+      band.x1 += (t1 - band.x1) * k;
+      band.alpha += (1 - band.alpha) * k;
+      moving = Math.abs(t0 - band.x0) > 0.3 || Math.abs(t1 - band.x1) > 0.3 || band.alpha < 0.99;
+      if (!moving) { band.x0 = t0; band.x1 = t1; band.alpha = 1; }
+    } else if (band.alpha > 0.01) {
+      band.alpha -= band.alpha * k;
+      moving = band.alpha > 0.01;
+      if (!moving) band.alpha = 0;
+    }
+    if (band.alpha > 0) {
+      ctx.globalAlpha = 0.1 * band.alpha;
+      ctx.fillStyle = c.price;
+      ctx.fillRect(band.x0, PAD.top, band.x1 - band.x0, h - PAD.bottom - PAD.top);
+      ctx.globalAlpha = 0.55 * band.alpha;
+      ctx.strokeStyle = c.price;
+      ctx.lineWidth = 1;
+      for (const x of [band.x0, band.x1]) {
+        ctx.beginPath();
+        ctx.moveTo(Math.round(x) + 0.5, PAD.top);
+        ctx.lineTo(Math.round(x) + 0.5, h - PAD.bottom);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
     ctx.font = `11.5px ${c.font}`;
     ctx.lineWidth = 1;
 
@@ -203,6 +274,24 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
       while (b < n && values[b] == null) b++;
       if (a < 0 || b >= n) return a >= 0 ? values[a] : b < n ? values[b] : null;
       return values[a] + ((values[b] - values[a]) * (i - a)) / (b - a);
+    };
+
+    // A line's value at a fractional x, so a measurement's ends glide with the band.
+    const valueAtX = (values, x) => {
+      const f = Math.max(0, Math.min(n - 1, ((x - PAD.left) / plotW) * (slots - 1)));
+      const lo = valueAt(values, Math.floor(f)), hi = valueAt(values, Math.ceil(f));
+      return lo == null || hi == null ? lo ?? hi : lo + (hi - lo) * (f - Math.floor(f));
+    };
+    // A point on a line: a dot in the line's colour, ringed in the surface colour.
+    const drawDot = (x, y, color) => {
+      ctx.fillStyle = c.bg;
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, 3.2, 0, Math.PI * 2);
+      ctx.fill();
     };
 
     // Price.
@@ -387,9 +476,58 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
       ctx.fillText(fx(xsT[i]), Math.min(w - PAD.right - 18, Math.max(PAD.left + 18, xOf(i))), h - 8);
     }
 
-    // Crosshair across every pane.
+    // The measured change: a dashed line between the two prices, in the colour of its
+    // direction, with each end on its line; the pop-up rides centred over the band.
+    if (band.alpha > 0) {
+      const [a, b] = m ? [Math.min(m.from, m.to), Math.max(m.from, m.to)] : st.bandEnds ?? [0, 0];
+      if (m) st.bandEnds = [a, b];
+      // Each line joins its two prices only where it has a value of its own at or before
+      // the start and at or after the end, as the pop-up does; it never reaches into a gap.
+      const has = (values, from, to, dir) => {
+        for (let i = from; dir < 0 ? i >= to : i <= to; i += dir) if (values[i] != null) return true;
+        return false;
+      };
+      const link = (values, color) => {
+        if (!has(values, a, 0, -1) || !has(values, b, n - 1, 1)) return;
+        const v0 = valueAtX(values, band.x0), v1 = valueAtX(values, band.x1);
+        if (v0 == null || v1 == null) return;
+        const y0 = yPrice(v0), y1 = yPrice(v1);
+        const ink = color(v1 - v0);
+        ctx.globalAlpha = band.alpha;
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(band.x0, y0);
+        ctx.lineTo(band.x1, y1);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
+        drawDot(band.x0, y0, ink);
+        drawDot(band.x1, y1, ink);
+        ctx.globalAlpha = 1;
+      };
+      if (cs) link(cs, () => c.compare);
+      link(ys, (d) => (d > 0 ? c.up : d < 0 ? c.down : c.cross));
+      // Beside the band, where it hides none of the measured stretch: right of it when it
+      // fits, else left of it, else over it. On a narrow chart it sits under the chart.
+      const pop = measureRef.current;
+      if (pop && w >= NARROW) {
+        // The observed width; read once directly if no observation has arrived yet.
+        if (!st.popW) st.popW = pop.offsetWidth;
+        const gap = 12, pw = st.popW;
+        const left = band.x1 + gap + pw <= w ? band.x1 + gap
+          : band.x0 - gap - pw >= 0 ? band.x0 - gap - pw
+            : Math.max(0, Math.min(w - pw, (band.x0 + band.x1) / 2 - pw / 2));
+        pop.style.transform = `translate3d(${Math.round(left)}px, ${PAD.top + 4}px, 0)`;
+      }
+    }
+    if (moving) schedule();
+    else band.at = 0; // idle: the next start counts as one fresh frame
+
+    // Crosshair across every pane; a measurement takes its place.
     const tip = tipRef.current;
-    if (st.hover !== null && st.hover < n) {
+    if (st.hover !== null && st.hover < n && !m) {
       const i = st.hover;
       const x = Math.round(xOf(i)) + 0.5;
       ctx.strokeStyle = c.cross;
@@ -412,23 +550,14 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
         dot(pane.values, paneY[k], c.price);
         dot(pane.cmp?.values, paneY[k], c.compare);
       });
-      for (const [y, color] of dots) {
-        ctx.fillStyle = c.bg;
-        ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, 3.2, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      for (const [y, color] of dots) drawDot(x, y, color);
       if (tip) {
         const tw = tip.offsetWidth || 200;
         // Right of the crosshair when it fits, else left of it, never past either edge.
         const left = Math.max(0, Math.min(w - tw, x + 16 + tw > w ? x - 16 - tw : x + 16));
         tip.style.transform = `translate3d(${Math.round(left)}px, ${PAD.top + 4}px, 0)`;
       }
-    } else if (isLive) {
+    } else if (isLive && !m) {
       // The newest bar is still forming: mark where the line ends.
       let last = n - 1;
       while (last > 0 && ys[last] == null) last--;
@@ -462,6 +591,8 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
       st.hover = null;
       st.onHover?.(null, false);
     }
+    // Fewer bars than the measurement spans (a new session): drop it.
+    if (st.sel && Math.max(st.sel.from, st.sel.to) >= close.length) { endPress(); setSel(null); }
     const canvas = canvasRef.current;
     if (canvas && st.w) {
       st.h = height(st.w);
@@ -490,11 +621,15 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
     resize();
+    // The pop-up's width, measured when its content changes rather than every frame.
+    const popRo = new ResizeObserver(([entry]) => { st.popW = entry.borderBoxSize?.[0]?.inlineSize ?? entry.target.offsetWidth; st.schedule(); });
+    if (measureRef.current) popRo.observe(measureRef.current);
     const mo = new MutationObserver(() => { st.colors = readColors(); st.schedule(); });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     document.fonts?.ready.then(() => st.schedule());
     return () => {
       ro.disconnect();
+      popRo.disconnect();
       mo.disconnect();
       cancelAnimationFrame(st.frame);
       st.frame = 0;
@@ -509,44 +644,155 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
     st.schedule();
   };
 
+  // Another ticker, range or comparison: the measured indices would mean other bars.
+  useEffect(() => {
+    endPress();
+    setSel(null);
+  }, [resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Only a change of bars reaches React (the pop-up's content); the band itself moves
+  // in the canvas loop.
+  const setSel = (next) => {
+    const same = next === st.sel || (next && st.sel && next.from === st.sel.from && next.to === st.sel.to);
+    st.sel = next;
+    if (!same) setSelState(next);
+    st.schedule?.();
+  };
+
   // Arrow keys step through the bars (Shift for ten), Home and End jump, Escape leaves.
+  // Enter starts a measurement at the reading; the keys then move its far end, and Enter
+  // or Escape ends it.
   const onKeyDown = (e) => {
     const n = st.props.close.length;
     if (!n) return;
-    const now = st.hover ?? n - 1;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (st.sel) { clearMeasure(); return; }
+      const from = st.hover ?? n - 1;
+      setSel({ from, to: from });
+      setHover(from, true);
+      return;
+    }
+    if (e.key === "Escape") {
+      if (st.sel) { clearMeasure(); return; }
+      setHover(null);
+      return;
+    }
+    const now = st.sel ? st.sel.to : st.hover ?? n - 1;
     const step = e.shiftKey ? 10 : 1;
     const next = { ArrowLeft: now - step, ArrowRight: now + step, Home: 0, End: n - 1 }[e.key];
-    if (e.key === "Escape") { setHover(null); return; }
     if (next === undefined) return;
     e.preventDefault();
-    setHover(Math.max(0, Math.min(n - 1, next)), true);
+    const to = Math.max(0, Math.min(n - 1, next));
+    if (st.sel) setSel({ from: st.sel.from, to });
+    else setHover(to, true);
+  };
+
+  /** Ends a measurement, leaving the reading on its far end so the keys go on from there. */
+  const clearMeasure = () => {
+    const to = st.sel?.to ?? null;
+    setSel(null);
+    if (to !== null && to < st.props.close.length) setHover(to, true);
+  };
+
+  /** The bar under the pointer. Over a full session's untraded stretch, the newest bar. */
+  const indexAt = (e) => {
+    const n = st.props.close.length;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const rel = (e.clientX - rect.left - PAD.left) / Math.max(10, st.w - PAD.left - PAD.right);
+    const slots = Math.max(n, st.props.axisTimes?.length ?? 0);
+    return Math.max(0, Math.min(n - 1, Math.round(rel * (slots - 1))));
+  };
+
+  const onPointerDown = (e) => {
+    if (!st.props.close.length || e.button !== 0) return;
+    // A second finger or pen while one press is held changes nothing.
+    if (st.down && st.down.id !== e.pointerId) return;
+    const i = indexAt(e);
+    // A press on a measurement clears it, unless it turns into a new drag.
+    st.down = { i, x: e.clientX, id: e.pointerId, clears: Boolean(st.sel) };
+    if (!st.sel) setHover(i);
   };
 
   const onPointerMove = (e) => {
-    const n = st.props.close.length;
-    if (!n) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const rel = (e.clientX - rect.left - PAD.left) / Math.max(10, st.w - PAD.left - PAD.right);
-    // Over a full session's untraded stretch the reading stays on the newest bar.
-    const slots = Math.max(n, st.props.axisTimes?.length ?? 0);
-    setHover(Math.max(0, Math.min(n - 1, Math.round(rel * (slots - 1)))));
+    if (!st.props.close.length) return;
+    // A press released outside the canvas never sent its pointerup here: with no button
+    // down any more, it is over.
+    if (st.down && st.down.id === e.pointerId && !(e.buttons & 1)) endPress();
+    const i = indexAt(e);
+    const down = st.down;
+    if (st.dragging && down?.id !== e.pointerId) return;
+    if (down && down.id === e.pointerId && !st.dragging && Math.abs(e.clientX - down.x) > DRAG_START) {
+      st.dragging = true;
+      setDragging(true);
+      setHover(null);
+      // Keeps the drag when the pointer leaves the canvas; a pointer that is already
+      // gone cannot be captured, and the drag simply ends at the canvas edge.
+      try { canvasRef.current.setPointerCapture(e.pointerId); } catch { /* no active pointer */ }
+    }
+    if (st.dragging) setSel({ from: down.i, to: i });
+    else if (!st.sel) setHover(i);
   };
+
+  const onPointerUp = (e) => {
+    const down = st.down;
+    if (!down || down.id !== e.pointerId) return;
+    const dragged = st.dragging;
+    endPress();
+    if (dragged) {
+      // Released where it started: nothing measured.
+      if (st.sel && st.sel.from === st.sel.to) setSel(null);
+      return;
+    }
+    if (down.clears) {
+      setSel(null);
+      setHover(indexAt(e));
+    }
+  };
+
+  // A touch the browser took over for scrolling measures nothing.
+  const onPointerCancel = (e) => {
+    if (st.down?.id !== e.pointerId) return;
+    const dragged = st.dragging;
+    endPress();
+    if (dragged) setSel(null);
+  };
+
+  // Capture lost without a pointerup (the window lost focus mid-drag): keep what was measured.
+  const onLostPointerCapture = (e) => {
+    if (st.dragging && st.down?.id === e.pointerId) {
+      endPress();
+      if (st.sel && st.sel.from === st.sel.to) setSel(null);
+    }
+  };
+
+  // Built once per measured stretch (and per new `measure`, when the data changes), never
+  // on a pointer move within the same bars.
+  const measured = useMemo(
+    () => (sel && sel.from !== sel.to && measure ? measure(Math.min(sel.from, sel.to), Math.max(sel.from, sel.to)) : null),
+    [sel, measure],
+  );
+  useEffect(() => { if (measured) shown.current = measured; }, [measured]);
+  const content = measured ?? shown.current;
 
   return (
     <div className="pchart" ref={wrapRef}>
       <canvas
         ref={canvasRef}
         onPointerMove={onPointerMove}
-        onPointerDown={onPointerMove}
-        onPointerLeave={() => setHover(null)}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        onLostPointerCapture={onLostPointerCapture}
+        onPointerLeave={() => { if (!st.dragging) setHover(null); }}
         onKeyDown={onKeyDown}
-        onFocus={() => { if (st.hover === null) setHover(st.props.close.length - 1); }}
+        onFocus={() => { if (st.hover === null && !st.sel) setHover(st.props.close.length - 1); }}
         onBlur={() => setHover(null)}
         tabIndex={0}
         role="group"
         aria-roledescription={roleLabel}
         aria-label={ariaLabel}
-        aria-keyshortcuts="ArrowLeft ArrowRight Home End"
+        aria-keyshortcuts="ArrowLeft ArrowRight Home End Enter Escape"
       />
       {/* Pane headers are DOM, laid over the canvas, so their inputs are real inputs. */}
       <div className={`pchart-heads ${narrow ? "narrow" : ""}`} style={{ top: `calc(${PAD.top}px + var(--main-h, 320px))` }}>
@@ -554,7 +800,19 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
           <div key={panes[k].key} className="pchart-head" style={{ height: headHeight(narrow, panes[k], Boolean(compare)), marginBottom: PANE_PLOT }}>{head}</div>
         ))}
       </div>
-      <div ref={tipRef} className={`vchart-tip ${tooltip ? "on" : ""}`} aria-hidden="true">{tooltip}</div>
+      <div ref={tipRef} className={`vchart-tip ${tooltip && !measured ? "on" : ""}`} aria-hidden="true">{tooltip}</div>
+      <div ref={measureRef} className={`pchart-measure ${measured ? "on" : ""} ${dragging ? "dragging" : ""} ${narrow ? "narrow" : ""}`} aria-hidden={!measured}>
+        <div className="measure-body">
+          {content?.content}
+          {measured && (
+            <button type="button" className="measure-x" aria-label={measureLabel} onClick={() => { clearMeasure(); canvasRef.current?.focus(); }}>
+              <Icon name="x" size={12} />
+            </button>
+          )}
+        </div>
+      </div>
+      {/* The finished measurement, or, when the keys start one, that measuring has begun. */}
+      <p className="sr-only" aria-live="polite">{dragging ? "" : measured ? measured.spoken : sel ? measureName : ""}</p>
     </div>
   );
 }
