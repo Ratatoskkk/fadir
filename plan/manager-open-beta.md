@@ -1947,3 +1947,14 @@ only, no restart: installed checksums match the build for all 12 files; rollback
 `/opt/fadir/frontend/dist.previous.measure-20261120`. Loopback and public health, `/`, the new
 bundle and its App chunk returned 200. In the signed-in owner tab a drag on SIVEF's chart
 opened the pop-up (6 h 5 min) and Escape cleared it.
+
+Measuring pop-up placement deployment (owner request 2026-11-20: keep the pop-up out of the
+selected band, never covering it). `5ed9ee6` places it right of the band when it fits, else
+left of it, else under the chart as on phones (with 24px of hysteresis to come back beside
+it); it no longer falls back to sitting over the band. Its width is now measured once per
+content change: a ResizeObserver could still hold the empty pop-up's 230px minimum, which
+made a left placement overlap the band by 110px. Checked against the band as drawn (canvas
+pixels) for a left, right-edge, too-wide and narrow band: clear of it each time. Frontend
+only, no restart: installed checksums match the build for all 12 files; rollback bundle
+`/opt/fadir/frontend/dist.previous.measure-outside-20261120`. Loopback and public health and
+the new bundle returned 200.
