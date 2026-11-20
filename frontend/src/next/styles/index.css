@@ -481,14 +481,15 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 /* Only the close button takes the pointer: clicks and drags on the chart under the
    pop-up still reach the chart. */
 .pchart-measure.on:not(.dragging) .measure-x { pointer-events: auto; }
-/* Narrow: under the chart instead of over the line it measures, opening smoothly. */
-.pchart-measure.narrow {
+/* Under the chart (a narrow chart, or a band too wide to sit beside): never over the
+   stretch it measures, opening smoothly. */
+.pchart-measure.under {
   position: static; max-width: none; transform: none !important; margin-top: 8px;
   display: grid; grid-template-rows: 0fr; transition: opacity 0.16s, grid-template-rows 0.22s var(--ease);
 }
-.pchart-measure.narrow.on { grid-template-rows: 1fr; }
-.pchart-measure.narrow > .measure-body { min-height: 0; overflow: hidden; }
-.pchart-measure.narrow:not(.on) > .measure-body { padding-block: 0; border-width: 0; }
+.pchart-measure.under.on { grid-template-rows: 1fr; }
+.pchart-measure.under > .measure-body { min-height: 0; overflow: hidden; }
+.pchart-measure.under:not(.on) > .measure-body { padding-block: 0; border-width: 0; }
 .measure-body {
   position: relative; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 12.5px;
   background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-pop);
@@ -507,7 +508,7 @@ input.small, select.small { height: 30px; padding: 0 8px; font-size: 12.5px; bor
 .measure-x::after { content: ""; position: absolute; inset: -10px; }
 .measure-x:hover { background: var(--surface-2); color: var(--text); }
 @media (prefers-reduced-motion: reduce) {
-  .pchart-measure, .pchart-measure.narrow, .measure-body { transition: none; }
+  .pchart-measure, .pchart-measure.under, .measure-body { transition: none; }
 }
 .tip-session { margin-left: 8px; font-weight: 400; color: var(--text-3); }
 .tip-row { display: flex; align-items: center; gap: 8px; color: var(--text-2); line-height: 1.75; font-variant-numeric: tabular-nums; }

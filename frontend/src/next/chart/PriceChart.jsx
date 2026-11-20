@@ -130,7 +130,8 @@ function extent(values, extra = []) {
 /**
  * Dragging across the chart (or Enter, then the arrow keys) measures between two bars:
  * a band across every pane, a line between the two prices, and `measure(a, b)`'s
- * { content, spoken } in a pop-up beside the band (under the chart on a narrow one); `a`
+ * { content, spoken } in a pop-up beside the band, never over it (under the chart when there
+ * is no room beside it, and always on a narrow chart); `a`
  * and `b` are point indices in time order. A click, Escape or a new drag clears it, and so
  * does a new `resetKey` (another ticker, range or comparison: the indices mean other bars).
  */
@@ -150,6 +151,10 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
   const [sel, setSelState] = useState(null);
   // Whether a drag is under way: the pop-up ignores the pointer and stays unannounced.
   const [dragging, setDragging] = useState(false);
+  // Whether the band leaves no room beside it, so the pop-up sits under the chart. Set
+  // from the drawing loop only when that changes.
+  const [popBelow, setPopBelow] = useState(false);
+  st.setPopBelow = setPopBelow;
   // What the pop-up last showed, kept while it fades out.
   const shown = useRef(null);
   // A press or drag in progress belongs to one pointer; the rest are ignored.
@@ -509,17 +514,22 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
       };
       if (cs) link(cs, () => c.compare);
       link(ys, (d) => (d > 0 ? c.up : d < 0 ? c.down : c.cross));
-      // Beside the band, where it hides none of the measured stretch: right of it when it
-      // fits, else left of it, else over it. On a narrow chart it sits under the chart.
+      // Never over the measured stretch: right of the band when it fits, else left of it,
+      // else under the chart (as on a narrow chart, where it always sits there). Going back
+      // beside the band needs a little more room than leaving, so an edge doesn't flicker.
       const pop = measureRef.current;
       if (pop && w >= NARROW) {
-        // The observed width; read once directly if no observation has arrived yet.
-        if (!st.popW) st.popW = pop.offsetWidth;
-        const gap = 12, pw = st.popW;
-        const left = band.x1 + gap + pw <= w ? band.x1 + gap
-          : band.x0 - gap - pw >= 0 ? band.x0 - gap - pw
-            : Math.max(0, Math.min(w - pw, (band.x0 + band.x1) / 2 - pw / 2));
-        pop.style.transform = `translate3d(${Math.round(left)}px, ${PAD.top + 4}px, 0)`;
+        // The width beside the band, as last measured (see the layout effect below).
+        if (!st.popW && !st.popBelow) st.popW = pop.offsetWidth;
+        const gap = 12, pw = st.popW, spare = st.popBelow ? 24 : 0;
+        const right = band.x1 + gap + pw + spare <= w;
+        const left = band.x0 - gap - pw - spare >= 0;
+        const below = !right && !left;
+        if (below !== st.popBelow) { st.popBelow = below; st.setPopBelow(below); }
+        if (!below) {
+          const x = right ? band.x1 + gap : band.x0 - gap - pw;
+          pop.style.transform = `translate3d(${Math.round(x)}px, ${PAD.top + 4}px, 0)`;
+        }
       }
     }
     if (moving) schedule();
@@ -621,15 +631,11 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
     resize();
-    // The pop-up's width, measured when its content changes rather than every frame.
-    const popRo = new ResizeObserver(([entry]) => { st.popW = entry.borderBoxSize?.[0]?.inlineSize ?? entry.target.offsetWidth; st.schedule(); });
-    if (measureRef.current) popRo.observe(measureRef.current);
     const mo = new MutationObserver(() => { st.colors = readColors(); st.schedule(); });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     document.fonts?.ready.then(() => st.schedule());
     return () => {
       ro.disconnect();
-      popRo.disconnect();
       mo.disconnect();
       cancelAnimationFrame(st.frame);
       st.frame = 0;
@@ -774,6 +780,15 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
   );
   useEffect(() => { if (measured) shown.current = measured; }, [measured]);
   const content = measured ?? shown.current;
+  // The pop-up's width beside the band, measured once each time its content changes (one
+  // layout read, never per frame). Under the chart it spans the chart, which says nothing
+  // about its width beside the band, so the last width beside it stands.
+  useLayoutEffect(() => {
+    const pop = measureRef.current;
+    if (!pop || !measured || narrow || popBelow) return;
+    st.popW = pop.offsetWidth;
+    st.schedule();
+  }, [measured, narrow, popBelow]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="pchart" ref={wrapRef}>
@@ -801,7 +816,7 @@ export default function PriceChart({ times, axisTimes = null, volume = null, clo
         ))}
       </div>
       <div ref={tipRef} className={`vchart-tip ${tooltip && !measured ? "on" : ""}`} aria-hidden="true">{tooltip}</div>
-      <div ref={measureRef} className={`pchart-measure ${measured ? "on" : ""} ${dragging ? "dragging" : ""} ${narrow ? "narrow" : ""}`} aria-hidden={!measured}>
+      <div ref={measureRef} className={`pchart-measure ${measured ? "on" : ""} ${dragging ? "dragging" : ""} ${narrow || popBelow ? "under" : ""}`} aria-hidden={!measured}>
         <div className="measure-body">
           {content?.content}
           {measured && (
