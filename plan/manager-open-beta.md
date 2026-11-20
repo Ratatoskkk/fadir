@@ -1926,3 +1926,24 @@ rollback bundle `/opt/fadir/frontend/dist.previous.prev-close-20261118`. Loopbac
 health and the new bundle returned 200 and an unauthenticated chart returned 401. In the
 signed-in owner tab SIVE.ST's 1D chart returned a previous close of 13.51 dated 2026-11-17.
 Tests: all passed.
+
+Measure between two points deployment (owner request 2026-11-20: click and drag on the
+Ticker chart to see the difference between two points for everything on screen, in a
+smooth 60fps pop-up; then code review on medium with Sonnet subagents and a UI review,
+every fix applied, push and deploy). `385b317`: dragging across the chart (or Enter and the
+arrow keys with it focused) draws a band across every pane that eases onto the two bars, a
+dashed line between the two prices in the colour of the move, and a pop-up with the time
+span, price change and %, start, end, high and low, volume, net volume, each indicator's
+change, and both lines' % change when comparing; a click, Escape or its x clears it. The
+band and pop-up move in the canvas loop with time-based easing (none under reduced motion)
+and React renders only when the measured bars change. On the production build a pointer
+move costs 0.9 ms of work at the median (13 ms at p95) and a frame 0.5 ms to draw; the
+browser pane was hidden, so frame rate itself was not observed. The ten code review
+findings (pointer tracking, click-through, easing after idle, reset with the window,
+counting from the bar after the start, keyboard feedback, memoised content, data gaps, one
+dot and sign helper, a one-line note) and the UI review's four (beside the band on wide
+charts, under the chart on phones, one minus sign, reduced motion) are fixed. Frontend
+only, no restart: installed checksums match the build for all 12 files; rollback bundle
+`/opt/fadir/frontend/dist.previous.measure-20261120`. Loopback and public health, `/`, the new
+bundle and its App chunk returned 200. In the signed-in owner tab a drag on SIVEF's chart
+opened the pop-up (6 h 5 min) and Escape cleared it.
